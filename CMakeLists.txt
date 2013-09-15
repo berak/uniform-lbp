@@ -13,6 +13,9 @@ SET(SRC
     combinedLBP.cpp
     Linear.cpp
     minmax.cpp
+    SpatialHistogramReco.cpp
+    wlp.cpp
+    VarLBP.cpp
 )
 ADD_EXECUTABLE( ${PROJECT_NAME} ${SRC} )
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME}  ${OpenCV_LIBS} )
@@ -25,6 +28,9 @@ SET(SRC
     combinedLBP.cpp
     Linear.cpp
     minmax.cpp
+    SpatialHistogramReco.cpp
+    wlp.cpp
+    VarLBP.cpp
 )
 ADD_EXECUTABLE( ${PROJECT_NAME} ${SRC} )
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME}  ${OpenCV_LIBS} )
@@ -39,6 +45,9 @@ SET(SRC
     combinedLBP.cpp
     Linear.cpp
     minmax.cpp
+    SpatialHistogramReco.cpp
+    wlp.cpp
+    VarLBP.cpp
 )
 ADD_EXECUTABLE( ${PROJECT_NAME} ${SRC} )
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME}  ${OpenCV_LIBS} )

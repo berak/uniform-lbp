@@ -1,5 +1,4 @@
 #include "SpatialHistogramReco.h"
-#include <iostream>
 
 #define _USE_MATH_DEFINES
 #include<math.h>
@@ -35,9 +34,6 @@ public:
     WLD( int gridx=8, int gridy=8, double threshold = DBL_MAX) 
         : SpatialHistogramReco(gridx,gridy,threshold,size_all,CV_8U)
     {}
-
-    ~WLD() { }
-
 };
 
 
