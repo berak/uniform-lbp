@@ -6,11 +6,19 @@
 //
 //  A Robust Descriptor based on Weber’s Law 
 //
-
+// (there are 2 papers, the other is called:
+//     WLD: A Robust Local Image Descriptor.  
+//     the formula numbers here are from the former. )
+//
 class WLD : public SpatialHistogramReco
 {
 public:
 
+    // my histograms looks like this:
+    // [32 bins for zeta][2*64 bins for theta][16 bins for center intensity]
+    // since the patches are pretty small(12x12), i can even get away using uchar for the historam bins
+    // all those are heuristic/empirical, i.e, i found it works better with only the 1st 2 orientations
+    
     // configurable, yet hardcoded values
     enum {
         size_center  = 4,   // num bits from the center
@@ -20,13 +28,15 @@ public:
 
         size_theta = 8*size_theta_w, 
         size_all = (1<<size_center) + size_zeta + size_theta_n * size_theta
+        
+        // 176 bytes per patch, * 8 * 8 = 11264 bytes per image.
     };
 
 protected:
     virtual void oper(const Mat & src, Mat & hist) const ;
 
     virtual double distance(const Mat & hist_a, Mat & hist_b) const {
-        return cv::norm(hist_a,hist_b,NORM_L1); 
+        return cv::norm(hist_a,hist_b,NORM_L1); // L1 norm is great for uchar histograms!
     }
 
 public:
@@ -93,7 +103,7 @@ void WLD::oper(const Mat & src, Mat & hist) const {
                 hist.at<uchar>(int(theta)+WLD::size_zeta+WLD::size_theta * i) += 1;
             }
 
-            // additionally, add some bits of the actual center value.
+            // additionally, add some bits of the actual center value (MSB).
             int cen = c>>(8-WLD::size_center); 
             hist.at<uchar>(cen+WLD::size_zeta+WLD::size_theta * WLD::size_theta_n) += 1;
         }
@@ -112,6 +122,8 @@ Ptr<FaceRecognizer> createWLDFaceRecognizer(int grid_x, int grid_y, double thres
 //
 // * fun to see a whole paper boil down to a good dozen line of code and *win* ;)  
 // * i probably did not get the histogram reordering right.
+// * the use of atan seems to be the major takeaway here,
+//   as it smoothes out very dense and very sparsely populated histogram bins
 // * you'd think, a radius:2 circular pattern with (interpolated corners even)
 //   would rock over he square one, but not so.
 // * added a few bits of the center pixel.
