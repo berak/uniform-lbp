@@ -14,7 +14,7 @@ SET(SRC
     Linear.cpp
     minmax.cpp
     SpatialHistogramReco.cpp
-    wlp.cpp
+    wld.cpp
     VarLBP.cpp
 )
 ADD_EXECUTABLE( ${PROJECT_NAME} ${SRC} )
@@ -29,7 +29,7 @@ SET(SRC
     Linear.cpp
     minmax.cpp
     SpatialHistogramReco.cpp
-    wlp.cpp
+    wld.cpp
     VarLBP.cpp
 )
 ADD_EXECUTABLE( ${PROJECT_NAME} ${SRC} )
@@ -46,7 +46,7 @@ SET(SRC
     Linear.cpp
     minmax.cpp
     SpatialHistogramReco.cpp
-    wlp.cpp
+    wld.cpp
     VarLBP.cpp
 )
 ADD_EXECUTABLE( ${PROJECT_NAME} ${SRC} )
