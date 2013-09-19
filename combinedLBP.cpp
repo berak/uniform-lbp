@@ -120,5 +120,5 @@ void CombinedLBPH::oper(const Mat & src, Mat & hist) const {
 
 Ptr<FaceRecognizer> createCombinedLBPHFaceRecognizer(int grid_x, int grid_y, double threshold)
 {
-    return new CombinedLBPH(grid_x, grid_y, threshold);
+    return makePtr<CombinedLBPH>(grid_x, grid_y, threshold);
 }

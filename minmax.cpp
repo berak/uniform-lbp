@@ -179,7 +179,7 @@ void MinMaxReco::save(const cv::String& filename) const {
 
 
 Ptr<FaceRecognizer> createMinMaxFaceRecognizer(int raster,int compression) {
-    return new MinMaxReco(raster,compression);
+    return makePtr<MinMaxReco>(raster,compression);
 }
 
 

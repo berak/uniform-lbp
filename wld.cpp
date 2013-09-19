@@ -113,7 +113,7 @@ void WLD::oper(const Mat & src, Mat & hist) const {
 
 
 Ptr<FaceRecognizer> createWLDFaceRecognizer(int grid_x, int grid_y, double threshold) {
-    return new WLD(grid_x, grid_y, threshold);
+    return makePtr<WLD>(grid_x, grid_y, threshold);
 }
 
 

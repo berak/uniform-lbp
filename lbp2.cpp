@@ -513,7 +513,7 @@ int LBPH::predict(InputArray _src) const {
 Ptr<FaceRecognizer> createLBPHFaceRecognizer2(int radius, int neighbors,
                                              int grid_x, int grid_y, double threshold,bool uniform)
 {
-    return new LBPH(radius, neighbors, grid_x, grid_y, threshold,uniform);
+    return makePtr<LBPH>(radius, neighbors, grid_x, grid_y, threshold,uniform);
 }
 
 

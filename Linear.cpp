@@ -53,7 +53,7 @@ struct Linear : public FaceRecognizer
 
 Ptr<FaceRecognizer> createLinearFaceRecognizer(int NORM)
 {
-    return new Linear(NORM);
+    return makePtr<Linear>(NORM);
 }
 
 

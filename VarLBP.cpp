@@ -276,5 +276,5 @@ AlgorithmInfo * VarLBP::info() const { return 0; }
 
 Ptr<FaceRecognizer> createVarLBPFaceRecognizer(int grid_x, int grid_y, double threshold)
 {
-    return new VarLBP(grid_x, grid_y, threshold);
+    return makePtr<VarLBP>(grid_x, grid_y, threshold);
 }
