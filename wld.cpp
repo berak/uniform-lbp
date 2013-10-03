@@ -91,21 +91,21 @@ void WLD::oper(const Mat & src, Mat & hist) const {
             //};
             int p = n[0]+n[1]+n[2]+n[3]+n[4]+n[5]+n[6]+n[7];
             p -= c*8;
-            // (7), projected from [-pi/2,pi/2] to [0,WLD::size_zeta]
+            // (7), projected from [-pi/2,pi/2] to [0,size_zeta]
             double zeta = 0;
-            if (p!=0) zeta = double(WLD::size_zeta) * (atan(double(p)/c) + M_PI*0.5) / M_PI;
+            if (p!=0) zeta = double(size_zeta) * (atan(double(p)/c) + M_PI*0.5) / M_PI;
             hist.at<uchar>(int(zeta)) += 1;
 
-            // (11), projected from [-pi/2,pi/2] to [0,WLD::size_theta]
-            for ( int i=0; i<WLD::size_theta_n; i++ ) {
+            // (11), projected from [-pi/2,pi/2] to [0,size_theta]
+            for ( int i=0; i<size_theta_n; i++ ) {
                 double a = atan2(double(n[i]-n[(i+4)%8]),double(n[(i+2)%8]-n[(i+6)%8]));
-                double theta = M_PI_4 * fmod( (a+M_PI)/M_PI_4+0.5f, 8 ) * WLD::size_theta_w; // (11)
-                hist.at<uchar>(int(theta)+WLD::size_zeta+WLD::size_theta * i) += 1;
+                double theta = M_PI_4 * fmod( (a+M_PI)/M_PI_4+0.5f, 8 ) * size_theta_w; // (11)
+                hist.at<uchar>(int(theta)+size_zeta+size_theta * i) += 1;
             }
 
             // additionally, add some bits of the actual center value (MSB).
-            int cen = c>>(8-WLD::size_center); 
-            hist.at<uchar>(cen+WLD::size_zeta+WLD::size_theta * WLD::size_theta_n) += 1;
+            int cen = c>>(8-size_center); 
+            hist.at<uchar>(cen+size_zeta+size_theta * size_theta_n) += 1;
         }
     }
 }

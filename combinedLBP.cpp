@@ -38,6 +38,7 @@ public:
 
 
 void CombinedLBPH::oper(const Mat & src, Mat & hist) const {
+    int t = 0; // experimenting with cslbp threshold
     // calculate patterns
     // hardcoded 1 pixel radius
     for(int i=1;i<src.rows-1;i++) {
@@ -64,14 +65,14 @@ void CombinedLBPH::oper(const Mat & src, Mat & hist) const {
             //  _\|/_
             //   /|\
             // this is the "central symmetric LBP" idea, from 
-            // Zhenhua Guo, Lei Zhang, Member, IEEE, and David Zhang*, Fellow, IEEE ,
-            // A Completed Modeling of Local Binary Pattern Operator for Texture Classification             
+            // "Description of Interest Regions with Center-Symmetric Local Binary Patterns"
+            // (http://www.ee.oulu.fi/mvg/files/pdf/pdf_750.pdf).
             //
             code = 0;
-            code |= (n[0]>n[4]) << 0;
-            code |= (n[1]>n[5]) << 1;
-            code |= (n[2]>n[6]) << 2;
-            code |= (n[3]>n[7]) << 3;
+            code |= (n[0]-n[4]>t) << 0;
+            code |= (n[1]-n[5]>t) << 1;
+            code |= (n[2]-n[6]>t) << 2;
+            code |= (n[3]-n[7]>t) << 3;
             hist.at<uchar>(code + offset) += 1;
             offset += 16;
 
@@ -80,10 +81,10 @@ void CombinedLBPH::oper(const Mat & src, Mat & hist) const {
             //    \ /
             //
             code = 0;
-            code |= (n[0]<n[2]) << 0;
-            code |= (n[2]<n[4]) << 1;
-            code |= (n[4]<n[6]) << 2;
-            code |= (n[6]<n[0]) << 3;
+            code |= (n[0]-n[2]>t) << 0;
+            code |= (n[2]-n[4]>t) << 1;
+            code |= (n[4]-n[6]>t) << 2;
+            code |= (n[6]-n[0]>t) << 3;
             hist.at<uchar>(code + offset) += 1;
             offset += 16;
 
@@ -93,14 +94,14 @@ void CombinedLBPH::oper(const Mat & src, Mat & hist) const {
             //// |_ _|
             ////
             code = 0;
-            code |= (n[7]<n[1]) << 0;
-            code |= (n[1]<n[3]) << 1;
-            code |= (n[3]<n[5]) << 2;
-            code |= (n[5]<n[7]) << 3;
+            code |= (n[7]-n[1]>t) << 0;
+            code |= (n[1]-n[3]>t) << 1;
+            code |= (n[3]-n[5]>t) << 2;
+            code |= (n[5]-n[7]>t) << 3;
             hist.at<uchar>(code + offset) += 1;
             offset += 16;
 
-            // save 3 bits of max value ( it's index )
+            // save 3 bits of max neighbour value ( it's index )
             code = 0;
             int m=-1;
             for ( int k=0; k<8; k++ )
@@ -110,7 +111,7 @@ void CombinedLBPH::oper(const Mat & src, Mat & hist) const {
             hist.at<uchar>(code + offset) += 1;
             offset += 8;
            
-            // save 3 bits of center value:
+            // save 3 bits (MSB) of center value:
             code = ((c >> 5) & 0x07); 
             hist.at<uchar>(code + offset) += 1;
             offset += 8;

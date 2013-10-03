@@ -259,13 +259,13 @@ int main(int argc, const char *argv[])
     vector<int> labels;
     vector<string> vec;
 
-    std::string imgpath("yale.txt");
+    std::string imgpath("att.txt");
     if ( argc>1 ) imgpath=argv[1];
 
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 9;
+    int rec = 8;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;
