@@ -1,7 +1,7 @@
 #include "opencv2/core/utility.hpp" // format
 
 #include "SpatialHistogramReco.h"
-
+#include <iostream>
 
 Mat SpatialHistogramReco::spatial_histogram(InputArray _src) const {
     Mat src = _src.getMat();
@@ -17,6 +17,30 @@ Mat SpatialHistogramReco::spatial_histogram(InputArray _src) const {
     for(int i = 0; i < _grid_y; i++) {
         for(int j = 0; j < _grid_x; j++) {
             Mat src_cell(src, Range(i*height,(i+1)*height), Range(j*width,(j+1)*width));
+            Mat hist = Mat::zeros(1,hist_len,hist_type);
+
+            oper(src_cell,hist);
+
+            result.push_back(hist);
+        }
+    }
+    return result;
+}
+
+Mat SpatialHistogramReco::spatial_histogram_overlap(InputArray _src) const {
+    Mat src = _src.getMat();
+    if(src.empty())
+        return Mat();
+
+    // calculate patch size
+    int width  = src.cols/_grid_x;
+    int height = src.rows/_grid_y;
+
+    Mat result = Mat::zeros(0, 0, hist_type);
+    // iterate through grid
+    for(int i = 0; i < src.cols-width; i+=step_size) {
+        for(int j = 0; j < src.rows-height; j+=step_size) {
+            Mat src_cell(src, Rect(i,j,height,width));
             Mat hist = Mat::zeros(1,hist_len,hist_type);
 
             oper(src_cell,hist);
@@ -115,12 +139,14 @@ void SpatialHistogramReco::train(InputArrayOfArrays _in_src, InputArray _in_labe
     }
     // calculate and store the spatial histograms of the original data
     for(size_t sampleIdx = 0; sampleIdx < src.size(); sampleIdx++) {
-         Mat p = spatial_histogram( src[sampleIdx] );
-         //normalize(p,p);
-         if ( ! p.empty() )
-            _histograms.push_back(p);
+        Mat p = step_size 
+            ? spatial_histogram_overlap( src[sampleIdx] )
+            : spatial_histogram( src[sampleIdx] );
+        //normalize(p,p);
+        if ( ! p.empty() )
+        _histograms.push_back(p);
     }
-    //std::cout << _histograms.size() << " * " << _histograms[0].total() << " = " << (_histograms.size() * _histograms[0].total()) << " elems." << std::endl;;
+    std::cout << _histograms.size() << " * " << _histograms[0].total() << " = " << (_histograms.size() * _histograms[0].total()) << " elems." << std::endl;;
 }
 
 void SpatialHistogramReco::predict(InputArray _src, int &minClass, double &minDist) const {
@@ -131,7 +157,9 @@ void SpatialHistogramReco::predict(InputArray _src, int &minClass, double &minDi
     }
     Mat src = _src.getMat();
     // get the spatial histogram from input image
-    Mat query = spatial_histogram( src );
+    Mat query = step_size 
+        ? spatial_histogram_overlap( src )
+        : spatial_histogram( src );
     // find 1-nearest neighbor
     minDist = DBL_MAX;
     minClass = -1;

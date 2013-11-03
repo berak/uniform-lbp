@@ -15,7 +15,7 @@ protected:
 public:
 
     CombinedLBPH( int gridx=8, int gridy=8, double threshold = DBL_MAX) 
-        : SpatialHistogramReco(gridx,gridy,threshold,8+8+16+16+16,CV_8U)
+        : SpatialHistogramReco(gridx,gridy,threshold,8+8+16+16+16,CV_8U,0)
     {}
 
 };
@@ -30,9 +30,10 @@ public:
 // per patch, write a combined (consecutive) histogram of 4 features:
 // 16 bins for CSLBP as in [A Completed Modeling of Local Binary Pattern Operator for Texture Classification](http://www4.comp.polyu.edu.hk/~cslzhang/paper/CLBP.pdf)
 // 16 bins for diagonal outer connectors
+// 16 bins for square outer connectors
 // 8 bins for the maximal neighbour id
 // 8 bins for the central intensity value
-// so, that's 48 bytes per patch, 3072 per nose with 8x8 patches
+// so, that's 54 bytes per patch, 4096 per nose with 8x8 patches
 //
 //
 

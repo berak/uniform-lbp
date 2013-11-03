@@ -28,6 +28,7 @@ private:
     int _grid_y;
     double _threshold;
 
+    int step_size;
     int hist_len;
     int hist_type;
 
@@ -40,6 +41,7 @@ private:
     void train(InputArrayOfArrays src, InputArray labels, bool preserveData);
 
     Mat spatial_histogram(InputArray _src) const ;
+    Mat spatial_histogram_overlap(InputArray _src) const ;
 
 
 public:
@@ -47,22 +49,23 @@ public:
     using FaceRecognizer::load;
 
     SpatialHistogramReco( int gridx=8, int gridy=8,
-            double threshold = DBL_MAX, int h_len=255,int h_type=CV_8U) :
+            double threshold = DBL_MAX, int h_len=255,int h_type=CV_8U, int step_size=0) :
         _grid_x(gridx),
         _grid_y(gridy),
         _threshold(threshold),
         hist_len(h_len),
-        hist_type(h_type)
+        hist_type(h_type),
+        step_size(step_size)
     {}
 
 
     ~SpatialHistogramReco() { }
 
-    // Computes a LBPH model with images in src and
+    // Computes a model with images in src and
     // corresponding labels in labels.
     void train(InputArrayOfArrays src, InputArray labels);
 
-    // Updates this LBPH model with images in src and
+    // Updates this model with images in src and
     // corresponding labels in labels.
     void update(InputArrayOfArrays src, InputArray labels);
 
