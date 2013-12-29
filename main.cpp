@@ -265,7 +265,7 @@ int main(int argc, const char *argv[])
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 8;
+    int rec = 3;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;

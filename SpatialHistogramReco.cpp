@@ -27,29 +27,29 @@ Mat SpatialHistogramReco::spatial_histogram(InputArray _src) const {
     return result;
 }
 
-Mat SpatialHistogramReco::spatial_histogram_overlap(InputArray _src) const {
-    Mat src = _src.getMat();
-    if(src.empty())
-        return Mat();
-
-    // calculate patch size
-    int width  = src.cols/_grid_x;
-    int height = src.rows/_grid_y;
-
-    Mat result = Mat::zeros(0, 0, hist_type);
-    // iterate through grid
-    for(int i = 0; i < src.cols-width; i+=step_size) {
-        for(int j = 0; j < src.rows-height; j+=step_size) {
-            Mat src_cell(src, Rect(i,j,height,width));
-            Mat hist = Mat::zeros(1,hist_len,hist_type);
-
-            oper(src_cell,hist);
-
-            result.push_back(hist);
-        }
-    }
-    return result;
-}
+//Mat SpatialHistogramReco::spatial_histogram_overlap(InputArray _src) const {
+//    Mat src = _src.getMat();
+//    if(src.empty())
+//        return Mat();
+//
+//    // calculate patch size
+//    int width  = src.cols/_grid_x;
+//    int height = src.rows/_grid_y;
+//
+//    Mat result = Mat::zeros(0, 0, hist_type);
+//    // iterate through grid
+//    for(int i = 0; i < src.cols-width; i+=step_size) {
+//        for(int j = 0; j < src.rows-height; j+=step_size) {
+//            Mat src_cell(src, Rect(i,j,height,width));
+//            Mat hist = Mat::zeros(1,hist_len,hist_type);
+//
+//            oper(src_cell,hist);
+//
+//            result.push_back(hist);
+//        }
+//    }
+//    return result;
+//}
 
 
 // Reads a sequence from a FileNode::SEQ with type _Tp into a result vector.
@@ -139,9 +139,7 @@ void SpatialHistogramReco::train(InputArrayOfArrays _in_src, InputArray _in_labe
     }
     // calculate and store the spatial histograms of the original data
     for(size_t sampleIdx = 0; sampleIdx < src.size(); sampleIdx++) {
-        Mat p = step_size 
-            ? spatial_histogram_overlap( src[sampleIdx] )
-            : spatial_histogram( src[sampleIdx] );
+        Mat p = spatial_histogram( src[sampleIdx] );
         //normalize(p,p);
         if ( ! p.empty() )
         _histograms.push_back(p);
@@ -157,9 +155,7 @@ void SpatialHistogramReco::predict(InputArray _src, int &minClass, double &minDi
     }
     Mat src = _src.getMat();
     // get the spatial histogram from input image
-    Mat query = step_size 
-        ? spatial_histogram_overlap( src )
-        : spatial_histogram( src );
+    Mat query = spatial_histogram( src );
     // find 1-nearest neighbor
     minDist = DBL_MAX;
     minClass = -1;
