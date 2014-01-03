@@ -19,7 +19,7 @@
      ^ added a ref impl that just compares pixls
      ^ added uniform version of lbp
 
-(all code is dependant on opencv *master* version)
+(all code in the master branch is dependant on opencv *master* version, please use the 2.4 branch otherwise)
 
 #results:
 
