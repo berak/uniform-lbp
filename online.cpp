@@ -2,10 +2,9 @@
 // 3 state online face db
 //
 
-#include <opencv2/highgui.hpp>
-#include <opencv2/ml.hpp>
-#include <opencv2/core/utility.hpp>
-#include <opencv2/contrib.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/ml/ml.hpp>
  
 #include <iostream>
 #include <fstream>

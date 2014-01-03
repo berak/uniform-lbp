@@ -1,13 +1,12 @@
 //#include "opencv2/opencv.hpp"
-#include "opencv2/core/utility.hpp"
-#include "opencv2/highgui.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/contrib/contrib.hpp"
  
 
 using namespace std;
 using namespace cv;
 
 
-#include "opencv2/contrib.hpp"
 //
 //
 // the pixel's neighbours:
@@ -132,7 +131,7 @@ void MinMaxReco::train(InputArray src, InputArray lbls)    {
 
 void MinMaxReco::predict(InputArray src, int& label, double & minDist) const    {
     if ( histograms.empty() || labels.empty() )
-        CV_Error(Error::StsBadArg,"must have train data");
+        CV_Error(CV_StsBadArg,"must have train data");
 
     Mat img = src.getMat();
     cv::Mat hist(0,8,CV_8U);
@@ -179,7 +178,7 @@ void MinMaxReco::save(const cv::String& filename) const {
 
 
 Ptr<FaceRecognizer> createMinMaxFaceRecognizer(int raster,int compression) {
-    return makePtr<MinMaxReco>(raster,compression);
+    return new MinMaxReco(raster,compression);
 }
 
 

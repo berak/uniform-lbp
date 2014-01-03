@@ -2,9 +2,8 @@
 // run k fold crossvalidation train/test on  person db
 //
 
-#include <opencv2/highgui.hpp>
-#include "opencv2/contrib.hpp"
-#include <opencv2/core/utility.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/contrib/contrib.hpp"
  
 #include <iostream>
 #include <fstream>

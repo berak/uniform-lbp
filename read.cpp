@@ -3,9 +3,8 @@
 //
 
 //#include <opencv2/opencv.hpp>
-#include <opencv2/core/utility.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/contrib.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/contrib/contrib.hpp>
  
 #include <iostream>
 #include <fstream>

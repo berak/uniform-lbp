@@ -1,11 +1,10 @@
-#include "opencv2/contrib.hpp"
+#include "opencv2/contrib/contrib.hpp"
 
 //
 // from https://github.com/bytefish/libfacerec/blob/master/src/lbp.cpp
 //
 
 
-#include <opencv2/core/utility.hpp>
 using namespace cv;
 #include <iostream>
 
@@ -204,14 +203,14 @@ void VarLBP::update(InputArrayOfArrays _in_src, InputArray _in_labels) {
 void VarLBP::train(InputArrayOfArrays _in_src, InputArray _in_labels, bool preserveData) {
     if(_in_src.kind() != _InputArray::STD_VECTOR_MAT && _in_src.kind() != _InputArray::STD_VECTOR_VECTOR) {
         std::string error_message = "The images are expected as InputArray::STD_VECTOR_MAT (a std::vector<Mat>) or _InputArray::STD_VECTOR_VECTOR (a std::vector< std::vector<...> >).";
-        CV_Error(Error::StsBadArg, error_message);
+        CV_Error(CV_StsBadArg, error_message);
     }
     if(_in_src.total() == 0) {
         std::string error_message = format("Empty training data was given. You'll need more than one sample to learn a model.");
-        CV_Error(Error::StsUnsupportedFormat, error_message);
+        CV_Error(CV_StsUnsupportedFormat, error_message);
     } else if(_in_labels.getMat().type() != CV_32SC1) {
         std::string error_message = format("Labels must be given as integer (CV_32SC1). Expected %d, but was %d.", CV_32SC1, _in_labels.type());
-        CV_Error(Error::StsUnsupportedFormat, error_message);
+        CV_Error(CV_StsUnsupportedFormat, error_message);
     }
     // get the vector of matrices
     std::vector<Mat> src;
@@ -221,7 +220,7 @@ void VarLBP::train(InputArrayOfArrays _in_src, InputArray _in_labels, bool prese
     // check if data is well- aligned
     if(labels.total() != src.size()) {
         std::string error_message = format("The number of samples (src) must equal the number of labels (labels). Was len(samples)=%d, len(labels)=%d.", src.size(), _labels.total());
-        CV_Error(Error::StsBadArg, error_message);
+        CV_Error(CV_StsBadArg, error_message);
     }
     // if this model should be trained without preserving old data, delete old model data
     if(!preserveData) {
@@ -247,7 +246,7 @@ void VarLBP::predict(InputArray _src, int &minClass, double &minDist) const {
     if(_histograms.empty()) {
         // throw error if no data (or simply return -1?)
         std::string error_message = "This LBPH model is not computed yet. Did you call the train method?";
-        CV_Error(Error::StsBadArg, error_message);
+        CV_Error(CV_StsBadArg, error_message);
     }
     Mat src = _src.getMat();
     // get the spatial histogram from input image
@@ -256,7 +255,7 @@ void VarLBP::predict(InputArray _src, int &minClass, double &minDist) const {
     minDist = DBL_MAX;
     minClass = -1;
     for(size_t sampleIdx = 0; sampleIdx < _histograms.size(); sampleIdx++) {
-        double dist = compareHist(_histograms[sampleIdx], query, HISTCMP_CHISQR);
+        double dist = compareHist(_histograms[sampleIdx], query, CV_COMP_CHISQR);
         if((dist < minDist) && (dist < _threshold)) {
             minDist = dist;
             minClass = _labels.at<int>((int) sampleIdx);
@@ -276,5 +275,5 @@ AlgorithmInfo * VarLBP::info() const { return 0; }
 
 Ptr<FaceRecognizer> createVarLBPFaceRecognizer(int grid_x, int grid_y, double threshold)
 {
-    return makePtr<VarLBP>(grid_x, grid_y, threshold);
+    return new VarLBP(grid_x, grid_y, threshold);
 }

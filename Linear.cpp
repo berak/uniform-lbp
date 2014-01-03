@@ -1,5 +1,4 @@
-//#include <opencv2/opencv.hpp>
-#include <opencv2/core/utility.hpp>
+#include <opencv2/core/core.hpp>
 
 using namespace std;
 using namespace cv;
@@ -53,7 +52,7 @@ struct Linear : public FaceRecognizer
 
 Ptr<FaceRecognizer> createLinearFaceRecognizer(int NORM)
 {
-    return makePtr<Linear>(NORM);
+    return new Linear(NORM);
 }
 
 

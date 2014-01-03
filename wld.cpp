@@ -36,7 +36,7 @@ protected:
     virtual void oper(const Mat & src, Mat & hist) const ;
 
     virtual double distance(const Mat & hist_a, Mat & hist_b) const {
-        return cv::norm(hist_a,hist_b,NORM_L1); // L1 norm is great for uchar histograms!
+        return cv::norm(hist_a,hist_b,CV_L1); // L1 norm is great for uchar histograms!
     }
 
 public:
@@ -113,7 +113,7 @@ void WLD::oper(const Mat & src, Mat & hist) const {
 
 
 Ptr<FaceRecognizer> createWLDFaceRecognizer(int grid_x, int grid_y, double threshold) {
-    return makePtr<WLD>(grid_x, grid_y, threshold);
+    return new WLD(grid_x, grid_y, threshold);
 }
 
 
