@@ -157,31 +157,33 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         int tp(0),tn(0),fp(0),fn(0);
         for ( int i=0; i<ntests; i++ )
         {
+            int label = testLabels[i];
+
+            // test positive img:
             double dist = DBL_MAX;
             int predicted = -1;
             model->predict(testImages[i],predicted,dist);
-            int missed = ( predicted != testLabels[i] );
-            misses += missed;
             if ( verbose )
-                confusion.at<int>(testLabels[i],predicted) += 1;
-            tp += (predicted == testLabels[i]);
-            fn += (predicted != testLabels[i]);
+                confusion.at<int>(label,predicted) += 1;
+            tp += (predicted == label);
+            fn += (predicted != label);
 
-            // test on a falsie
-            int oi = -1;
+            // test negative
+            int neg = -1;
             while ( 1 ) 
             {
-                oi = theRNG().uniform(0,labels.size());
-                if ( testLabels[i] != labels[oi] ) 
+                neg = theRNG().uniform(0,labels.size());
+                if ( label != testLabels[neg] ) 
                     break;
             }
-            model->predict(images[oi],predicted,dist);
-            fp += (predicted == testLabels[i]);
-            tn += (predicted != testLabels[i]);
+            model->predict(images[neg],predicted,dist);
+            fp += (predicted == label);
+            tn += (predicted != label);
         }
 
-        double rror = double(misses)/ntests;
+        double rror = double(fn)/ntests;
         meanSqrError += rror * rror;
+
         double a = double(tp+tn) / (ntests+ntests);
         acc += a;
 
