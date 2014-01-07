@@ -114,6 +114,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
     //
     int64 dt1=0, dt2=0;
     double meanSqrError = 0.0;
+    double acc = 0.0;
     Mat confusion = Mat::zeros(persons.size(),persons.size(),CV_32S);
     for ( size_t f=0; f<fold; f++ )
     {
@@ -153,6 +154,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         // test model
         int ntests = testImages.size();
         int misses = 0;
+        int tp(0),tn(0),fp(0),fn(0);
         for ( int i=0; i<ntests; i++ )
         {
             double dist = DBL_MAX;
@@ -162,22 +164,39 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
             misses += missed;
             if ( verbose )
                 confusion.at<int>(testLabels[i],predicted) += 1;
+            tp += (predicted == testLabels[i]);
+            fn += (predicted != testLabels[i]);
+
+            // test on a falsie
+            int oi = -1;
+            while ( 1 ) 
+            {
+                oi = theRNG().uniform(0,labels.size());
+                if ( testLabels[i] != labels[oi] ) 
+                    break;
+            }
+            model->predict(images[oi],predicted,dist);
+            fp += (predicted == testLabels[i]);
+            tn += (predicted != testLabels[i]);
         }
 
         double rror = double(misses)/ntests;
         meanSqrError += rror * rror;
+        double a = double(tp+tn) / (ntests+ntests);
+        acc += a;
 
         cout << '.';
         int64 t3 = cv::getTickCount();
         dt1 += t2-t1;
         dt2 += t3-t2;
+
         if ( verbose )
-            cout << format(" %-12s %-10.3f %3d/%-3d (%3d %3d) (%6.3f %6.3f %6.3f)",rec_names[rec], rror, misses,ntests, trainImages.size(), testImages.size(), ct(t1-t0),ct(t2-t1), ct(t3-t2) ) << endl;
+            cout << format(" %-12s %-6.3f %-6.3f (%3d %3d)[%d %d %d %d] (%6.3f %6.3f %6.3f)",rec_names[rec], rror, a, trainImages.size(), testImages.size(), tp,tn,fp,fn, ct(t1-t0),ct(t2-t1), ct(t3-t2) ) << endl;
     }
     double me = sqrt(meanSqrError) / fold;
-    if ( verbose )
-       cerr << confusion << endl;
-    cout << format(" %s%s\t%-10.3f %-10.3f (%6.3f %6.3f",rec_names[rec], (DPFX), me, 1.0-me, ct(dt1), ct(dt2)) ;
+    //if ( verbose )
+    //   cerr << confusion << endl;
+    cout << format(" %-12s %-10.3f %-10.3f (%6.3f %6.3f",rec_names[rec], me, acc/fold, ct(dt1), ct(dt2)) ;
     return model;
 }
 
@@ -264,7 +283,7 @@ int main(int argc, const char *argv[])
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 3;
+    int rec = 9;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;
