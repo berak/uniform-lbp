@@ -144,7 +144,7 @@ void SpatialHistogramReco::train(InputArrayOfArrays _in_src, InputArray _in_labe
         if ( ! p.empty() )
         _histograms.push_back(p);
     }
-    std::cout << _histograms.size() << " * " << _histograms[0].total() << " = " << (_histograms.size() * _histograms[0].total()) << " elems." << std::endl;;
+    //std::cout << _histograms.size() << " * " << _histograms[0].total() << " = " << (_histograms.size() * _histograms[0].total()) << " elems." << std::endl;;
 }
 
 void SpatialHistogramReco::predict(InputArray _src, int &minClass, double &minDist) const {
