@@ -112,6 +112,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
     //
     // do nfold sliding window train & test runs
     //
+    vector<Point2f> roc;
     int64 dt1=0, dt2=0;
     double meanSqrError = 0.0;
     double acc = 0.0;
@@ -168,18 +169,21 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
             tp += (predicted == label);
             fn += (predicted != label);
 
-            // test negative
+            // test random negative img:
             int neg = -1;
             while ( 1 ) 
             {
-                neg = theRNG().uniform(0,labels.size());
-                if ( label != testLabels[neg] ) 
+                neg = theRNG().uniform(0,labels.size()-1);
+                if ( label != neg ) 
                     break;
             }
             model->predict(images[neg],predicted,dist);
             fp += (predicted == label);
             tn += (predicted != label);
         }
+        double tpr = double(tp) / ntests;
+        double fpr = double(fp) / ntests;
+        roc.push_back(Point2f(tpr,fpr));
 
         double rror = double(fn)/ntests;
         meanSqrError += rror * rror;
@@ -193,11 +197,12 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         dt2 += t3-t2;
 
         if ( verbose )
-            cout << format(" %-12s %-6.3f %-6.3f (%3d %3d)[%d %d %d %d] (%6.3f %6.3f %6.3f)",rec_names[rec], rror, a, trainImages.size(), testImages.size(), tp,tn,fp,fn, ct(t1-t0),ct(t2-t1), ct(t3-t2) ) << endl;
+            cout << format(" %-12s %-6.3f %-6.3f (%3d %3d)[%2d %2d %2d %2d] (%6.3f %6.3f %6.3f)",rec_names[rec], rror, a, trainImages.size(), testImages.size(), tp,tn,fp,fn, ct(t1-t0),ct(t2-t1), ct(t3-t2) ) << endl;
     }
     double me = sqrt(meanSqrError) / fold;
     //if ( verbose )
     //   cerr << confusion << endl;
+    //cout << "roc " << Mat(roc) << endl;
     cout << format(" %-12s %-10.3f %-10.3f (%6.3f %6.3f",rec_names[rec], me, acc/fold, ct(dt1), ct(dt2)) ;
     return model;
 }
@@ -285,7 +290,7 @@ int main(int argc, const char *argv[])
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 9;
+    int rec = 6;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;
