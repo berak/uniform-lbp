@@ -114,6 +114,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
     // do nfold sliding window train & test runs
     //
     vector<Point2f> roc;
+    vector<float> dists;
     int64 dt1=0, dt2=0;
     double meanSqrError = 0.0;
     double acc = 0.0;
@@ -169,16 +170,17 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
                 confusion.at<int>(label,predicted) += 1;
             tp += (predicted == label);
             fn += (predicted != label);
-
+            dists.push_back(dist);
             // test random negative img:
             int neg = -1;
             while ( 1 ) 
             {
-                neg = theRNG().uniform(0,labels.size()-1);
-                if ( label != neg ) 
+                neg = theRNG().uniform(0,testLabels.size()-1);
+                if ( label != testLabels[neg] ) 
                     break;
             }
-            model->predict(images[neg],predicted,dist);
+            model->predict(testImages[neg],predicted,dist);
+            dists.push_back(dist);
             fp += (predicted == label);
             tn += (predicted != label);
         }
@@ -204,6 +206,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
     //if ( verbose )
     //   cerr << confusion << endl;
     //cout << "roc " << Mat(roc) << endl;
+    //cerr << "dists " << Mat(dists) << endl;
     cout << format(" %-12s %-10.3f %-10.3f (%6.3f %6.3f",rec_names[rec], me, acc/fold, ct(dt1), ct(dt2)) ;
     return model;
 }
@@ -291,7 +294,7 @@ int main(int argc, const char *argv[])
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 6;
+    int rec = 5;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;
