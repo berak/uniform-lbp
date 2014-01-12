@@ -113,11 +113,8 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
     //
     // do nfold sliding window train & test runs
     //
-    vector<Point2f> roc;
-    vector<float> dists;
     int64 dt1=0, dt2=0;
     double meanSqrError = 0.0;
-    double acc = 0.0;
     Mat confusion = Mat::zeros(persons.size(),persons.size(),CV_32S);
     for ( size_t f=0; f<fold; f++ )
     {
@@ -129,12 +126,12 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         // split train/test set per person:
         for ( size_t j=0; j<persons.size(); j++ )
         {
-            size_t nperson = persons[j].size();
-            if ( nperson < fold ) continue;
+            size_t n_per_person = persons[j].size();
+            if ( n_per_person < fold ) continue;
             int r = -1;
             if ( fold != 0 )
-                r = nperson/fold;
-            for ( size_t n=0; n<nperson; n++ )
+                r = n_per_person/fold;
+            for ( size_t n=0; n<n_per_person; n++ )
             {
                 int index = persons[j][n];
                 if ( (fold>1) && (n >= f*r) && (n <= (f+1)*r) ) // sliding window per fold
@@ -157,7 +154,6 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         // test model
         int ntests = testImages.size();
         int misses = 0;
-        int tp(0),tn(0),fp(0),fn(0);
         for ( int i=0; i<ntests; i++ )
         {
             int label = testLabels[i];
@@ -168,31 +164,11 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
             model->predict(testImages[i],predicted,dist);
             if ( verbose )
                 confusion.at<int>(label,predicted) += 1;
-            tp += (predicted == label);
-            fn += (predicted != label);
-            dists.push_back(dist);
-            // test random negative img:
-            int neg = -1;
-            while ( 1 ) 
-            {
-                neg = theRNG().uniform(0,testLabels.size()-1);
-                if ( label != testLabels[neg] ) 
-                    break;
-            }
-            model->predict(testImages[neg],predicted,dist);
-            dists.push_back(dist);
-            fp += (predicted == label);
-            tn += (predicted != label);
+            misses += (predicted != label);
         }
-        double tpr = double(tp) / ntests;
-        double fpr = double(fp) / ntests;
-        roc.push_back(Point2f(tpr,fpr));
-
-        double rror = double(fn)/ntests;
+        double rror = double(misses)/ntests;
         meanSqrError += rror * rror;
 
-        double a = double(tp+tn) / (ntests+ntests);
-        acc += a;
 
         cout << '.';
         int64 t3 = cv::getTickCount();
@@ -200,14 +176,12 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         dt2 += t3-t2;
 
         if ( verbose )
-            cout << format(" %-12s %-6.3f %-6.3f (%3d %3d)[%2d %2d %2d %2d] (%6.3f %6.3f %6.3f)",rec_names[rec], rror, a, trainImages.size(), testImages.size(), tp,tn,fp,fn, ct(t1-t0),ct(t2-t1), ct(t3-t2) ) << endl;
+            cout << format(" %-12s %-6.3f (%3d %3d) %3d (%6.3f %6.3f %6.3f)",rec_names[rec], rror,trainImages.size(), testImages.size(), misses, ct(t1-t0),ct(t2-t1), ct(t3-t2) ) << endl;
     }
     double me = sqrt(meanSqrError) / fold;
     //if ( verbose )
     //   cerr << confusion << endl;
-    //cout << "roc " << Mat(roc) << endl;
-    //cerr << "dists " << Mat(dists) << endl;
-    cout << format(" %-12s %-10.3f %-10.3f (%6.3f %6.3f",rec_names[rec], me, acc/fold, ct(dt1), ct(dt2)) ;
+    cout << format(" %-12s %-10.3f %-10.3f (%6.3f %6.3f",rec_names[rec], me, (1.0-me), ct(dt1), ct(dt2)) ;
     return model;
 }
 
@@ -294,7 +268,7 @@ int main(int argc, const char *argv[])
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 5;
+    int rec = 6;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;
