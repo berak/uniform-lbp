@@ -11,5 +11,6 @@ extern cv::Ptr<cv::FaceRecognizer> createVarLBPFaceRecognizer(int grid_x, int gr
 extern cv::Ptr<cv::FaceRecognizer> createLTPHFaceRecognizer(int ic, int grid_x, int grid_y, double threshold);
 extern cv::Ptr<cv::FaceRecognizer> createClbpDistFaceRecognizer(double threshold);
 extern cv::Ptr<cv::FaceRecognizer> createWLDFaceRecognizer(int gridx,int gridy,double threshold);
+extern cv::Ptr<cv::FaceRecognizer> createMomFaceRecognizer(int grid,int w);
 
 #endif _lalalala_

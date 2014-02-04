@@ -65,6 +65,7 @@ const char *rec_names[] = {
     "ltph",
     "clbpdist",
     "wld",
+    "mom",
     "norml2"
 };
 
@@ -107,6 +108,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 7: model = createLTPHFaceRecognizer(25,8,8,DBL_MAX); break;
         case 8: model = createClbpDistFaceRecognizer(DBL_MAX); break;
         case 9: model = createWLDFaceRecognizer(8,8,DBL_MAX); break;
+        case 10: model = createMomFaceRecognizer(24,8); break;
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     int64 t1 = cv::getTickCount();
@@ -268,7 +270,7 @@ int main(int argc, const char *argv[])
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 6;
+    int rec = 3;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;
