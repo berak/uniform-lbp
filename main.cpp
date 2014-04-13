@@ -66,6 +66,7 @@ const char *rec_names[] = {
     "clbpdist",
     "wld",
     "mom",
+    "zernike",
     "norml2"
 };
 
@@ -109,6 +110,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 8: model = createClbpDistFaceRecognizer(DBL_MAX); break;
         case 9: model = createWLDFaceRecognizer(8,8,DBL_MAX); break;
         case 10: model = createMomFaceRecognizer(24,8); break;
+        case 11: model = createZernikeFaceRecognizer(20,10); break;
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     int64 t1 = cv::getTickCount();
@@ -270,7 +272,7 @@ int main(int argc, const char *argv[])
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 3;
+    int rec = 11;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;
@@ -282,7 +284,7 @@ int main(int argc, const char *argv[])
     if ( argc>5 ) preproc=atoi(argv[5]);
 
     // read face db
-    size_t maxim = 400;
+    size_t maxim  = 400;
     int nsubjects = 1 + readtxt(imgpath.c_str(),vec,labels, maxim);
 
 

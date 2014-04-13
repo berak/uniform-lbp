@@ -162,6 +162,7 @@ void SpatialHistogramReco::predict(InputArray _src, int &minClass, double &minDi
     for(size_t sampleIdx = 0; sampleIdx < _histograms.size(); sampleIdx++) {
         // call vmethod!
         double dist = this->distance(_histograms[sampleIdx], query);
+       // _distances.at<double>((int) sampleIdx) = dist;
 
         if((dist < minDist) && (dist < _threshold)) {
             minDist = dist;
@@ -176,4 +177,38 @@ int SpatialHistogramReco::predict(InputArray _src) const {
     predict(_src, label, dummy);
     return label;
 }
+
+//
+//#define CV_INIT_ALGORITHM(classname, algname, memberinit) \
+//    static inline ::cv::Algorithm* create##classname##_hidden() \
+//    { \
+//        return new classname; \
+//    } \
+//    \
+//    static inline ::cv::Ptr< ::cv::Algorithm> create##classname##_ptr_hidden() \
+//    { \
+//        return ::cv::makePtr<classname>(); \
+//    } \
+//    \
+//    static inline ::cv::AlgorithmInfo& classname##_info() \
+//    { \
+//        static ::cv::AlgorithmInfo classname##_info_var(algname, create##classname##_hidden); \
+//        return classname##_info_var; \
+//    } \
+//    \
+//    static ::cv::AlgorithmInfo& classname##_info_auto = classname##_info(); \
+//    \
+//    ::cv::AlgorithmInfo* classname::info() const \
+//    { \
+//        static volatile bool initialized = false; \
+//        \
+//        if( !initialized ) \
+//        { \
+//            initialized = true; \
+//            classname obj; \
+//            memberinit; \
+//        } \
+//        return &classname##_info(); \
+//    }
+
 AlgorithmInfo * SpatialHistogramReco::info() const { return 0; } // dummy for now, as it's a total pita to reconstruct the resp. macro outside opencv.

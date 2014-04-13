@@ -33,6 +33,7 @@ private:
     int hist_type;
 
     std::vector<Mat> _histograms;
+    //  Mat _distances;
     Mat _labels;
 
     // Computes a SpatialHistogramReco model with images in src and
