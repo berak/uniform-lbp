@@ -93,7 +93,7 @@ void setupPersons( const vector<int> & labels, vector<vector<int>> & persons )
 //
 // for each fold, take alternating n/fold items for test, the other for training
 //
-Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<int>& labels,const vector<vector<int>>& persons, size_t fold=10, bool verbose=false ) 
+Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<int>& labels, const vector<vector<int>>& persons, size_t fold=10, bool verbose=false ) 
 {
     int64 t0 = cv::getTickCount();
     Ptr<FaceRecognizer> model;
@@ -109,8 +109,8 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 7: model = createLTPHFaceRecognizer(25,8,8,DBL_MAX); break;
         case 8: model = createClbpDistFaceRecognizer(DBL_MAX); break;
         case 9: model = createWLDFaceRecognizer(8,8,DBL_MAX); break;
-        case 10: model = createMomFaceRecognizer(24,8); break;
-        case 11: model = createZernikeFaceRecognizer(20,10); break;
+        case 10: model = createMomFaceRecognizer(8,10); break;
+        case 11: model = createZernikeFaceRecognizer(4,10); break;
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     int64 t1 = cv::getTickCount();
@@ -342,7 +342,7 @@ int main(int argc, const char *argv[])
     {
         n = rec+1;
     }
-    for (; rec<n; rec++ ) 
+    for ( ; rec<n; rec++ ) 
     {
         Ptr<FaceRecognizer> model = runtest(rec,images,labels,persons, fold,verbose);
         if ( save ) {

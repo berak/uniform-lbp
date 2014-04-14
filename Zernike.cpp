@@ -1,5 +1,5 @@
-//#include <opencv2/opencv.hpp>
-#include <opencv2/core/utility.hpp>
+#include <opencv2/core/core.hpp>
+//#include <opencv2/core/utility.hpp>
 
 using namespace std;
 using namespace cv;
@@ -80,17 +80,22 @@ using namespace cv;
 struct Zernike : public FaceRecognizer
 {
     //;) don't bother optimizing below private code (at all), this is used to generate lut's, once per Zernike instance 
-    static double radpol_11(double r) { return (r)/(2.0); }
-    static double radpol_20(double r) { return (2*r*r - 1)/sqrt(2.0); }
-    static double radpol_22(double r) { return (r*r)/sqrt(6.0); }
-    static double radpol_31(double r) { return (3*r*r*r - 2*r*r)/sqrt(8.0); }
-    static double radpol_33(double r) { return (r*r*r)/sqrt(8.0); }
-    static double radpol_40(double r) { return (6*r*r*r*r - 6*r*r+1)/sqrt(10.0); }
-    static double radpol_42(double r) { return (4*r*r*r*r - 3*r*r)/sqrt(10.0); }
-    static double radpol_44(double r) { return (r*r*r*r)/sqrt(10.0); }
-    static double radpol_51(double r) { return (10*r*r*r*r - 12*r*r*r + 3*r)/sqrt(12.0); }
-    static double radpol_53(double r) { return (5*r*r*r*r - 4*r*r*r)/sqrt(12.0); }
-    static double radpol_55(double r) { return (r*r*r*r*r)/sqrt(12.0); }
+    static double radpol_11(double r) { return (r)*(2.0); }
+    static double radpol_20(double r) { return (2*r*r - 1)*sqrt(2.0); }
+    static double radpol_22(double r) { return (r*r)*sqrt(6.0); }
+    static double radpol_31(double r) { return (3*r*r*r - 2*r*r)*sqrt(8.0); }
+    static double radpol_33(double r) { return (r*r*r)*sqrt(8.0); }
+    static double radpol_40(double r) { return (6*r*r*r*r - 6*r*r+1)*sqrt(10.0); }
+    static double radpol_42(double r) { return (4*r*r*r*r - 3*r*r)*sqrt(10.0); }
+    static double radpol_44(double r) { return (r*r*r*r)*sqrt(10.0); }
+    static double radpol_51(double r) { return (10*r*r*r*r - 12*r*r*r + 3*r)*sqrt(12.0); }
+    static double radpol_53(double r) { return (5*r*r*r*r - 4*r*r*r)*sqrt(12.0); }
+    static double radpol_55(double r) { return (r*r*r*r*r)*sqrt(12.0); }
+    static double radpol_60(double r) { return (20*r*r*r*r*r*r - 30*r*r*r*r + 12*2*2 - 1)*sqrt(14.0); }
+    static double radpol_62(double r) { return (15*r*r*r*r*r*r - 20*r*r*r*r + 6*2*2)*sqrt(14.0); }
+    static double radpol_64(double r) { return (6*r*r*r*r*r*r - 5*r*r*r*r)*sqrt(14.0); }
+    static double radpol_66(double r) { return (r*r*r*r*r*r)*sqrt(14.0); }
+
 
     //! we only save the real/cos part of the (originally complex) equation here.
     void cos_mat(Mat & zm, double maumau, double(*radicalchic)(double) )
@@ -112,8 +117,8 @@ struct Zernike : public FaceRecognizer
         zm /= (N*N); // normalized [-1,1]
     }
 
-    enum {NZERN=11};
-    Mat zerm[NZERN]; // 11 max features
+    enum {NZERN=14};
+    Mat zerm[NZERN]; // precalc array, one per feature
     int N;           // patchsize
     int nfeatures;   // you might want to use less than max features
 
@@ -141,7 +146,10 @@ public:
         cos_mat(zerm[7], 1.0, radpol_51);
         cos_mat(zerm[8], 3.0, radpol_53);
         cos_mat(zerm[9], 5.0, radpol_55);
-        cos_mat(zerm[10],1.0, radpol_11);
+        cos_mat(zerm[10],0.0, radpol_60);
+        cos_mat(zerm[11],2.0, radpol_62);
+        cos_mat(zerm[12],4.0, radpol_64);
+        cos_mat(zerm[13],6.0, radpol_66);
     }
 
 
@@ -170,18 +178,21 @@ public:
             img.convertTo(m, CV_32F);
         else
             m=img;
+       // normalize(m,m,255.0);
 
-        // the trick with the precalculated (radial*cos(m*theta)) term requires a fixed patch size,
-        // so let's try to 'equalize' differently sized images here
-        //   downside: this puts a penalty on (small) input images < NxN ,
-        //      please let me know, if you find something better here.
-        cv::resize(m, m, Size(N*N, N*N));
+        //// the trick with the precalculated (radial*cos(m*theta)) term requires a fixed patch size,
+        //// so let's try to 'equalize' differently sized images here
+        ////   downside: this puts a penalty on (small) input images < NxN ,
+        ////      please let me know, if you find something better here.
+        //cv::resize(m, m, Size(N*N, N*N));
+//        cv::pyrUp(m, m);
+      //  cv::resize(m, m, m.size()*4);
 
-        for (int i=0; i<N; i++) 
+        for (int i=0; i<m.rows-N; i+=N) 
         {
-            for (int j=0; j<N; j++) 
+            for (int j=0; j<m.cols-N; j+=N) 
             {
-                Mat patch = m(Rect(j*N, i*N, N, N));
+                Mat patch = m(Rect(j, i, N, N));
                 compute_patch(patch, _features);
             }
         }
@@ -192,17 +203,9 @@ public:
     virtual void train(InputArray src, InputArray lbls)    
     {
         features.release();
+        labels.clear();
 
-        labels = lbls.getMat();
-
-        vector<Mat> imgs;
-        src.getMatVector(imgs);
-
-        for (size_t i=0; i<imgs.size(); ++i)
-        {
-            compute(imgs[i],features);
-        }
-        features = features.reshape(1,imgs.size());
+        update(src,lbls);
     }
 
     virtual void predict(InputArray src, int& label, double & minDist) const    
@@ -232,7 +235,19 @@ public:
         predict(src,pred,conf);
         return pred;
     }
-    virtual void update(InputArrayOfArrays src, InputArray labels) {train(src,labels);}
+    virtual void update(InputArrayOfArrays src, InputArray lbls) 
+    {
+        labels = lbls.getMat();
+
+        vector<Mat> imgs;
+        src.getMatVector(imgs);
+
+        for (size_t i=0; i<imgs.size(); ++i)
+        {
+            compute(imgs[i],features);
+        }
+        features = features.reshape(1,imgs.size());
+    }
     virtual void save(const std::string& filename) const    {}
     virtual void save(FileStorage& fs) const    {}
     virtual void load(const std::string& filename)    {}
