@@ -1,6 +1,7 @@
 #include <opencv2/core/core.hpp>
 //#include <opencv2/core/utility.hpp>
 
+#include <iostream>
 using namespace std;
 using namespace cv;
 
@@ -80,7 +81,19 @@ using namespace cv;
 struct Zernike : public FaceRecognizer
 {
     //;) don't bother optimizing below private code (at all), this is used to generate lut's, once per Zernike instance 
-    static double radpol_11(double r) { return (r)*(2.0); }
+    static double pseudo_20(double r) { return (3 + 10*r*r - 12*r); }
+    static double pseudo_21(double r) { return (5*r*r - 4*r); }
+    static double pseudo_22(double r) { return (r*r); }
+    static double pseudo_30(double r) { return (-4 + 35*r*r*r - 60*r*r + 30*r); }
+    static double pseudo_31(double r) { return (21*r*r*r - 30*r*r+10*r); }
+    static double pseudo_32(double r) { return (7*r*r*r - 6*r*r); }
+    static double pseudo_33(double r) { return (r*r*r); }
+    static double pseudo_40(double r) { return (5 + 126*r*r*r*r - 280*r*r*r + 210*r*r - 60*r); }
+    static double pseudo_41(double r) { return (84*r*r*r*r - 168*r*r*r + 105*r*r - 20*r); }
+    static double pseudo_42(double r) { return (36*r*r*r*r - 56*r*r*r + 21*r*r); }
+    static double pseudo_43(double r) { return (9*r*r*r*r - 8*r*r*r); }
+    static double pseudo_44(double r) { return (r*r*r*r); }
+
     static double radpol_20(double r) { return (2*r*r - 1)*sqrt(2.0); }
     static double radpol_22(double r) { return (r*r)*sqrt(6.0); }
     static double radpol_31(double r) { return (3*r*r*r - 2*r*r)*sqrt(8.0); }
@@ -91,10 +104,6 @@ struct Zernike : public FaceRecognizer
     static double radpol_51(double r) { return (10*r*r*r*r - 12*r*r*r + 3*r)*sqrt(12.0); }
     static double radpol_53(double r) { return (5*r*r*r*r - 4*r*r*r)*sqrt(12.0); }
     static double radpol_55(double r) { return (r*r*r*r*r)*sqrt(12.0); }
-    static double radpol_60(double r) { return (20*r*r*r*r*r*r - 30*r*r*r*r + 12*2*2 - 1)*sqrt(14.0); }
-    static double radpol_62(double r) { return (15*r*r*r*r*r*r - 20*r*r*r*r + 6*2*2)*sqrt(14.0); }
-    static double radpol_64(double r) { return (6*r*r*r*r*r*r - 5*r*r*r*r)*sqrt(14.0); }
-    static double radpol_66(double r) { return (r*r*r*r*r*r)*sqrt(14.0); }
 
 
     //! we only save the real/cos part of the (originally complex) equation here.
@@ -106,8 +115,10 @@ struct Zernike : public FaceRecognizer
         {
             for ( int j=0; j<N; j++ ) 
             {
-                double a(2*i-N+1);
-                double b(N-1-j*2);
+                //double a(2*i-N+1);
+                //double b(N-1-j*2);
+                double a(c1*i + c2); //(29) Image description with generalized pseudo-Zernike moments 
+                double b(c1*j + c2);
                 double rho = sqrt(a*a + b*b);
                 double theta = atan(b/a);
                 double radial = radicalchic(rho);
@@ -117,10 +128,11 @@ struct Zernike : public FaceRecognizer
         zm /= (N*N); // normalized [-1,1]
     }
 
-    enum {NZERN=14};
+    enum {NZERN=7+5};
     Mat zerm[NZERN]; // precalc array, one per feature
     int N;           // patchsize
     int nfeatures;   // you might want to use less than max features
+    double c1,c2;
 
     vector<int> labels;
     Mat features;
@@ -130,26 +142,26 @@ public:
 
     //
     //! precalculate the (radial*cos(m*theta)) term for each of our moments
-    //! resultant featuresize will be nfeatures*N*N
+    //! resultant featuresize will be nfeatures*(w/N)*(h/N)
     //
     Zernike(int n=8, int used=NZERN)
         : N(n)
         , nfeatures(min(used, int(NZERN)))
+        , c1(sqrt(2.0) / (N-1))
+        , c2(1.0 / sqrt(2.0))
     {
-        cos_mat(zerm[0], 0.0, radpol_20);
-        cos_mat(zerm[1], 2.0, radpol_22);
-        cos_mat(zerm[2], 1.0, radpol_31);
-        cos_mat(zerm[3], 3.0, radpol_33);
-        cos_mat(zerm[4], 0.0, radpol_40);
-        cos_mat(zerm[5], 2.0, radpol_42);
-        cos_mat(zerm[6], 4.0, radpol_44);
-        cos_mat(zerm[7], 1.0, radpol_51);
-        cos_mat(zerm[8], 3.0, radpol_53);
-        cos_mat(zerm[9], 5.0, radpol_55);
-        cos_mat(zerm[10],0.0, radpol_60);
-        cos_mat(zerm[11],2.0, radpol_62);
-        cos_mat(zerm[12],4.0, radpol_64);
-        cos_mat(zerm[13],6.0, radpol_66);
+        cos_mat(zerm[0],  0.0, pseudo_20);
+        cos_mat(zerm[1],  1.0, pseudo_21);
+        cos_mat(zerm[2],  2.0, pseudo_22);
+        cos_mat(zerm[3],  0.0, pseudo_30);
+        cos_mat(zerm[4],  1.0, pseudo_31);
+        cos_mat(zerm[5],  2.0, pseudo_32);
+        cos_mat(zerm[6],  3.0, pseudo_33);
+        cos_mat(zerm[7],  0.0, pseudo_40);
+        cos_mat(zerm[8],  1.0, pseudo_41);
+        cos_mat(zerm[9],  2.0, pseudo_42);
+        cos_mat(zerm[10], 3.0, pseudo_43);
+        cos_mat(zerm[11], 4.0, pseudo_44);
     }
 
 

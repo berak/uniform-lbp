@@ -110,7 +110,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 8: model = createClbpDistFaceRecognizer(DBL_MAX); break;
         case 9: model = createWLDFaceRecognizer(8,8,DBL_MAX); break;
         case 10: model = createMomFaceRecognizer(8,10); break;
-        case 11: model = createZernikeFaceRecognizer(4,10); break;
+        case 11: model = createZernikeFaceRecognizer(2,7); break;
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     int64 t1 = cv::getTickCount();
@@ -259,6 +259,7 @@ Mat tan_triggs_preprocessing(InputArray src,
 // face db      fold  reco  verbose  preprocessing
 //
 // special: fold==1 will train on all images , save them, and ignore the test step
+// special: reco==0 will run *all* recognizers available on a given db
 //
 int main(int argc, const char *argv[]) 
 {
