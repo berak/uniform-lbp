@@ -95,7 +95,6 @@ void setupPersons( const vector<int> & labels, vector<vector<int>> & persons )
 //
 Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<int>& labels, const vector<vector<int>>& persons, size_t fold=10, bool verbose=false ) 
 {
-    int64 t0 = cv::getTickCount();
     Ptr<FaceRecognizer> model;
 
     switch ( rec ) {
@@ -110,15 +109,15 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 8: model = createClbpDistFaceRecognizer(DBL_MAX); break;
         case 9: model = createWLDFaceRecognizer(8,8,DBL_MAX); break;
         case 10: model = createMomFaceRecognizer(8,10); break;
-        case 11: model = createZernikeFaceRecognizer(2,7); break;
+        case 11: model = createZernikeFaceRecognizer(4,7); break;
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
-    int64 t1 = cv::getTickCount();
     //
     // do nfold sliding window train & test runs
     //
     int64 dt1=0, dt2=0;
     double meanSqrError = 0.0;
+    double meanError = 0.0;
     Mat confusion = Mat::zeros(persons.size(),persons.size(),CV_32S);
     for ( size_t f=0; f<fold; f++ )
     {
@@ -127,6 +126,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         vector<Mat> testImages;
         vector<int> testLabels;
 
+        int64 t1 = cv::getTickCount();
         // split train/test set per person:
         for ( size_t j=0; j<persons.size(); j++ )
         {
@@ -172,6 +172,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         }
         double rror = double(misses)/ntests;
         meanSqrError += rror * rror;
+        meanError += rror;// * rror;
 
 
         cout << '.';
@@ -180,9 +181,10 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         dt2 += t3-t2;
 
         if ( verbose )
-            cout << format(" %-12s %-6.3f (%3d %3d) %3d (%6.3f %6.3f %6.3f)",rec_names[rec], rror,trainImages.size(), testImages.size(), misses, ct(t1-t0),ct(t2-t1), ct(t3-t2) ) << endl;
+            cout << format(" %-12s %-6.3f (%3d %3d) %3d (%6.3f %6.3f)",rec_names[rec], rror,trainImages.size(), testImages.size(), misses,ct(t2-t1), ct(t3-t2) ) << endl;
     }
-    double me = sqrt(meanSqrError) / fold;
+    double me = meanError / fold;
+    //double me = sqrt(meanSqrError) / fold;
     //if ( verbose )
     //   cerr << confusion << endl;
     cout << format(" %-12s %-10.3f %-10.3f (%6.3f %6.3f",rec_names[rec], me, (1.0-me), ct(dt1), ct(dt2)) ;
@@ -261,6 +263,10 @@ Mat tan_triggs_preprocessing(InputArray src,
 // special: fold==1 will train on all images , save them, and ignore the test step
 // special: reco==0 will run *all* recognizers available on a given db
 //
+
+
+extern void zern_ga(const vector<Mat>& images, const vector<int>& labels, float err);
+
 int main(int argc, const char *argv[]) 
 {
     vector<Mat> images;
@@ -324,6 +330,10 @@ int main(int argc, const char *argv[])
         //if ( i%33==0) imshow("i",mm), waitKey(0);
     }
     labels = clabels;
+
+    //zern_ga(images, labels, 10.0f);
+    //return 1;
+
 
     // per person id lookup
     vector<vector<int>> persons;
