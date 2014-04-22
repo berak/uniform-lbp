@@ -26,9 +26,9 @@
 results vary pretty much with preprocessing:
 
 <p align="center">
-  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_att.png" width=320 height=240>
-  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_yale.png" width=320 height=240>
-  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_lfw.png" width=320 height=240>
+  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_att.png" width=440 height=300>
+  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_yale.png" width=440 height=300>
+  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_lfw.png" width=440 height=300>
 </p>
 
 
