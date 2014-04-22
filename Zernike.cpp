@@ -156,9 +156,9 @@ struct Zernike : public FaceRecognizer
     }
 
     enum {NZERN=7+5};  // only the 1st 7 seem to bring any gain
-    vector<Mat> zerm; // precalc array, one per feature
-    int N;           // patchsize
-    int nfeatures;   // you might want to use less than max features
+    vector<Mat> zerm;  // precalc array, one per feature
+    int N;             // patchsize
+    int nfeatures;     // you might want to use less than max features
 
     vector<int> labels;
     Mat features;
@@ -266,7 +266,20 @@ public:
 
         update(src,lbls);
     }
+    virtual void update(InputArrayOfArrays src, InputArray lbls) 
+    {
+        Mat l = lbls.getMat();
+        labels.insert(l.begin(),l.end());
 
+        vector<Mat> imgs;
+        src.getMatVector(imgs);
+
+        for (size_t i=0; i<imgs.size(); ++i)
+        {
+            compute(imgs[i],features);
+        }
+        features = features.reshape(1,imgs.size());
+    }
     virtual void predict(InputArray src, int& label, double & minDist) const    
     {
         Mat zerf;
@@ -293,19 +306,6 @@ public:
         double conf=-1;
         predict(src,pred,conf);
         return pred;
-    }
-    virtual void update(InputArrayOfArrays src, InputArray lbls) 
-    {
-        labels = lbls.getMat();
-
-        vector<Mat> imgs;
-        src.getMatVector(imgs);
-
-        for (size_t i=0; i<imgs.size(); ++i)
-        {
-            compute(imgs[i],features);
-        }
-        features = features.reshape(1,imgs.size());
     }
     virtual void save(const std::string& filename) const    {}
     virtual void save(FileStorage& fs) const    {}
