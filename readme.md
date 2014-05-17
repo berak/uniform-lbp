@@ -1,7 +1,7 @@
 
 
 #updates:
-
+     ^ svm (on grayscale pixels)
      ^ Zernike moments
      ^ WLD, A Robust Detector based on Weber's Law  
      ^ ltp and var_lbp

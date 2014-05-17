@@ -67,6 +67,8 @@ const char *rec_names[] = {
     "wld",
     "mom",
     "zernike",
+    "ann",
+    "svm",
     "norml2"
 };
 
@@ -110,6 +112,8 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 9: model = createWLDFaceRecognizer(8,8,DBL_MAX); break;
         case 10: model = createMomFaceRecognizer(8,10); break;
         case 11: model = createZernikeFaceRecognizer(4,7); break;
+        case 12: model = createAnnFaceRecognizer(); break;
+        case 13: model = createSvmFaceRecognizer(); break;
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     //
@@ -165,8 +169,9 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
             // test positive img:
             double dist = DBL_MAX;
             int predicted = -1;
+            //cerr << label << " ";
             model->predict(testImages[i],predicted,dist);
-            if ( verbose )
+            if ( verbose && (predicted>=0 && size_t(predicted)<persons.size()) ) /// TODO: what if else
                 confusion.at<int>(label,predicted) += 1;
             misses += (predicted != label);
         }
@@ -265,7 +270,7 @@ Mat tan_triggs_preprocessing(InputArray src,
 //
 
 
-extern void zern_ga(const vector<Mat>& images, const vector<int>& labels, float err);
+extern void svm_ga(const vector<Mat>& images, const vector<int>& labels, float err);
 
 int main(int argc, const char *argv[]) 
 {
@@ -273,13 +278,14 @@ int main(int argc, const char *argv[])
     vector<int> labels;
     vector<string> vec;
 
-    std::string imgpath("att.txt");
+    //std::string imgpath("att.txt");
+    std::string imgpath("lfw2fun.txt");
     if ( argc>1 ) imgpath=argv[1];
 
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 11;
+    int rec = 13;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;
@@ -331,8 +337,9 @@ int main(int argc, const char *argv[])
     }
     labels = clabels;
 
-    //zern_ga(images, labels, 10.0f);
-    //return 1;
+    ////zern_ga(images, labels, 10.0f);
+   // svm_ga(images, labels, 0.005f);
+   // return 1;
 
 
     // per person id lookup

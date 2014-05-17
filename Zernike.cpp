@@ -1,11 +1,11 @@
 #include <opencv2/core/core.hpp>
+#include <opencv2/contrib/contrib.hpp>
 
 #include <iostream>
 using namespace std;
 using namespace cv;
 
 
-#include "factory.h"
 
 
 //
@@ -88,7 +88,7 @@ struct Zernike : public FaceRecognizer
     // (7) "Image description with generalized pseudo-Zernike moments"
     unsigned pochhammer(unsigned a, int k) // lower
     {
-        assert(a>=0);
+        assert(a>0);
         assert(k>=0);
         if ( k<1 ) return a;
         for(int n=1; n<k-1; n++)
@@ -268,8 +268,8 @@ public:
     }
     virtual void update(InputArrayOfArrays src, InputArray lbls) 
     {
-        Mat l = lbls.getMat();
-        labels.insert(l.begin(),l.end());
+        Mat_<int> l = lbls.getMat();
+        labels.insert(labels.begin(), l.begin(),l.end());
 
         vector<Mat> imgs;
         src.getMatVector(imgs);
