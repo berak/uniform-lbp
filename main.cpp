@@ -69,6 +69,8 @@ const char *rec_names[] = {
     "zernike",
     "ann",
     "svm",
+    "svm_lbp",
+    "svm_hu",
     "norml2"
 };
 
@@ -113,7 +115,9 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 10: model = createMomFaceRecognizer(8,10); break;
         case 11: model = createZernikeFaceRecognizer(4,7); break;
         case 12: model = createAnnFaceRecognizer(); break;
-        case 13: model = createSvmFaceRecognizer(); break;
+        case 13: model = createSvmFaceRecognizer(0); break;
+        case 14: model = createSvmFaceRecognizer(1); break;
+        case 15: model = createSvmFaceRecognizer(2); break;
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     //

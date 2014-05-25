@@ -12,8 +12,10 @@ struct Svm : public FaceRecognizer
 
 	CvSVM svm;
     CvSVMParams param;
+    int preprocessing; // 0 none(pixels), 1 lbph_u, 2 humoments
 
-    Svm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
+    Svm(int pre = 0, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
+        : preprocessing(pre)
     {
 	    param.kernel_type = CvSVM :: POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
     	param.degree = degree; // for poly
@@ -29,75 +31,134 @@ struct Svm : public FaceRecognizer
         param.svm_type = CvSVM::NU_SVC;
     }
 
-    virtual void train(InputArray src, InputArray lbls)    
+private:
+
+    static uchar lbp(const Mat_<uchar> & img, int x, int y)
     {
-        vector<Mat> imgs;
-        src.getMatVector(imgs);
-        vector<int> labels = lbls.getMat();
-        //train_ga(imgs,labels,0.002f);
-        train_im(imgs,labels);
+        static int uniform[256] = {
+            0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
+            14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
+            58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
+            58,58,58,58,58,58,58,58,58,58,58,58,23,58,58,58,58,58,58,58,58,58,58,58,58,58,
+            58,58,24,58,58,58,58,58,58,58,25,58,58,58,26,58,27,28,29,30,58,31,58,58,58,32,58,
+            58,58,58,58,58,58,33,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,34,58,58,58,58,
+            58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
+            58,35,36,37,58,38,58,58,58,39,58,58,58,58,58,58,58,40,58,58,58,58,58,58,58,58,58,
+            58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
+            58,58,58,50,51,52,58,53,54,55,56,57
+        };
+        uchar v = 0;
+        uchar c = img(y,x);
+        v += (img(y-1,x  ) > c) << 0;
+        v += (img(y-1,x+1) > c) << 1;
+        v += (img(y  ,x+1) > c) << 2;
+        v += (img(y+1,x+1) > c) << 3;
+        v += (img(y+1,x  ) > c) << 4;
+        v += (img(y+1,x-1) > c) << 5;
+        v += (img(y  ,x-1) > c) << 6;
+        v += (img(y-1,x-1) > c) << 7;
+        return uniform[v];
     }
 
-    //static uchar lbp(const Mat_<uchar> & img, int x, int y)
-    //{
-    //    static int uniform[256] = {
-    //        0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
-    //        14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
-    //        58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
-    //        58,58,58,58,58,58,58,58,58,58,58,58,23,58,58,58,58,58,58,58,58,58,58,58,58,58,
-    //        58,58,24,58,58,58,58,58,58,58,25,58,58,58,26,58,27,28,29,30,58,31,58,58,58,32,58,
-    //        58,58,58,58,58,58,33,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,34,58,58,58,58,
-    //        58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
-    //        58,35,36,37,58,38,58,58,58,39,58,58,58,58,58,58,58,40,58,58,58,58,58,58,58,58,58,
-    //        58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
-    //        58,58,58,50,51,52,58,53,54,55,56,57
-    //    };
-    //    uchar v = 0;
-    //    uchar c = img(y,x);
-    //    v += (img(y-1,x  ) > c) << 0;
-    //    v += (img(y-1,x+1) > c) << 1;
-    //    v += (img(y  ,x+1) > c) << 2;
-    //    v += (img(y+1,x+1) > c) << 3;
-    //    v += (img(y+1,x  ) > c) << 4;
-    //    v += (img(y+1,x-1) > c) << 5;
-    //    v += (img(y  ,x-1) > c) << 6;
-    //    v += (img(y-1,x-1) > c) << 7;
-    //    return uniform[v];
-    //}
-
-    static Mat preproc(const Mat & z)
+    static void mom(const Mat & z, Mat & feature, int i, int j, int w, int h)
     {
-        //if ( 0 )
-        //{ 
-        //    Mat h = Mat::zeros(1,60*8*8,CV_32F);
-        //    int sw = z.cols/7;
-        //    int sh = z.rows/7;
-        //    for ( int r=1; r<z.rows-1; r++ )
-        //    {
-        //        for ( int c=1; c<z.cols-1; c++ )
-        //        {
-        //            uchar v = lbp(z,r,c);
-        //            int i = r/sh;
-        //            int j = r/sw;
-        //            h.at<float>( 60*(i*j) + v ) += 1;
-        //        }
-        //    }        
-        //    normalize(h,h);
-        //    return h;
-        //}
+        cv::Mat roi(z, cv::Rect(i*w,j*h,w,h));
+        Moments m = moments( roi, false);
+
+        //feature.push_back(m.m00);
+        //feature.push_back(m.m01);
+        //feature.push_back(m.m02);
+        //feature.push_back(m.m03);
+        //feature.push_back(m.m10);
+        //feature.push_back(m.m11);
+        //feature.push_back(m.m12);
+        //feature.push_back(m.m30);
+
+        //feature.push_back(m.mu02);
+        //feature.push_back(m.mu03);
+        //feature.push_back(m.mu11);
+        //feature.push_back(m.mu12);
+        //feature.push_back(m.mu20);
+        //feature.push_back(m.mu21);
+        //feature.push_back(m.mu30);
+
+        //feature.push_back(m.nu02);
+        //feature.push_back(m.nu03);
+        //feature.push_back(m.nu11);
+        //feature.push_back(m.nu12);
+        //feature.push_back(m.nu20);
+        //feature.push_back(m.nu21);
+        //feature.push_back(m.nu30);
+
+        double hu[7];
+        HuMoments(m,hu);
+        feature.push_back(hu[0]);
+        feature.push_back(hu[1]);
+        feature.push_back(hu[2]);
+        feature.push_back(hu[3]);
+        feature.push_back(hu[4]);
+        feature.push_back(hu[5]);
+        feature.push_back(hu[6]);
+    }
+    Mat preproc(const Mat & z) const
+    {
+        switch ( preprocessing )
+        { 
+        case 1:
+        {
+            Mat h  = Mat::zeros(1,60*8*8,CV_32F);
+            int sw = (z.cols)/7;
+            int sh = (z.rows)/7;
+            for ( int r=1; r<z.rows-1; r++ )
+            {
+                for ( int c=1; c<z.cols-1; c++ )
+                {
+                    int i = r/sh;
+                    int j = c/sw;
+                    uchar v = lbp(z,r,c);
+                    h.at<float>( 60*(i*8+j) + v ) += 1;
+                }
+            }        
+            normalize(h,h);
+            return h;
+        }
+
+        case 2:
+        {
+            Mat mo;
+            int sw = (z.cols)/8;
+            int sh = (z.rows)/8;
+            for ( int i=0; i<8; i++ )
+            {
+                for ( int j=0; j<8; j++ )
+                {
+                    mom(z,mo,i,j,sw,sh);
+                }
+            }        
+            mo.convertTo(mo,CV_32F);
+            normalize(mo,mo);
+            return mo;
+        }
+        }
         Mat m = z.reshape(1,1);
         m.convertTo(m,CV_32F,1.0/255);
         return m;
     }
 
-    void train_im(const vector<Mat>& images, const vector<int>& labels)    
+public:
+
+    virtual void train(InputArray src, InputArray lbls)    
     {
+        vector<Mat> images;
+        src.getMatVector(images);
+        vector<int> labels = lbls.getMat();
         Mat trainData;
         for ( size_t i=0; i<images.size(); i++ )
         {
             Mat m = preproc(images[i]);
             trainData.push_back(m);
         }
+        trainData = trainData.reshape(1,labels.size());
         svm.train( trainData , Mat(labels) , cv::Mat() , cv::Mat() , param );
     }
 
@@ -270,44 +331,12 @@ struct Svm : public FaceRecognizer
 //    }
 };
 
-Ptr<FaceRecognizer> createSvmFaceRecognizer()
+Ptr<FaceRecognizer> createSvmFaceRecognizer(int pre)
 {
-    return makePtr<Svm>();
+    return makePtr<Svm>(pre);
 }
 
-////
-////
-////string svm_str(const CvSVMParams & p)
-////{
-////    return cv::format("[%3.3f %3.3f %3.3f %3.3f %3.3f %3.3f]", p.degree, p.gamma, p.coef0, p.C, p.nu, p.p);
-////}
-////
-////void svm_xbreed(CvSVMParams & p, const CvSVMParams & q, double u=0.5)
-////{
-////    p.degree = p.degree * u + q.degree * (1.0-u);
-////    p.gamma  = p.gamma  * u + q.gamma  * (1.0-u);
-////    p.coef0  = p.coef0  * u + q.coef0  * (1.0-u);
-////    p.C  = p.C  * u + q.C  * (1.0-u);
-////    p.nu = p.nu * u + q.nu * (1.0-u);
-////    p.p  = p.p  * u + q.p  * (1.0-u);
-////}
-////
-////void clamp(double &z)
-////{
-////    if ( z > 1.0 ) z=1.0;
-////    if ( z < 0.0001 ) z=0.0001;
-////}
-////void svm_mutate( CvSVMParams & p,RNG & rng)
-////{
-////    double mutation = 2.0;
-////    if ( rng.uniform(0,6)>4) p.degree += rng.uniform(-mutation,mutation), clamp(p.degree);
-////    if ( rng.uniform(0,6)>4) p.gamma += rng.uniform(-mutation,mutation), clamp(p.gamma);
-////    if ( rng.uniform(0,6)>4) p.coef0 += rng.uniform(-mutation,mutation), clamp(p.coef0);
-////    if ( rng.uniform(0,6)>4) p.C += rng.uniform(-mutation,mutation), clamp(p.C);
-////    if ( rng.uniform(0,6)>4) p.nu += rng.uniform(-mutation,mutation), clamp(p.nu);
-////    if ( rng.uniform(0,6)>4) p.p += rng.uniform(-mutation,mutation), clamp(p.p);
-////}
-////
+//
 //#include <opencv2/core/utility.hpp>
 //void svm_ga(const vector<Mat>& images, const vector<int>& labels, float err)
 //{
