@@ -18,9 +18,9 @@
 results vary pretty much with preprocessing:
 
 <p align="center">
-  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_att.png" width=440 height=300>
-  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_yale.png" width=440 height=300>
-  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_lfw.png" width=440 height=300>
+  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_att.png" width=520 height=340>
+  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_yale.png" width=520 height=340>
+  <img src="https://github.com/berak/uniform-lbp/raw/master/img/res_lfw.png" width=520 height=340>
 </p>
 
 

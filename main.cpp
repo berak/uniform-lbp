@@ -71,6 +71,7 @@ const char *rec_names[] = {
     "svm",
     "svm_lbp",
     "svm_hu",
+    "svm_hog",
     "norml2"
 };
 
@@ -118,6 +119,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 13: model = createSvmFaceRecognizer(0); break;
         case 14: model = createSvmFaceRecognizer(1); break;
         case 15: model = createSvmFaceRecognizer(2); break;
+        case 16: model = createSvmFaceRecognizer(3); break;
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     //
@@ -159,6 +161,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
             }
         }
 
+        //  cerr << rec_names[rec] << " " << f << endl;
         model->train(trainImages, trainLabels);
 
         int64 t2 = cv::getTickCount();
@@ -173,7 +176,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
             // test positive img:
             double dist = DBL_MAX;
             int predicted = -1;
-            //cerr << label << " ";
+            // cerr << label << " ";
             model->predict(testImages[i],predicted,dist);
             if ( verbose && (predicted>=0 && size_t(predicted)<persons.size()) ) /// TODO: what if else
                 confusion.at<int>(label,predicted) += 1;
@@ -276,8 +279,11 @@ Mat tan_triggs_preprocessing(InputArray src,
 
 extern void svm_ga(const vector<Mat>& images, const vector<int>& labels, float err);
 
+
 int main(int argc, const char *argv[]) 
 {
+    //return btest();
+
     vector<Mat> images;
     vector<int> labels;
     vector<string> vec;
@@ -289,7 +295,7 @@ int main(int argc, const char *argv[])
     size_t fold = 5;
     if ( argc>2 ) fold=atoi(argv[2]);
 
-    int rec = 13;
+    int rec = 16;
     if ( argc>3 ) rec=atoi(argv[3]);
 
     bool verbose = true;
@@ -297,7 +303,7 @@ int main(int argc, const char *argv[])
 
     bool save = (fold==1);
 
-    int preproc = 1; // 0-none 1-eqhist 2-tantriggs 2-clahe
+    int preproc = 0; // 0-none 1-eqhist 2-tantriggs 3-clahe
     if ( argc>5 ) preproc=atoi(argv[5]);
 
     // read face db

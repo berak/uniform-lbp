@@ -12,7 +12,7 @@ struct Svm : public FaceRecognizer
 
 	CvSVM svm;
     CvSVMParams param;
-    int preprocessing; // 0 none(pixels), 1 lbph_u, 2 humoments
+    int preprocessing; // 0 none(pixels), 1 lbph_u, 2 humoments, 3 hog
 
     Svm(int pre = 0, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
         : preprocessing(pre)
@@ -33,7 +33,39 @@ struct Svm : public FaceRecognizer
 
 private:
 
+    // square radius 1
     static uchar lbp(const Mat_<uchar> & img, int x, int y)
+    {
+        uchar v = 0;
+        uchar c = img(y,x);
+        v += (img(y-1,x  ) > c) << 0;
+        v += (img(y-1,x+1) > c) << 1;
+        v += (img(y  ,x+1) > c) << 2;
+        v += (img(y+1,x+1) > c) << 3;
+        v += (img(y+1,x  ) > c) << 4;
+        v += (img(y+1,x-1) > c) << 5;
+        v += (img(y  ,x-1) > c) << 6;
+        v += (img(y-1,x-1) > c) << 7;
+        return v;
+    }
+
+    // circle radius 2 , linear interpolated neighbours
+    static uchar lbp2(const Mat_<uchar> & img, int x, int y)
+    {
+        uchar v = 0;
+        int c = img(y,x);
+        v += (img(y-2,x  ) > c) << 0;
+        v += ((img(y-1,x+1)+img(y-1,x+2)+img(y-2,x+1)+img(y-2,x+2)) > c*4) << 1;
+        v += (img(y  ,x+2) > c) << 2;
+        v += ((img(y+1,x+1)+img(y+1,x+2)+img(y+2,x+1)+img(y+2,x+2)) > c*4) << 3;
+        v += (img(y+2,x  ) > c) << 4;
+        v += ((img(y+1,x-1)+img(y+1,x-2)+img(y+2,x-1)+img(y+2,x-2)) > c*4) << 5;
+        v += (img(y  ,x-2) > c) << 6;
+        v += ((img(y-2,x-1)+img(y-2,x-2)+img(y-1,x-1)+img(y-1,x-2)) > c*4) << 7;
+        return v;
+    }
+
+    static Mat lbp(const Mat & z)
     {
         static int uniform[256] = {
             0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
@@ -47,51 +79,29 @@ private:
             58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
             58,58,58,50,51,52,58,53,54,55,56,57
         };
-        uchar v = 0;
-        uchar c = img(y,x);
-        v += (img(y-1,x  ) > c) << 0;
-        v += (img(y-1,x+1) > c) << 1;
-        v += (img(y  ,x+1) > c) << 2;
-        v += (img(y+1,x+1) > c) << 3;
-        v += (img(y+1,x  ) > c) << 4;
-        v += (img(y+1,x-1) > c) << 5;
-        v += (img(y  ,x-1) > c) << 6;
-        v += (img(y-1,x-1) > c) << 7;
-        return uniform[v];
+        Mat h  = Mat::zeros(1,60*8*8,CV_32F);
+        int sw = (z.cols)/7;
+        int sh = (z.rows)/7;
+        const int m=2;
+        for ( int r=m; r<z.rows-m; r++ )
+        {
+            for ( int c=m; c<z.cols-m; c++ )
+            {
+                int i = r/sh;
+                int j = c/sw;
+                uchar v = lbp2(z,r,c);
+                v = uniform[v];
+                h.at<float>( 60*(i*8+j) + v ) += 1;
+            }
+        }        
+        normalize(h,h);
+        return h;
     }
-
     static void mom(const Mat & z, Mat & feature, int i, int j, int w, int h)
     {
-        cv::Mat roi(z, cv::Rect(i*w,j*h,w,h));
-        Moments m = moments( roi, false);
-
-        //feature.push_back(m.m00);
-        //feature.push_back(m.m01);
-        //feature.push_back(m.m02);
-        //feature.push_back(m.m03);
-        //feature.push_back(m.m10);
-        //feature.push_back(m.m11);
-        //feature.push_back(m.m12);
-        //feature.push_back(m.m30);
-
-        //feature.push_back(m.mu02);
-        //feature.push_back(m.mu03);
-        //feature.push_back(m.mu11);
-        //feature.push_back(m.mu12);
-        //feature.push_back(m.mu20);
-        //feature.push_back(m.mu21);
-        //feature.push_back(m.mu30);
-
-        //feature.push_back(m.nu02);
-        //feature.push_back(m.nu03);
-        //feature.push_back(m.nu11);
-        //feature.push_back(m.nu12);
-        //feature.push_back(m.nu20);
-        //feature.push_back(m.nu21);
-        //feature.push_back(m.nu30);
-
         double hu[7];
-        HuMoments(m,hu);
+        Mat roi(z, cv::Rect(i*w,j*h,w,h));
+        HuMoments( moments( roi, false), hu);
         feature.push_back(hu[0]);
         feature.push_back(hu[1]);
         feature.push_back(hu[2]);
@@ -100,45 +110,62 @@ private:
         feature.push_back(hu[5]);
         feature.push_back(hu[6]);
     }
+    static Mat mom(const Mat & z)
+    {
+        Mat mo;
+        int sw = (z.cols)/8;
+        int sh = (z.rows)/8;
+        for ( int i=0; i<8; i++ )
+        {
+            for ( int j=0; j<8; j++ )
+            {
+                mom(z,mo,i,j,sw,sh);
+            }
+        }        
+        mo.convertTo(mo,CV_32F);
+        normalize(mo,mo);
+        return mo;
+    }
+
+    static Mat hog(const Mat & z)
+    {
+        vector<float> descriptors;
+        vector< Point > location;
+        cv::HOGDescriptor hog( Size(8,8),Size(8,8), Size(8,8), Size(8,8), 9, 1, -1,
+                HOGDescriptor::L2Hys, 0.2, true, HOGDescriptor::DEFAULT_NLEVELS );
+
+
+        hog.compute(z, descriptors, Size( 8, 8 ), Size( 0, 0 ), location);
+        Mat hist;
+        normalize(Mat(descriptors),hist);
+
+        //int sw = 16; //(z.cols)/8;
+        //int sh = 16; //(z.rows)/8;
+        //for ( int i=0; i<z.rows-sh; i+=sh )
+        //{
+        //    CV_Assert(i+sh<z.rows);
+        //    for ( int j=0; j<z.cols-sw; j+=sw )
+        //    {
+        //        CV_Assert(j+sw<z.cols);
+        //        Mat m = z(Rect(j,i,sw,sh));
+        //        //  cerr << "hog.compute " << i << " " << j << " " << m.rows << " " << m.cols << endl;
+        //        hog.compute(m, descriptors, Size( 8, 8 ), Size( 0, 0 ), location);
+        //        hist.push_back(Mat(descriptors).clone());
+        //    }
+        //}        
+        //normalize(hist,hist);
+        return hist;
+    }
+
+
     Mat preproc(const Mat & z) const
     {
+
         switch ( preprocessing )
         { 
-        case 1:
-        {
-            Mat h  = Mat::zeros(1,60*8*8,CV_32F);
-            int sw = (z.cols)/7;
-            int sh = (z.rows)/7;
-            for ( int r=1; r<z.rows-1; r++ )
-            {
-                for ( int c=1; c<z.cols-1; c++ )
-                {
-                    int i = r/sh;
-                    int j = c/sw;
-                    uchar v = lbp(z,r,c);
-                    h.at<float>( 60*(i*8+j) + v ) += 1;
-                }
-            }        
-            normalize(h,h);
-            return h;
-        }
-
-        case 2:
-        {
-            Mat mo;
-            int sw = (z.cols)/8;
-            int sh = (z.rows)/8;
-            for ( int i=0; i<8; i++ )
-            {
-                for ( int j=0; j<8; j++ )
-                {
-                    mom(z,mo,i,j,sw,sh);
-                }
-            }        
-            mo.convertTo(mo,CV_32F);
-            normalize(mo,mo);
-            return mo;
-        }
+            case 1: return lbp(z);
+            case 2: return mom(z);
+            case 3: return hog(z);
         }
         Mat m = z.reshape(1,1);
         m.convertTo(m,CV_32F,1.0/255);

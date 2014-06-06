@@ -218,7 +218,7 @@ public:
     //
     void compute_patch(const Mat & patch, Mat & _features) const
     {
-        for (int i=0; i<zerm.size(); i++) 
+        for (size_t i=0; i<zerm.size(); i++) 
         {
             Mat c;
             multiply(patch, zerm[i], c); // per element
@@ -416,18 +416,18 @@ void zern_ga(const vector<Mat>& images, const vector<int>& labels, float err)
                     if ( (feat[i].a==tests[j].a) && (feat[i].p==tests[j].p) && (feat[i].q==tests[j].q) )
                     {
                         if (tests[j].score<d)
-                            tests[j].score=d;
+                            tests[j].score=float(d);
                         found = true;
                         break;
                     }
                 }
                 if ( ! found )
                 {
-                    feat[i].score = d;
+                    feat[i].score = float(d);
                     tests.push_back(feat[i]);
                 }
             }
-            e = 1+ d * 4;
+            e = 1.0f + float(d) * 4;
         }
 
         if ( tests.size() > 7 )
