@@ -7,29 +7,6 @@ using namespace cv;
 
 
 
-struct NN
-{
-    struct Layer
-    {
-        Mat_<float> values;
-        Mat_<float> weights;
-
-        Layer(int n, int m)
-            : values(n,1,0.0f)
-            , weights(n,m,0.0f)
-        {}
-
-        void prop(Layer & next) const
-        {
-            next.values += weights * values.t();
-        }
-        void backprop(const Layer & next, float eps=0.01f)
-        {
-            weights += ( next.values  - (weights * values.t()) ) * eps;
-        }
-    };
-};
-
 
 class ClassifierNearest : public TextureFeature::Classifier
 {
