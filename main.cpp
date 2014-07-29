@@ -2,8 +2,9 @@
 // run k fold crossvalidation train/test on  person db
 //
 
+#include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include "opencv2/contrib.hpp"
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/core/utility.hpp>
  
 #include <iostream>
@@ -14,14 +15,8 @@
 using namespace std;
 using namespace cv;
 
-
-#define DPFX ""
-//#ifdef _DEBUG 
-// #define DPFX "_d"
-//#else
-// #define DPFX "_r"
-//#endif //_DEBUG 
-//
+#include "fr.h"
+#include "tan_triggs.h"
 
 //
 // path label
@@ -67,9 +62,9 @@ const char *rec_names[] = {
     "wld",
     "mom",
     "zernike",
-    "ann",
     "svm",
     "svm_lbp",
+    "svm_lbp_u2",
     "svm_hu",
     "svm_hog",
     "norml2"
@@ -115,11 +110,12 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 9: model = createWLDFaceRecognizer(8,8,DBL_MAX); break;
         case 10: model = createMomFaceRecognizer(8,10); break;
         case 11: model = createZernikeFaceRecognizer(4,7); break;
-        case 12: model = createAnnFaceRecognizer(); break;
-        case 13: model = createSvmFaceRecognizer(0); break;
-        case 14: model = createSvmFaceRecognizer(1); break;
-        case 15: model = createSvmFaceRecognizer(2); break;
-        case 16: model = createSvmFaceRecognizer(3); break;
+//        case 12: model = createAnnFaceRecognizer(); break;
+        case 12: model = createSvmFaceRecognizer(0); break;
+        case 13: model = createSvmFaceRecognizer(1); break; // use pixels
+        case 14: model = createSvmFaceRecognizer(1,true); break; // use_uni2
+        case 15: model = createSvmFaceRecognizer(2); break; // use hu
+        case 16: model = createSvmFaceRecognizer(3); break; // use mom
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     //
@@ -199,72 +195,9 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
     //double me = sqrt(meanSqrError) / fold;
     //if ( verbose )
     //   cerr << confusion << endl;
-    cout << format(" %-12s %-10.3f %-10.3f (%6.3f %6.3f",rec_names[rec], me, (1.0-me), ct(dt1), ct(dt2)) ;
+    cout << format(" %-12s %-10.3f (%6.3f %6.3f",rec_names[rec], (1.0-me), ct(dt1), ct(dt2)) ;
     return model;
 }
-
-
-//
-// tried tan_triggs instead of equalizeHist, but no cigar.
-// taken from : https://github.com/bytefish/opencv/blob/master/misc/tan_triggs.cpp
-//
-Mat tan_triggs_preprocessing(InputArray src,
-        float alpha = 0.1, float tau = 10.0, float gamma = 0.2, int sigma0 = 1,
-        int sigma1 = 2) {
-
-    // Convert to floating point:
-    Mat X = src.getMat();
-    X.convertTo(X, CV_32FC1);
-    // Start preprocessing:
-    Mat I;
-    pow(X, gamma, I);
-    // Calculate the DOG Image:
-    {
-        Mat gaussian0, gaussian1;
-        // Kernel Size:
-        int kernel_sz0 = (3*sigma0);
-        int kernel_sz1 = (3*sigma1);
-        // Make them odd for OpenCV:
-        kernel_sz0 += ((kernel_sz0 % 2) == 0) ? 1 : 0;
-        kernel_sz1 += ((kernel_sz1 % 2) == 0) ? 1 : 0;
-        GaussianBlur(I, gaussian0, Size(kernel_sz0,kernel_sz0), sigma0, sigma0, BORDER_CONSTANT);
-        GaussianBlur(I, gaussian1, Size(kernel_sz1,kernel_sz1), sigma1, sigma1, BORDER_CONSTANT);
-        subtract(gaussian0, gaussian1, I);
-    }
-
-    {
-        double meanI = 0.0;
-        {
-            Mat tmp;
-            pow(abs(I), alpha, tmp);
-            meanI = mean(tmp).val[0];
-
-        }
-        I = I / pow(meanI, 1.0/alpha);
-    }
-
-    {
-        double meanI = 0.0;
-        {
-            Mat tmp;
-            pow(min(abs(I), tau), alpha, tmp);
-            meanI = mean(tmp).val[0];
-        }
-        I = I / pow(meanI, 1.0/alpha);
-    }
-
-    // Squash into the tanh:
-    {
-        for(int r = 0; r < I.rows; r++) {
-            for(int c = 0; c < I.cols; c++) {
-                I.at<float>(r,c) = tanh(I.at<float>(r,c) / tau);
-            }
-        }
-        I = tau * I;
-    }
-    return I;
-}
-
 
 
 //
@@ -359,9 +292,9 @@ int main(int argc, const char *argv[])
     fold = std::min(fold,images.size()/nsubjects);
 
     cout << fold  << " fold, " ;
-    cout << nsubjects  << " subjects, " ;
+    cout << nsubjects  << " classes, " ;
     cout << images.size() << " images, ";
-    cout << images.size()/nsubjects << " per person ";
+    cout << images.size()/nsubjects << " per class ";
     if ( skipped ) cout << "(" << skipped << " images skipped)";
     cout << endl;
 
