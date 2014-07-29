@@ -71,7 +71,8 @@ double ct(int64 t)
 
 
 //
-// imglists per person
+// imglists per person.
+//  no really, you can't just draw a random probability set from a set of multiple classes and call it a day ...
 //
 void setupPersons( const vector<int> & labels, vector<vector<int>> & persons )
 {
@@ -97,6 +98,8 @@ void setupPersons( const vector<int> & labels, vector<vector<int>> & persons )
 using TextureFeature::Extractor;
 using TextureFeature::Classifier;
 
+
+
 //
 // train the classifier on features from the extractor
 //
@@ -111,6 +114,8 @@ void epoch_train(Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> & im
     }
     cls->train(train.reshape(1,labels.rows),labels);
 }
+
+
 
 
 //
@@ -131,6 +136,8 @@ void epoch_test(Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> & img
             confusion.at<int>(ground, pred) ++;
     }
 }
+
+
 
 
 //
@@ -187,6 +194,8 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
     //if ( verbose ) cerr << confusion << endl;
     cout << format(" %-16s %6.1f %6.1f %6.3f",name.c_str(), (all-neg), neg, (1.0-err)) << endl;
 }
+
+
 
 
 
@@ -285,7 +294,7 @@ int main(int argc, const char *argv[])
     cout << endl;
 
     int n=23;
-    if ( rec > 0 ) // run through all possibilities for 0, restrict it to the chosen one else.
+    if ( rec > 0 ) // loop through all possibilities for 0, restrict it to the chosen one else.
     {
         n = rec+1;
     }
