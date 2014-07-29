@@ -1,4 +1,4 @@
-#include "opencv2/contrib.hpp"
+#include "fr.h"
 
 //
 // from https://github.com/bytefish/libfacerec/blob/master/src/lbp.cpp
@@ -6,6 +6,8 @@
 
 
 #include <opencv2/core/utility.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 using namespace cv;
 #include <iostream>
 

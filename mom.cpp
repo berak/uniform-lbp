@@ -1,6 +1,9 @@
 //#include "opencv2/core/utility.hpp"
 #include "opencv2/highgui.hpp"
-#include "opencv2/contrib.hpp"
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+#include "fr.h"
  
 
 using namespace std;

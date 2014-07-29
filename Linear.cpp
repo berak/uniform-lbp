@@ -1,6 +1,6 @@
 //#include <opencv2/opencv.hpp>
 #include <opencv2/core/utility.hpp>
-#include <opencv2/contrib/contrib.hpp>
+#include "fr.h"
 
 using namespace std;
 using namespace cv;

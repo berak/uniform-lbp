@@ -1,4 +1,6 @@
-#include "opencv2/contrib.hpp"
+#include "fr.h"
+#include "opencv2/imgproc.hpp"
+
 #include <opencv2/core/utility.hpp>
 using namespace cv;
 //#include <iostream>

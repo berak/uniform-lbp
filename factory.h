@@ -14,6 +14,7 @@ extern cv::Ptr<cv::FaceRecognizer> createWLDFaceRecognizer(int gridx,int gridy,d
 extern cv::Ptr<cv::FaceRecognizer> createMomFaceRecognizer(int grid,int w);
 extern cv::Ptr<cv::FaceRecognizer> createZernikeFaceRecognizer(int grid, int nfeatures);
 extern cv::Ptr<cv::FaceRecognizer> createAnnFaceRecognizer();
-extern cv::Ptr<cv::FaceRecognizer> createSvmFaceRecognizer(int preprocessing);
+extern cv::Ptr<cv::FaceRecognizer> createSvmFaceRecognizer(int pre, bool use_uni2=false)
+;
 
 #endif _lalalala_

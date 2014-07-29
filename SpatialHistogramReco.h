@@ -1,7 +1,7 @@
 #ifndef __SpatialHistogramReco_onboard__
 #define __SpatialHistogramReco_onboard__
 
-#include "opencv2/contrib.hpp"
+#include "fr.h"
 
 using namespace cv;
 using namespace std;
