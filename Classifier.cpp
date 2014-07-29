@@ -52,6 +52,9 @@ public:
     }
 };
 
+
+
+
 class ClassifierHist : public ClassifierNearest
 {
 public:
@@ -66,6 +69,8 @@ public:
          return compareHist(trainFeature, testFeature, flag);
     }
 };
+
+
 
 
 class ClassifierKNN : public TextureFeature::Classifier
@@ -106,19 +111,19 @@ public:
 
     Svm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
     {
-	    param.kernel_type = CvSVM :: POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
+        param.kernel_type = CvSVM :: POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
         param.svm_type = CvSVM::NU_SVC;
-    	param.degree = degree; // for poly
-	    param.gamma = gamma; // for poly / rbf / sigmoid
-	    param.coef0 = coef0; // for poly / sigmoid
-	    param.C = C; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
-	    param.nu = nu; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
-    	param.p = p; // for CV_SVM_EPS_SVR
-    	param.class_weights = NULL ; // for CV_SVM_C_SVC
+        param.degree = degree; // for poly
+        param.gamma = gamma; // for poly / rbf / sigmoid
+        param.coef0 = coef0; // for poly / sigmoid
+        param.C = C; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
+        param.nu = nu; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
+        param.p = p; // for CV_SVM_EPS_SVR
+        param.class_weights = NULL ; // for CV_SVM_C_SVC
 
         param.term_crit.type = CV_TERMCRIT_ITER + CV_TERMCRIT_EPS ;
-    	param.term_crit.max_iter = 1000;
-    	param.term_crit.epsilon = 1e-6;
+        param.term_crit.max_iter = 1000;
+        param.term_crit.epsilon = 1e-6;
     }
 
     virtual int train(const Mat &src, const Mat &labels)
@@ -161,6 +166,7 @@ public:
 
 
 
+
 class RTrees : public TextureFeature::Classifier
 {
 	CvRTrees rtree ;
@@ -183,6 +189,8 @@ public:
         return 1;
     }
 };
+
+
 
 
 class DTree : public TextureFeature::Classifier
@@ -223,6 +231,13 @@ public:
     }
 };
 
+
+
+
+
+//
+// 'factory' functions (aka public api)
+//
 
 cv::Ptr<TextureFeature::Classifier> createClassifierDTree()
 { return makePtr<DTree>(); }

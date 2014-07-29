@@ -16,6 +16,9 @@ using namespace std;
 #include "tan_triggs.h"
 
 
+//
+// the current compilation of extractors / classifiers. (should probably go into a header)
+//
 
 extern cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw=0, int resh=0);
 extern cv::Ptr<TextureFeature::Extractor> createExtractorMoments();
@@ -27,9 +30,9 @@ extern cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag
 extern cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR);
 extern cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int n=1);                // TODO: needs a way to get to the k-1 others
 extern cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5);
-extern cv::Ptr<TextureFeature::Classifier> createClassifierBayes();                     // TODO: slow
-extern cv::Ptr<TextureFeature::Classifier> createClassifierRTrees();                    // TODO: broken
-extern cv::Ptr<TextureFeature::Classifier> createClassifierDTree();                     // TODO: broken
+//extern cv::Ptr<TextureFeature::Classifier> createClassifierBayes();                     // TODO: slow
+//extern cv::Ptr<TextureFeature::Classifier> createClassifierRTrees();                    // TODO: broken
+//extern cv::Ptr<TextureFeature::Classifier> createClassifierDTree();                     // TODO: broken
 
 
 
@@ -37,7 +40,7 @@ extern cv::Ptr<TextureFeature::Classifier> createClassifierDTree();             
 
 
 //
-// path label
+// read a 'path <blank> label' list
 //
 int readtxt( const char * fname, std::vector<std::string> & names, std::vector<int> & labels, size_t maxim  ) 
 {
@@ -67,7 +70,9 @@ double ct(int64 t)
 }
 
 
-
+//
+// imglists per person
+//
 void setupPersons( const vector<int> & labels, vector<vector<int>> & persons )
 {
     // find out which index belongs to which person
@@ -92,7 +97,10 @@ void setupPersons( const vector<int> & labels, vector<vector<int>> & persons )
 using TextureFeature::Extractor;
 using TextureFeature::Classifier;
 
-bool epoch_train(Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> & img, const Mat & labels)
+//
+// train the classifier on features from the extractor
+//
+void epoch_train(Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> & img, const Mat & labels)
 {
     Mat train;
     for ( size_t i=0; i<img.size(); i++ )
@@ -102,11 +110,13 @@ bool epoch_train(Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> & im
         train.push_back(feature);
     }
     cls->train(train.reshape(1,labels.rows),labels);
-    return true;
 }
 
 
-bool epoch_test(Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> & img, const Mat & labels, Mat &confusion)
+//
+// classify test images on features from the extractor, feed the confusion
+//
+void epoch_test(Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> & img, const Mat & labels, Mat &confusion)
 {
     for ( size_t i=0; i<img.size(); i++ )
     {
@@ -120,18 +130,15 @@ bool epoch_test(Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> & img
         if ( ground<confusion.rows && pred>=0 && pred<confusion.cols )
             confusion.at<int>(ground, pred) ++;
     }
-    return true;
 }
 
 
 //
-// for each fold, take alternating n/fold items for test, the other for training
+// for each fold, take alternating n/fold items for test, the others for training
 //
 void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat>& images, const vector<int>& labels, const vector<vector<int>>& persons, size_t fold=10, bool verbose=false ) 
 {
-    //
-    // do nfold sliding window train & test runs
-    //
+    // each test is confused on its own over a lot of folds..
     Mat confusion = Mat::zeros(persons.size(),persons.size(),CV_32S);
     for ( size_t f=0; f<fold; f++ )
     {
@@ -173,6 +180,7 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
         if ( verbose ) cerr << format(" %-16s %3d %5d %d",name.c_str(), f, (all-neg), neg) << endl;
     }
 
+    // evaluate. this is probably all too simple.
     double all = sum(confusion)[0];
     double neg = all - sum(confusion.diag())[0];
     double err = double(neg)/all;
@@ -198,23 +206,23 @@ int main(int argc, const char *argv[])
 
     std::string imgpath("att.txt");
     //std::string imgpath("yale.txt");
-    if ( argc>1 ) imgpath=argv[1];
+    if ( argc>1 ) imgpath = argv[1];
 
     size_t fold = 5;
-    if ( argc>2 ) fold=atoi(argv[2]);
+    if ( argc>2 ) fold = atoi(argv[2]);
 
     int rec = 11;
-    if ( argc>3 ) rec=atoi(argv[3]);
+    if ( argc>3 ) rec = atoi(argv[3]);
 
     bool verbose = false;
-    if ( argc>4 ) verbose=(argv[4][0]=='1');
+    if ( argc>4 ) verbose = (argv[4][0] != '0');
 
     int preproc = 0; // 0-none 1-eqhist 2-tantriggs 3-clahe
-    if ( argc>5 ) preproc=atoi(argv[5]);
+    if ( argc>5 ) preproc = atoi(argv[5]);
 
     // read face db
-    size_t maxim  = 400;
-    int nsubjects = 1 + readtxt(imgpath.c_str(),vec,labels, maxim);
+    size_t maxim  = 400; // restrict it.
+    int nsubjects = 1 + readtxt(imgpath.c_str(), vec, labels, maxim);
 
 
     if ( argc==1 )
@@ -222,30 +230,39 @@ int main(int argc, const char *argv[])
         cerr << argv[0] << " " << imgpath << " " << fold << " " << rec << endl;
     }
 
-    Ptr<CLAHE> clahe = createCLAHE();
-    clahe->setClipLimit(50); // default:40 (!!)
 
-    // read the images, correct labels if empty image skipped
+    //
+    // read the images, 
+    //   correct labels if empty images are skipped
+    //   also apply preprocessing,
+    //
     int load_flag = preproc==-1 ? 1 : 0;
     int skipped = 0;
     vector<int> clabels; 
     for ( size_t i=0; i<vec.size(); i++ )
     {
-        Mat mm = imread(vec[i],load_flag);
+        Mat mm = imread(vec[i], load_flag);
         if ( mm.empty() )
         {
             skipped ++;
             continue;
         }
         Mat m2;
-        resize(mm,m2,Size(90,90));
+        resize(mm, m2, Size(90,90));
         switch(preproc) 
         {
             default:
             case 0: mm = m2; break;
             case 1: cv::equalizeHist( m2, mm ); break;
             case 2: cv::normalize( tan_triggs_preprocessing(m2), mm, 0, 255, NORM_MINMAX, CV_8UC1); break;
-            case 3: clahe->apply(m2,mm); break;
+            case 3: 
+            {
+
+                Ptr<CLAHE> clahe = createCLAHE();
+                clahe->setClipLimit(50); 
+                clahe->apply(m2, mm); 
+                break;
+            }
         }            
         images.push_back(mm);
         clabels.push_back(labels[i]);
@@ -264,12 +281,12 @@ int main(int argc, const char *argv[])
     cout << images.size() << " images, ";
     cout << images.size()/nsubjects << " per class, ";
     if ( skipped ) cout << "(" << skipped << " images skipped), ";
-    char *pp[] = { "no preproc","equalizeHist","tan-triggs","CLAHE" };
+    char *pp[] = { "no preproc", "equalizeHist", "tan-triggs", "CLAHE" };
     cout << pp[preproc];
     cout << endl;
 
     int n=23;
-    if ( rec > 0 )
+    if ( rec > 0 ) // run through all possibilities for 0, restrict it to the chosen else.
     {
         n = rec+1;
     }

@@ -1,8 +1,11 @@
 
-###this branch is a complete re-write.
+####this branch is a complete re-write.
 
-since the contrib module got removed from 3.0, and might resurface in the contrib *repo*, i'm trying a more lego like approach,
-an extractor/classifier toolkit much like the feature2d api.
+since the contrib module got removed from 3.0, ( and *might* resurface in the contrib *repo* ),   
+
+i'm trying a more lego like approach,
+
+an extractor / classifier toolkit much like the feature2d api.
 
 
 ```
@@ -25,4 +28,4 @@ namespace TextureFeature
 
 ```
 
-the goal now is to achieve more flexibility, make it easy to swap features, knn against svm, distance measures, etc.
+the goal now is to achieve more flexibility, make it easy to swap features, knn against svm, distance measures.

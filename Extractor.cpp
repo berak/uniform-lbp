@@ -6,12 +6,14 @@ using namespace cv;
 
 
 
+
+//
+// this is the most simple one.
+//
 class ExtractorPixels : public TextureFeature::Extractor
 {
     int resw,resh;
-
 public:
-
     ExtractorPixels(int resw=0,int resh=0): resw(resw), resh(resh) {}
 
     // TextureFeature::Extractor
@@ -27,6 +29,11 @@ public:
 
 
 
+
+
+//
+// gridded humoments
+//
 class ExtractorMoments : public TextureFeature::Extractor
 {
     static void mom(const Mat &z, Mat & feature, int i, int j, int w, int h)
@@ -59,7 +66,6 @@ class ExtractorMoments : public TextureFeature::Extractor
         return mo;
     }
 public:
-
     // TextureFeature::Extractor
     virtual int extract(const Mat &img, Mat &features) const
     {
@@ -70,6 +76,14 @@ public:
 
 
 
+
+
+
+// 
+// base for lbph, calc features on pixels, then calc the grid on that, 
+//   thus avoiding to waste border pixels 
+//     (with probably the price of pixels shared between patches)
+//
 struct GriddedHist : public TextureFeature::Extractor
 {
 protected:
@@ -117,6 +131,8 @@ public:
         , GRIDY(gridy) 
     {}
 };
+
+
 
 
 
@@ -168,6 +184,7 @@ public:
 
 
 
+
 class ExtractorLbpUniform : public ExtractorLbp
 {
 
@@ -175,7 +192,7 @@ class ExtractorLbpUniform : public ExtractorLbp
     {
         UniformNormal,    // 58 + noise
         UniformModified,  // 58
-        UniformReduced,   // 16
+        UniformReduced,   // 16 + noise
         UniFormMax
     };
 
@@ -192,7 +209,8 @@ public:
     virtual int extract(const Mat &img, Mat &features) const
     {
         static int uniform[3][256] = {
-        {   0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
+        {   // the well known ori´ginal uniform2 pattern 
+            0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
             14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
             58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
             58,58,58,58,58,58,58,58,58,58,58,58,23,58,58,58,58,58,58,58,58,58,58,58,58,58,
@@ -202,7 +220,8 @@ public:
             58,35,36,37,58,38,58,58,58,39,58,58,58,58,58,58,58,40,58,58,58,58,58,58,58,58,58,
             58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
             58,58,58,50,51,52,58,53,54,55,56,57 },
-        {   0,1,2,3,4,1,5,6,7,1,2,3,8,8,9,10,11,1,2,3,4,1,5,6,12,12,12,15,13,13,14,15,16,1,2,
+        {   // 'noise' ones mapped to their closest hamming uniform neighbour
+            0,1,2,3,4,1,5,6,7,1,2,3,8,8,9,10,11,1,2,3,4,1,5,6,12,12,12,15,13,13,14,15,16,1,2,
             3,4,1,5,6,7,1,2,3,8,8,9,10,17,17,17,3,17,17,20,21,18,18,18,21,19,19,20,21,22,1,
             2,3,4,1,5,6,7,1,2,3,8,8,9,10,11,1,2,3,4,58,5,6,12,12,12,15,13,13,14,15,23,23,23,
             44,23,23,5,45,23,23,23,28,26,26,27,28,24,24,24,49,24,24,27,28,25,25,25,28,26,26,
@@ -211,7 +230,8 @@ public:
             52,18,35,19,35,20,35,36,37,36,38,36,37,39,39,36,37,36,38,8,40,40,40,36,37,36,38,
             36,37,39,39,51,52,41,41,54,41,41,41,42,43,42,44,42,43,45,45,42,43,42,44,54,46,46,
             46,47,48,47,49,47,48,50,50,51,52,51,53,54,55,56,57 },
-        {   16,0,16,16,16,16,1,16,2,16,16,16,16,16,16,16,3,16,16,16,16,16,16,16,16,16,16,16,
+        {   // 'reduced' set (16 + 1 bins)
+            16,0,16,16,16,16,1,16,2,16,16,16,16,16,16,16,3,16,16,16,16,16,16,16,16,16,16,16,
             16,16,16,4,5,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
             16,16,16,16,16,16,6,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
             16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
@@ -238,10 +258,9 @@ public:
 
 
 
+
 class WLD : public GriddedHist
 {
-
-
     // my histograms looks like this:
     // [32 bins for zeta][2*64 bins for theta][16 bins for center intensity]
     // since the patches are pretty small(12x12), i can even get away using uchar for the historam bins
@@ -329,6 +348,13 @@ public:
 };
 
 
+
+
+
+
+//
+// 'factory' functions (aka public api)
+//
 
 cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw=0, int resh=0)
 { 
