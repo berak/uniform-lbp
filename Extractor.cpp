@@ -209,7 +209,7 @@ public:
     virtual int extract(const Mat &img, Mat &features) const
     {
         static int uniform[3][256] = {
-        {   // the well known ori´ginal uniform2 pattern 
+        {   // the well known original uniform2 pattern 
             0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
             14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
             58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
@@ -258,7 +258,9 @@ public:
 
 
 
-
+//
+//  A Robust Descriptor based on Weber’s Law
+//
 class WLD : public GriddedHist
 {
     // my histograms looks like this:

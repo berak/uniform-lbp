@@ -54,7 +54,9 @@ public:
 
 
 
-
+//
+// just swap the comparison
+//
 class ClassifierHist : public ClassifierNearest
 {
 public:
@@ -143,6 +145,10 @@ public:
 
 
 
+
+// dragons all down the way
+//
+/***
 class Bayes : public TextureFeature::Classifier
 {
 	CvNormalBayesClassifier bayes;
@@ -231,7 +237,7 @@ public:
     }
 };
 
-
+***/
 
 
 
@@ -239,14 +245,14 @@ public:
 // 'factory' functions (aka public api)
 //
 
-cv::Ptr<TextureFeature::Classifier> createClassifierDTree()
-{ return makePtr<DTree>(); }
+//cv::Ptr<TextureFeature::Classifier> createClassifierDTree()
+//{ return makePtr<DTree>(); }
 
-cv::Ptr<TextureFeature::Classifier> createClassifierRTrees()
-{ return makePtr<RTrees>(); }
+//cv::Ptr<TextureFeature::Classifier> createClassifierRTrees()
+//{ return makePtr<RTrees>(); }
 
-cv::Ptr<TextureFeature::Classifier> createClassifierBayes()
-{ return makePtr<Bayes>(); }
+//cv::Ptr<TextureFeature::Classifier> createClassifierBayes()
+//{ return makePtr<Bayes>(); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L2)
 { return makePtr<ClassifierNearest>(norm_flag); }
