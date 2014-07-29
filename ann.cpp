@@ -1,11 +1,13 @@
 //#include <opencv2/opencv.hpp>
 #include <opencv2/core/utility.hpp>
-#include <opencv2/contrib/contrib.hpp>
 #include <opencv2/ml/ml.hpp>
+
+#include <set>
 
 using namespace std;
 using namespace cv;
 
+#include "fr.h"
 
 //
 // reference impl

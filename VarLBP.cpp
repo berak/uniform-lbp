@@ -1,13 +1,15 @@
-#include "opencv2/contrib.hpp"
-
 //
 // from https://github.com/bytefish/libfacerec/blob/master/src/lbp.cpp
 //
 
 
+#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/utility.hpp>
 using namespace cv;
 #include <iostream>
+
+
+#include "fr.h"
 
 class VarLBP : public FaceRecognizer
 {

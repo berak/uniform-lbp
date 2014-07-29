@@ -3,6 +3,7 @@
 #include "SpatialHistogramReco.h"
 #include <iostream>
 
+
 Mat SpatialHistogramReco::spatial_histogram(InputArray _src) const {
     Mat src = _src.getMat();
     if(src.empty())

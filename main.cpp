@@ -2,8 +2,9 @@
 // run k fold crossvalidation train/test on  person db
 //
 
+#include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include "opencv2/contrib.hpp"
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/core/utility.hpp>
  
 #include <iostream>
@@ -14,6 +15,7 @@
 using namespace std;
 using namespace cv;
 
+#include "fr.h"
 
 #define DPFX ""
 //#ifdef _DEBUG 
@@ -67,9 +69,9 @@ const char *rec_names[] = {
     "wld",
     "mom",
     "zernike",
-    "ann",
     "svm",
     "svm_lbp",
+    "svm_lbp_u2",
     "svm_hu",
     "svm_hog",
     "norml2"
@@ -115,11 +117,12 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 9: model = createWLDFaceRecognizer(8,8,DBL_MAX); break;
         case 10: model = createMomFaceRecognizer(8,10); break;
         case 11: model = createZernikeFaceRecognizer(4,7); break;
-        case 12: model = createAnnFaceRecognizer(); break;
-        case 13: model = createSvmFaceRecognizer(0); break;
-        case 14: model = createSvmFaceRecognizer(1); break;
-        case 15: model = createSvmFaceRecognizer(2); break;
-        case 16: model = createSvmFaceRecognizer(3); break;
+//        case 12: model = createAnnFaceRecognizer(); break;
+        case 12: model = createSvmFaceRecognizer(0); break;
+        case 13: model = createSvmFaceRecognizer(1); break; // use pixels
+        case 14: model = createSvmFaceRecognizer(1,true); break; // use_uni2
+        case 15: model = createSvmFaceRecognizer(2); break; // use hu
+        case 16: model = createSvmFaceRecognizer(3); break; // use mom
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     //
@@ -199,7 +202,7 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
     //double me = sqrt(meanSqrError) / fold;
     //if ( verbose )
     //   cerr << confusion << endl;
-    cout << format(" %-12s %-10.3f %-10.3f (%6.3f %6.3f",rec_names[rec], me, (1.0-me), ct(dt1), ct(dt2)) ;
+    cout << format(" %-12s %-10.3f (%6.3f %6.3f",rec_names[rec], (1.0-me), ct(dt1), ct(dt2)) ;
     return model;
 }
 
@@ -359,9 +362,9 @@ int main(int argc, const char *argv[])
     fold = std::min(fold,images.size()/nsubjects);
 
     cout << fold  << " fold, " ;
-    cout << nsubjects  << " subjects, " ;
+    cout << nsubjects  << " classes, " ;
     cout << images.size() << " images, ";
-    cout << images.size()/nsubjects << " per person ";
+    cout << images.size()/nsubjects << " per class ";
     if ( skipped ) cout << "(" << skipped << " images skipped)";
     cout << endl;
 

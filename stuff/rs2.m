@@ -16,32 +16,26 @@ lfw_3 = [0.707  0.687  0.749  0.580  0.697  0.657  0.271  0.506  0.652  0.773  0
 
 labels = { "fisher" "eigen" "lbph" "lbph_u" "minmax" "lbp_com" "lbp_var" "ltph" "clbpdis" "wld" "mom" "zernike" "svm" "svm_lbp" "svm_hu" "svm_hog" "norml2"};
 idx = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17];
-#preproc = { "none", "equ_hist", "tan_triggs", "clahe"};
 
 figure;
 plot(lfw_0,idx,lfw_1,idx,lfw_2,idx,lfw_3,idx);
 title("lfw");
 for i = [1:17] text(1,i, char(labels(i))); end
 legend("none", "equ_hist", "tan_triggs", "clahe",'Location','SouthEast');
-#grid on
 grid minor
 
 figure;
-#grid on
 plot(att_0,idx,att_1,idx,att_2,idx,att_3,idx);
 title("att");
 for i = [1:17] text(1,i, char(labels(i))); end
 legend("none", "equ_hist", "tan_triggs", "clahe",'Location','SouthWest');
-#grid on
 grid minor
 
 figure;
-#grid on
 plot(yale_0,idx,yale_1,idx,yale_2,idx,yale_3,idx);
 title("yale");
 for i = [1:17] text(1,i, char(labels(i))); end
 legend("none", "equ_hist", "tan_triggs", "clahe",'Location','SouthEast');
-#grid on
 grid minor
 
 

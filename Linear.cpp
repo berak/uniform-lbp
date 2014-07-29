@@ -1,10 +1,10 @@
 //#include <opencv2/opencv.hpp>
 #include <opencv2/core/utility.hpp>
-#include <opencv2/contrib/contrib.hpp>
 
 using namespace std;
 using namespace cv;
 
+#include "fr.h"
 
 
 //

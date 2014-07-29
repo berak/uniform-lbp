@@ -1,7 +1,7 @@
 #ifndef _lalalala_
 #define _lalalala_
 
-#include "opencv2/contrib.hpp"
+#include "fr.h"
 
 extern cv::Ptr<cv::FaceRecognizer> createLBPHFaceRecognizer2(int radius, int neighbors, int grid_x, int grid_y, double threshold, bool uniform );
 extern cv::Ptr<cv::FaceRecognizer> createMinMaxFaceRecognizer(int raster,int compression );
@@ -14,6 +14,6 @@ extern cv::Ptr<cv::FaceRecognizer> createWLDFaceRecognizer(int gridx,int gridy,d
 extern cv::Ptr<cv::FaceRecognizer> createMomFaceRecognizer(int grid,int w);
 extern cv::Ptr<cv::FaceRecognizer> createZernikeFaceRecognizer(int grid, int nfeatures);
 extern cv::Ptr<cv::FaceRecognizer> createAnnFaceRecognizer();
-extern cv::Ptr<cv::FaceRecognizer> createSvmFaceRecognizer(int preprocessing);
+extern cv::Ptr<cv::FaceRecognizer> createSvmFaceRecognizer(int preprocessing,bool use_uni2=false);
 
 #endif _lalalala_
