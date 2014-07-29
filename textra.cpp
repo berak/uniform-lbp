@@ -195,7 +195,6 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
 // face att.txt 5     5      1         1
 // face db      fold  reco  verbose  preprocessing
 //
-// special: fold==1 will train on all images , save them, and ignore the test step
 // special: reco==0 will run *all* recognizers available on a given db
 //
 int main(int argc, const char *argv[]) 
@@ -286,7 +285,7 @@ int main(int argc, const char *argv[])
     cout << endl;
 
     int n=23;
-    if ( rec > 0 ) // run through all possibilities for 0, restrict it to the chosen else.
+    if ( rec > 0 ) // run through all possibilities for 0, restrict it to the chosen one else.
     {
         n = rec+1;
     }
@@ -302,30 +301,18 @@ int main(int argc, const char *argv[])
                 createClassifierNearest(), 
                 images,labels,persons, fold,verbose);
             break;
-        //case 1:
-        //    runtest("lbp", createExtractorLbp(), createClassifierNearest(), images,labels,persons, fold,verbose);
-        //    break;
-        //case 2:
-        //    runtest("lbpu", createExtractorLbpUniform(), createClassifierNearest(), images,labels,persons, fold,verbose);
-        //    break;
-        //case 3:
-        //    runtest("lbpu_mod",createExtractorLbpUniform(8,8,1), createClassifierNearest(), images,labels,persons, fold,verbose);
-        //    break;
-        //case 4:
-        //    runtest("lbpu_red",createExtractorLbpUniform(8,8,2), createClassifierNearest(), images,labels,persons, fold,verbose);
-        //    break;
-        //case 5:
-        //    runtest("lbpu_svm",createExtractorLbpUniform(8,8,0), createClassifierSVM(), images,labels,persons, fold,verbose);
-        //    break;
+        //case 1:  runtest("lbp", createExtractorLbp(), createClassifierNearest(), images,labels,persons, fold,verbose); break;
+        //case 2:  runtest("lbpu", createExtractorLbpUniform(), createClassifierNearest(), images,labels,persons, fold,verbose); break;
+        //case 3:  runtest("lbpu_mod",createExtractorLbpUniform(8,8,1), createClassifierNearest(), images,labels,persons, fold,verbose); break;
+        //case 4:  runtest("lbpu_red",createExtractorLbpUniform(8,8,2), createClassifierNearest(), images,labels,persons, fold,verbose); break;
+        //case 5:  runtest("lbpu_svm",createExtractorLbpUniform(8,8,0), createClassifierSVM(), images,labels,persons, fold,verbose); break;
         case 6:
             runtest("lbpu_red_svm",
                 createExtractorLbpUniform(8,8,2),
                 createClassifierSVM(),
                 images,labels,persons, fold,verbose);
             break;
-        //case 7:
-        //    runtest("lbp_chisqr", createExtractorLbp(), createClassifierHist(), images,labels,persons, fold,verbose);
-        //    break;
+        //case 7:  runtest("lbp_chisqr", createExtractorLbp(), createClassifierHist(), images,labels,persons, fold,verbose); break;
         case 8:
             runtest("lbp_hell",
                 createExtractorLbp(), 
@@ -344,9 +331,7 @@ int main(int argc, const char *argv[])
                 createClassifierHist(HISTCMP_HELLINGER), 
                 images,labels,persons, fold,verbose);
             break;
-        //case 11:
-        //    runtest("wld_L1", createExtractorWLD(8,8,CV_8U), createClassifierNearest(NORM_L1), images,labels,persons, fold,verbose);
-        //    break;
+        //case 11:  runtest("wld_L1", createExtractorWLD(8,8,CV_8U), createClassifierNearest(NORM_L1), images,labels,persons, fold,verbose); break;
         case 13:
             runtest("wld_hell",
                 createExtractorWLD(), 
