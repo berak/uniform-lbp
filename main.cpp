@@ -17,7 +17,7 @@ using namespace std;
 
 enum 
 {
-    TEST_ROC, // 1:n random split, calc tp,fp,tn,fn for ROC analysis, write out matlab files.
+    TEST_ROC,   // 1:n random split, calc tp,fp,tn,fn for ROC analysis, write out matlab files.
     TEST_CROSS, // n-fold cross validation
 };
 
@@ -136,7 +136,8 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
         vector<Point2f> points;
         random_roc(points,ext,cls,images,labels,persons,fold,100,verbose);
         cerr << name << endl;
-
+        
+        // write 1d tpr,fpr arrays to (matlab) file:
         string fn = name + ".roc";
         ofstream of(fn.c_str());
         of << " # name: tpr_" << name << endl;
@@ -186,6 +187,7 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
                 int index = persons[j][n];
                 Mat feature;
                 ext->extract(images[index],feature);
+
                 if ( (fold>1) && (n >= f*r) && (n <= (f+1)*r) ) // sliding window per fold
                 {
                     testFeatures.push_back(feature);
@@ -207,18 +209,14 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
             cls->predict(testFeatures[i].reshape(1,1), res);
     
             int pred = int(res.at<float>(0));
-            int ground  = testLabels.at<int>(i);
-            if ( ground<conf.rows && pred>=0 && pred<conf.cols )
-                conf.at<float>(ground, pred) ++;
-            else {
-                cerr << "label sync prob: " << pred << " " << ground << " " << conf.size() << endl;
-            }
+            int ground = testLabels.at<int>(i);
+            conf.at<float>(ground, pred) ++;
         }
         confusion += conf;
 
         cout << '.';
         double all = sum(conf)[0], neg = all - sum(conf.diag())[0];
-        if ( verbose ) cerr << format(" %-16s %3d %5d %d",name.c_str(), f, (all-neg), neg) << endl;
+        if ( verbose ) cerr << format(" %-16s %3d %5d %d",name.c_str(), f, int(all-neg), int(neg)) << endl;
     }
 
 
@@ -227,7 +225,7 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
     double neg = all - sum(confusion.diag())[0];
     double err = double(neg)/all;
     //if ( verbose ) cerr << confusion << endl;
-    cout << format(" %-16s %6.1f %6.1f %6.3f",name.c_str(), (all-neg), neg, (1.0-err)) << endl;
+    cout << format(" %-16s %6d %6d %6.3f",name.c_str(), int(all-neg), int(neg), (1.0-err)) << endl;
 
 }
 
@@ -306,7 +304,11 @@ int main(int argc, const char *argv[])
                 createClassifierSVM(),
                 images,labels,persons, fold,verbose);
             break;
-        case 8:  runtest("lbp_chisqr", createExtractorLbp(), createClassifierHist(), images,labels,persons, fold,verbose); break;
+        case 8:  
+            runtest("lbp_chisqr", 
+                createExtractorLbp(),
+                createClassifierHist(),
+                images,labels,persons, fold,verbose); break;
         case 9:
             runtest("lbp_hell",
                 createExtractorLbp(), 
@@ -325,7 +327,11 @@ int main(int argc, const char *argv[])
                 createClassifierHist(HISTCMP_HELLINGER), 
                 images,labels,persons, fold,verbose);
             break;
-        //case 12:  runtest("wld_L1", createExtractorWLD(8,8,CV_8U), createClassifierNearest(NORM_L1), images,labels,persons, fold,verbose); break;
+        case 12:  
+            runtest("wld_L1", 
+                createExtractorWLD(8,8,CV_8U),
+                createClassifierNearest(NORM_L1),
+                images,labels,persons, fold,verbose); break;
         case 13:
             runtest("wld_hell",
                 createExtractorWLD(), 

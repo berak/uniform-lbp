@@ -145,9 +145,9 @@ protected:
         Mat_<uchar> fI(z.size());
         Mat_<uchar> img(z);
         const int m=1;
-        for ( int r=m; r<z.rows-m; r++ )
+        for ( int r=m; r<img.rows-m; r++ )
         {
-            for ( int c=m; c<z.cols-m; c++ )
+            for ( int c=m; c<img.cols-m; c++ )
             {
                 uchar v = 0;
                 uchar cen = img(r,c);
