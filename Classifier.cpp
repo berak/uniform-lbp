@@ -19,7 +19,7 @@ public:
 
     ClassifierNearest(int flag=NORM_L2) : flag(flag) {}
 
-    virtual double distance(const cv::Mat &trainFeature, const cv::Mat &testFeature, int flag ) const
+    virtual double distance(const cv::Mat &trainFeature, const cv::Mat &testFeature) const
     {
         return norm(trainFeature, testFeature, flag);
     }
@@ -30,7 +30,7 @@ public:
         int best = -1;
         for (int r=0; r<features.rows; r++)
         {
-            double d = distance(testFeature, features.row(r), flag);
+            double d = distance(testFeature, features.row(r));
             if (d < mind)
             {
                 mind = d;
@@ -66,7 +66,7 @@ public:
     {}
 
     // ClassifierNearest
-    virtual double distance(const cv::Mat &trainFeature, const cv::Mat &testFeature, int flag ) const
+    virtual double distance(const cv::Mat &trainFeature, const cv::Mat &testFeature) const
     {
          return compareHist(trainFeature, testFeature, flag);
     }
@@ -77,17 +77,20 @@ public:
 
 class ClassifierKNN : public TextureFeature::Classifier
 {
-    CvKNearest knn; 
+    Ptr<ml::KNearest> knn; 
     int K;
 
 public:
 
-    ClassifierKNN(int k=1) : K(k) {}
+    ClassifierKNN(int k=1) 
+        : knn(ml::KNearest::create())
+        , K(k) 
+    {}
 
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
         Mat resp;
-        knn.find_nearest(testFeature, K, results, resp, Mat());
+        knn->findNearest(testFeature, K, results, resp, Mat());
         //  std::cerr << "resp " << resp << std::endl;
         //for ( int k=0; k<resp.cols; k++ )
         //    results.push_back(resp.at<float>(k));
@@ -95,7 +98,7 @@ public:
     }
     virtual int train(const cv::Mat &trainFeatures, const cv::Mat &trainLabels)
     {
-        knn.train(trainFeatures,trainLabels);
+        knn->train(trainFeatures, ml::ROW_SAMPLE, trainLabels);
         return 1;
     }
 };
@@ -106,38 +109,39 @@ public:
 
 class Svm : public TextureFeature::Classifier
 {
-	CvSVM svm;
-    CvSVMParams param;
+    Ptr<ml::SVM> svm;
+    ml::SVM::Params param;
 
 public:
 
     Svm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
     {
-        param.kernel_type = CvSVM :: POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
-        param.svm_type = CvSVM::NU_SVC;
+        param.kernelType = ml::SVM :: POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
+        param.svmType = ml::SVM::NU_SVC;
         param.degree = degree; // for poly
         param.gamma = gamma; // for poly / rbf / sigmoid
         param.coef0 = coef0; // for poly / sigmoid
         param.C = C; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
         param.nu = nu; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
         param.p = p; // for CV_SVM_EPS_SVR
-        param.class_weights = NULL ; // for CV_SVM_C_SVC
+        param.classWeights = NULL ; // for CV_SVM_C_SVC
 
-        param.term_crit.type = CV_TERMCRIT_ITER + CV_TERMCRIT_EPS ;
-        param.term_crit.max_iter = 1000;
-        param.term_crit.epsilon = 1e-6;
+        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS ;
+        param.termCrit.maxCount = 1000;
+        param.termCrit.epsilon = 1e-6;
+        svm = ml::SVM::create(param);
     }
 
     virtual int train(const Mat &src, const Mat &labels)
     {
         Mat trainData = src.reshape(1,labels.rows);
-        svm.train( trainData , Mat(labels) , cv::Mat() , cv::Mat() , param );
+        svm->train( trainData , ml::ROW_SAMPLE , Mat(labels) );
         return trainData.rows;
     }
 
     virtual int predict(const Mat &src, Mat &res) const    
     {
-        svm.predict(src,res);
+        svm->predict(src, res);
         return res.rows;
     }
 };
@@ -146,7 +150,7 @@ public:
 
 
 
-// dragons all down the way
+// dragons..
 //
 /***
 class Bayes : public TextureFeature::Classifier

@@ -283,7 +283,7 @@ class WLD : public GriddedHist
 
     int typeflag;
 
-    template < class T>
+    template <class T>
     void oper(const Mat & src, Mat & hist) const {
         const double CV_PI_4 = CV_PI / 4.0;
         int radius = 1;
@@ -305,6 +305,7 @@ class WLD : public GriddedHist
                 };
                 int p = n[0]+n[1]+n[2]+n[3]+n[4]+n[5]+n[6]+n[7];
                 p -= c*8;
+                
                 // (7), projected from [-pi/2,pi/2] to [0,size_zeta]
                 double zeta = 0;
                 if (p!=0) zeta = double(size_zeta) * (atan(double(p)/c) + CV_PI*0.5) / CV_PI;
