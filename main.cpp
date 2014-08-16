@@ -122,7 +122,7 @@ void random_roc(vector<Point2f> & points, Ptr<Extractor> ext, Ptr<Classifier> cl
         }
         Point2f p(roc.tpr(),roc.fpr());
         points.push_back(p);
-        if (verbose) cerr << test_id << "("<<npos<<") : " << roc.str() << endl;
+        if (verbose) cerr << test_id << "("<<npos<<")\t: " << roc.str() << endl;
     }
 }
 
@@ -178,13 +178,13 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
         for ( size_t j=0; j<persons.size(); j++ )
         {
             size_t n_per_person = persons[j].size();
-            if ( n_per_person < fold ) continue;
-            int r = -1;
-            if ( fold != 0 )
-                r = n_per_person/fold;
+            if (n_per_person < fold)
+                continue;
+            int r = (fold != 0) ? (n_per_person/fold) : -1;
             for ( size_t n=0; n<n_per_person; n++ )
             {
                 int index = persons[j][n];
+
                 Mat feature;
                 ext->extract(images[index],feature);
 
