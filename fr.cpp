@@ -109,6 +109,87 @@ inline vector<_Tp> remove_dups(const vector<_Tp>& src) {
     return elems;
 }
 
+
+
+
+
+//------------------------------------------------------------------------------
+// cv::subspaceProject
+//------------------------------------------------------------------------------
+Mat subspaceProject(InputArray _W, InputArray _mean, InputArray _src) {
+    // get data matrices
+    Mat W = _W.getMat();
+    Mat mean = _mean.getMat();
+    Mat src = _src.getMat();
+    // get number of samples and dimension
+    int n = src.rows;
+    int d = src.cols;
+    // make sure the data has the correct shape
+    if(W.rows != d) {
+        string error_message = format("Wrong shapes for given matrices. Was size(src) = (%d,%d), size(W) = (%d,%d).", src.rows, src.cols, W.rows, W.cols);
+        CV_Error(cv::Error::StsBadArg, error_message);
+    }
+    // make sure mean is correct if not empty
+    if(!mean.empty() && (mean.total() != (size_t) d)) {
+        string error_message = format("Wrong mean shape for the given data matrix. Expected %d, but was %d.", d, mean.total());
+        CV_Error(cv::Error::StsBadArg, error_message);
+    }
+    // create temporary matrices
+    Mat X, Y;
+    // make sure you operate on correct type
+    src.convertTo(X, W.type());
+    // safe to do, because of above assertion
+    if(!mean.empty()) {
+        for(int i=0; i<n; i++) {
+            Mat r_i = X.row(i);
+            subtract(r_i, mean.reshape(1,1), r_i);
+        }
+    }
+    // finally calculate projection as Y = (X-mean)*W
+    gemm(X, W, 1.0, Mat(), 0.0, Y);
+    return Y;
+}
+
+//------------------------------------------------------------------------------
+// cv::subspaceReconstruct
+//------------------------------------------------------------------------------
+Mat subspaceReconstruct(InputArray _W, InputArray _mean, InputArray _src)
+{
+    // get data matrices
+    Mat W = _W.getMat();
+    Mat mean = _mean.getMat();
+    Mat src = _src.getMat();
+    // get number of samples and dimension
+    int n = src.rows;
+    int d = src.cols;
+    // make sure the data has the correct shape
+    if(W.cols != d) {
+        string error_message = format("Wrong shapes for given matrices. Was size(src) = (%d,%d), size(W) = (%d,%d).", src.rows, src.cols, W.rows, W.cols);
+        CV_Error(cv::Error::StsBadArg, error_message);
+    }
+    // make sure mean is correct if not empty
+    if(!mean.empty() && (mean.total() != (size_t) W.rows)) {
+        string error_message = format("Wrong mean shape for the given eigenvector matrix. Expected %d, but was %d.", W.cols, mean.total());
+        CV_Error(cv::Error::StsBadArg, error_message);
+    }
+    // initialize temporary matrices
+    Mat X, Y;
+    // copy data & make sure we are using the correct type
+    src.convertTo(Y, W.type());
+    // calculate the reconstruction
+    gemm(Y, W, 1.0, Mat(), 0.0, X, GEMM_2_T);
+    // safe to do because of above assertion
+    if(!mean.empty()) {
+        for(int i=0; i<n; i++) {
+            Mat r_i = X.row(i);
+            add(r_i, mean.reshape(1,1), r_i);
+        }
+    }
+    return X;
+}
+
+
+
 // The FaceRecognizer2 class is introduced to keep the FaceRecognizer binary backward compatibility in 2.4
 // In master setLabelInfo/getLabelInfo/getLabelsByString should be virtual and _labelsInfo should be moved
 // to FaceRecognizer, that allows to avoid FaceRecognizer2 in master

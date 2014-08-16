@@ -111,11 +111,11 @@ Ptr<FaceRecognizer> runtest( int rec, const vector<Mat>& images, const vector<in
         case 10: model = createMomFaceRecognizer(8,10); break;
         case 11: model = createZernikeFaceRecognizer(4,7); break;
 //        case 12: model = createAnnFaceRecognizer(); break;
-        case 12: model = createSvmFaceRecognizer(0); break;
-        case 13: model = createSvmFaceRecognizer(1); break; // use pixels
-        case 14: model = createSvmFaceRecognizer(1,true); break; // use_uni2
-        case 15: model = createSvmFaceRecognizer(2); break; // use hu
-        case 16: model = createSvmFaceRecognizer(3); break; // use mom
+        case 12: model = createSvmFaceRecognizer(0); break;   // use pixels
+        case 13: model = createSvmFaceRecognizer(1); break;   // use ulbph
+        case 14: model = createSvmFaceRecognizer(1,4); break; // use uni2
+        case 15: model = createSvmFaceRecognizer(2); break;   // use hu
+        case 16: model = createSvmFaceRecognizer(3); break;   // use hog
         default: model = createLinearFaceRecognizer(NORM_L2); break;
     }
     //
