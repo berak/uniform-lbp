@@ -40,7 +40,7 @@ class ExtractorMoments : public TextureFeature::Extractor
     {
         double hu[7];
         Mat roi(z, cv::Rect(i*w,j*h,w,h));
-        HuMoments( moments( roi, false), hu);
+        HuMoments(moments(roi, false), hu);
         feature.push_back(hu[0]);
         feature.push_back(hu[1]);
         feature.push_back(hu[2]);
@@ -81,7 +81,7 @@ public:
 
 // 
 // base for lbph, calc features on pixels, then calc the grid on that, 
-//   thus avoiding to waste border pixels 
+//   so we avoid to waste border pixels 
 //     (with probably the price of pixels shared between patches)
 //
 struct GriddedHist : public TextureFeature::Extractor
@@ -102,11 +102,11 @@ protected:
         }
     }
 
-    void hist(const Mat & feature, Mat & histo, int histSize=256, int histRnange=256) const
+    void hist(const Mat & feature, Mat & histo, int histSize=256, int histRange=256) const
     {   
         histo.release();
-        const float range[] = { 0, 256 } ;
-        const float* histRange[] = { range };
+        //const float range[] = { 0, 256 } ;
+        //const float* hist_range[] = { range };
         int sw = (feature.cols)/(GRIDX+1);
         int sh = (feature.rows)/(GRIDY+1);
         for ( int i=0; i<GRIDX; i++ )
@@ -116,8 +116,8 @@ protected:
                 Rect patch(i*sw,j*sh,sw,sh);
                 Mat fi( feature, patch );
                 Mat_<float> h(1,histSize,0.0f);
-                //calcHist( &fi, 1, 0, Mat(), h, 1, &histSize, &histRange, true, false );
-                calc_hist(fi,h,histSize,histRnange);
+                //calcHist( &fi, 1, 0, Mat(), h, 1, &histSize, &hist_range, true, false );
+                calc_hist(fi,h,histSize,histRange);
                 histo.push_back(h.reshape(1,1));
             }
         }
@@ -136,14 +136,204 @@ public:
 
 
 
+#define SHIFTED_MATS_3x3(I) \
+        int M = I.rows; \
+        int N = I.cols; \
+        Mat I7 = I(Range(1,M-2), Range(1,N-2));\
+        Mat I6 = I(Range(1,M-2), Range(2,N-1));\
+        Mat I5 = I(Range(1,M-2), Range(3,N  ));\
+        Mat I4 = I(Range(2,M-1), Range(3,N  ));\
+        Mat I3 = I(Range(3,M  ), Range(3,N  ));\
+        Mat I2 = I(Range(3,M  ), Range(2,N-1));\
+        Mat I1 = I(Range(3,M  ), Range(1,N-2));\
+        Mat I0 = I(Range(2,M-1), Range(1,N-2));\
+        Mat Ic = I(Range(2,M-1), Range(2,N-1));
+
+/*
+
+struct LBP_3x3
+{
+    void operator()( const Mat &I, Mat & h ) const
+    {  
+
+        SHIFTED_MATS_3x3;
+
+        Mat fI = ((I7>Ic)&128) |
+             ((I6>Ic)&64)  |
+             ((I5>Ic)&32)  |
+             ((I4>Ic)&16)  |
+             ((I3>Ic)&8)   |
+             ((I2>Ic)&4)   |
+             ((I1>Ic)&2)   |
+             ((I0>Ic)&1);  
+
+        hist(fI,h,256,GRID,GRID);
+    }
+};
+
+struct BGC1_3x3
+{
+    void operator()( const Mat &I, Mat & h ) const
+    {  
+
+        SHIFTED_MATS_3x3;
+
+        Mat fI = ((I7>=I0)&128) |
+             ((I6>=I7)& 64) |
+             ((I5>=I6)& 32) |
+             ((I4>=I5)& 16) |
+             ((I3>=I4)&  8) |
+             ((I2>=I3)&  4) |
+             ((I1>=I2)&  2) |
+             ((I0>=I1)&  1);
+
+        hist(fI,h,256,GRID,GRID);
+    }
+};
+
+struct RT_3x3
+{
+    void operator()( const Mat &I, Mat & h ) const
+    {  
+
+        SHIFTED_MATS_3x3;
+
+        Mat fI = (Ic>I7) | (Ic>I6) | (Ic>I5) | (Ic>I4) | (Ic>I3) | (Ic>I2) | (Ic>I1) | (Ic>I0);
+
+        hist(fI,h,9,GRID,GRID);
+    }
+};
+
+struct LTP_3x3
+{
+    int kerP1;
+
+    LTP_3x3(int k=5) : kerP1(k) {}
+
+    void operator()( const Mat &I, Mat & h ) const
+    {  
+
+        SHIFTED_MATS_3x3;
+
+        Mat Icplus  = Ic+kerP1;
+        Mat Icminus = Ic-kerP1;
+        Mat fUp = ((I7>=Icplus)&128) |
+                  ((I6>=Icplus)& 64) |
+                  ((I5>=Icplus)& 32) |
+                  ((I4>=Icplus)& 16) |
+                  ((I3>=Icplus)&  8) |
+                  ((I2>=Icplus)&  4) |
+                  ((I1>=Icplus)&  2) |
+                  ((I0>=Icplus)&  1);
+        Mat fDn = ((I7<=Icminus)&128) |
+                  ((I6<=Icminus)& 64) |
+                  ((I5<=Icminus)& 32) |
+                  ((I4<=Icminus)& 16) |
+                  ((I3<=Icminus)&  8) |
+                  ((I2<=Icminus)&  4) |
+                  ((I1<=Icminus)&  2) |
+                  ((I0<=Icminus)&  1);
+        Mat h1,h2;
+        hist(fUp,h1,256,GRID,GRID);
+        hist(fDn,h2,256,GRID,GRID);
+        h.push_back(h1);
+        h.push_back(h2);
+        h = h.reshape(1,1);
+    }
+};
+
+
+
+struct  LQP_3x3 
+{
+    int kerP1;
+    int kerP2;
+
+    LQP_3x3(int k1=5,int k2=5) : kerP1(k1), kerP2(k2) {}
+
+    void operator()( const Mat &I, Mat & h ) const
+    {   
+        Mat fI_2,fI_1,fI1,fI2;
+
+        SHIFTED_MATS_3x3;
+
+        Mat Icplus1  = Ic+kerP1;
+        Mat Icplus2  = Ic+kerP2;
+        Mat Icminus1 = Ic-kerP1;
+        Mat Icminus2 = Ic-kerP2;
+        fI_2 =  ((I7<Icminus2)&128 ) |
+                ((I6<Icminus2)& 64 ) |
+                ((I5<Icminus2)& 32 ) |
+                ((I4<Icminus2)& 16 ) |
+                ((I3<Icminus2)&  8 ) |
+                ((I2<Icminus2)&  4 ) |
+                ((I1<Icminus2)&  2 ) |
+                ((I0<Icminus2)&  1 );
+        fI_1 =  (((I7>=Icminus2) &(I7<Icminus1))&128 ) |
+                (((I6>=Icminus2) &(I6<Icminus1))& 64 ) |
+                (((I5>=Icminus2) &(I5<Icminus1))& 32 ) |
+                (((I4>=Icminus2) &(I4<Icminus1))& 16 ) |
+                (((I3>=Icminus2) &(I3<Icminus1))&  8 ) |
+                (((I2>=Icminus2) &(I2<Icminus1))&  4 ) |
+                (((I1>=Icminus2) &(I1<Icminus1))&  2 ) |
+                (((I0>=Icminus2) &(I0<Icminus1))&  1 );
+        fI1 =   (((I7>=Icplus1) &(I7<Icplus2))&128 ) |
+                (((I6>=Icplus1) &(I6<Icplus2))& 64 ) |
+                (((I5>=Icplus1) &(I5<Icplus2))& 32 ) |
+                (((I4>=Icplus1) &(I4<Icplus2))& 16 ) |
+                (((I3>=Icplus1) &(I3<Icplus2))&  8 ) |
+                (((I2>=Icplus1) &(I2<Icplus2))&  4 ) |
+                (((I1>=Icplus1) &(I1<Icplus2))&  2 ) |
+                (((I0>=Icplus1) &(I0<Icplus2))&  1 );
+        fI2 =   ((I7>=Icplus2)&128 ) |
+                ((I6>=Icplus2)& 64 ) |
+                ((I5>=Icplus2)& 32 ) |
+                ((I4>=Icplus2)& 16 ) |
+                ((I3>=Icplus2)&  8 ) |
+                ((I2>=Icplus2)&  4 ) |
+                ((I1>=Icplus2)&  2 ) |
+                ((I0>=Icplus2)&  1 );
+
+        Mat h1,h2,h3,h4;
+        hist(fI_2,h1,256,GRID,GRID);
+        hist(fI_1,h2,256,GRID,GRID);
+        hist(fI1, h3,256,GRID,GRID);
+        hist(fI2, h4,256,GRID,GRID);
+        h.push_back(h1);
+        h.push_back(h2);
+        h.push_back(h3);
+        h.push_back(h4);
+        h = h.reshape(1,1);
+    }
+};
+
+*/
+
+
 class ExtractorLbp : public GriddedHist
 {
 protected:
 
-    void lbp_pix( const Mat &z, Mat & f ) const
+    int utable;
+
+    //
+    // "histogram of equivalence patterns" 
+    //
+    virtual void hep( const Mat &I, Mat & fI ) const
     {
-        Mat_<uchar> fI(z.size());
-        Mat_<uchar> img(z);
+        //SHIFTED_MATS_3x3(I);
+
+        //fI = ((I7>Ic)&128) |
+        //     ((I6>Ic)&64)  |
+        //     ((I5>Ic)&32)  |
+        //     ((I4>Ic)&16)  |
+        //     ((I3>Ic)&8)   |
+        //     ((I2>Ic)&4)   |
+        //     ((I1>Ic)&2)   |
+        //     ((I0>Ic)&1);  
+
+        Mat_<uchar> feature(I.size());
+        Mat_<uchar> img(I);
         const int m=1;
         for ( int r=m; r<img.rows-m; r++ )
         {
@@ -159,55 +349,40 @@ protected:
                 v |= (img(r+1,c-1) > cen) << 5;
                 v |= (img(r  ,c-1) > cen) << 6;
                 v |= (img(r-1,c-1) > cen) << 7;
-                fI(r,c) = v;
+                feature(r,c) = v;
             }
         }
-        f = fI;
+        fI = feature;
     }
+
 
 public:
-
-    ExtractorLbp(int gridx=8, int gridy=8) 
-        : GriddedHist(gridx,gridy) 
-    {}
-
-    // TextureFeature::Extractor
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        Mat fI;
-        lbp_pix(img,fI);
-        hist(fI,features,256);
-        return features.rows;
-    }
-};
-
-
-
-
-
-class ExtractorLbpUniform : public ExtractorLbp
-{
 
     enum UniformTable
     {
         UniformNormal,    // 58 + noise
         UniformModified,  // 58
         UniformReduced,   // 16 + noise
-        UniFormMax
+        UniformNone = -1
     };
 
-    int utable;
-
-public:
-
-    ExtractorLbpUniform(int gridx=8, int gridy=8, int u_table=0) 
-        : ExtractorLbp(gridx,gridy) 
+    ExtractorLbp(int gridx=8, int gridy=8, int u_table=UniformNone) 
+        : GriddedHist(gridx,gridy) 
         , utable(u_table)
     {}
 
     // TextureFeature::Extractor
     virtual int extract(const Mat &img, Mat &features) const
     {
+        Mat fI;
+        hep(img,fI);
+
+        if (utable == UniformNone)
+        {
+            hist(fI,features,256,256);
+            return features.rows;
+        }
+
         static int uniform[3][256] = {
         {   // the well known original uniform2 pattern 
             0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
@@ -242,12 +417,9 @@ public:
             16,16,16,16,16,16,16,16,16,16,13,16,16,16,16,16,16,16,16,16,16,16,16,16,14,16,15,
             16,16,16,16,16,16,16,16,16,16,16,16 }
         };
-        Mat lu(1,256,CV_8U, uniform[utable]);
-
-        Mat fI;
-        lbp_pix(img,fI);
 
         Mat h59;
+        Mat lu(1,256,CV_8U, uniform[utable]);
         LUT(fI,lu,h59);
 
         int histlen[] = {59,58,17};
@@ -256,6 +428,113 @@ public:
     }
 };
 
+
+
+class ExtractorBGC1 : public ExtractorLbp
+{
+protected:
+    virtual void hep( const Mat &I, Mat & fI ) const
+    {
+        SHIFTED_MATS_3x3(I);
+
+        fI = ((I7>=I0)&128) |
+             ((I6>=I7)& 64) |
+             ((I5>=I6)& 32) |
+             ((I4>=I5)& 16) |
+             ((I3>=I4)&  8) |
+             ((I2>=I3)&  4) |
+             ((I1>=I2)&  2) |
+             ((I0>=I1)&  1);
+    }
+
+public:
+    ExtractorBGC1(int gridx=8, int gridy=8, int u_table=UniformNone) 
+        : ExtractorLbp(gridx, gridy, u_table) 
+    {}
+};
+
+class ExtractorRT : public ExtractorLbp
+{
+protected:
+    virtual void hep( const Mat &I, Mat & fI ) const
+    {
+        SHIFTED_MATS_3x3(I);
+
+        fI = (Ic>I7) | (Ic>I6) | (Ic>I5) | (Ic>I4) | (Ic>I3) | (Ic>I2) | (Ic>I1) | (Ic>I0);
+    }
+
+public:
+    ExtractorRT(int gridx=8, int gridy=8, int u_table=UniformNone) 
+        : ExtractorLbp(gridx, gridy, u_table) 
+    {}
+};
+
+
+class ExtractorLQP : public GriddedHist
+{
+
+public:
+    ExtractorLQP(int gridx=8, int gridy=8) 
+        : GriddedHist(gridx, gridy) 
+    {}
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        int kerP1=5;
+        int kerP2=5;
+        Mat fI_2,fI_1,fI1,fI2;
+
+        SHIFTED_MATS_3x3(img);
+
+        Mat Icplus1  = Ic+kerP1;
+        Mat Icplus2  = Ic+kerP2;
+        Mat Icminus1 = Ic-kerP1;
+        Mat Icminus2 = Ic-kerP2;
+        fI_2 =  ((I7<Icminus2)&128 ) |
+                ((I6<Icminus2)& 64 ) |
+                ((I5<Icminus2)& 32 ) |
+                ((I4<Icminus2)& 16 ) |
+                ((I3<Icminus2)&  8 ) |
+                ((I2<Icminus2)&  4 ) |
+                ((I1<Icminus2)&  2 ) |
+                ((I0<Icminus2)&  1 );
+        fI_1 =  (((I7>=Icminus2) &(I7<Icminus1))&128 ) |
+                (((I6>=Icminus2) &(I6<Icminus1))& 64 ) |
+                (((I5>=Icminus2) &(I5<Icminus1))& 32 ) |
+                (((I4>=Icminus2) &(I4<Icminus1))& 16 ) |
+                (((I3>=Icminus2) &(I3<Icminus1))&  8 ) |
+                (((I2>=Icminus2) &(I2<Icminus1))&  4 ) |
+                (((I1>=Icminus2) &(I1<Icminus1))&  2 ) |
+                (((I0>=Icminus2) &(I0<Icminus1))&  1 );
+        fI1 =   (((I7>=Icplus1) &(I7<Icplus2))&128 ) |
+                (((I6>=Icplus1) &(I6<Icplus2))& 64 ) |
+                (((I5>=Icplus1) &(I5<Icplus2))& 32 ) |
+                (((I4>=Icplus1) &(I4<Icplus2))& 16 ) |
+                (((I3>=Icplus1) &(I3<Icplus2))&  8 ) |
+                (((I2>=Icplus1) &(I2<Icplus2))&  4 ) |
+                (((I1>=Icplus1) &(I1<Icplus2))&  2 ) |
+                (((I0>=Icplus1) &(I0<Icplus2))&  1 );
+        fI2 =   ((I7>=Icplus2)&128 ) |
+                ((I6>=Icplus2)& 64 ) |
+                ((I5>=Icplus2)& 32 ) |
+                ((I4>=Icplus2)& 16 ) |
+                ((I3>=Icplus2)&  8 ) |
+                ((I2>=Icplus2)&  4 ) |
+                ((I1>=Icplus2)&  2 ) |
+                ((I0>=Icplus2)&  1 );
+
+        Mat h1,h2,h3,h4,h;
+        hist(fI_2,h1,256);
+        hist(fI_1,h2,256);
+        hist(fI1, h3,256);
+        hist(fI2, h4,256);
+        h.push_back(h1);
+        h.push_back(h2);
+        h.push_back(h3);
+        h.push_back(h4);
+        features = h.reshape(1,1);
+        return features.rows;
+    }
+};
 
 
 //
@@ -367,14 +646,27 @@ cv::Ptr<TextureFeature::Extractor> createExtractorMoments()
 { 
     return makePtr<ExtractorMoments>(); 
 }
-cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gx=8, int gy=8)
+
+cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gx=8, int gy=8, int utable=ExtractorLbp::UniformNone)
 { 
-    return makePtr<ExtractorLbp>(gx, gy); 
+    return makePtr<ExtractorLbp>(gx, gy, utable); 
 }
-cv::Ptr<TextureFeature::Extractor> createExtractorLbpUniform(int gx=8, int gy=8, int utable=0)
+
+cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx=8, int gy=8, int utable=ExtractorLbp::UniformNone)
 { 
-    return makePtr<ExtractorLbpUniform>(gx, gy, 0); 
+    return makePtr<ExtractorBGC1>(gx, gy, utable); 
 }
+
+cv::Ptr<TextureFeature::Extractor> createExtractorRT(int gx=8, int gy=8, int utable=ExtractorLbp::UniformNone)
+{ 
+    return makePtr<ExtractorRT>(gx, gy, utable); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx=8, int gy=8)
+{ 
+    return makePtr<ExtractorLQP>(gx, gy); 
+}
+
 cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx=8, int gy=8, int tf=CV_32F)
 { 
     return makePtr<WLD>(gx, gy, tf); 
