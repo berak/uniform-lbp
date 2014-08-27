@@ -65,10 +65,9 @@ void setupPersons( const vector<int> & labels, vector<vector<int>> & persons )
     }
 }
 
-int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int preproc, int maxim)
+int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int preproc, int maxim, int fixed_size)
 {
     // read face db
-    int fixed_size = 90;
     vector<string> vec;
     vector<int> vlabels; 
     int nsubjects = 1 + readtxt(txtfile.c_str(), vec, vlabels, maxim);

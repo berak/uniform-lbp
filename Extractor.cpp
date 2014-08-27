@@ -89,7 +89,6 @@ struct GriddedHist : public TextureFeature::Extractor
 protected:
     int GRIDX,GRIDY;
     
-    // histogram calculation seems to be the bottleneck.
     void calc_hist(const Mat_<uchar> & feature, Mat_<float> & hist, int histSize, int histRange=256) const
     {   
         for ( int i=0; i<feature.rows; i++ )
@@ -136,6 +135,7 @@ public:
 
 
 
+
 #define SHIFTED_MATS_3x3(I) \
         int M = I.rows; \
         int N = I.cols; \
@@ -148,7 +148,6 @@ public:
         Mat I1 = I(Range(3,M  ), Range(1,N-2));\
         Mat I0 = I(Range(2,M-1), Range(1,N-2));\
         Mat Ic = I(Range(2,M-1), Range(2,N-1));
-
 
 
 class ExtractorLbp : public GriddedHist
@@ -451,9 +450,59 @@ public:
     }
 };
 
+class ExtractorMTS : public GriddedHist
+{
+public:
+    ExtractorMTS(int gridx=8, int gridy=8) 
+        : GriddedHist(gridx, gridy) 
+    {}
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        SHIFTED_MATS_3x3(img);
 
+        Mat h,fI;
 
+        //int t=0;
+        //fI = ((I0>=I4)&8) | ((I1>=I5)&4) | ((I2>=I6)&2) | ((I3>=I7)&1);
+        //hist(fI,h,16,16);
+        //features.push_back(h);
 
+        fI = ((Ic>=I7)&8) | ((Ic>=I6)&4) | ((Ic>=I5)&2) | ((Ic>=I4)&1);
+        hist(fI,h,16,16);
+        features.push_back(h);
+
+        return features.rows;
+    }
+};
+
+class ExtractorGLCM : public GriddedHist
+{
+public:
+    ExtractorGLCM(int gridx=8, int gridy=8) 
+        : GriddedHist(gridx, gridy) 
+    {}
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        int M = img.rows; 
+        int N = img.cols; 
+        //% Define shifted images (special case)
+        Mat I7 = img(Range(1,M-1), Range(1,N-2));
+        Mat I6 = img(Range(1,M-1), Range(2,N-1));
+        Mat I5 = img(Range(1,M-1), Range(3,N  ));
+        Mat I4 = img(Range(2,M  ), Range(3,N  ));
+        Mat Ic = img(Range(2,M  ), Range(2,N-1));
+        //% Compute and normalize the histograms
+        Mat h4,h5,h6,h7;
+        // one pixel displacements in orientations 0є, 45є, 90є and 135є
+        hist((Ic|I4), h4);
+        hist((Ic|I5), h5);
+        hist((Ic|I6), h6);
+        hist((Ic|I7), h7);
+        //% Average 
+        features = (h4+h5+h6+h7)/4;
+        return features.rows;
+    }
+};
 
 
 //
@@ -483,6 +532,16 @@ cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx=8, int gy=8, int u
 cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx=8, int gy=8)
 { 
     return makePtr<ExtractorLQP>(gx, gy); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx=8, int gy=8)
+{ 
+    return makePtr<ExtractorMTS>(gx, gy); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8)
+{ 
+    return makePtr<ExtractorGLCM>(gx, gy); 
 }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx=8, int gy=8, int tf=CV_32F)
