@@ -135,13 +135,20 @@ public:
     virtual int train(const Mat &src, const Mat &labels)
     {
         Mat trainData = src.reshape(1,labels.rows);
+        if ( trainData.type() != CV_32F )
+            trainData.convertTo(trainData,CV_32F);
         svm->train( trainData , ml::ROW_SAMPLE , Mat(labels) );
         return trainData.rows;
     }
 
     virtual int predict(const Mat &src, Mat &res) const    
     {
-        svm->predict(src, res);
+        Mat query;
+        if ( src.type() != CV_32F )
+            src.convertTo(query,CV_32F);
+        else
+            query=src;
+        svm->predict(query, res);
         return res.rows;
     }
 };

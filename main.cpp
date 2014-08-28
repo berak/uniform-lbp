@@ -250,7 +250,7 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if ( argc>2 ) fold = atoi(argv[2]);
 
-    int rec = 19;
+    int rec = 2;
     if ( argc>3 ) rec = atoi(argv[3]);
 
     bool verbose = false;
@@ -269,14 +269,10 @@ int main(int argc, const char *argv[])
 
     fold = std::min(fold,images.size()/persons.size());
 
-    cout << fold  << " fold, " ;
-    cout << persons.size()  << " classes, " ;
-    cout << images.size() << " images, ";
     char *pp[] = { "no preproc", "equalizeHist", "tan-triggs", "CLAHE" };
-    cout << pp[preproc];
-    cout << endl;
+    cout << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[preproc] << endl;
 
-    int n=23;
+    int n=32;
     if ( rec > 0 ) // loop through all possibilities for 0, restrict it to the chosen one else.
     {
         n = rec+1;
@@ -287,8 +283,9 @@ int main(int argc, const char *argv[])
         {
         default: continue;
         case 1:  runtest("pixels",  createExtractorPixels(120,120), createClassifierNearest(), images,labels,persons, fold,verbose); break;
-        case 2:  runtest("lbp",     createExtractorLbp(),           createClassifierNearest(), images,labels,persons, fold,verbose); break;
-        case 3:  runtest("lbp_svm", createExtractorLbp(),           createClassifierSVM(),     images,labels,persons, fold,verbose); break;
+        case 2:  runtest("pixels_svm",createExtractorPixels(69,60), createClassifierSVM(),     images,labels,persons, fold,verbose); break;
+        case 3:  runtest("lbp",     createExtractorLbp(),           createClassifierNearest(), images,labels,persons, fold,verbose); break;
+        case 4:  runtest("lbp_svm", createExtractorLbp(),           createClassifierSVM(),     images,labels,persons, fold,verbose); break;
         //case 3:  runtest("lbpu",    createExtractorLbp(8,8,0),      createClassifierNearest(), images,labels,persons, fold,verbose); break;
         //case 4:  runtest("lbpu_mod",createExtractorLbpUniform(8,8,1), createClassifierNearest(), images,labels,persons, fold,verbose); break;
         //case 5:  runtest("lbpu_red",createExtractorLbpUniform(8,8,2), createClassifierNearest(), images,labels,persons, fold,verbose); break;

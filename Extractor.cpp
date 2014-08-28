@@ -450,6 +450,7 @@ public:
     }
 };
 
+
 class ExtractorMTS : public GriddedHist
 {
 public:
@@ -474,6 +475,7 @@ public:
         return features.rows;
     }
 };
+
 
 class ExtractorGLCM : public GriddedHist
 {
@@ -503,6 +505,7 @@ public:
         return features.rows;
     }
 };
+
 
 
 //
