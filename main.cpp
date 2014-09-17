@@ -36,6 +36,8 @@ extern cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx=8, int gy=8,
 extern cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx=8, int gy=8);
 extern cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx=8, int gy=8);
 extern cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8);
+extern cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, int u_table=0, int kernel_size=8);
+extern cv::Ptr<TextureFeature::Extractor> createExtractorDct();
 
 extern cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L2);
 extern cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR);
@@ -46,7 +48,10 @@ extern cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0
 double ct(int64 t) {    return double(t) / cv::getTickFrequency(); }
 
 
-
+#define HAVE_CONIO
+#ifdef HAVE_CONIO
+#include <conio.h>
+#endif
 
 struct ROC
 {
@@ -94,13 +99,11 @@ void random_roc(vector<Point2f> & points, Ptr<Extractor> ext, Ptr<Classifier> cl
                 train_labels.push_back(labels[i]);
             }
         }
-        
+
         // train
         test_data = test_data.reshape(1,test_labels.rows);
         train_data = train_data.reshape(1,train_labels.rows);
-
         cls->train(train_data,train_labels);
-        if (verbose) cerr << ".(" << images.size() <<","<< train_data.rows<<","<<test_data.rows<<") ";
 
         // predict
         ROC roc;
@@ -129,7 +132,7 @@ void random_roc(vector<Point2f> & points, Ptr<Extractor> ext, Ptr<Classifier> cl
 
 
 
-void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat>& images, const vector<int>& labels, const vector<vector<int>>& persons, size_t fold=10, bool verbose=false ) 
+double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat>& images, const vector<int>& labels, const vector<vector<int>>& persons, size_t fold=10, bool verbose=false ) 
 {
     if (testMethod == TEST_ROC)
     {
@@ -155,7 +158,7 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
             of << points[i].y << " ";
         of << endl << endl;
         of.close(); 
-        return;
+        return -1;
     }
 
 
@@ -167,6 +170,8 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
     vector<float> tpr;
     vector<float> fnr;
 
+    int64 t0=getTickCount();
+    int fsiz=0;
     for ( size_t f=0; f<fold; f++ )
     {
         Mat trainFeatures;
@@ -187,7 +192,7 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
                 int index = persons[j][n];
 
                 Mat feature;
-                ext->extract(images[index],feature);
+                fsiz = ext->extract(images[index],feature);
 
                 if ( (fold>1) && (n >= f*r) && (n <= (f+1)*r) ) // sliding window per fold
                 {
@@ -202,7 +207,6 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
             }
         }
         cls->train(trainFeatures.reshape(1,trainLabels.rows),trainLabels);
-
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
         for ( size_t i=0; i<testFeatures.size(); i++ )
         {
@@ -215,9 +219,12 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
         }
         confusion += conf;
 
-        cout << '.';
-        double all = sum(conf)[0], neg = all - sum(conf.diag())[0];
-        if ( verbose ) cerr << format(" %-16s %3d %5d %d",name.c_str(), f, int(all-neg), int(neg)) << endl;
+        double all = sum(confusion)[0];
+        double neg = all - sum(confusion.diag())[0];
+        double err = double(neg)/all;
+        cout << format("%-13s %-2d %6d %6d %6d %8.3f",name.c_str(),f, fsiz, int(all-neg), int(neg), (1.0-err)) << '\r';
+        //double all = sum(conf)[0], neg = all - sum(conf.diag())[0];
+        //if ( verbose ) cerr << format(" %-16s %3d %5d %d",name.c_str(), f, int(all-neg), int(neg)) << endl;
     }
 
 
@@ -226,9 +233,12 @@ void runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<
     double neg = all - sum(confusion.diag())[0];
     double err = double(neg)/all;
     //if ( verbose ) cerr << confusion << endl;
-    cout << format(" %-16s %6d %6d %6.3f",name.c_str(), int(all-neg), int(neg), (1.0-err)) << endl;
-
+    int64 t1=getTickCount() - t0;
+    double t(t1/getTickFrequency());
+    cout << format("%-16s %6d %6d %6d %8.3f %8.3f",name.c_str(), fsiz, int(all-neg), int(neg), (1.0-err), t) << endl;
+    return err;
 }
+
 
 //
 //
@@ -242,7 +252,7 @@ int main(int argc, const char *argv[])
     vector<Mat> images;
     Mat labels;
 
-    std::string db_path("yale.txt");
+    std::string db_path("yaleB.txt");
     //std::string db_path("att.txt");
     //std::string db_path("yale.txt");
     if ( argc>1 ) db_path = argv[1];
@@ -250,7 +260,7 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if ( argc>2 ) fold = atoi(argv[2]);
 
-    int rec = 2;
+    int rec = 25;
     if ( argc>3 ) rec = atoi(argv[3]);
 
     bool verbose = false;
@@ -261,7 +271,8 @@ int main(int argc, const char *argv[])
 
     if ( argc>6 ) testMethod = atoi(argv[6]); // TEST_TOC <> TEST_CROSS
 
-    extractDB(db_path,images,labels,preproc,400, 120);
+    
+    extractDB(db_path, images, labels, preproc, 500, 120);
 
     // per person id lookup
     vector<vector<int>> persons;
@@ -271,8 +282,10 @@ int main(int argc, const char *argv[])
 
     char *pp[] = { "no preproc", "equalizeHist", "tan-triggs", "CLAHE" };
     cout << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[preproc] << endl;
+    if ( rec==0 )
+        cout << "[method]       [f_count]  [pos]  [neg]   [hit]   [time]  " << endl;
 
-    int n=32;
+    int n=42;
     if ( rec > 0 ) // loop through all possibilities for 0, restrict it to the chosen one else.
     {
         n = rec+1;
@@ -282,31 +295,34 @@ int main(int argc, const char *argv[])
         switch(rec)
         {
         default: continue;
-        case 1:  runtest("pixels",  createExtractorPixels(120,120), createClassifierNearest(), images,labels,persons, fold,verbose); break;
-        case 2:  runtest("pixels_svm",createExtractorPixels(69,60), createClassifierSVM(),     images,labels,persons, fold,verbose); break;
-        case 3:  runtest("lbp",     createExtractorLbp(),           createClassifierNearest(), images,labels,persons, fold,verbose); break;
-        case 4:  runtest("lbp_svm", createExtractorLbp(),           createClassifierSVM(),     images,labels,persons, fold,verbose); break;
-        //case 3:  runtest("lbpu",    createExtractorLbp(8,8,0),      createClassifierNearest(), images,labels,persons, fold,verbose); break;
-        //case 4:  runtest("lbpu_mod",createExtractorLbpUniform(8,8,1), createClassifierNearest(), images,labels,persons, fold,verbose); break;
-        //case 5:  runtest("lbpu_red",createExtractorLbpUniform(8,8,2), createClassifierNearest(), images,labels,persons, fold,verbose); break;
-        //case 6:  runtest("lbpu_svm",createExtractorLbpUniform(8,8,0), createClassifierSVM(), images,labels,persons, fold,verbose); break;
-        //case 7:  runtest("lbpu_red_svm", createExtractorLbp(8,8,2), createClassifierSVM(),     images,labels,persons, fold,verbose); break;
-        //case 8:  runtest("lbp_chisqr",   createExtractorLbp(),      createClassifierHist(),    images,labels,persons, fold,verbose); break;
-        case 9:  runtest("lbp_hell",     createExtractorLbp(),      createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose);   break;
-        //case 10: runtest("lbpu_hell",    createExtractorLbp(),      createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose);   break;
-        case 11: runtest("lbpu_red_hell",createExtractorLbp(8,8,2), createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
-        case 12: runtest("bgc1_hell",    createExtractorBGC1(),     createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose);   break;
-        //case 13: runtest("bgc1_red_hell",createExtractorBGC1(8,8,2),createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose);break;
-        //case 15: runtest("wld_L1",      createExtractorWLD(8,8,CV_8U),createClassifierNearest(NORM_L1),  images,labels,persons, fold,verbose);      break;
-        case 16: runtest("wld_hell",     createExtractorWLD(),      createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
-        case 17: runtest("mts_svm",      createExtractorMTS(),      createClassifierSVM(),     images,labels,persons, fold,verbose); break;
-        case 18: runtest("mts_hell",     createExtractorMTS(),      createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
-        //case 19: runtest("glcm_hell",    createExtractorGLCM(),     createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
-        case 20: runtest("glcm_svm",     createExtractorGLCM(),     createClassifierSVM(),     images,labels,persons, fold,verbose); break;
-        //case 18: runtest("lqp_hell", createExtractorLQP(), createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
+        case 1:  runtest("pixels",       createExtractorPixels(120,120),   createClassifierNearest(),              images,labels,persons, fold,verbose); break;
+        case 2:  runtest("pixels_svm",   createExtractorPixels(60,60),     createClassifierSVM(),                  images,labels,persons, fold,verbose); break;
+        //case 3:  runtest("pixels_xx",    createExtractorPixels(20,20),     createClassifierXX("ml.KNN"),           images,labels,persons, fold,verbose); break;
+        case 4:  runtest("lbp",          createExtractorLbp(),             createClassifierNearest(),              images,labels,persons, fold,verbose); break;
+        case 5:  runtest("lbp_svm",      createExtractorLbp(),             createClassifierSVM(),                  images,labels,persons, fold,verbose); break;
+        //case 3:  runtest("lbpu",         createExtractorLbp(8,8,0),        createClassifierNearest(),              images,labels,persons, fold,verbose); break;
+        //case 4:  runtest("lbpu_mod",     createExtractorLbpUniform(8,8,1), createClassifierNearest(),              images,labels,persons, fold,verbose); break;
+        //case 5:  runtest("lbpu_red",     createExtractorLbpUniform(8,8,2), createClassifierNearest(),              images,labels,persons, fold,verbose); break;
+        //case 6:  runtest("lbpu_svm",     createExtractorLbpUniform(8,8,0), createClassifierSVM(),                  images,labels,persons, fold,verbose); break;
+        //case 7:  runtest("lbpu_red_svm", createExtractorLbp(8,8,2),        createClassifierSVM(),                  images,labels,persons, fold,verbose); break;
+        //case 8:  runtest("lbp_chisqr",   createExtractorLbp(),             createClassifierHist(),                 images,labels,persons, fold,verbose); break;
+        case 9:  runtest("lbp_hell",     createExtractorLbp(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose);   break;
+        //case 10: runtest("lbpu_hell",    createExtractorLbp(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose);   break;
+        case 11: runtest("lbpu_red_hell",createExtractorLbp(8,8,2),        createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
+        case 12: runtest("bgc1_hell",    createExtractorBGC1(),            createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose);   break;
+        //case 13: runtest("bgc1_red_hell",createExtractorBGC1(8,8,2),       createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose);break;
+        //case 15: runtest("wld_L1",       createExtractorWLD(8,8,CV_8U),    createClassifierNearest(NORM_L1),  images,labels,persons, fold,verbose);      break;
+        case 16: runtest("wld_hell",     createExtractorWLD(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
+        case 17: runtest("mts_svm",      createExtractorMTS(),             createClassifierSVM(),                   images,labels,persons, fold,verbose); break;
+        case 18: runtest("mts_hell",     createExtractorMTS(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
+        //case 19: runtest("glcm_hell",    createExtractorGLCM(),            createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
+        case 20: runtest("glcm_svm",     createExtractorGLCM(),            createClassifierSVM(),                   images,labels,persons, fold,verbose); break;
+        //case 18: runtest("lqp_hell",     createExtractorLQP(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
+        case 21: runtest("gabor_lbp",    createExtractorGaborLbp(),        createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
+        case 22: runtest("gabor_lbp_red",createExtractorGaborLbp(8,8,2),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold,verbose); break;
+        case 25: runtest("dct",          createExtractorDct(),             createClassifierSVM(),               images,labels,persons, fold,verbose); break;
         }
     }
-    
     return 0;
 }
 

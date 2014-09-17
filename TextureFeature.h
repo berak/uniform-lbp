@@ -12,7 +12,7 @@ namespace TextureFeature
         virtual int extract( const Mat &img, Mat &features ) const = 0;
     };
 
-    struct Classifier 
+    struct Classifier // shallow wrapper around what should be a cv::StatModel. 
     {
         virtual int train( const Mat &features, const Mat &labels ) = 0;
         virtual int predict( const Mat &test, Mat &result ) const = 0;

@@ -6,6 +6,7 @@ using namespace cv;
 #include "TextureFeature.h"
 
 
+static struct _onceonly { _onceonly() { /*initModule_ml();*/ } } yes;
 
 
 class ClassifierNearest : public TextureFeature::Classifier
@@ -103,8 +104,40 @@ public:
     }
 };
 
-
-
+//
+//class ClassifierXX : public TextureFeature::Classifier
+//{
+//    Ptr<ml::StatModel> me; // hmm type errors with ml::EM
+//
+//public:
+//
+//    ClassifierXX(Ptr<ml::StatModel> p) 
+//        : me(p)
+//    {}
+//
+//    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
+//    {
+//        Mat feature = testFeature;
+//        if ( testFeature.type() != CV_32F )
+//            testFeature.convertTo(feature,CV_32F);
+//        me->predict(feature, results, ml::ROW_SAMPLE);
+//        return results.rows;
+//    }
+//    virtual int train(const cv::Mat &trainFeatures, const cv::Mat &trainLabels)
+//    {
+//        Mat feature = trainFeatures;
+//        if ( trainFeatures.type() != CV_32F )
+//            trainFeatures.convertTo(feature,CV_32F);
+//        Mat labels = trainLabels;
+//        if ( trainLabels.type() != CV_32F )
+//            trainLabels.convertTo(labels,CV_32F);
+//        me->train(feature, ml::ROW_SAMPLE, labels);
+//        return 1;
+//    }
+//};
+//
+//
+//
 
 
 class Svm : public TextureFeature::Classifier
@@ -173,3 +206,12 @@ cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1)
 cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
 { return makePtr<Svm>(degree, gamma, coef0, C, nu, p); }
 
+//cv::Ptr<TextureFeature::Classifier> createClassifierXX(String s)
+//{ 
+//    //cv::Ptr<ml::StatModel> m = ml::StatModel::create(s);
+//    //cv::Ptr<ml::StatModel> m = Algorithm::create<ml::StatModel>(s);
+//    //cv::Ptr<ml::StatModel> m = ml::LogisticRegression::create();
+//    cv::Ptr<ml::StatModel> m = ml::KNearest::create();
+//    return makePtr<ClassifierXX>(m); 
+//}
+//

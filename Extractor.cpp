@@ -23,7 +23,8 @@ public:
             resize(img, features, Size(resw,resh) );
         else
             features=img;
-        return features.rows;
+        features = features.reshape(1,1);
+        return features.cols * features.elemSize() ;
     }
 };
 
@@ -70,7 +71,8 @@ public:
     virtual int extract(const Mat &img, Mat &features) const
     {
         features = mom(img);
-        return features.rows;
+        features = features.reshape(1,1);
+        return features.cols * features.elemSize() ;
     }
 };
 
@@ -80,7 +82,7 @@ public:
 
 
 // 
-// base for lbph, calc features on the wjhole image, the hist on a grid, 
+// base for lbph, calc features on the whole image, the hist on a grid, 
 //   so we avoid to waste border pixels 
 //     (with probably the price of pixels shared between patches)
 //
@@ -89,14 +91,14 @@ struct GriddedHist : public TextureFeature::Extractor
 protected:
     int GRIDX,GRIDY;
     
-    void calc_hist(const Mat_<uchar> & feature, Mat_<float> & hist, int histSize, int histRange=256) const
+    void calc_hist(const Mat_<uchar> & feature, Mat_<float> & histo, int histSize, int histRange=256) const
     {   
         for ( int i=0; i<feature.rows; i++ )
         {
             for ( int j=0; j<feature.cols; j++ )
             {
                 uchar bin = int(feature(i,j)) * histSize / histRange;
-                hist( bin ) += 1.0f;
+                histo( bin ) += 1.0f;
             }
         }
     }
@@ -135,6 +137,7 @@ public:
 
 
 
+//#define range(x,M,k) Range((x),((M)-((k)-(x))))
 
 #define SHIFTED_MATS_3x3(I) \
         int M = I.rows; \
@@ -147,8 +150,29 @@ public:
         Mat I2 = I(Range(3,M  ), Range(2,N-1));\
         Mat I1 = I(Range(3,M  ), Range(1,N-2));\
         Mat I0 = I(Range(2,M-1), Range(1,N-2));\
-        Mat Ic = I(Range(2,M-1), Range(2,N-1));
-
+        Mat IC = I(Range(2,M-1), Range(2,N-1));
+        //int k = 3; \
+        //Mat I7 = I(range(0,M,k), range(0,N,k));\
+        //Mat I6 = I(range(0,M,k), range(1,N,k));\
+        //Mat I5 = I(range(0,M,k), range(2,N,k));\
+        //Mat I4 = I(range(1,M,k), range(2,N,k));\
+        //Mat I3 = I(range(2,M,k), range(2,N,k));\
+        //Mat I2 = I(range(2,M,k), range(1,N,k));\
+        //Mat I1 = I(range(2,M,k), range(0,N,k));\
+        //Mat I0 = I(range(1,M,k), range(0,N,k));\
+        //Mat IC = I(range(1,M,k), range(1,N,k));
+//
+//#define SHIFTED_MATS_5x5(I) \
+//        Mat Ia = I(Range(0,M-3), Range(0,N-3));\
+//        Mat Ib = I(Range(0,M-3), Range(1,N-2));\
+//        Mat Ic = I(Range(0,M-3), Range(2,N-1));\
+//        Mat Id = I(Range(0,M-3), Range(3,N  ));\
+//        Mat Ie = I(Range(0,M-3), Range(4,N  ));\
+//        Mat If = I(Range(2,M-1), Range(3,N  ));\
+//        Mat Ig = I(Range(3,M  ), Range(3,N  ));\
+//        Mat Ih = I(Range(3,M  ), Range(2,N-1));\
+//        Mat Ii = I(Range(3,M  ), Range(2,N-1));
+//        Mat Ih = I(Range(3,M-1), Range(2,N-1));
 
 class ExtractorLbp : public GriddedHist
 {
@@ -164,14 +188,14 @@ protected:
 #if 1
         SHIFTED_MATS_3x3(I);
 
-        fI = ((I7>Ic)&128) |
-             ((I6>Ic)&64)  |
-             ((I5>Ic)&32)  |
-             ((I4>Ic)&16)  |
-             ((I3>Ic)&8)   |
-             ((I2>Ic)&4)   |
-             ((I1>Ic)&2)   |
-             ((I0>Ic)&1);  
+        fI = ((I7>IC)&128) |
+             ((I6>IC)&64)  |
+             ((I5>IC)&32)  |
+             ((I4>IC)&16)  |
+             ((I3>IC)&8)   |
+             ((I2>IC)&4)   |
+             ((I1>IC)&2)   |
+             ((I0>IC)&1);  
 #else
         Mat_<uchar> feature(I.size());
         Mat_<uchar> img(I);
@@ -222,7 +246,7 @@ public:
         if (utable == UniformNone)
         {
             hist(fI,features,256,256);
-            return features.rows;
+            return features.cols * features.elemSize() ;
         }
 
         static int uniform[3][256] = {
@@ -266,7 +290,8 @@ public:
 
         int histlen[] = {59,58,17};
         hist(h59,features,histlen[utable],histlen[utable]);
-        return features.rows;
+        features = features.reshape(1,1);
+        return features.cols * features.elemSize() ;
     }
 };
 
@@ -311,10 +336,10 @@ public:
 
         SHIFTED_MATS_3x3(img);
 
-        Mat Icplus1  = Ic+kerP1;
-        Mat Icplus2  = Ic+kerP2;
-        Mat Icminus1 = Ic-kerP1;
-        Mat Icminus2 = Ic-kerP2;
+        Mat Icplus1  = IC+kerP1;
+        Mat Icplus2  = IC+kerP2;
+        Mat Icminus1 = IC-kerP1;
+        Mat Icminus2 = IC-kerP2;
         fI_2 =  ((I7<Icminus2)&128 ) |
                 ((I6<Icminus2)& 64 ) |
                 ((I5<Icminus2)& 32 ) |
@@ -358,7 +383,7 @@ public:
         h.push_back(h3);
         h.push_back(h4);
         features = h.reshape(1,1);
-        return features.rows;
+        return features.cols * features.elemSize() ;
     }
 };
 
@@ -389,16 +414,20 @@ class WLD : public GriddedHist
     int typeflag;
 
     template <class T>
-    void oper(const Mat & src, Mat & hist) const {
+    void oper(const Mat & src, Mat & hist) const 
+    {
         const double CV_PI_4 = CV_PI / 4.0;
         int radius = 1;
-        for(int i=radius;i<src.rows-radius;i++) {
-            for(int j=radius;j<src.cols-radius;j++) {
+        for(int i=radius; i<src.rows-radius; i++) 
+        {
+            for(int j=radius; j<src.cols-radius; j++) 
+            {
                 // 7 0 1
                 // 6 c 2
                 // 5 4 3
                 uchar c   = src.at<uchar>(i,j);
-                uchar n[8]= {
+                uchar n[8]= 
+                {
                     src.at<uchar>(i-1,j),
                     src.at<uchar>(i-1,j+1),
                     src.at<uchar>(i,j+1),
@@ -417,7 +446,8 @@ class WLD : public GriddedHist
                 hist.at<T>(int(zeta)) += 1;
 
                 // (11), projected from [-pi/2,pi/2] to [0,size_theta]
-                for ( int i=0; i<size_theta_n; i++ ) {
+                for ( int i=0; i<size_theta_n; i++ ) 
+                {
                     double a = atan2(double(n[i]-n[(i+4)%8]),double(n[(i+2)%8]-n[(i+6)%8]));
                     double theta = CV_PI_4 * fmod( (a+CV_PI)/CV_PI_4+0.5f, 8 ) * size_theta_w; // (11)
                     hist.at<T>(int(theta)+size_zeta+size_theta * i) += 1;
@@ -443,10 +473,11 @@ public:
         features = Mat::zeros(WLD::size_all*GRIDX*GRIDY,1,typeflag);
         switch(typeflag)
         {
-        case CV_32F:  oper<float>(img,features);  break;
-        case CV_8U:   oper<uchar>(img,features);  break;
+            case CV_32F:  oper<float>(img,features);  break;
+            case CV_8U:   oper<uchar>(img,features);  break;
         }
-        return features.rows;
+        features = features.reshape(1,1);
+        return features.cols * features.elemSize() ;
     }
 };
 
@@ -463,16 +494,11 @@ public:
 
         Mat h,fI;
 
-        //int t=0;
-        //fI = ((I0>=I4)&8) | ((I1>=I5)&4) | ((I2>=I6)&2) | ((I3>=I7)&1);
-        //hist(fI,h,16,16);
-        //features.push_back(h);
-
-        fI = ((Ic>=I7)&8) | ((Ic>=I6)&4) | ((Ic>=I5)&2) | ((Ic>=I4)&1);
+        fI = ((IC>=I7)&8) | ((IC>=I6)&4) | ((IC>=I5)&2) | ((IC>=I4)&1);
         hist(fI,h,16,16);
         features.push_back(h);
-
-        return features.rows;
+        features = features.reshape(1,1);
+        return features.cols * features.elemSize() ;
     }
 };
 
@@ -487,25 +513,82 @@ public:
     {
         int M = img.rows; 
         int N = img.cols; 
-        //% Define shifted images (special case)
+        // shifted images (special case)
         Mat I7 = img(Range(1,M-1), Range(1,N-2));
         Mat I6 = img(Range(1,M-1), Range(2,N-1));
         Mat I5 = img(Range(1,M-1), Range(3,N  ));
         Mat I4 = img(Range(2,M  ), Range(3,N  ));
-        Mat Ic = img(Range(2,M  ), Range(2,N-1));
-        //% Compute and normalize the histograms
-        Mat h4,h5,h6,h7;
+        Mat IC = img(Range(2,M  ), Range(2,N-1));
+        // Compute and normalize the histograms
         // one pixel displacements in orientations 0є, 45є, 90є and 135є
-        hist((Ic|I4), h4);
-        hist((Ic|I5), h5);
-        hist((Ic|I6), h6);
-        hist((Ic|I7), h7);
-        //% Average 
+        Mat h4,h5,h6,h7;
+        hist((IC|I4), h4);
+        hist((IC|I5), h5);
+        hist((IC|I6), h6);
+        hist((IC|I7), h7);
+        // Average 
         features = (h4+h5+h6+h7)/4;
-        return features.rows;
+        return features.cols * features.elemSize() ;
     }
 };
 
+
+//
+// concat histograms from lbp(u) features generated from a bank of gabor filtered images
+//
+class ExtractorGaborLbp : public ExtractorLbp
+{
+    Size kernel_size;
+public:
+    ExtractorGaborLbp(int gridx=8, int gridy=8, int u_table=UniformNone, int kernel_siz=8) 
+        : ExtractorLbp(gridx, gridy, u_table) 
+        , kernel_size(kernel_siz, kernel_siz)
+    {}
+    void gabor(const Mat &src_f, Mat &features,double sigma, double theta, double lambda, double gamma, double psi) const
+    {
+        Mat dest,dest8u,his;
+        cv::filter2D(src_f, dest, CV_32F, getGaborKernel(kernel_size, sigma,theta, lambda, gamma, psi));
+        dest.convertTo(dest8u, CV_8U);
+        ExtractorLbp::extract(dest8u, his);
+        features.push_back(his.reshape(1, 1));
+    }
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        Mat src_f;
+        img.convertTo(src_f, CV_32F, 1.0/255.0);
+        gabor(src_f, features, 8,4,90,15,0);
+        gabor(src_f, features, 8,4,45,30,1);
+        gabor(src_f, features, 8,4,45,45,0);
+        gabor(src_f, features, 8,4,90,60,1);
+        features = features.reshape(1,1);
+        return features.cols * features.elemSize() ;
+    }
+};
+
+
+class ExtractorDct : public TextureFeature::Extractor
+{
+    int grid;
+public:
+    ExtractorDct() : grid(8) {}
+    virtual int extract( const Mat &img, Mat &features ) const 
+    {
+        Mat src;
+        img.convertTo(src,CV_32F,1.0/255.0);
+        for(int i=0; i<src.rows-grid; i+=grid) 
+        {
+            for(int j=0; j<src.cols-grid; j+=grid) 
+            {
+                Mat d;
+                dct(src(Rect(i,j,grid,grid)),d);
+                Mat e = d(Rect(0,0,grid/2,grid/2)).clone();
+                features.push_back(e.reshape(1,1));
+            }
+        }
+        features = features.reshape(1,1);
+        return features.cols*features.elemSize();
+    }
+};
 
 
 //
@@ -550,4 +633,14 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8)
 cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx=8, int gy=8, int tf=CV_32F)
 { 
     return makePtr<WLD>(gx, gy, tf); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, int u_table=0, int kernel_siz=8)
+{ 
+    return makePtr<ExtractorGaborLbp>(gx, gy, u_table, kernel_siz); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorDct()
+{ 
+    return makePtr<ExtractorDct>(); 
 }
