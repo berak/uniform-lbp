@@ -273,7 +273,7 @@ int main(int argc, const char *argv[])
     char *pp[] = { "no preproc", "equalizeHist", "tan-triggs", "CLAHE" };
     cout << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[preproc] << endl;
     if ( rec==0 )
-        cout << "[method]       [f_count]  [pos]  [neg]   [hit]   [time]  " << endl;
+        cout << "[method]       [f_bytes]  [pos]  [neg]   [hit]   [time]  " << endl;
 
     int n=42;
     if ( rec > 0 ) // loop through all possibilities for 0, restrict it to the chosen one else.

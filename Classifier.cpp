@@ -107,52 +107,18 @@ public:
     }
 };
 
-//
-//class ClassifierXX : public TextureFeature::Classifier
-//{
-//    Ptr<ml::StatModel> me; // hmm type errors with ml::EM
-//
-//public:
-//
-//    ClassifierXX(Ptr<ml::StatModel> p) 
-//        : me(p)
-//    {}
-//
-//    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
-//    {
-//        Mat feature = testFeature;
-//        if ( testFeature.type() != CV_32F )
-//            testFeature.convertTo(feature,CV_32F);
-//        me->predict(feature, results, ml::ROW_SAMPLE);
-//        return results.rows;
-//    }
-//    virtual int train(const cv::Mat &trainFeatures, const cv::Mat &trainLabels)
-//    {
-//        Mat feature = trainFeatures;
-//        if ( trainFeatures.type() != CV_32F )
-//            trainFeatures.convertTo(feature,CV_32F);
-//        Mat labels = trainLabels;
-//        if ( trainLabels.type() != CV_32F )
-//            trainLabels.convertTo(labels,CV_32F);
-//        me->train(feature, ml::ROW_SAMPLE, labels);
-//        return 1;
-//    }
-//};
-//
-//
-//
 
 
-class Svm : public TextureFeature::Classifier
+class ClassifierSvm : public TextureFeature::Classifier
 {
     Ptr<ml::SVM> svm;
     ml::SVM::Params param;
 
 public:
 
-    Svm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
+    ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
     {
-        param.kernelType = ml::SVM :: POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
+        param.kernelType = ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
         param.svmType = ml::SVM::NU_SVC;
         param.degree = degree; // for poly
         param.gamma = gamma; // for poly / rbf / sigmoid
@@ -190,8 +156,11 @@ public:
 };
 
 
+
 // 
 // ref impl of eigen / fisher faces
+//   this is basically bytefish's code, 
+//   stripped to the bare minimum
 //
 class ClassifierEigen : public TextureFeature::Classifier
 {
@@ -222,7 +191,6 @@ public:
         gemm(X, _eigenvectors, 1.0, Mat(), 0.0, Y);
         return Y;
     }
-
     //Mat reconstruct(const Mat& src) const
     //{
     //    Mat X, Y;
@@ -235,7 +203,6 @@ public:
     //    }
     //    return X;
     //}
-
 
     void save_projections(const Mat& data) 
     {
@@ -283,12 +250,13 @@ public:
     }
 };
 
+
 class ClassifierFisher : public ClassifierEigen
 {
 public:
 
     ClassifierFisher(int num_components = 0, double threshold = DBL_MAX) 
-        : ClassifierEigen(num_components, _threshold) 
+        : ClassifierEigen(num_components, threshold) 
     {}
 
     int unique(const Mat & labels) const 
@@ -309,7 +277,7 @@ public:
         PCA pca(data, Mat(), cv::PCA::DATA_AS_ROW, (N-C));
         LDA lda(pca.project(data),labels, _num_components);
 
-        Mat leigen; // hmm, it's new, that i have to convert.
+        Mat leigen; // hmm, it's new, that i have to convert. something changed in LDA ?
         lda.eigenvectors().convertTo(leigen, pca.eigenvectors.type());
         gemm(pca.eigenvectors, leigen, 1.0, Mat(), 0.0, _eigenvectors, GEMM_1_T);
 
@@ -336,9 +304,12 @@ cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1)
 { return makePtr<ClassifierKNN>(k); }
 
-cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
-{ return makePtr<Svm>(degree, gamma, coef0, C, nu, p); }
+cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree=0.5, double gamma=0.8, double coef0=0, double C=0.99, double nu=0.2, double p=0.5)
+{ return makePtr<ClassifierSvm>(degree, gamma, coef0, C, nu, p); }
 
+//
+// reference impl
+//
 cv::Ptr<TextureFeature::Classifier> createClassifierEigen()
 { return makePtr<ClassifierEigen>(); }
 

@@ -24,7 +24,7 @@ public:
         else
             features=img;
         features = features.reshape(1,1);
-        return features.cols * features.elemSize() ;
+        return features.total() * features.elemSize();
     }
 };
 
@@ -72,7 +72,7 @@ public:
     {
         features = mom(img);
         features = features.reshape(1,1);
-        return features.cols * features.elemSize() ;
+        return features.total() * features.elemSize() ;
     }
 };
 
@@ -246,7 +246,7 @@ public:
         if (utable == UniformNone)
         {
             hist(fI,features,256,256);
-            return features.cols * features.elemSize() ;
+            return features.total() * features.elemSize();
         }
 
         static int uniform[3][256] = {
@@ -291,7 +291,7 @@ public:
         int histlen[] = {59,58,17};
         hist(h59,features,histlen[utable],histlen[utable]);
         features = features.reshape(1,1);
-        return features.cols * features.elemSize() ;
+        return features.total() * features.elemSize();
     }
 };
 
@@ -383,7 +383,7 @@ public:
         h.push_back(h3);
         h.push_back(h4);
         features = h.reshape(1,1);
-        return features.cols * features.elemSize() ;
+        return features.total() * features.elemSize();
     }
 };
 
@@ -477,7 +477,7 @@ public:
             case CV_8U:   oper<uchar>(img,features);  break;
         }
         features = features.reshape(1,1);
-        return features.cols * features.elemSize() ;
+        return features.total() * features.elemSize();
     }
 };
 
@@ -498,7 +498,7 @@ public:
         hist(fI,h,16,16);
         features.push_back(h);
         features = features.reshape(1,1);
-        return features.cols * features.elemSize() ;
+        return features.total() * features.elemSize();
     }
 };
 
@@ -528,7 +528,7 @@ public:
         hist((IC|I7), h7);
         // Average 
         features = (h4+h5+h6+h7)/4;
-        return features.cols * features.elemSize() ;
+        return features.total() * features.elemSize();
     }
 };
 
@@ -561,7 +561,7 @@ public:
         gabor(src_f, features, 8,4,45,45,0);
         gabor(src_f, features, 8,4,90,60,1);
         features = features.reshape(1,1);
-        return features.cols * features.elemSize() ;
+        return features.total() * features.elemSize();
     }
 };
 
@@ -575,9 +575,9 @@ public:
     {
         Mat src;
         img.convertTo(src,CV_32F,1.0/255.0);
-        for(int i=0; i<src.rows-grid; i+=grid) 
+        for(int i=0; i<src.rows-grid; i+=grid)
         {
-            for(int j=0; j<src.cols-grid; j+=grid) 
+            for(int j=0; j<src.cols-grid; j+=grid)
             {
                 Mat d;
                 dct(src(Rect(i,j,grid,grid)),d);
