@@ -51,7 +51,6 @@ the goal now is to achieve more flexibility, make it easy to swap features, knn 
     gabor_red         17408    392     57    0.873   27.797
     gabor_svm         60416    412     37    0.918   49.143
     dct_l2            12544    363     86    0.808    3.665
-    dct_hell          12544      0      0   -1.#IO    8.998
     dct_svm           12544    390     59    0.869    7.435
     eigen             14400    361     88    0.804   97.675
     fisher            14400    401     48    0.893   77.305
@@ -76,7 +75,6 @@ the goal now is to achieve more flexibility, make it easy to swap features, knn 
     gabor_red         17408    743     17    0.978   56.272
     gabor_svm         60416    727     33    0.957  115.706
     dct_l2            12544    730     30    0.961    8.248
-    dct_hell          12544      0      0   -1.#IO   18.259
     dct_svm           12544    736     24    0.968   17.566
     eigen             14400    740     20    0.974  246.252
     fisher            14400    720     40    0.947  207.481
@@ -101,7 +99,6 @@ the goal now is to achieve more flexibility, make it easy to swap features, knn 
     gabor_red         17408    282    216    0.566   51.788
     gabor_svm         60416    335    163    0.673  116.583
     dct_l2            12544    230    268    0.462    7.400
-    dct_hell          12544      0      0   -1.#IO   14.413
     dct_svm           12544    362    136    0.727   18.474
     eigen             14400    223    275    0.448  272.145
     fisher            14400    346    152    0.695  233.791
@@ -126,7 +123,6 @@ the goal now is to achieve more flexibility, make it easy to swap features, knn 
     gabor_red         17408     94      6    0.940    8.508
     gabor_svm         60416     94      6    0.940   10.767
     dct_l2            12544     87     13    0.870    1.248
-    dct_hell          12544      0      0   -1.#IO    1.532
     dct_svm           12544     95      5    0.950    1.589
     eigen             14400     88     12    0.880    9.676
     fisher            14400     94      6    0.940    7.083
@@ -151,7 +147,6 @@ the goal now is to achieve more flexibility, make it easy to swap features, knn 
     gabor_red         17408    577     11    0.981   67.891
     gabor_svm         60416    576     12    0.980  152.041
     dct_l2            12544    577     11    0.981    8.738
-    dct_hell          12544     20      0    1.000   19.390
     dct_svm           12544    578     10    0.983   22.977
     eigen             14400    578     10    0.983  472.288
     fisher            14400    537     51    0.913  424.227
@@ -176,7 +171,6 @@ the goal now is to achieve more flexibility, make it easy to swap features, knn 
     gabor_red         17408    284     16    0.947   19.135
     gabor_svm         60416    282     18    0.940   26.120
     dct_l2            12544    249     51    0.830    2.758
-    dct_hell          12544     22      0    1.000    4.448
     dct_svm           12544    266     34    0.887    3.975
     eigen             14400    252     48    0.840   40.255
     fisher            14400    257     43    0.857   28.471
@@ -201,7 +195,6 @@ the goal now is to achieve more flexibility, make it easy to swap features, knn 
     gabor_red         17408    457     93    0.831   68.337
     gabor_svm         60416    518     32    0.942  138.727
     dct_l2            12544    473     77    0.860    9.707
-    dct_hell          12544      0      0   -1.#IO   19.851
     dct_svm           12544    195    355    0.355   21.497
     eigen             14400    469     81    0.853  503.998
     fisher            14400    537     13    0.976  454.957
