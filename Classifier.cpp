@@ -9,7 +9,20 @@ using namespace cv;
 #include "TextureFeature.h"
 
 
-static struct _onceonly { _onceonly() { /*initModule_ml();*/ } } yes;
+//static struct _onceonly { _onceonly() { /*initModule_ml();*/ } } yes;
+
+
+//
+// find the number of unique labels, the class count
+//
+int unique(const Mat &labels, set<int> &classes=set<int>())
+{
+    for (size_t i=0; i<labels.total(); ++i)
+        classes.insert(labels.at<int>(i));
+    return classes.size();
+}
+
+
 
 
 class ClassifierNearest : public TextureFeature::Classifier
@@ -60,6 +73,7 @@ public:
 
 //
 // just swap the comparison
+//   the flag enums are overlapping, so i like to have this in a different class
 //
 class ClassifierHist : public ClassifierNearest
 {
@@ -102,6 +116,7 @@ public:
     }
     virtual int train(const cv::Mat &trainFeatures, const cv::Mat &trainLabels)
     {
+        knn->clear();
         knn->train(trainFeatures, ml::ROW_SAMPLE, trainLabels);
         return 1;
     }
@@ -109,6 +124,9 @@ public:
 
 
 
+//
+// single svm, multi class.
+//
 class ClassifierSvm : public TextureFeature::Classifier
 {
     Ptr<ml::SVM> svm;
@@ -139,6 +157,8 @@ public:
         Mat trainData = src.reshape(1,labels.rows);
         if ( trainData.type() != CV_32F )
             trainData.convertTo(trainData,CV_32F);
+
+        svm->clear();
         svm->train( trainData , ml::ROW_SAMPLE , Mat(labels) );
         return trainData.rows;
     }
@@ -156,64 +176,173 @@ public:
 };
 
 
+//
+// single class, multi svm approach
+//
+class ClassifierSvmMulti : public TextureFeature::Classifier
+{
+    vector<Ptr<ml::SVM>> svms;
+    ml::SVM::Params param;
+
+public:
+
+    ClassifierSvmMulti() 
+    {
+        // 
+        // again, call me hellples on paramizing this ;[
+        //
+        param.kernelType = ml::SVM::LINEAR; //, CvSVM::LINEAR...
+        //param.svmType = ml::SVM::NU_SVC;
+        ////param.degree = degree; // for poly
+        param.gamma = 1.0; // for poly / rbf / sigmoid
+        param.coef0 = 0.0; // for poly / sigmoid
+        param.C = 0.5; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
+        param.nu = 0.5; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
+        //param.p = p; // for CV_SVM_EPS_SVR
+        //param.classWeights = NULL ; // for CV_SVM_C_SVC
+        
+        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS ;
+        param.termCrit.maxCount = 100;
+        param.termCrit.epsilon = 1e-6;
+    }
+
+    virtual int train(const Mat &src, const Mat &labels)
+    {
+        svms.clear();
+
+        Mat trainData = src.reshape(1,labels.rows);
+        if ( trainData.type() != CV_32F )
+            trainData.convertTo(trainData,CV_32F);
+
+        //
+        // train one svm per class:
+        //
+        set<int> classes;
+        int N = unique(labels,classes);
+
+        for (set<int>::iterator it=classes.begin(); it != classes.end(); ++it)
+        {
+            Ptr<ml::SVM> svm = ml::SVM::create(param);
+            Mat slabels; // you against all others, that's the only difference.
+            for ( size_t j=0; j<labels.total(); ++j)
+                slabels.push_back( ( *it == labels.at<int>(j) ) ? 1 : -1 );
+            svm->train( trainData , ml::ROW_SAMPLE , slabels );
+            svms.push_back(svm);
+        }
+        return trainData.rows;
+    }
+
+
+    virtual int predict(const Mat &src, Mat &res) const    
+    {
+        Mat query;
+        if ( src.type() != CV_32F )
+            src.convertTo(query,CV_32F);
+        else
+            query=src;
+
+        //
+        // query per-class svms, return best(largest) result
+        //
+        float m = -1.0f;
+        float mi = 0.0f;
+        for ( size_t j=0; j<svms.size(); ++j)
+        {
+            Mat r;
+            svms[j]->predict(query, r);
+            float p = r.at<float>(0);
+            if ( p > m ) 
+            {
+                m = p;
+                mi = float(j);
+            }
+        }
+        res = (Mat_<float>(1,2) << mi, m);
+        return res.rows;
+    }
+};
+
+
+//
+////
+//// (half-assed) regression test, don't merge ;)
+////
+//class ClassifierTree : public TextureFeature::Classifier
+//{
+//    Ptr<ml::RTrees> tree;
+//    ml::RTrees::Params param;
+//
+//public:
+//
+//    ClassifierTree() 
+//    {
+//        param.maxDepth = 10;
+//        // here's where it fails for me:
+//        //  i have to use such a large number for minSampleCount(else it crashes)
+//        //   that the resulting splits are lower than my class count,
+//        //   resulting in a *obviously very bad* prediction.
+//        param.minSampleCount = 64;
+//
+//        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
+//        param.termCrit.maxCount = 10000;
+//        param.termCrit.epsilon = 1e-6;
+//        tree = ml::RTrees::create(param);
+//    }
+//
+//    virtual int train(const Mat &src, const Mat &labels)
+//    {
+//        Mat trainData = src.reshape(1,labels.rows);
+//        if (trainData.type() != CV_32F)
+//            trainData.convertTo(trainData,CV_32F);
+//        tree->train(trainData , ml::ROW_SAMPLE , labels);
+//        return trainData.rows;
+//    }
+//
+//    virtual int predict(const Mat &src, Mat &res) const    
+//    {
+//        Mat query;
+//        if ( src.type() != CV_32F )
+//            src.convertTo(query,CV_32F);
+//        else
+//            query=src;
+//        tree->predict(query, res);
+//        return res.rows;
+//    }
+//};
+//
+
 
 // 
 // ref impl of eigen / fisher faces
 //   this is basically bytefish's code, 
-//   stripped to the bare minimum
+//   (terribly) condensed to the bare minimum
 //
 class ClassifierEigen : public TextureFeature::Classifier
 {
 protected:
-    int _num_components;
-    double _threshold;
     vector<Mat> _projections;
     Mat _labels;
     Mat _eigenvectors;
     Mat _mean;
+    int _num_components;
 
 public:
 
-    ClassifierEigen(int num_components = 0, double threshold = DBL_MAX) 
-        : _num_components(num_components)
-        , _threshold(threshold) 
+    ClassifierEigen(int num_components=0) 
+        : _num_components(num_components) // we don't need a threshold here
     {}
 
-    Mat project(const Mat& src) const
-    {
-        Mat X, Y;
-        src.convertTo(X, _eigenvectors.type());
-        for(int i=0; i<src.rows; i++) 
-        {
-            Mat r_i = X.row(i);
-            subtract(r_i, _mean.reshape(1,1), r_i);
-        }
-        gemm(X, _eigenvectors, 1.0, Mat(), 0.0, Y);
-        return Y;
-    }
-    //Mat reconstruct(const Mat& src) const
-    //{
-    //    Mat X, Y;
-    //    src.convertTo(Y, _eigenvectors.type());
-    //    gemm(Y, _eigenvectors, 1.0, Mat(), 0.0, X, GEMM_2_T);
-    //    for(int i=0; i<src.rows; i++) 
-    //    {
-    //        Mat r_i = X.row(i);
-    //        add(r_i, _mean.reshape(1,1), r_i);
-    //    }
-    //    return X;
-    //}
-
-    void save_projections(const Mat& data) 
+    void save_projections(const Mat &data) 
     {
         _projections.clear();
         for(int i=0; i<data.rows; i++) 
         {
-            _projections.push_back(project(data.row(i)));
+            Mat p = LDA::subspaceProject(_eigenvectors, _mean, data.row(i));
+            _projections.push_back(p);
         }
     }
 
-    virtual int train(const Mat & data, const Mat & labels) 
+    virtual int train(const Mat &data, const Mat &labels) 
     {
         if((_num_components <= 0) || (_num_components > data.rows))
             _num_components = data.rows;
@@ -229,18 +358,18 @@ public:
 
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
-        Mat q = project(testFeature.reshape(1,1));
+        Mat query = LDA::subspaceProject(_eigenvectors, _mean, testFeature.reshape(1,1));
         double minDist = DBL_MAX;
         int minClass = -1;
         int minId=-1;
-        for(size_t sampleIdx = 0; sampleIdx < _projections.size(); sampleIdx++) 
+        for (size_t idx=0; idx<_projections.size(); idx++) 
         {
-            double dist = norm(_projections[sampleIdx], q, NORM_L2);
-            if((dist < minDist) && (dist < _threshold))
+            double dist = norm(_projections[idx], query, NORM_L2);
+            if (dist < minDist)
             {
-                minId    = sampleIdx;
+                minId    = idx;
                 minDist  = dist;
-                minClass = _labels.at<int>((int)sampleIdx);
+                minClass = _labels.at<int>((int)idx);
             }
         }
         results.push_back(float(minClass));
@@ -255,34 +384,33 @@ class ClassifierFisher : public ClassifierEigen
 {
 public:
 
-    ClassifierFisher(int num_components = 0, double threshold = DBL_MAX) 
-        : ClassifierEigen(num_components, threshold) 
+    ClassifierFisher(int num_components=0) 
+        : ClassifierEigen(num_components) 
     {}
 
-    int unique(const Mat & labels) const 
-    {
-        set<int> set_elems;
-        for (size_t i=0; i<labels.total(); ++i)
-            set_elems.insert(labels.at<int>(i));
-        return set_elems.size();
-    }
 
-    virtual int train(const Mat & data, const Mat & labels)
+    virtual int train(const Mat &data, const Mat &labels)
     {
         int N = data.rows;
         int C = unique(labels);
-        if((_num_components <= 0) || (_num_components > (C-1)))
+        if((_num_components <= 0) || (_num_components > (C-1))) // btw, why C-1 ?
             _num_components = (C-1);
 
+        // step one, do pca on the original(pixel) data:
         PCA pca(data, Mat(), cv::PCA::DATA_AS_ROW, (N-C));
-        LDA lda(pca.project(data),labels, _num_components);
+        _mean = pca.mean.reshape(1,1);
 
-        Mat leigen; // hmm, it's new, that i have to convert. something changed in LDA ?
+        // step two, do lda on data projected to pca space:
+        Mat proj = LDA::subspaceProject(pca.eigenvectors.t(), _mean, data);
+        LDA lda(proj, labels, _num_components);
+
+        // step three, combine both:
+        Mat leigen; 
         lda.eigenvectors().convertTo(leigen, pca.eigenvectors.type());
         gemm(pca.eigenvectors, leigen, 1.0, Mat(), 0.0, _eigenvectors, GEMM_1_T);
 
+        // step four, project training images to lda space for furthur comparison:
         _labels = labels;
-        _mean   = pca.mean.reshape(1,1);
         save_projections(data);
         return 1;
     }
@@ -304,8 +432,14 @@ cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1)
 { return makePtr<ClassifierKNN>(k); }
 
+//cv::Ptr<TextureFeature::Classifier> createClassifierTree()
+//{ return makePtr<ClassifierTree>(); }
+
 cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree=0.5, double gamma=0.8, double coef0=0, double C=0.99, double nu=0.2, double p=0.5)
 { return makePtr<ClassifierSvm>(degree, gamma, coef0, C, nu, p); }
+
+cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
+{ return makePtr<ClassifierSvmMulti>(); }
 
 //
 // reference impl

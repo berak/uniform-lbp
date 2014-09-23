@@ -33,11 +33,11 @@ public:
 
 
 //
-// gridded humoments
+// gridded hu-moments
 //
 class ExtractorMoments : public TextureFeature::Extractor
 {
-    static void mom(const Mat &z, Mat & feature, int i, int j, int w, int h)
+    static void mom(const Mat &z, Mat &feature, int i, int j, int w, int h)
     {
         double hu[7];
         Mat roi(z, cv::Rect(i*w,j*h,w,h));
@@ -91,7 +91,7 @@ struct GriddedHist : public TextureFeature::Extractor
 protected:
     int GRIDX,GRIDY;
     
-    void calc_hist(const Mat_<uchar> & feature, Mat_<float> & histo, int histSize, int histRange=256) const
+    void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo, int histSize, int histRange=256) const
     {   
         for ( int i=0; i<feature.rows; i++ )
         {
@@ -103,7 +103,7 @@ protected:
         }
     }
 
-    void hist(const Mat & feature, Mat & histo, int histSize=256, int histRange=256) const
+    void hist(const Mat &feature, Mat &histo, int histSize=256, int histRange=256) const
     {   
         histo.release();
         //const float range[] = { 0, 256 } ;
@@ -174,6 +174,8 @@ public:
 //        Mat Ii = I(Range(3,M  ), Range(2,N-1));
 //        Mat Ih = I(Range(3,M-1), Range(2,N-1));
 
+
+
 class ExtractorLbp : public GriddedHist
 {
 protected:
@@ -183,7 +185,7 @@ protected:
     //
     // "histogram of equivalence patterns" 
     //
-    virtual void hep( const Mat &I, Mat & fI ) const
+    virtual void hep( const Mat &I, Mat &fI ) const
     {
 #if 1
         SHIFTED_MATS_3x3(I);
@@ -300,7 +302,7 @@ public:
 class ExtractorBGC1 : public ExtractorLbp
 {
 protected:
-    virtual void hep( const Mat &I, Mat & fI ) const
+    virtual void hep( const Mat &I, Mat &fI ) const
     {
         SHIFTED_MATS_3x3(I);
 
@@ -389,7 +391,7 @@ public:
 
 
 //
-//  A Robust Descriptor based on Weber’s Law
+//  A Robust Descriptor based on Weber’s Law (i terribly crippled it)
 //
 class WLD : public GriddedHist
 {
@@ -414,7 +416,7 @@ class WLD : public GriddedHist
     int typeflag;
 
     template <class T>
-    void oper(const Mat & src, Mat & hist) const 
+    void oper(const Mat &src, Mat &hist) const 
     {
         const double CV_PI_4 = CV_PI / 4.0;
         int radius = 1;
@@ -496,8 +498,42 @@ public:
 
         fI = ((IC>=I7)&8) | ((IC>=I6)&4) | ((IC>=I5)&2) | ((IC>=I4)&1);
         hist(fI,h,16,16);
-        features.push_back(h);
-        features = features.reshape(1,1);
+        features = h.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
+
+
+// helper
+static Mat eta1(Mat a, int p)
+{
+    Mat c;
+    multiply(a,a,c);
+    return c > (p*p);
+}
+
+
+class ExtractorSTU : public GriddedHist
+{
+    int kerP1;
+public:
+    ExtractorSTU(int gridx=8, int gridy=8, int kp1=8) 
+        : GriddedHist(gridx, gridy) 
+        , kerP1(kp1)
+    {}
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        SHIFTED_MATS_3x3(img);
+
+        Mat h,fI;
+
+        fI = eta1(abs(I6-IC),kerP1) & (1<<6)
+           | eta1(abs(I4-IC),kerP1) & (1<<4) 
+           | eta1(abs(I2-IC),kerP1) & (1<<2) 
+           | eta1(abs(I0-IC),kerP1) & (1<<1);
+        hist(fI,h,64,256);
+
+        features = h.reshape(1,1);
         return features.total() * features.elemSize();
     }
 };
@@ -566,6 +602,10 @@ public:
 };
 
 
+//
+// grid it into 8x8 image patches, do a dct on each, 
+//  concat downsampled 4x4(topleft) result to feature vector.
+//
 class ExtractorDct : public TextureFeature::Extractor
 {
     int grid;
@@ -581,7 +621,8 @@ public:
             {
                 Mat d;
                 dct(src(Rect(i,j,grid,grid)),d);
-                Mat e = d(Rect(0,0,grid/2,grid/2)).clone();
+                // downsampling is just a ROI operation here, still we need a clone()
+                Mat e = d(Rect(0,0,grid/2,grid/2)).clone(); 
                 features.push_back(e.reshape(1,1));
             }
         }
@@ -623,6 +664,11 @@ cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx=8, int gy=8)
 cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx=8, int gy=8)
 { 
     return makePtr<ExtractorMTS>(gx, gy); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorSTU(int gx=8, int gy=8,int kp1=5)
+{ 
+    return makePtr<ExtractorSTU>();//gx, gy, kp1); 
 }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8)
