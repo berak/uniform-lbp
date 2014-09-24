@@ -29,25 +29,31 @@ namespace TextureFeature
 the goal now is to achieve more flexibility, make it easy to swap features, knn against svm, distance measures.
 
 
+------------------------------------------------------
+
+####results:
+
+------------------------------------------------------
+
 
     --------------------------------------------------------------
     aberdeen:          5 fold, 98 classes, 500 images, no preproc
     --------------------------------------------------------------
     [method]       [f_bytes]  [pos]  [neg]   [hit]   [time]
-    pixels_l2         14400    361     88    0.804    4.568
-    pixels_svm         3600    390     59    0.869    5.552
-    pixels_multi       3600      0    449    0.000   14.453
+    pixels_l2         14400    361     88    0.804    4.568    * 120x120
+    pixels_svm         3600    390     59    0.869    5.552    * 60x60, multi-class, single svm
+    pixels_multi       3600      0    449    0.000   14.453    * 60x60, multi-svm, single class
     lbp_l2            65536    338    111    0.753    9.590
     lbp_svm           65536    370     79    0.824   40.966
-    lbp_hell          65536    391     58    0.871   36.448
-    lbpu_red_hell      4352    325    124    0.724    4.255
+    lbp_hell          65536    391     58    0.871   36.448    * hellinger distance
+    lbpu_red_hell      4352    325    124    0.724    4.255    * reduced uniform2 (17 bins)
     bgc1_hell         65536    368     81    0.820   36.526
     wld_hell          45056    279    170    0.621   40.767
     mts_svm            4096    394     55    0.878    3.086
     mts_hell           4096    358     91    0.797    3.521
     stu_svm           16384    410     39    0.913    8.623
     glcm_svm          65536    300    149    0.668   46.678
-    gabor_hell        60416    401     48    0.893   50.987
+    gabor_hell        60416    401     48    0.893   50.987    * 4 gabor filters -> lbp
     gabor_red         17408    392     57    0.873   27.797
     gabor_svm         60416    412     37    0.918   49.143
     dct_l2            12544    363     86    0.808    3.665
