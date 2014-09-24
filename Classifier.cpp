@@ -91,6 +91,23 @@ public:
 };
 
 
+//
+// Negated Mahalanobis Cosine Distance
+//
+class ClassifierCosine : public ClassifierNearest
+{
+public:
+    // ClassifierNearest
+    virtual double distance(const cv::Mat &trainFeature, const cv::Mat &testFeature) const
+    {
+        double a = trainFeature.dot(testFeature);
+        double b = trainFeature.dot(trainFeature);
+        double c = testFeature.dot(testFeature);
+        return -a / sqrt(b*c);
+    }
+};
+
+
 
 
 class ClassifierKNN : public TextureFeature::Classifier
@@ -189,7 +206,7 @@ public:
     ClassifierSvmMulti() 
     {
         // 
-        // again, call me hellples on paramizing this ;[
+        // again, call me helpless on parameterizing this ;[
         //
         param.kernelType = ml::SVM::LINEAR; //, CvSVM::LINEAR...
         //param.svmType = ml::SVM::NU_SVC;
@@ -428,6 +445,9 @@ cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L
 
 cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR)
 { return makePtr<ClassifierHist>(flag); }
+
+cv::Ptr<TextureFeature::Classifier> createClassifierCosine()
+{ return makePtr<ClassifierCosine>(); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1)
 { return makePtr<ClassifierKNN>(k); }

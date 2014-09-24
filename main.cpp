@@ -42,6 +42,7 @@ extern cv::Ptr<TextureFeature::Extractor> createExtractorDct();
 
 extern cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L2);
 extern cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR);
+extern cv::Ptr<TextureFeature::Classifier> createClassifierCosine();
 extern cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int n=1);                // TODO: needs a way to get to the k-1 others
 extern cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5);
 extern cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti();
@@ -302,9 +303,10 @@ int main(int argc, const char *argv[])
         case 1:  runtest("pixels_l2",    createExtractorPixels(120,120),   createClassifierNearest(),               images,labels,persons, fold); break;
         case 2:  runtest("pixels_svm",   createExtractorPixels(60,60),     createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 3:  runtest("pixels_tree",  createExtractorPixels(60,60),     createClassifierTree(),                 images,labels,persons, fold); break;
-        case 3:  runtest("pixels_multi", createExtractorPixels(60,60),   createClassifierSVMMulti(),                images,labels,persons, fold); break;
-        case 4:  runtest("lbp_l2",       createExtractorLbp(),             createClassifierNearest(),               images,labels,persons, fold); break;
-        case 5:  runtest("lbp_svm",      createExtractorLbp(),             createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 3:  runtest("pixels_cosine",createExtractorPixels(120,120),   createClassifierCosine(),                images,labels,persons, fold); break;
+        case 4:  runtest("pixels_multi", createExtractorPixels(60,60),     createClassifierSVMMulti(),                images,labels,persons, fold); break;
+        case 5:  runtest("lbp_l2",       createExtractorLbp(),             createClassifierNearest(),               images,labels,persons, fold); break;
+        case 6:  runtest("lbp_svm",      createExtractorLbp(),             createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 3:  runtest("lbpu",         createExtractorLbp(8,8,0),        createClassifierNearest(),              images,labels,persons, fold); break;
         //case 4:  runtest("lbpu_mod",     createExtractorLbpUniform(8,8,1), createClassifierNearest(),              images,labels,persons, fold); break;
         //case 5:  runtest("lbpu_red",     createExtractorLbpUniform(8,8,2), createClassifierNearest(),              images,labels,persons, fold); break;
