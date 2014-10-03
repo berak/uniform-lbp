@@ -193,7 +193,8 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
                 Mat feature;
                 fsiz = ext->extract(images[index],feature);
 
-                if ( (fold>1) && (n >= f*r) && (n <= (f+1)*r) ) // sliding window per fold
+                // sliding window per fold
+                if ( (fold>1) && (n >= f*r) && (n <= (f+1)*r) ) 
                 {
                     testFeatures.push_back(feature);
                     testLabels.push_back(labels[index]);
@@ -244,8 +245,8 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
 
 //
 //
-// face att.txt 5     5             1         0
-// face db      fold  reco    preprocessing   testmethod
+// face att.txt 5     5             1        0     0
+// face db      fold  reco    preprocessing  debug testmethod
 //
 // special: reco==0 will run *all* recognizers available on a given db
 //
@@ -307,6 +308,7 @@ int main(int argc, const char *argv[])
         case 4:  runtest("pixels_multi", createExtractorPixels(60,60),     createClassifierSVMMulti(),                images,labels,persons, fold); break;
         case 5:  runtest("lbp_l2",       createExtractorLbp(),             createClassifierNearest(),               images,labels,persons, fold); break;
         case 6:  runtest("lbp_svm",      createExtractorLbp(),             createClassifierSVM(),                   images,labels,persons, fold); break;
+        //case 7:  runtest("wein_l2",      createExtractorWeinbergHash(),    createClassifierNearest(),                   images,labels,persons, fold); break;
         //case 3:  runtest("lbpu",         createExtractorLbp(8,8,0),        createClassifierNearest(),              images,labels,persons, fold); break;
         //case 4:  runtest("lbpu_mod",     createExtractorLbpUniform(8,8,1), createClassifierNearest(),              images,labels,persons, fold); break;
         //case 5:  runtest("lbpu_red",     createExtractorLbpUniform(8,8,2), createClassifierNearest(),              images,labels,persons, fold); break;
@@ -325,10 +327,10 @@ int main(int argc, const char *argv[])
         //case 19: runtest("glcm_hell",    createExtractorGLCM(),            createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         case 19: runtest("glcm_svm",     createExtractorGLCM(),            createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 18: runtest("lqp_hell",     createExtractorLQP(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        case 20: runtest("gabor_hell",   createExtractorGaborLbp(),        createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         case 21: runtest("gabor_red",    createExtractorGaborLbp(8,8,2),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         case 22: runtest("gabor_svm",    createExtractorGaborLbp(),        createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 23: runtest("gaboru_svm",   createExtractorGaborLbp(8,8,0),   createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 23: runtest("dct_cosine",   createExtractorDct(),             createClassifierCosine(),                images,labels,persons, fold); break;
         case 24: runtest("dct_l2",       createExtractorDct(),             createClassifierNearest(),               images,labels,persons, fold); break;
         case 26: runtest("dct_svm",      createExtractorDct(),             createClassifierSVM(),                   images,labels,persons, fold); break;
         case 27: runtest("eigen",        createExtractorPixels(),          createClassifierEigen(),                 images,labels,persons, fold); break;

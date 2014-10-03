@@ -627,9 +627,11 @@ public:
             }
         }
         features = features.reshape(1,1);
-        return features.cols*features.elemSize();
+        return features.total() * features.elemSize();
     }
 };
+
+
 
 
 //

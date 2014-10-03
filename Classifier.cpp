@@ -194,7 +194,7 @@ public:
 
 
 //
-// single class, multi svm approach
+// single class(one vs. all), multi svm approach
 //
 class ClassifierSvmMulti : public TextureFeature::Classifier
 {
@@ -243,7 +243,7 @@ public:
             Mat slabels; // you against all others, that's the only difference.
             for ( size_t j=0; j<labels.total(); ++j)
                 slabels.push_back( ( *it == labels.at<int>(j) ) ? 1 : -1 );
-            svm->train( trainData , ml::ROW_SAMPLE , slabels );
+            svm->train( trainData , ml::ROW_SAMPLE , slabels ); // same data, different labels.
             svms.push_back(svm);
         }
         return trainData.rows;
@@ -259,7 +259,8 @@ public:
             query=src;
 
         //
-        // query per-class svms, return best(largest) result
+        // predict per-class, return best(largest) result
+        // hrmm, this assumes, the labels are [0..N]
         //
         float m = -1.0f;
         float mi = 0.0f;
@@ -279,54 +280,6 @@ public:
     }
 };
 
-
-//
-////
-//// (half-assed) regression test, don't merge ;)
-////
-//class ClassifierTree : public TextureFeature::Classifier
-//{
-//    Ptr<ml::RTrees> tree;
-//    ml::RTrees::Params param;
-//
-//public:
-//
-//    ClassifierTree() 
-//    {
-//        param.maxDepth = 10;
-//        // here's where it fails for me:
-//        //  i have to use such a large number for minSampleCount(else it crashes)
-//        //   that the resulting splits are lower than my class count,
-//        //   resulting in a *obviously very bad* prediction.
-//        param.minSampleCount = 64;
-//
-//        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
-//        param.termCrit.maxCount = 10000;
-//        param.termCrit.epsilon = 1e-6;
-//        tree = ml::RTrees::create(param);
-//    }
-//
-//    virtual int train(const Mat &src, const Mat &labels)
-//    {
-//        Mat trainData = src.reshape(1,labels.rows);
-//        if (trainData.type() != CV_32F)
-//            trainData.convertTo(trainData,CV_32F);
-//        tree->train(trainData , ml::ROW_SAMPLE , labels);
-//        return trainData.rows;
-//    }
-//
-//    virtual int predict(const Mat &src, Mat &res) const    
-//    {
-//        Mat query;
-//        if ( src.type() != CV_32F )
-//            src.convertTo(query,CV_32F);
-//        else
-//            query=src;
-//        tree->predict(query, res);
-//        return res.rows;
-//    }
-//};
-//
 
 
 // 
@@ -426,7 +379,7 @@ public:
         lda.eigenvectors().convertTo(leigen, pca.eigenvectors.type());
         gemm(pca.eigenvectors, leigen, 1.0, Mat(), 0.0, _eigenvectors, GEMM_1_T);
 
-        // step four, project training images to lda space for furthur comparison:
+        // step four, project training images to lda space for prediction:
         _labels = labels;
         save_projections(data);
         return 1;
@@ -451,9 +404,6 @@ cv::Ptr<TextureFeature::Classifier> createClassifierCosine()
 
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1)
 { return makePtr<ClassifierKNN>(k); }
-
-//cv::Ptr<TextureFeature::Classifier> createClassifierTree()
-//{ return makePtr<ClassifierTree>(); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree=0.5, double gamma=0.8, double coef0=0, double C=0.99, double nu=0.2, double p=0.5)
 { return makePtr<ClassifierSvm>(degree, gamma, coef0, C, nu, p); }
