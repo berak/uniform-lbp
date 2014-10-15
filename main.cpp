@@ -39,6 +39,7 @@ extern cv::Ptr<TextureFeature::Extractor> createExtractorSTU(int gx=8, int gy=8,
 extern cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8);
 extern cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, int u_table=0, int kernel_size=8);
 extern cv::Ptr<TextureFeature::Extractor> createExtractorDct();
+extern cv::Ptr<TextureFeature::Extractor> createExtractorWeinbergHash(int grid=4,int bits=8);
 
 extern cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L2);
 extern cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR);
@@ -129,6 +130,47 @@ void random_roc(vector<Point2f> &points, Ptr<Extractor> ext, Ptr<Classifier> cls
 }
 
 
+int crossfoldData( Ptr<Extractor> ext,
+                    Mat & trainFeatures,
+                    Mat & trainLabels,
+                    Mat & testFeatures,
+                    Mat & testLabels,
+                    const vector<Mat> &images, 
+                    const vector<int> &labels, 
+                    const vector<vector<int>> &persons,
+                    size_t f, size_t fold )
+{
+    int fsiz=0;
+
+    // split train/test set per person:
+    for ( size_t j=0; j<persons.size(); j++ )
+    {
+        size_t n_per_person = persons[j].size();
+        if (n_per_person < fold)
+            continue;
+        int r = (fold != 0) ? (n_per_person/fold) : -1;
+        for ( size_t n=0; n<n_per_person; n++ )
+        {
+            int index = persons[j][n];
+
+            Mat feature;
+            fsiz = ext->extract(images[index],feature);
+
+            // sliding window per fold
+            if ( (fold>1) && (n >= f*r) && (n <= (f+1)*r) ) 
+            {
+                testFeatures.push_back(feature);
+                testLabels.push_back(labels[index]);
+            }
+            else
+            {
+                trainFeatures.push_back(feature);
+                trainLabels.push_back(labels[index]);
+            }
+        }
+    }
+    return fsiz;
+}
 
 
 double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> &images, const vector<int> &labels, const vector<vector<int>> &persons, size_t fold=10 ) 
@@ -173,51 +215,24 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
     int fsiz=0;
     for ( size_t f=0; f<fold; f++ )
     {
-        Mat trainFeatures;
-        Mat trainLabels;
-        vector<Mat> testFeatures;
-        Mat testLabels;
-
         int64 t1 = cv::getTickCount();
-        // split train/test set per person:
-        for ( size_t j=0; j<persons.size(); j++ )
-        {
-            size_t n_per_person = persons[j].size();
-            if (n_per_person < fold)
-                continue;
-            int r = (fold != 0) ? (n_per_person/fold) : -1;
-            for ( size_t n=0; n<n_per_person; n++ )
-            {
-                int index = persons[j][n];
-
-                Mat feature;
-                fsiz = ext->extract(images[index],feature);
-
-                // sliding window per fold
-                if ( (fold>1) && (n >= f*r) && (n <= (f+1)*r) ) 
-                {
-                    testFeatures.push_back(feature);
-                    testLabels.push_back(labels[index]);
-                }
-                else
-                {
-                    trainFeatures.push_back(feature);
-                    trainLabels.push_back(labels[index]);
-                }
-            }
-        }
+        Mat trainFeatures, trainLabels;
+        Mat testFeatures,  testLabels;
+        fsiz = crossfoldData(ext,trainFeatures,trainLabels,testFeatures,testLabels,images,labels,persons,f,fold);
+        
         cls->train(trainFeatures.reshape(1,trainLabels.rows),trainLabels);
+
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
-        for ( size_t i=0; i<testFeatures.size(); i++ )
+        for ( int i=0; i<testFeatures.rows; i++ )
         {
             Mat res;
-            cls->predict(testFeatures[i].reshape(1,1), res);
+            cls->predict(testFeatures.row(i).reshape(1,1), res);
     
             int pred = int(res.at<float>(0));
             int ground = testLabels.at<int>(i);
             if ( pred<0 || ground<0 )
             {
-                // cerr << "neg prediction " << f << " " << i << " " << pred << " " << ground << endl;
+                cerr << "neg prediction " << f << " " << i << " " << pred << " " << ground << endl;
                 continue;
             }
             conf.at<float>(ground, pred) ++;
@@ -242,6 +257,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
     return err;
 }
 
+//extern void tttrain(const Mat &src, const Mat &labels);
 
 //
 //
@@ -255,9 +271,9 @@ int main(int argc, const char *argv[])
     vector<Mat> images;
     Mat labels;
 
-    //std::string db_path("senthil.txt");
+    std::string db_path("senthil.txt");
     //std::string db_path("att.txt");
-    std::string db_path("yale.txt");
+    //std::string db_path("yale.txt");
     if ( argc>1 ) db_path = argv[1];
 
     size_t fold = 4;
@@ -274,13 +290,24 @@ int main(int argc, const char *argv[])
     if ( argc>6 ) testMethod = atoi(argv[6]); // TEST_TOC <> TEST_CROSS
 
     
-    extractDB(db_path, images, labels, preproc, 500, 120);
+    extractDB(db_path, images, labels, preproc, 100, 120);
+
+
+    //Mat feat;
+    //for ( size_t i=0; i< images.size(); ++i)
+    //{
+    //    feat.push_back(images[i].reshape(1,1));
+    //}
+    //images.clear();
+    //tttrain(feat,Mat(labels));
+    //return 1;
 
     // per person id lookup
     vector<vector<int>> persons;
     setupPersons( labels, persons );
-
     fold = std::min(fold,images.size()/persons.size());
+
+    // some diagnostics:
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
     char *pp[] = { "no preproc", "equalizeHist", "tan-triggs", "CLAHE" };
     if ( rec==0 )
@@ -291,8 +318,9 @@ int main(int argc, const char *argv[])
         cout << "[method]       [f_bytes]  [pos]  [neg]   [hit]   [time]  " << endl;
     }
 
+    // loop through all tests for rec==0, do one test else.
     int n=42;
-    if ( rec > 0 ) // loop through all possibilities for 0, restrict it to the chosen one else.
+    if ( rec > 0 ) 
     {
         n = rec+1;
     }
@@ -308,7 +336,7 @@ int main(int argc, const char *argv[])
         case 4:  runtest("pixels_multi", createExtractorPixels(60,60),     createClassifierSVMMulti(),                images,labels,persons, fold); break;
         case 5:  runtest("lbp_l2",       createExtractorLbp(),             createClassifierNearest(),               images,labels,persons, fold); break;
         case 6:  runtest("lbp_svm",      createExtractorLbp(),             createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 7:  runtest("wein_l2",      createExtractorWeinbergHash(),    createClassifierNearest(),                   images,labels,persons, fold); break;
+        //case 7:  runtest("wein_h2",      createExtractorWeinbergHash(4,5), createClassifierSVM(),  images,labels,persons, fold); break;
         //case 3:  runtest("lbpu",         createExtractorLbp(8,8,0),        createClassifierNearest(),              images,labels,persons, fold); break;
         //case 4:  runtest("lbpu_mod",     createExtractorLbpUniform(8,8,1), createClassifierNearest(),              images,labels,persons, fold); break;
         //case 5:  runtest("lbpu_red",     createExtractorLbpUniform(8,8,2), createClassifierNearest(),              images,labels,persons, fold); break;
