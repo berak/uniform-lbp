@@ -1,6 +1,7 @@
 
 
 #updates:
+     ^ taking a detour (https://github.com/berak/uniform-lbp/tree/m4)
      ^ svm (on grayscale pixels)
      ^ Zernike moments
      ^ WLD, A Robust Detector based on Weber's Law  
