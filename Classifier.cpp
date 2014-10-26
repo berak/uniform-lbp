@@ -9,9 +9,6 @@ using namespace cv;
 #include "TextureFeature.h"
 
 
-//static struct _onceonly { _onceonly() { /*initModule_ml();*/ } } yes;
-
-
 //
 // find the number of unique labels, the class count
 //
@@ -192,59 +189,7 @@ public:
     }
 };
 
-//
-//void dump(const ml::SVM::Params &param,const String & s="")
-//{
-//    cerr << s << endl;
-//    cerr << "kernelType   = " << param.kernelType << endl;
-//    cerr << "svmType      = " << param.svmType << endl;
-//    cerr << "degree       = " << param.degree << endl;
-//    cerr << "gamma        = " << param.gamma << endl;
-//    cerr << "coef0        = " << param.coef0 << endl;
-//    cerr << "C            = " << param.C << endl;
-//    cerr << "nu           = " << param.nu << endl;
-//    cerr << "classWeights = " << param.classWeights << endl;
-//    cerr << "tc.type      = " << param.termCrit.type << endl;
-//    cerr << "tc.maxCount  = " << param.termCrit.maxCount << endl;
-//    cerr << "tc.epsilon   = " << param.termCrit.epsilon << endl;
-//}
-//void tttrain(const Mat &src, const Mat &labels)
-//{
-//    const double degree=0.01, gamma=0.01, coef0=0.01, C=0.01, nu=0.01, p=0.01; 
-//
-//    Mat data; src.convertTo(data, CV_32F);
-//
-//    ml::SVM::Params param;
-//    //param.kernelType = ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
-//    //param.svmType = ml::SVM::NU_SVC;
-//    param.degree = degree; // for poly
-//    param.gamma = gamma; // for poly / rbf / sigmoid
-//    param.coef0 = coef0; // for poly / sigmoid
-//    param.C = C; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
-//    param.nu = nu; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
-//    param.p = p; // for CV_SVM_EPS_SVR
-//    //param.classWeights = NULL ; // for CV_SVM_C_SVC
-//    //param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS ;
-//    //param.termCrit.maxCount = 100;
-//    //param.termCrit.epsilon = 1e-6;
-//
-//    Ptr<ml::SVM> svm = ml::SVM::create(param);
-//
-//    dump(param,"pre");
-//    ml::ParamGrid C_grid(0.1,10,1.01);
-//    ml::ParamGrid gamma_grid(0.1,10.0,1.02);
-//    ml::ParamGrid p_grid(0.1,1.0,1.02);
-//    ml::ParamGrid nu_grid(0.1,1.0,1.02);
-//    ml::ParamGrid coeff_grid(0.1,0.1,0.0);
-//    ml::ParamGrid degree_grid(0.1,1.0,1.01);
-//
-//    //svm->trainAuto( ml::TrainData::create(data, ml::ROW_SAMPLE, labels), 5);
-//    svm->trainAuto( ml::TrainData::create(data, ml::ROW_SAMPLE, labels), 5,C_grid,gamma_grid,p_grid,nu_grid,coeff_grid,degree_grid);
-//
-//    param = svm->getParams();
-//    dump(param,"post");
-//}
-//
+
 
 //
 // single class(one vs. all), multi svm approach
