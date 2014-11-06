@@ -37,6 +37,7 @@ extern cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8
 extern cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, int u_table=0, int kernel_size=8);
 extern cv::Ptr<TextureFeature::Extractor> createExtractorDct();
 extern cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid();
+extern cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid();
 
 extern cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L2);
 extern cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR);
@@ -117,8 +118,9 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
         int64 t1 = cv::getTickCount();
         Mat trainFeatures, trainLabels;
         Mat testFeatures,  testLabels;
+
         fsiz = crossfoldData(ext,trainFeatures,trainLabels,testFeatures,testLabels,images,labels,persons,f,fold);
-        
+       
         cls->train(trainFeatures.reshape(1,trainLabels.rows),trainLabels);
 
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
@@ -156,12 +158,11 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
     return err;
 }
 
-//extern void tttrain(const Mat &src, const Mat &labels);
 
 //
 //
-// face att.txt 5     5             1        0     0
-// face db      fold  reco    preprocessing  debug testmethod
+// face att.txt 5     5             1        0     
+// face db      fold  reco    preprocessing  debug 
 //
 // special: reco==0 will run *all* recognizers available on a given db
 //
@@ -187,7 +188,7 @@ int main(int argc, const char *argv[])
     if ( argc>5 ) debug = atoi(argv[5])!=0;
 
     
-    extractDB(db_path, images, labels, preproc, 600, 120);
+    extractDB(db_path, images, labels, preproc, 500, 120);
 
     // per person id lookup
     vector<vector<int>> persons;
@@ -220,7 +221,7 @@ int main(int argc, const char *argv[])
         case 2:  runtest("pixels_svm",   createExtractorPixels(60,60),     createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 3:  runtest("pixels_tree",  createExtractorPixels(60,60),     createClassifierTree(),                 images,labels,persons, fold); break;
         case 3:  runtest("pixels_cosine",createExtractorPixels(120,120),   createClassifierCosine(),                images,labels,persons, fold); break;
-        case 4:  runtest("pixels_multi", createExtractorPixels(60,60),     createClassifierSVMMulti(),                images,labels,persons, fold); break;
+        case 4:  runtest("pixels_multi", createExtractorPixels(60,60),     createClassifierSVMMulti(),              images,labels,persons, fold); break;
         case 5:  runtest("lbp_L2",       createExtractorLbp(),             createClassifierNearest(),               images,labels,persons, fold); break;
         case 6:  runtest("lbp_svm",      createExtractorLbp(),             createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 3:  runtest("lbpu",         createExtractorLbp(8,8,0),        createClassifierNearest(),              images,labels,persons, fold); break;
@@ -247,8 +248,8 @@ int main(int argc, const char *argv[])
         case 23: runtest("dct_cosine",   createExtractorDct(),             createClassifierCosine(),                images,labels,persons, fold); break;
         case 24: runtest("dct_L2",       createExtractorDct(),             createClassifierNearest(),               images,labels,persons, fold); break;
         case 26: runtest("dct_svm",      createExtractorDct(),             createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 27: runtest("orbgrid_L1", createExtractorORBGrid(),         createClassifierNearest(NORM_L1),  images,labels,persons, fold); break;
-
+        case 27: runtest("orbgrid_L1",   createExtractorORBGrid(),         createClassifierNearest(NORM_L1),        images,labels,persons, fold); break;
+        case 28: runtest("siftgrid_L2",  createExtractorSIFTGrid(),        createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
         case 40: runtest("eigen",        createExtractorPixels(),          createClassifierEigen(),                 images,labels,persons, fold); break;
         case 41: runtest("fisher",       createExtractorPixels(),          createClassifierFisher(),                images,labels,persons, fold); break;
         }

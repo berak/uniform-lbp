@@ -611,33 +611,39 @@ public:
 };
 
 
-class ExtractorORBGrid : public TextureFeature::Extractor
+
+template < class Descriptor >
+class ExtractorGridFeature : public TextureFeature::Extractor
 {
     int grid;
 public:
-    ExtractorORBGrid() : grid(16) {}
+    ExtractorGridFeature() : grid(16) {}
     virtual int extract(const Mat &img, Mat &features) const 
     {
-        int gw = img.cols / grid;
-        int gh = img.rows / grid;
+        float gw = float(img.cols) / grid;
+        float gh = float(img.rows) / grid;
         vector<KeyPoint> kp;
-        for (int i=gh/2; i<img.rows-gh; i+=gh)
+        for (float i=gh/2; i<img.rows-gh; i+=gh)
         {
-            for (int j=gw/2; j<img.cols-gw; j+=gw)
+            for (float j=gw/2; j<img.cols-gw; j+=gw)
             {
                 KeyPoint k(j, i, gh);
                 kp.push_back(k);
             }
         }
-        //Ptr<Feature2D> f2d = xfeatures2d::BriefDescriptorExtractor::create(); // yale 2592     275     25    0.917    1.746
-        //Ptr<Feature2D> f2d = xfeatures2d::FREAK::create();                    // yale 7744     286     14    0.953    202.751
-        Ptr<Feature2D> f2d = ORB::create();                                     // yale 2592     285     15    0.950    1.842
-        //Ptr<Feature2D> f2d = BRISK::create();                                 // yale 10816    284     16    0.947    1125.523
+        Ptr<Feature2D> f2d = Descriptor::create();                   
         f2d->compute(img, kp, features);
+
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
 };
+
+typedef ExtractorGridFeature<ORB> ExtractorORBGrid;
+typedef ExtractorGridFeature<BRISK> ExtractorBRISKGrid;
+typedef ExtractorGridFeature<xfeatures2d::FREAK> ExtractorFREAKGrid;
+typedef ExtractorGridFeature<xfeatures2d::SIFT> ExtractorSIFTGrid;
+typedef ExtractorGridFeature<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
 
 //
 // 'factory' functions (aka public api)
@@ -701,5 +707,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorDct()
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid()
 { 
     return makePtr<ExtractorORBGrid>(); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid()
+{ 
+    return makePtr<ExtractorSIFTGrid>(); 
 }
 
