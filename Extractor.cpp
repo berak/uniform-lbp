@@ -1,5 +1,10 @@
+#include <vector>
+using std::vector;
+
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
 using namespace cv;
 
 #include "TextureFeature.h"
@@ -70,8 +75,7 @@ public:
     // TextureFeature::Extractor
     virtual int extract(const Mat &img, Mat &features) const
     {
-        features = mom(img);
-        features = features.reshape(1,1);
+        features = mom(img).reshape(1,1);
         return features.total() * features.elemSize() ;
     }
 };
@@ -136,9 +140,6 @@ public:
 
 
 
-
-//#define range(x,M,k) Range((x),((M)-((k)-(x))))
-
 #define SHIFTED_MATS_3x3(I) \
         int M = I.rows; \
         int N = I.cols; \
@@ -151,28 +152,6 @@ public:
         Mat I1 = I(Range(3,M  ), Range(1,N-2));\
         Mat I0 = I(Range(2,M-1), Range(1,N-2));\
         Mat IC = I(Range(2,M-1), Range(2,N-1));
-        //int k = 3; \
-        //Mat I7 = I(range(0,M,k), range(0,N,k));\
-        //Mat I6 = I(range(0,M,k), range(1,N,k));\
-        //Mat I5 = I(range(0,M,k), range(2,N,k));\
-        //Mat I4 = I(range(1,M,k), range(2,N,k));\
-        //Mat I3 = I(range(2,M,k), range(2,N,k));\
-        //Mat I2 = I(range(2,M,k), range(1,N,k));\
-        //Mat I1 = I(range(2,M,k), range(0,N,k));\
-        //Mat I0 = I(range(1,M,k), range(0,N,k));\
-        //Mat IC = I(range(1,M,k), range(1,N,k));
-//
-//#define SHIFTED_MATS_5x5(I) \
-//        Mat Ia = I(Range(0,M-3), Range(0,N-3));\
-//        Mat Ib = I(Range(0,M-3), Range(1,N-2));\
-//        Mat Ic = I(Range(0,M-3), Range(2,N-1));\
-//        Mat Id = I(Range(0,M-3), Range(3,N  ));\
-//        Mat Ie = I(Range(0,M-3), Range(4,N  ));\
-//        Mat If = I(Range(2,M-1), Range(3,N  ));\
-//        Mat Ig = I(Range(3,M  ), Range(3,N  ));\
-//        Mat Ih = I(Range(3,M  ), Range(2,N-1));\
-//        Mat Ii = I(Range(3,M  ), Range(2,N-1));
-//        Mat Ih = I(Range(3,M-1), Range(2,N-1));
 
 
 
@@ -231,7 +210,7 @@ public:
         UniformNormal,    // 58 + noise
         UniformModified,  // 58
         UniformReduced,   // 16 + noise
-        UniformNone = -1
+        UniformNone = -1  // 256, as-is
     };
 
     ExtractorLbp(int gridx=8, int gridy=8, int u_table=UniformNone) 
@@ -504,14 +483,12 @@ public:
 };
 
 
-// helper
-static Mat eta1(Mat a, int p)
+inline Mat eta1(Mat a, int p)
 {
     Mat c;
     multiply(a,a,c);
     return c > (p*p);
 }
-
 
 class ExtractorSTU : public GriddedHist
 {
@@ -521,6 +498,8 @@ public:
         : GriddedHist(gridx, gridy) 
         , kerP1(kp1)
     {}
+        
+
     virtual int extract(const Mat &img, Mat &features) const
     {
         SHIFTED_MATS_3x3(img);
@@ -632,6 +611,33 @@ public:
 };
 
 
+class ExtractorORBGrid : public TextureFeature::Extractor
+{
+    int grid;
+public:
+    ExtractorORBGrid() : grid(16) {}
+    virtual int extract(const Mat &img, Mat &features) const 
+    {
+        int gw = img.cols / grid;
+        int gh = img.rows / grid;
+        vector<KeyPoint> kp;
+        for (int i=gh/2; i<img.rows-gh; i+=gh)
+        {
+            for (int j=gw/2; j<img.cols-gw; j+=gw)
+            {
+                KeyPoint k(j, i, gh);
+                kp.push_back(k);
+            }
+        }
+        //Ptr<Feature2D> f2d = xfeatures2d::BriefDescriptorExtractor::create(); // yale 2592     275     25    0.917    1.746
+        //Ptr<Feature2D> f2d = xfeatures2d::FREAK::create();                    // yale 7744     286     14    0.953    202.751
+        Ptr<Feature2D> f2d = ORB::create();                                     // yale 2592     285     15    0.950    1.842
+        //Ptr<Feature2D> f2d = BRISK::create();                                 // yale 10816    284     16    0.947    1125.523
+        f2d->compute(img, kp, features);
+        features = features.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
 
 //
 // 'factory' functions (aka public api)
@@ -690,5 +696,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, i
 cv::Ptr<TextureFeature::Extractor> createExtractorDct()
 { 
     return makePtr<ExtractorDct>(); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid()
+{ 
+    return makePtr<ExtractorORBGrid>(); 
 }
 
