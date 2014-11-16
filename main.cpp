@@ -182,7 +182,7 @@ int main(int argc, const char *argv[])
     int rec = 27;
     if ( argc>3 ) rec = atoi(argv[3]);
 
-    int preproc = 0; // 0-none 1-eqhist 2-tan_triggs 3-clahe
+    int preproc = 4; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
     if ( argc>4 ) preproc = atoi(argv[4]);
 
     if ( argc>5 ) debug = atoi(argv[5])!=0;
@@ -197,11 +197,12 @@ int main(int argc, const char *argv[])
 
     // some diagnostics:
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
-    char *pp[] = { "no preproc", "equalizeHist", "tan-triggs", "CLAHE" };
+    char *pp[] = { "no preproc", "equalizeHist", "tan-triggs", "CLAHE", "retina" };
     if ( rec==0 )
         cout << "--------------------------------------------------------------" << endl;
     cout << format("%-19s",dbs.c_str()) << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[preproc] << endl;
-    if ( rec==0 ) {
+    if ( rec==0 ) 
+    {
         cout << "--------------------------------------------------------------" << endl;
         cout << "[method]       [f_bytes]  [pos]  [neg]   [hit]   [time]  " << endl;
     }

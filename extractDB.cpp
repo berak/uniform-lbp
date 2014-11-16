@@ -1,6 +1,7 @@
 #include "extractDB.h"
 
 #include <opencv2/core.hpp>
+#include <opencv2/bioinspired.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -132,6 +133,12 @@ int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int pre
     vector<int> vlabels; 
     int nsubjects = 1 + readtxt(txtfile.c_str(), vec, vlabels, maxim);
 
+    Ptr<CLAHE> clahe = createCLAHE();
+    clahe->setClipLimit(50); 
+
+    Ptr<bioinspired::Retina> retina = bioinspired::createRetina(Size(fixed_size,fixed_size));
+
+
     //
     // read the images, 
     //   correct labels if empty images are skipped
@@ -155,13 +162,8 @@ int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int pre
             case 0: mm = m2; break;
             case 1: cv::equalizeHist( m2, mm ); break;
             case 2: cv::normalize( tan_triggs_preprocessing(m2), mm, 0, 255, NORM_MINMAX, CV_8UC1); break;
-            case 3: 
-            {
-                Ptr<CLAHE> clahe = createCLAHE();
-                clahe->setClipLimit(50); 
-                clahe->apply(m2, mm); 
-                break;
-            }
+            case 3: clahe->apply(m2, mm); break;
+            case 4: retina->run(m2); retina->getParvo(mm); break;
         }            
         images.push_back(mm);
         labels.push_back(vlabels[i]);

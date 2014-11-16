@@ -1,5 +1,6 @@
 
 ####updates:
+     ^ retina / parvo preprocessing, even better than CLAHE !
      ^ re-write. split in Extractor / Classifier pairs.
      ^ svm (on grayscale pixels)
      ^ Zernike moments
@@ -231,3 +232,35 @@
     siftgrid_L2      115200    470     20    0.959  647.266
     eigen             14400    462     28    0.943  462.823
     fisher            14400    349    141    0.712  406.520
+
+
+for those, who stayed until until the end, here's a bonus track ;)
+retina / parvo preprocessing realllly rocks!!
+
+    --------------------------------------------------------------
+    yale:              10 fold, 15 classes, 165 images, retina
+    --------------------------------------------------------------
+    [method]       [f_bytes]  [pos]  [neg]   [hit]   [time]
+    pixels_L2         14400    291      9    0.970    1.817
+    pixels_svm         3600    295      5    0.983    2.143
+    pixels_cosine     14400    293      7    0.977    1.400
+    pixels_multi       3600    290     10    0.967    6.062
+    lbp_L2            65536    282     18    0.940    5.663
+    lbp_svm           65536    285     15    0.950   18.105
+    lbp_hell          65536    286     14    0.953   14.636
+    lbpu_red_hell      4352    285     15    0.950    2.646
+    bgc1_hell         65536    282     18    0.940   14.636
+    wld_hell          45056    224     76    0.747   24.217
+    mts_svm            4096    282     18    0.940    1.803
+    mts_hell           4096    282     18    0.940    2.069
+    stu_svm           16384    267     33    0.890    4.436
+    glcm_svm          65536    277     23    0.923   25.175
+    gabor_red         17408    287     13    0.957   21.375
+    gabor_svm         60416    298      2    0.993   30.476
+    dct_cosine        12544    290     10    0.967    3.246
+    dct_L2            12544    290     10    0.967    2.788
+    dct_svm           12544    295      5    0.983    4.058
+    orbgrid_L1         2048    285     15    0.950    1.759
+    siftgrid_L2      115200    292      8    0.973  228.428
+    eigen             14400    291      9    0.970   45.304
+    fisher            14400    298      2    0.993   31.292
