@@ -138,34 +138,30 @@ int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int pre
 
     Ptr<bioinspired::Retina> retina = bioinspired::createRetina(Size(fixed_size,fixed_size));
 
-
     //
     // read the images, 
     //   correct labels if empty images are skipped
     //   also apply preprocessing,
     //
     int load_flag = preproc==-1 ? 1 : 0;
-    int skipped = 0;
     for ( size_t i=0; i<vec.size(); i++ )
     {
-        Mat mm = imread(vec[i], load_flag);
-        if ( mm.empty() )
-        {
-            skipped ++;
+        Mat m1 = imread(vec[i], load_flag);
+        if ( m1.empty() )
             continue;
-        }
-        Mat m2;
-        resize(mm, m2, Size(fixed_size,fixed_size));
+
+        Mat m2, m3;
+        resize(m1, m2, Size(fixed_size,fixed_size));
         switch(preproc) 
         {
             default:
-            case 0: mm = m2; break;
-            case 1: cv::equalizeHist( m2, mm ); break;
-            case 2: cv::normalize( tan_triggs_preprocessing(m2), mm, 0, 255, NORM_MINMAX, CV_8UC1); break;
-            case 3: clahe->apply(m2, mm); break;
-            case 4: retina->run(m2); retina->getParvo(mm); break;
+            case 0: m3 = m2; break;
+            case 1: cv::equalizeHist( m2, m3 ); break;
+            case 2: cv::normalize( tan_triggs_preprocessing(m2), m3, 0, 255, NORM_MINMAX, CV_8UC1); break;
+            case 3: clahe->apply(m2, m3); break;
+            case 4: retina->run(m2); retina->getParvo(m3); break;
         }            
-        images.push_back(mm);
+        images.push_back(m3);
         labels.push_back(vlabels[i]);
         //if ( i%33==0) imshow("i",mm), waitKey(0);
     }
