@@ -1,6 +1,6 @@
 
 ####updates:
-     ^ retina / parvo preprocessing, even better than CLAHE !
+     ^ retina / parvo preprocessing.
      ^ re-write. split in Extractor / Classifier pairs.
      ^ svm (on grayscale pixels)
      ^ Zernike moments
@@ -235,7 +235,7 @@
 
 
 for those, who stayed until until the end, here's a bonus track ;)
-retina / parvo preprocessing realllly rocks!!
+retina / parvo preprocessing !!
 
     --------------------------------------------------------------
     yaleB:             10 fold, 8 classes, 500 images, retina
@@ -291,3 +291,30 @@ retina / parvo preprocessing realllly rocks!!
     siftgrid_L2      115200    751      9    0.988  631.998
     eigen             14400    747     13    0.983  286.378
     fisher            14400    746     14    0.982  231.289
+    --------------------------------------------------------------
+    lfw2fun:           10 fold, 20 classes, 400 images, retina
+    --------------------------------------------------------------
+    [method]       [f_bytes]  [pos]  [neg]   [hit]   [time]
+    pixels_L2         14400    402     96    0.807    6.455
+    pixels_svm         3600    461     37    0.926   14.907
+    pixels_cosine     14400    418     80    0.839    4.899
+    pixels_multi       3600    409     89    0.821   33.441
+    lbp_L2            65536    454     44    0.912   17.063
+    lbp_svm           65536    479     19    0.962  103.287
+    lbp_hell          65536    464     34    0.932   52.272
+    lbpu_red_hell      4352    412     86    0.827    7.059
+    bgc1_hell         65536    466     32    0.936   52.587
+    wld_hell          45056    161    337    0.323   68.197
+    mts_svm            4096    480     18    0.964    6.802
+    mts_hell           4096    461     37    0.926    5.630
+    stu_svm           16384    410     88    0.823   21.323
+    glcm_svm          65536    349    149    0.701  133.131
+    gabor_red         17408    411     87    0.825   54.365
+    gabor_svm         60416    443     55    0.890  118.499
+    dct_cosine        12544    411     87    0.825    8.824
+    dct_L2            12544    403     95    0.809    6.854
+    dct_svm           12544    459     39    0.922   17.459
+    orbgrid_L1         2048    445     53    0.894    4.001
+    siftgrid_L2      115200    453     45    0.910  527.134
+    eigen             14400    402     96    0.807  272.991
+    fisher            14400    466     32    0.936  231.298
