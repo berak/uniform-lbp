@@ -234,7 +234,7 @@
     fisher            14400    349    141    0.712  406.520
 
 
-for those, who stayed until until the end, here's a bonus track ;)
+for those, who stayed until the end, here's a bonus track ;)
 retina / parvo preprocessing !!
 
     --------------------------------------------------------------
