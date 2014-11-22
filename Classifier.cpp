@@ -148,10 +148,11 @@ public:
     ml::SVM::Params param;
 
 
-    ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
+    ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5) 
+    //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
     {
         param.kernelType = ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
-        param.svmType = ml::SVM::NU_SVC;
+        param.svmType = ml::SVM::NU_SVC; // NU_SVC
         param.degree = degree; // for poly
         param.gamma = gamma; // for poly / rbf / sigmoid
         param.coef0 = coef0; // for poly / sigmoid
@@ -173,7 +174,8 @@ public:
             trainData.convertTo(trainData,CV_32F);
 
         svm->clear();
-        svm->train( trainData , ml::ROW_SAMPLE , Mat(labels) );
+        bool ok = svm->train( trainData , ml::ROW_SAMPLE , Mat(labels) );
+        CV_Assert(ok&&"please check the input params(nu)");
         return trainData.rows;
     }
 
@@ -401,7 +403,7 @@ cv::Ptr<TextureFeature::Classifier> createClassifierCosine()
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1)
 { return makePtr<ClassifierKNN>(k); }
 
-cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree=0.5, double gamma=0.8, double coef0=0, double C=0.99, double nu=0.2, double p=0.5)
+cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree=0.5, double gamma=0.8, double coef0=0, double C=0.99, double nu=0.002, double p=0.5)
 { return makePtr<ClassifierSvm>(degree, gamma, coef0, C, nu, p); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()

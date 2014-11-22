@@ -88,13 +88,14 @@ public:
 // 
 // base for lbph, calc features on the whole image, the hist on a grid, 
 //   so we avoid to waste border pixels 
-//     (with probably the price of pixels shared between patches)
 //
 struct GriddedHist : public TextureFeature::Extractor
 {
 protected:
+    Mat_<float> weights;
     int GRIDX,GRIDY;
-    
+    bool doWeight;
+
     void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo, int histSize, int histRange=256) const
     {   
         for ( int i=0; i<feature.rows; i++ )
@@ -123,6 +124,8 @@ protected:
                 Mat_<float> h(1,histSize,0.0f);
                 //calcHist( &fi, 1, 0, Mat(), h, 1, &histSize, &hist_range, true, false );
                 calc_hist(fi,h,histSize,histRange);
+                if ( doWeight )
+                    h *= weights(j,i);
                 histo.push_back(h.reshape(1,1));
             }
         }
@@ -131,10 +134,27 @@ protected:
 
 public:
 
-    GriddedHist(int gridx=8, int gridy=8) 
+    GriddedHist(int gridx=8, int gridy=8, bool doweight=false) 
         : GRIDX(gridx)
         , GRIDY(gridy) 
-    {}
+        , weights(8,8)
+        , doWeight(doweight)
+    {
+        if (doWeight) // not all patches have the same relevance.
+        {
+            weights << 1, 1, 1, 1, 1, 1, 1, 1,
+                       1, 2, 2, 2, 2, 2, 2, 1,
+                       1, 3, 4, 4, 4, 4, 3, 1,
+                       1, 3, 4, 4, 4, 4, 3, 1,
+                       1, 2, 4, 4, 4, 4, 2, 1,
+                       1, 2, 4, 4, 4, 4, 2, 1,
+                       1, 2, 3, 3, 3, 3, 2, 1,
+                       1, 1, 1, 1, 1, 1, 1, 1;
+            if ( GRIDX != weights.rows || GRIDY != weights.cols )
+                resize(weights, weights, Size(GRIDX,GRIDY));
+            normalize(weights, weights);
+        }
+    }
 };
 
 

@@ -137,6 +137,12 @@ int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int pre
     clahe->setClipLimit(50); 
 
     Ptr<bioinspired::Retina> retina = bioinspired::createRetina(Size(fixed_size,fixed_size));
+    // (realistic setup)
+    bioinspired::Retina::RetinaParameters ret_params;
+    ret_params.OPLandIplParvo.horizontalCellsGain = 0.7;
+    ret_params.OPLandIplParvo.photoreceptorsLocalAdaptationSensitivity = 0.39;
+    ret_params.OPLandIplParvo.ganglionCellsSensitivity = 0.39;
+    retina->setup(ret_params);
 
     //
     // read the images, 
