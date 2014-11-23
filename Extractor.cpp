@@ -144,10 +144,10 @@ public:
         {
             weights << 1, 1, 1, 1, 1, 1, 1, 1,
                        1, 2, 2, 2, 2, 2, 2, 1,
-                       1, 3, 4, 4, 4, 4, 3, 1,
-                       1, 3, 4, 4, 4, 4, 3, 1,
-                       1, 2, 4, 4, 4, 4, 2, 1,
-                       1, 2, 4, 4, 4, 4, 2, 1,
+                       1, 3, 3, 3, 3, 3, 3, 1,
+                       1, 3, 3, 3, 3, 3, 3, 1,
+                       1, 2, 3, 3, 3, 3, 2, 1,
+                       1, 2, 3, 3, 3, 3, 2, 1,
                        1, 2, 3, 3, 3, 3, 2, 1,
                        1, 1, 1, 1, 1, 1, 1, 1;
             if ( GRIDX != weights.rows || GRIDY != weights.cols )
@@ -186,7 +186,7 @@ protected:
     //
     virtual void hep( const Mat &I, Mat &fI ) const
     {
-#if 1
+#if 0
         SHIFTED_MATS_3x3(I);
 
         fI = ((I7>IC)&128) |
@@ -198,7 +198,7 @@ protected:
              ((I1>IC)&2)   |
              ((I0>IC)&1);  
 #else
-        Mat_<uchar> feature(I.size());
+        Mat_<uchar> feature(I.size(),0);
         Mat_<uchar> img(I);
         const int m=1;
         for ( int r=m; r<img.rows-m; r++ )
@@ -600,6 +600,37 @@ public:
     }
 };
 
+//
+// four-patch (well, more pixels) lbp
+//
+class ExtractorFPLbp : public GriddedHist
+{
+public:
+    ExtractorFPLbp(int gridx=8, int gridy=8) 
+        : GriddedHist(gridx, gridy) 
+    {}
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        Mat_<uchar> fI(img.size(),0);
+        Mat_<uchar> I(img);
+        const int m=2;
+        for ( int r=m; r<I.rows-m; r++ )
+        {
+            for ( int c=m; c<I.cols-m; c++ )
+            {
+                uchar v = 0;
+                v |= ((I(r  ,c+1) - I(r+2,c+2)) > (I(r  ,c-1) - I(r-2,c-2))) * 1;
+                v |= ((I(r+1,c+1) - I(r+2,c  )) > (I(r-1,c-1) - I(r-2,c  ))) * 2;
+                v |= ((I(r+1,c  ) - I(r+2,c-2)) > (I(r-1,c  ) - I(r-2,c+2))) * 4;
+                v |= ((I(r+1,c-1) - I(r  ,c-2)) > (I(r-1,c+1) - I(r  ,c+2))) * 8;
+                fI(r,c) = v;
+            }
+        }
+        hist(fI,features,16,16);
+        features = features.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
 
 //
 // grid it into 8x8 image patches, do a dct on each, 
@@ -670,67 +701,44 @@ typedef ExtractorGridFeature<xfeatures2d::BriefDescriptorExtractor> ExtractorBRI
 //
 
 cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw=0, int resh=0)
-{ 
-    return makePtr<ExtractorPixels>(resw, resh); 
-}
+{   return makePtr<ExtractorPixels>(resw, resh); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorMoments()
-{ 
-    return makePtr<ExtractorMoments>(); 
-}
+{   return makePtr<ExtractorMoments>(); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gx=8, int gy=8, int utable=ExtractorLbp::UniformNone)
-{ 
-    return makePtr<ExtractorLbp>(gx, gy, utable); 
-}
+{   return makePtr<ExtractorLbp>(gx, gy, utable); }
+
+cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx=8, int gy=8)
+{   return makePtr<ExtractorFPLbp>(gx, gy); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx=8, int gy=8, int utable=ExtractorLbp::UniformNone)
-{ 
-    return makePtr<ExtractorBGC1>(gx, gy, utable); 
-}
+{   return makePtr<ExtractorBGC1>(gx, gy, utable); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx=8, int gy=8)
-{ 
-    return makePtr<ExtractorLQP>(gx, gy); 
-}
+{   return makePtr<ExtractorLQP>(gx, gy); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx=8, int gy=8)
-{ 
-    return makePtr<ExtractorMTS>(gx, gy); 
-}
+{   return makePtr<ExtractorMTS>(gx, gy); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorSTU(int gx=8, int gy=8,int kp1=5)
-{ 
-    return makePtr<ExtractorSTU>();//gx, gy, kp1); 
-}
+{   return makePtr<ExtractorSTU>(); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8)
-{ 
-    return makePtr<ExtractorGLCM>(gx, gy); 
-}
+{   return makePtr<ExtractorGLCM>(gx, gy); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx=8, int gy=8, int tf=CV_32F)
-{ 
-    return makePtr<WLD>(gx, gy, tf); 
-}
+{   return makePtr<WLD>(gx, gy, tf); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, int u_table=0, int kernel_siz=8)
-{ 
-    return makePtr<ExtractorGaborLbp>(gx, gy, u_table, kernel_siz); 
-}
+{   return makePtr<ExtractorGaborLbp>(gx, gy, u_table, kernel_siz); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorDct()
-{ 
-    return makePtr<ExtractorDct>(); 
-}
+{   return makePtr<ExtractorDct>(); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid()
-{ 
-    return makePtr<ExtractorORBGrid>(); 
-}
+{   return makePtr<ExtractorORBGrid>(); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid()
-{ 
-    return makePtr<ExtractorSIFTGrid>(); 
-}
+{   return makePtr<ExtractorSIFTGrid>(); }
 

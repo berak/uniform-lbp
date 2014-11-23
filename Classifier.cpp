@@ -329,7 +329,7 @@ public:
         Mat query = LDA::subspaceProject(_eigenvectors, _mean, testFeature.reshape(1,1));
         double minDist = DBL_MAX;
         int minClass = -1;
-        int minId=-1;
+        int minId = -1;
         for (size_t idx=0; idx<_projections.size(); idx++) 
         {
             double dist = norm(_projections[idx], query, NORM_L2);

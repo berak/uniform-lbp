@@ -38,6 +38,8 @@ extern cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int 
 extern cv::Ptr<TextureFeature::Extractor> createExtractorDct();
 extern cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid();
 extern cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid();
+extern cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx=8, int gy=8);
+
 
 extern cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L2);
 extern cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR);
@@ -179,10 +181,10 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if ( argc>2 ) fold = atoi(argv[2]);
 
-    int rec = 27;
+    int rec = 7;
     if ( argc>3 ) rec = atoi(argv[3]);
 
-    int preproc = 4; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
+    int preproc = 0; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
     if ( argc>4 ) preproc = atoi(argv[4]);
 
     if ( argc>5 ) debug = atoi(argv[5])!=0;
@@ -224,6 +226,7 @@ int main(int argc, const char *argv[])
         case 4:  runtest("pixels_multi", createExtractorPixels(60,60),     createClassifierSVMMulti(),              images,labels,persons, fold); break;
         case 5:  runtest("lbp_L2",       createExtractorLbp(),             createClassifierNearest(),               images,labels,persons, fold); break;
         case 6:  runtest("lbp_svm",      createExtractorLbp(),             createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 7:  runtest("fplbp_svm",    createExtractorFPLbp(),           createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 8:  runtest("lbp_chisqr",   createExtractorLbp(),             createClassifierHist(),                  images,labels,persons, fold); break;
         case 9:  runtest("lbp_hell",     createExtractorLbp(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 10: runtest("lbpu_hell",    createExtractorLbp(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
