@@ -1,19 +1,9 @@
 
-####updates:
-     ^ retina / parvo preprocessing.
-     ^ re-write. split in Extractor / Classifier pairs.
-     ^ svm (on grayscale pixels)
-     ^ Zernike moments
-     ^ WLD, A Robust Detector based on Weber's Law  
-     ^ ltp and var_lbp
-     ^ lfw_funneled database
-     ^ combining many small featuresets is quite powerful (combinedLBP),      
-     ^ k fold cross validation
-     ^ this thing has turned into a comparative test of face recognizers
-     ^ added a ref impl that just compares pixls
-     ^ added uniform version of lbp
-     
+this started out as a try to improve opencv's lbph facereco, 
 
+but meanwhile it morphed into a testbed for comparing preprocessing/extraction/classification methods
+
+it all builds on opencv30 .
 
 
 ------------------------------------------------------

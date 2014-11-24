@@ -4,7 +4,9 @@
 #include <opencv2/opencv.hpp>
 using cv::Mat;
 
-
+//
+// interfaces
+//
 namespace TextureFeature	
 {
     struct Extractor 
@@ -20,6 +22,9 @@ namespace TextureFeature
 };
 
 
+//
+// supplied impls
+//
 cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw=0, int resh=0);
 cv::Ptr<TextureFeature::Extractor> createExtractorMoments();
 cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gridx=8, int gridy=8, int u_table=-1);
@@ -42,6 +47,7 @@ cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int n=1);               
 cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5);
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti();
 
+// reference
 cv::Ptr<TextureFeature::Classifier> createClassifierEigen();
 cv::Ptr<TextureFeature::Classifier> createClassifierFisher();
 
