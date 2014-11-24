@@ -19,43 +19,13 @@ using namespace std;
 #include "TextureFeature.h"
 #include "extractDB.h"
 
-bool debug = false;
-
-//
-// the current compilation of extractors / classifiers. (should probably go into a header)
-//
-
-extern cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw=0, int resh=0);
-extern cv::Ptr<TextureFeature::Extractor> createExtractorMoments();
-extern cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gridx=8, int gridy=8, int u_table=-1);
-extern cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx=8, int gy=8, int utable=-1);
-extern cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx=8, int gy=8, int tf=CV_32F);
-extern cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx=8, int gy=8);
-extern cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx=8, int gy=8);
-extern cv::Ptr<TextureFeature::Extractor> createExtractorSTU(int gx=8, int gy=8, int kp1=5);
-extern cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8);
-extern cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, int u_table=0, int kernel_size=8);
-extern cv::Ptr<TextureFeature::Extractor> createExtractorDct();
-extern cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid();
-extern cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid();
-extern cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx=8, int gy=8);
-
-
-extern cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L2);
-extern cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR);
-extern cv::Ptr<TextureFeature::Classifier> createClassifierCosine();
-extern cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int n=1);                // TODO: needs a way to get to the k-1 others
-extern cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5);
-extern cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti();
-
-extern cv::Ptr<TextureFeature::Classifier> createClassifierEigen();
-extern cv::Ptr<TextureFeature::Classifier> createClassifierFisher();
-
-double ct(int64 t) {    return double(t) / cv::getTickFrequency(); }
 
 using TextureFeature::Extractor;
 using TextureFeature::Classifier;
 
+bool debug = false;
+
+double ct(int64 t) {    return double(t) / cv::getTickFrequency(); }
 
 RNG rng(getTickCount());
 

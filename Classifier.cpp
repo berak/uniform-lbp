@@ -418,19 +418,19 @@ public:
 // 'factory' functions (aka public api)
 //
 
-cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L2)
+cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag)
 { return makePtr<ClassifierNearest>(norm_flag); }
 
-cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR)
+cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag)
 { return makePtr<ClassifierHist>(flag); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierCosine()
 { return makePtr<ClassifierCosine>(); }
 
-cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1)
+cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k)
 { return makePtr<ClassifierKNN>(k); }
 
-cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree=0.5, double gamma=0.8, double coef0=0, double C=0.99, double nu=0.002, double p=0.5)
+cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree, double gamma, double coef0, double C, double nu, double p)
 { return makePtr<ClassifierSvm>(degree, gamma, coef0, C, nu, p); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
