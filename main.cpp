@@ -227,6 +227,7 @@ int main(int argc, const char *argv[])
         case 5:  runtest("lbp_L2",       createExtractorLbp(),             createClassifierNearest(),               images,labels,persons, fold); break;
         case 6:  runtest("lbp_svm",      createExtractorLbp(),             createClassifierSVM(),                   images,labels,persons, fold); break;
         case 7:  runtest("fplbp_svm",    createExtractorFPLbp(),           createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 8:  runtest("fplbp_hell",   createExtractorFPLbp(),           createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 8:  runtest("lbp_chisqr",   createExtractorLbp(),             createClassifierHist(),                  images,labels,persons, fold); break;
         case 9:  runtest("lbp_hell",     createExtractorLbp(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 10: runtest("lbpu_hell",    createExtractorLbp(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;

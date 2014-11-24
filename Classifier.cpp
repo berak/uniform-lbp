@@ -66,18 +66,45 @@ public:
     }
 };
 
+class ClassifierNearestFloat : public ClassifierNearest
+{
+public:
+
+    ClassifierNearestFloat(int flag=NORM_L2) : ClassifierNearest(flag) {}
+
+    Mat tofloat(const Mat &src) const
+    {
+        Mat query;
+        if ( src.type() != CV_32F )
+            src.convertTo(query,CV_32F);
+        else
+            query=src;
+        return query;
+    }
+
+    // TextureFeature::Classifier
+    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
+    {
+        return ClassifierNearest::predict(tofloat(testFeature), results);
+    }
+    virtual int train(const cv::Mat &trainFeatures, const cv::Mat &trainLabels)
+    {
+        return ClassifierNearest::train(tofloat(trainFeatures), trainLabels);
+    }
+};
+
 
 
 //
 // just swap the comparison
 //   the flag enums are overlapping, so i like to have this in a different class
 //
-class ClassifierHist : public ClassifierNearest
+class ClassifierHist : public ClassifierNearestFloat
 {
 public:
 
     ClassifierHist(int flag=HISTCMP_CHISQR) 
-        : ClassifierNearest(flag)
+        : ClassifierNearestFloat(flag)
     {}
 
     // ClassifierNearest

@@ -668,7 +668,7 @@ class ExtractorGridFeature : public TextureFeature::Extractor
 {
     int grid;
 public:
-    ExtractorGridFeature() : grid(16) {}
+    ExtractorGridFeature(int g=10) : grid(g) {}
     virtual int extract(const Mat &img, Mat &features) const 
     {
         float gw = float(img.cols) / grid;
@@ -736,8 +736,8 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, i
 cv::Ptr<TextureFeature::Extractor> createExtractorDct()
 {   return makePtr<ExtractorDct>(); }
 
-cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid()
-{   return makePtr<ExtractorORBGrid>(); }
+cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g)
+{   return makePtr<ExtractorORBGrid>(g); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid()
 {   return makePtr<ExtractorSIFTGrid>(); }
