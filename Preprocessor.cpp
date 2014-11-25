@@ -68,8 +68,8 @@ Preprocessor::Preprocessor(int mode, int crop)
     : preproc(mode)
     , precrop(crop) 
     , clahe(createCLAHE(50))
+    , retina(bioinspired::createRetina(Size(90,90)))
 {
-    retina = bioinspired::createRetina(Size(90,90));
     //// (realistic setup)
     bioinspired::Retina::RetinaParameters ret_params;
     ret_params.OPLandIplParvo.horizontalCellsGain = 0.7f;
@@ -86,7 +86,7 @@ Mat Preprocessor::process(const Mat &imgin)  const
     switch(preproc)
     {
         default:
-        case 0: imgout=imgcropped.clone(); break;
+        case 0: imgout = precrop>0 ? imgcropped.clone() : imgcropped; break;
         case 1: equalizeHist(imgcropped,imgout); break;
         case 2: clahe->apply(imgcropped,imgout); break;
         case 3: retina->run(imgcropped); retina->getParvo(imgout); break;
@@ -95,6 +95,7 @@ Mat Preprocessor::process(const Mat &imgin)  const
     }
     return imgout;
 }
+
 const char * Preprocessor::pps() const 
 {
     static const char *PPS[] = { "none","eqhist","clahe","retina","tan-triggs","crop",0 };

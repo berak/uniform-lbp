@@ -7,7 +7,7 @@
 
 int readtxt( const char * fname, std::vector<std::string> & names, std::vector<int> & labels, size_t maxim=400  );
 
-int extractDB(const std::string &txtfile, std::vector<cv::Mat> & images, cv::Mat & labels, int preproc, int maxim=400, int fixed_size=90);
+int extractDB(const std::string &txtfile, std::vector<cv::Mat> & images, cv::Mat & labels, int preproc, int precrop=0, int maxim=400, int fixed_size=90);
 
 void setupPersons( const std::vector<int> & labels, std::vector<std::vector<int>> & persons );
 

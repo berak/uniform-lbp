@@ -200,8 +200,8 @@ int main(int argc, const char *argv[])
         case 8:  runtest("lbp_hell",     createExtractorLbp(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 9: runtest("lbpu_hell",    createExtractorLbp(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         case 10: runtest("lbpu_red_hell",createExtractorLbp(8,8,2),        createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        case 11:  runtest("fplbp_svm",    createExtractorFPLbp(),           createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 12:  runtest("fplbp_hell",   createExtractorFPLbp(),           createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
+        case 11: runtest("fplbp_svm",    createExtractorFPLbp(),           createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 12: runtest("fplbp_hell",   createExtractorFPLbp(),           createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         case 13: runtest("bgc1_hell",    createExtractorBGC1(),            createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 13: runtest("bgc1_red_hell",createExtractorBGC1(8,8,2),       createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 14: runtest("wld_L1",       createExtractorWLD(8,8,CV_8U),    createClassifierNearest(NORM_L1),        images,labels,persons, fold); break;

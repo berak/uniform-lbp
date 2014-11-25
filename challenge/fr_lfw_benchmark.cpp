@@ -136,7 +136,7 @@ int main(int argc, const char *argv[])
         printOptions();
         return -1;
     }
-    int ext = myface::EXT_FPLbp;
+    int ext = myface::EXT_MAX;
     int cls = myface::CL_NORM_L2;
     int pre = 1;
     int crp = 80;
@@ -145,10 +145,17 @@ int main(int argc, const char *argv[])
     getprm(parser,"cls",cls);
     getprm(parser,"pre",pre);
     getprm(parser,"trn",trainMethod);
-
-
-    cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << pre << " " << trainMethod << endl;
-    Ptr<FaceRecognizer> model = createMyFaceRecognizer(ext,cls,pre,crp);
+    
+    Ptr<FaceRecognizer> model;
+    if ( ext>=myface::EXT_MAX )
+    {
+        model = createLBPHFaceRecognizer();
+    } 
+    else 
+    {
+        cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << pre << " " << trainMethod << endl;
+        model = createMyFaceRecognizer(ext,cls,pre,crp);
+    }
 
     // These vectors hold the images and corresponding labels.
     vector<Mat> images;
@@ -197,6 +204,7 @@ int main(int argc, const char *argv[])
         {
             images.clear();
             labels.clear();
+            classes.clear();
             for (unsigned int j2=0; j2<numSplits; ++j2)
             {   
                 if ( j==j2 ) continue;
@@ -249,10 +257,13 @@ int main(int argc, const char *argv[])
             {
                 incorrect++;
             }
-            printf("%4u %5u/%-5u %d (%d:%d/%4i/%4i)(%d:%d/%4i/%4i) \r", i, correct, incorrect, example->same, known1,(currNum1==predictedLabel1),currNum1,predictedLabel1, known2,(currNum2==predictedLabel2),currNum2,predictedLabel2 ); 
+            printf("%4u %5u/%-5u %d (%d:%d)(%d:%d)(%4i/%-4i)(%4i/%-4i) \r", 
+                i, correct, incorrect, example->same, known1, known2, 
+                (currNum1==predictedLabel1),(currNum2==predictedLabel2),
+                currNum1,currNum2, predictedLabel2,predictedLabel1 ); 
         }
         p.push_back(1.0*correct/(correct+incorrect));
-        printf("correct: %u, from: %u -> %f                    \n", correct, correct+incorrect, p.back());
+        printf("correct: %u, from: %u -> %f                                \n", correct, correct+incorrect, p.back());
     }
     double mu = 0.0;
     for (vector<double>::iterator it=p.begin(); it!=p.end(); ++it)
