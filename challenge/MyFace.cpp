@@ -4,6 +4,7 @@ using namespace cv;
 
 #include "MyFace.h"
 #include "../TextureFeature.h"
+#include "../Preprocessor.h"
 
 #include <iostream>
 #include <vector>
@@ -17,30 +18,31 @@ class MyFace : public face::FaceRecognizer
 {
     Ptr<TextureFeature::Extractor> ext;
     Ptr<TextureFeature::Classifier> cls;
-    Ptr<bioinspired::Retina> retina;
-    Ptr<CLAHE> clahe;
-    int preproc;
-    int precrop;
+    //Ptr<bioinspired::Retina> retina;
+    //Ptr<CLAHE> clahe;
+    //int preproc;
+    //int precrop;
     bool doFlip;
+    Preprocessor pre;
 public:
 
     MyFace(int extract=0, int clsfy=0, int preproc=0, int precrop=0,int psize=250)
-        : clahe(createCLAHE(50))
-        , retina(bioinspired::createRetina(Size(psize,psize)))
-        , preproc(preproc)
-        , precrop(precrop)
+        //: clahe(createCLAHE(50))
+        //, retina(bioinspired::createRetina(Size(psize,psize)))
+        : pre(preproc,precrop)
         , doFlip(false)
     {
         switch(extract) 
         {
             default:
-            case EXT_Pixels:   ext = createExtractorPixels(); break;
+            case EXT_Pixels:   ext = createExtractorPixels(60,60); break;
             case EXT_Lbp:      ext = createExtractorLbp(); break;
             case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
             case EXT_MTS:      ext = createExtractorMTS(); break;
             case EXT_GaborLbp: ext = createExtractorGaborLbp(); break;
             case EXT_Dct:      ext = createExtractorDct(); break;
             case EXT_OrbGrid:  ext = createExtractorORBGrid(15);
+            case EXT_SiftGrid: ext = createExtractorSIFTGrid();
         }
         switch(clsfy) 
         {
@@ -53,31 +55,32 @@ public:
             case CL_SVM:       cls = createClassifierSVM(); break;
             case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;
             case CL_COSINE:    cls = createClassifierCosine(); break;
+            case CL_FISHER:    cls = createClassifierFisher(); break;
         }
 
-        // (realistic setup)
-        bioinspired::Retina::RetinaParameters ret_params;
-        ret_params.OPLandIplParvo.horizontalCellsGain = 0.7f;
-        ret_params.OPLandIplParvo.photoreceptorsLocalAdaptationSensitivity = 0.39f;
-        ret_params.OPLandIplParvo.ganglionCellsSensitivity = 0.39f;
-        retina->setup(ret_params);
+        //// (realistic setup)
+        //bioinspired::Retina::RetinaParameters ret_params;
+        //ret_params.OPLandIplParvo.horizontalCellsGain = 0.7f;
+        //ret_params.OPLandIplParvo.photoreceptorsLocalAdaptationSensitivity = 0.39f;
+        //ret_params.OPLandIplParvo.ganglionCellsSensitivity = 0.39f;
+        //retina->setup(ret_params);
     }
 
-    Mat preprocess(const Mat & imgin) const
-    {
-        Mat imgcropped(imgin, Rect(precrop, precrop, imgin.cols-2*precrop, imgin.rows-2*precrop));
-        Mat imgout;
-        switch(preproc)
-        {
-            default:
-            case 0: imgout=imgcropped.clone(); break;
-            case 1: equalizeHist(imgcropped,imgout); break;
-            case 2: clahe->apply(imgcropped,imgout); break;
-            case 3: retina->run(imgcropped); retina->getParvo(imgout); break;
-            case 4: resize(imgcropped,imgout,Size(60,60)); break;
-        }
-        return imgout;
-    }
+    //Mat preprocess(const Mat & imgin) const
+    //{
+    //    Mat imgcropped(imgin, Rect(precrop, precrop, imgin.cols-2*precrop, imgin.rows-2*precrop));
+    //    Mat imgout;
+    //    switch(preproc)
+    //    {
+    //        default:
+    //        case 0: imgout=imgcropped.clone(); break;
+    //        case 1: equalizeHist(imgcropped,imgout); break;
+    //        case 2: clahe->apply(imgcropped,imgout); break;
+    //        case 3: retina->run(imgcropped); retina->getParvo(imgout); break;
+    //        case 4: resize(imgcropped,imgout,Size(60,60)); break;
+    //    }
+    //    return imgout;
+    //}
 
     // Trains a FaceRecognizer.
     virtual void train(InputArrayOfArrays src, InputArray _labels)
@@ -91,7 +94,7 @@ public:
         Mat features;
         for ( size_t i=0; i<images.size(); i++ )
         {
-            Mat img = preprocess(images[i]);
+            Mat img = pre.process(images[i]);
 
             Mat feat1;
             nfeatbytes = ext->extract(img, feat1);
@@ -109,7 +112,7 @@ public:
             }
         }
         cls->train( features, labels.reshape(1,features.rows) );
-        cerr << "trained " << nfeatbytes << " bytes." << endl;
+        cerr << "trained " << nfeatbytes << " bytes." << '\r';
     }
 
     // Gets a prediction from a FaceRecognizer.
@@ -118,7 +121,7 @@ public:
         Mat img = src.getMat();
 
         Mat feat;
-        ext->extract(preprocess(img), feat);
+        ext->extract(pre.process(img), feat);
 
         Mat res;
         cls->predict(feat,res);

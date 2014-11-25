@@ -12,7 +12,7 @@ using namespace cv;
 //
 // find the number of unique labels, the class count
 //
-int unique(const Mat &labels, set<int> &classes=set<int>())
+static int unique(const Mat &labels, set<int> &classes=set<int>())
 {
     for (size_t i=0; i<labels.total(); ++i)
         classes.insert(labels.at<int>(i));
@@ -397,7 +397,7 @@ public:
 
         // step two, do lda on data projected to pca space:
         Mat proj = LDA::subspaceProject(pca.eigenvectors.t(), _mean, data);
-        LDA lda(proj, labels, _num_components);
+        LDA lda(proj, labels, min(_num_components,pca.eigenvectors.rows));
 
         // step three, combine both:
         Mat leigen; 
