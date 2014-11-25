@@ -126,8 +126,9 @@ int main(int argc, const char *argv[])
             "{ path p         |true| path to dataset (lfw2 folder) }"
             "{ ext e          |0   |    extractor enum }"
             "{ cls c          |0   |    classifier enum }"
-            "{ pre P          |true|    preprocessing }"
+            "{ pre P          |none|    preprocessing }"
             "{ trn t          |0   |    train method: pairsDevTrain=0 pairs(split)=1 }";
+
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
     if (parser.has("help") || path=="true")
@@ -153,7 +154,7 @@ int main(int argc, const char *argv[])
     } 
     else 
     {
-        cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << pre << " " << trainMethod << endl;
+        cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << trainMethod << endl;
         model = createMyFaceRecognizer(ext,cls,pre,crp);
     }
 
@@ -170,7 +171,7 @@ int main(int argc, const char *argv[])
     }
     unsigned int numSplits = dataset->getNumSplits();
 
-    if ( trainMethod == 0 )
+    if ( trainMethod == 0 ) // train on personsDevTrain.txt
     {
         for (unsigned int i=0; i<dataset->getTrain().size(); ++i)
         {   
@@ -193,6 +194,8 @@ int main(int argc, const char *argv[])
             PROFILEX("train");
             model->train(images, labels);
         }
+        images.clear();
+        labels.clear();
     }
 
 
@@ -200,7 +203,7 @@ int main(int argc, const char *argv[])
     for (unsigned int j=0; j<numSplits; ++j)
     {  
         PROFILEX("splits");
-        if (trainMethod == 1)
+        if (trainMethod == 1) // train on the remaining 9 splits from tairs.txt
         {
             images.clear();
             labels.clear();
@@ -225,11 +228,13 @@ int main(int argc, const char *argv[])
                 }
             }
             int un = unique(Mat(labels),classes);
-            printf("%d/%d got data: %d %d.\r",j,numSplits,images.size(), un);
+            printf("%u/%u got data: %u %d.\r",j,numSplits,images.size(), un);
             {
                 PROFILEX("train");
                 model->train(images, labels);
             }
+            images.clear();
+            labels.clear();
         }
 
         unsigned int incorrect = 0, correct = 0;
@@ -253,7 +258,8 @@ int main(int argc, const char *argv[])
                 (predictedLabel1 != predictedLabel2 && !example->same))
             {
                 correct++;
-            } else
+            } 
+            else
             {
                 incorrect++;
             }
@@ -282,38 +288,3 @@ int main(int argc, const char *argv[])
 
     return 0;
 }
-
-
-    //if ( 0 )
-    //{
-    //    printf("splits number: %u\n", numSplits);
-    //    std::vector< Ptr<Object> > trn = dataset->getTrain();
-    //    printf("train   size: %u\n", (unsigned int)trn.size());
-    //    for (unsigned int i=0; i<trn.size(); ++i)
-    //    {   
-    //        FR_lfwObj *example = static_cast<FR_lfwObj *>(trn[i].get());
-    //        int currNum1 = getLabel(example->image1);
-    //        int currNum2 = getLabel(example->image2);
-    //        cerr << format("tr   %5d %2d %5d:%-5d %32s %32s", i, example->same, currNum1, currNum2, name(example->image1).c_str(), name(example->image2).c_str() ) << endl;
-    //    }
-    //    for (unsigned int j=0; j<numSplits; ++j)
-    //    {   
-    //        vector < Ptr<Object> > &curr = dataset->getTest(j);
-    //        printf("test %d size: %u\n", j, (unsigned int)curr.size());
-    //        for (unsigned int i=0; i<curr.size(); ++i)
-    //        {   
-    //            FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
-    //            cerr << format("te%5d %5d %2d %32s %32s", j, i, example->same, name(example->image1).c_str(), name(example->image2).c_str()) << endl;
-    //        }
-    //    }
-    //    return 0;
-    //}
-
-    // 2200 pairsDevTrain, first split: correct: 373, from: 600 -> 62.1667%
-    //Ptr<FaceRecognizer> model = createLBPHFaceRecognizer();
-    // 2200 pairsDevTrain, first split: correct: correct: 369, from: 600 -> 61.5%
-    //Ptr<FaceRecognizer> model = createEigenFaceRecognizer();
-    // 2200 pairsDevTrain, first split: correct: 372, from: 600 -> 62%
-    //Ptr<FaceRecognizer> model = createFisherFaceRecognizer();
-    //cout << "Saving the trained model to " << saveModelPath << endl;
-    //model->save(saveModelPath);

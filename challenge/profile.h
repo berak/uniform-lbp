@@ -20,7 +20,6 @@ struct Profile
     double d_tc;
     double d_t;
 
-
     Profile(cv::String name) 
         : name(name)
         , t(0) 
@@ -28,36 +27,24 @@ struct Profile
         , d_tc(0)
         , d_t(0)
     {}   
-
-    void finalize()
+    ~Profile() 
     {
         fprintf(stderr, "%-24s %8u ",name.c_str(),c);
         fprintf(stderr, "%13.6f ",d_tc); 
         fprintf(stderr, "%13.6f ",d_t);
         fprintf(stderr, "%14u",t);
         fprintf(stderr, "\n");
-        c=0;
     }
 
-    void tick(int64 _dt)
+    void tick(int64 delta)
     {
-        if ( _dt > 0 )
-        {
-            t += _dt;
-            c ++;
-            d_t  = dt(_dt);
-            d_tc = d_t/c;
-        }
+        if (delta <= 0)  return;
+        t += delta;
+        c ++;
+        d_t  = dt(delta);
+        d_tc = d_t/c;
     }
-    ~Profile() 
-    {
-        if ( c!=0 ) finalize();
-        //cerr << format("%-24s %8u ",name.c_str(),c);
-        //cerr << format("%13.6f ",dt(t/c)); 
-        //cerr << format("%13.6f ",dt(t));
-        //cerr << format("%14u",t);
-        //cerr << endl;
-    }
+
 
     struct Scope
     {

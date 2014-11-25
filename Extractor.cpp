@@ -135,9 +135,9 @@ protected:
 public:
 
     GriddedHist(int gridx=8, int gridy=8, bool doweight=false) 
-        : GRIDX(gridx)
+        : weights(8,8)
         , GRIDY(gridy) 
-        , weights(8,8)
+        , GRIDX(gridx)
         , doWeight(doweight)
     {
         if (doWeight) // not all patches have the same relevance.
