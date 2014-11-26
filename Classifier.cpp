@@ -225,7 +225,7 @@ public:
 //
 class ClassifierSvmMulti : public TextureFeature::Classifier
 {
-    vector<Ptr<ml::SVM>> svms;
+    vector< Ptr<ml::SVM> > svms;
     ml::SVM::Params param;
 
 public:
