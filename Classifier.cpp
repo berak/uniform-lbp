@@ -12,7 +12,7 @@ using namespace cv;
 //
 // find the number of unique labels, the class count
 //
-static int unique(const Mat &labels, set<int> &classes=set<int>())
+static int unique(const Mat &labels, set<int> &classes)
 {
     for (size_t i=0; i<labels.total(); ++i)
         classes.insert(labels.at<int>(i));
@@ -387,7 +387,8 @@ public:
     virtual int train(const Mat &data, const Mat &labels)
     {
         int N = data.rows;
-        int C = unique(labels);
+        set<int> classes;
+        int C = unique(labels,classes);
         if((_num_components <= 0) || (_num_components > (C-1))) // btw, why C-1 ?
             _num_components = (C-1);
 

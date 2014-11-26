@@ -111,7 +111,7 @@ void printOptions()
 //
 // find the number of unique labels, the class count
 //
-static int unique(const Mat &labels, set<int> &classes=set<int>())
+static int unique(const Mat &labels, set<int> &classes)
 {
     for (size_t i=0; i<labels.total(); ++i)
         classes.insert(labels.at<int>(i));
