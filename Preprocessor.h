@@ -10,10 +10,12 @@ class Preprocessor
     int preproc, precrop;
     Ptr<CLAHE> clahe;
     Ptr<bioinspired::Retina> retina;
-public:
-	Preprocessor( int mode=0, int crop=0 );
 
-    Mat process(const Mat & in) const;
+public:
+
+	Preprocessor(int mode=0, int crop=0);
+
+    Mat process(const Mat &in) const;
 
     const char *pps() const;
 };

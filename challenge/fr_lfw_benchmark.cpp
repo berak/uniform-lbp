@@ -47,7 +47,7 @@
 
 #include "MyFace.h"
 
-#if 0
+#if 1
  #include "profile.h"
 #else
  #define PROFILE ;
@@ -203,7 +203,7 @@ int main(int argc, const char *argv[])
     for (unsigned int j=0; j<numSplits; ++j)
     {  
         PROFILEX("splits");
-        if (trainMethod == 1) // train on the remaining 9 splits from tairs.txt
+        if (trainMethod == 1) // train on the remaining 9 splits from pairs.txt
         {
             images.clear();
             labels.clear();
