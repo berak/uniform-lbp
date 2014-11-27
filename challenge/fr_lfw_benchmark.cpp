@@ -162,10 +162,7 @@ int main(int argc, const char *argv[])
 
     // load dataset
     Ptr<FR_lfw> dataset = FR_lfw::create();
-    {
-        PROFILEX("load");
-        dataset->load(path);
-    }
+    dataset->load(path);
     unsigned int numSplits = dataset->getNumSplits();
 
     if ( trainMethod == 0 ) // train on personsDevTrain.txt
@@ -237,13 +234,12 @@ int main(int argc, const char *argv[])
         vector < Ptr<Object> > &curr = dataset->getTest(j);
         for (unsigned int i=0; i<curr.size(); ++i)
         {   
-            PROFILEX("predicts");
             FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
 
             Mat img1 = imread(path+example->image1, IMREAD_GRAYSCALE);
             Mat img2 = imread(path+example->image2, IMREAD_GRAYSCALE);
             bool same = model->same(img1,img2)>0;
-            if ( same && example->same )
+            if ( same == example->same )
                 correct++;
             else
                 incorrect++;

@@ -430,16 +430,14 @@ struct VerifierNearest : TextureFeature::Verifier
     virtual int train( const Mat &features, const Mat &labels )
     {
         thresh = 0;
-        double dSame=0;
-        double dNotSame=0;
-        int nSame=0;
-        int nNotSame=0;
-        for (size_t i=1; i<labels.total()-2; i+=2)
+        double dSame=0, dNotSame=0;
+        int    nSame=0, nNotSame=0;
+        for (size_t i=0; i<labels.total()-1; i+=2)
         {
-            for (size_t j=0; j<labels.total()-2; j+=2)
+            //for (size_t j=0; j<labels.total()-1; j+=2)
             {
-                if (i==j) continue;
-                
+                //if (i==j) continue;
+                int j = i+1;
                 double d = distance(features.row(i), features.row(j));
                 if ( labels.at<int>(i) == labels.at<int>(j) )
                 {
@@ -454,10 +452,10 @@ struct VerifierNearest : TextureFeature::Verifier
             }
             cerr << i << "/" << labels.total() << '\r';
         }
-        dSame    /= nSame;
-        dNotSame /= nNotSame;
+        dSame    = (dSame/nSame);
+        dNotSame = (dNotSame/nNotSame);
         double dt = dNotSame - dSame;
-        thresh = dSame + dt*0.5; //(dSame + dNotSame) / 2;
+        thresh = dSame + dt*0.25; //(dSame + dNotSame) / 2;
         cerr << dSame << " " << dNotSame << " " << thresh << "\t" << nSame << " " << nNotSame <<  endl;
         return 1;
     }
@@ -465,10 +463,11 @@ struct VerifierNearest : TextureFeature::Verifier
     virtual int same( const Mat &a, const Mat &b ) const
     {
         double d = distance(a,b);
+        //cerr << d << " ";
         return d < thresh;
     }
-
 };
+
 
 struct VerifierHist : VerifierNearest
 {
