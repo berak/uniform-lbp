@@ -13,10 +13,12 @@ using namespace std;
 
 namespace myface {
 
-class MyFace : public face::FaceRecognizer 
+//class MyFace : public face::FaceRecognizer 
+class MyFace : public FaceVerifier 
 {
     Ptr<TextureFeature::Extractor> ext;
-    Ptr<TextureFeature::Classifier> cls;
+    Ptr<TextureFeature::Verifier> cls;
+    //Ptr<TextureFeature::Classifier> cls;
     Preprocessor pre;
     bool doFlip;
 
@@ -40,16 +42,26 @@ public:
         }
         switch(clsfy) 
         {
-            default:
-            case CL_NORM_L2:   cls = createClassifierNearest(NORM_L2); break;
-            case CL_NORM_L1:   cls = createClassifierNearest(NORM_L1); break;
-            case CL_NORM_HAM:  cls = createClassifierNearest(NORM_HAMMING); break;
-            case CL_HIST_HELL: cls = createClassifierHist(HISTCMP_HELLINGER); break;
-            case CL_HIST_ISEC: cls = createClassifierHist(HISTCMP_INTERSECT); break;
-            case CL_SVM:       cls = createClassifierSVM(); break;
-            case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;
-            case CL_COSINE:    cls = createClassifierCosine(); break;
-            case CL_FISHER:    cls = createClassifierFisher(); break;
+            case CL_NORM_L2:   cls = createVerifierNearest(NORM_L2); break;
+            case CL_NORM_L1:   cls = createVerifierNearest(NORM_L1); break;
+            case CL_NORM_HAM:  cls = createVerifierNearest(NORM_HAMMING); break;
+            case CL_HIST_HELL: cls = createVerifierHist(HISTCMP_HELLINGER); break;
+            case CL_HIST_ISEC: cls = createVerifierHist(HISTCMP_INTERSECT); break;
+            default: cerr << clsfy << " is not yet supported." << endl; exit(-1);
+            //case CL_SVM:       cls = createClassifierSVM(); break;
+            //case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;
+            //case CL_COSINE:    cls = createClassifierCosine(); break;
+            //case CL_FISHER:    cls = createClassifierFisher(); break;
+
+            //case CL_NORM_L2:   cls = createClassifierNearest(NORM_L2); break;
+            //case CL_NORM_L1:   cls = createClassifierNearest(NORM_L1); break;
+            //case CL_NORM_HAM:  cls = createClassifierNearest(NORM_HAMMING); break;
+            //case CL_HIST_HELL: cls = createClassifierHist(HISTCMP_HELLINGER); break;
+            //case CL_HIST_ISEC: cls = createClassifierHist(HISTCMP_INTERSECT); break;
+            //case CL_SVM:       cls = createClassifierSVM(); break;
+            //case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;
+            //case CL_COSINE:    cls = createClassifierCosine(); break;
+            //case CL_FISHER:    cls = createClassifierFisher(); break;
         }
     }
 
@@ -87,18 +99,30 @@ public:
     }
 
     // Gets a prediction from a FaceRecognizer.
-    virtual int predict(InputArray src) const
+    virtual int same(const Mat & a, const Mat &b) const
     {
-        Mat img = src.getMat();
+        Mat feat1;
+        ext->extract(pre.process(a), feat1);
 
-        Mat feat;
-        ext->extract(pre.process(img), feat);
+        Mat feat2;
+        ext->extract(pre.process(b), feat2);
 
-        Mat res;
-        cls->predict(feat,res);
-
-        return int(res.at<float>(0));
+        return cls->same(feat1,feat2);
     }
+
+    //// Gets a prediction from a FaceRecognizer.
+    //virtual int predict(InputArray src) const
+    //{
+    //    Mat img = src.getMat();
+
+    //    Mat feat;
+    //    ext->extract(pre.process(img), feat);
+
+    //    Mat res;
+    //    cls->predict(feat,res);
+
+    //    return int(res.at<float>(0));
+    //}
 
 
 
@@ -128,7 +152,8 @@ public:
 
 } // myface
 
-Ptr<face::FaceRecognizer> createMyFaceRecognizer(int ex, int cl, int pr, int pc, int ps)
+//Ptr<face::FaceRecognizer> createMyFaceRecognizer(int ex, int cl, int pr, int pc, int ps)
+Ptr<myface::FaceVerifier> createMyFaceVerifier(int ex, int cl, int pr, int pc, int ps)
 {
     return makePtr<myface::MyFace>(ex, cl, pr, pc, ps);
 }

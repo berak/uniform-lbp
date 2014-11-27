@@ -19,6 +19,15 @@ namespace TextureFeature
         virtual int train( const Mat &features, const Mat &labels ) = 0;
         virtual int predict( const Mat &test, Mat &result ) const = 0;
     };
+
+    struct Verifier // same-notSame
+    {
+        // labels can be:
+        // *empty (restricted)
+        // *int   (unrestricted)
+        virtual int train( const Mat &features, const Mat &labels ) = 0;
+        virtual int same( const Mat &a, const Mat &b ) const = 0;
+    };
 };
 
 
@@ -40,8 +49,8 @@ cv::Ptr<TextureFeature::Extractor> createExtractorDct();
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g=25);
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid();
 
-cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=NORM_L2);
-cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=HISTCMP_CHISQR);
+cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=cv::NORM_L2);
+cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=cv::HISTCMP_CHISQR);
 cv::Ptr<TextureFeature::Classifier> createClassifierCosine();
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int n=1);                // TODO: needs a way to get to the k-1 others
 cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5);
@@ -51,6 +60,8 @@ cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti();
 cv::Ptr<TextureFeature::Classifier> createClassifierEigen();
 cv::Ptr<TextureFeature::Classifier> createClassifierFisher();
 
+cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int flag=cv::NORM_L2);
+cv::Ptr<TextureFeature::Verifier> createVerifierHist(int flag=cv::HISTCMP_CHISQR);
 
 
 #endif // __TextureFeature_onboard__

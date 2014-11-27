@@ -262,7 +262,7 @@ public:
         // train one svm per class:
         //
         set<int> classes;
-        int N = unique(labels,classes);
+        unique(labels,classes);
 
         for (set<int>::iterator it=classes.begin(); it != classes.end(); ++it)
         {
@@ -386,9 +386,9 @@ public:
 
     virtual int train(const Mat &data, const Mat &labels)
     {
-        int N = data.rows;
         set<int> classes;
         int C = unique(labels,classes);
+        int N = data.rows;
         if((_num_components <= 0) || (_num_components > (C-1))) // btw, why C-1 ?
             _num_components = (C-1);
 
@@ -414,9 +414,80 @@ public:
 
 
 
+struct VerifierNearest : TextureFeature::Verifier
+{
+    double thresh;
+    int flag;
+
+    VerifierNearest(int f=NORM_L2)
+        : thresh(0)
+        , flag(f)
+    {}
+    virtual double distance(const Mat &a, const Mat &b) const
+    {
+        return norm(a,b,flag);
+    }
+    virtual int train( const Mat &features, const Mat &labels )
+    {
+        thresh = 0;
+        double dSame=0;
+        double dNotSame=0;
+        int nSame=0;
+        int nNotSame=0;
+        for (size_t i=1; i<labels.total()-2; i+=2)
+        {
+            for (size_t j=0; j<labels.total()-2; j+=2)
+            {
+                if (i==j) continue;
+                
+                double d = distance(features.row(i), features.row(j));
+                if ( labels.at<int>(i) == labels.at<int>(j) )
+                {
+                    dSame += d;
+                    nSame ++;
+                }
+                else
+                {
+                    dNotSame += d;
+                    nNotSame ++;
+                }
+            }
+            cerr << i << "/" << labels.total() << '\r';
+        }
+        dSame    /= nSame;
+        dNotSame /= nNotSame;
+        double dt = dNotSame - dSame;
+        thresh = dSame + dt*0.5; //(dSame + dNotSame) / 2;
+        cerr << dSame << " " << dNotSame << " " << thresh << "\t" << nSame << " " << nNotSame <<  endl;
+        return 1;
+    }
+
+    virtual int same( const Mat &a, const Mat &b ) const
+    {
+        double d = distance(a,b);
+        return d < thresh;
+    }
+
+};
+
+struct VerifierHist : VerifierNearest
+{
+    VerifierHist(int f=HISTCMP_CHISQR)
+        : VerifierNearest(f)
+    {}
+    virtual double distance(const Mat &a, const Mat &b) const
+    {
+        return compareHist(a,b,flag);
+    }
+};
+
+
 
 //
 // 'factory' functions (aka public api)
+//
+// verifiers (identification)
+//
 //
 
 cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag)
@@ -445,4 +516,15 @@ cv::Ptr<TextureFeature::Classifier> createClassifierEigen()
 
 cv::Ptr<TextureFeature::Classifier> createClassifierFisher()
 { return makePtr<ClassifierFisher>(); }
+
+
+//
+// (verification)
+//
+
+cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
+{ return makePtr<VerifierNearest>(norm_flag); }
+
+cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
+{ return makePtr<VerifierHist>(norm_flag); }
 

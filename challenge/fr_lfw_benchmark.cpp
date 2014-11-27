@@ -71,7 +71,6 @@ map<string, int> people;
 int getLabel(const string &imagePath);
 int getLabel(const string &imagePath)
 {   
-    PROFILEX("getLabel");
     size_t pos = imagePath.find('/');
     string curr = imagePath.substr(0, pos);
     map<string, int>::iterator it = people.find(curr);
@@ -147,16 +146,14 @@ int main(int argc, const char *argv[])
     getprm(parser,"pre",pre);
     getprm(parser,"trn",trainMethod);
     
-    Ptr<FaceRecognizer> model;
-    if ( ext>=myface::EXT_MAX )
-    {
-        model = createLBPHFaceRecognizer();
-    } 
-    else 
-    {
-        cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << trainMethod << endl;
-        model = createMyFaceRecognizer(ext,cls,pre,crp);
-    }
+    //Ptr<FaceRecognizer> model;
+    //if ( ext>=myface::EXT_MAX )
+    //{
+    //    model = createLBPHFaceRecognizer();
+    //} 
+    //else 
+    cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << trainMethod << endl;
+    Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,cls,pre,crp);
 
     // These vectors hold the images and corresponding labels.
     vector<Mat> images;
@@ -175,7 +172,6 @@ int main(int argc, const char *argv[])
     {
         for (unsigned int i=0; i<dataset->getTrain().size(); ++i)
         {   
-            PROFILEX("getData");
             FR_lfwObj *example = static_cast<FR_lfwObj *>(dataset->getTrain()[i].get());
 
             int currNum1 = getLabel(example->image1);
@@ -244,29 +240,39 @@ int main(int argc, const char *argv[])
             PROFILEX("predicts");
             FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
 
-            int currNum1 = getLabel(example->image1);
-            bool known1  = classes.find(currNum1) != classes.end();
-            Mat img = imread(path+example->image1, IMREAD_GRAYSCALE);
-            int predictedLabel1 = model->predict(img);
-
-            int currNum2 = getLabel(example->image2);
-            bool known2  = classes.find(currNum2) != classes.end();
-            img = imread(path+example->image2, IMREAD_GRAYSCALE);
-            int predictedLabel2 = model->predict(img);
-
-            if ((predictedLabel1 == predictedLabel2 && example->same) ||
-                (predictedLabel1 != predictedLabel2 && !example->same))
-            {
+            Mat img1 = imread(path+example->image1, IMREAD_GRAYSCALE);
+            Mat img2 = imread(path+example->image2, IMREAD_GRAYSCALE);
+            bool same = model->same(img1,img2)>0;
+            if ( same && example->same )
                 correct++;
-            } 
             else
-            {
                 incorrect++;
-            }
-            printf("%4u %5u/%-5u %d (%d:%d)(%d:%d)(%4i/%-4i)(%4i/%-4i) \r", 
-                i, correct, incorrect, example->same, known1, known2, 
-                (currNum1==predictedLabel1),(currNum2==predictedLabel2),
-                currNum1,currNum2, predictedLabel2,predictedLabel1 ); 
+
+            printf("%4u %5u/%-5u %d  \r", i, correct,incorrect, example->same );
+
+            //int currNum1 = getLabel(example->image1);
+            //bool known1  = classes.find(currNum1) != classes.end();
+            //Mat img = imread(path+example->image1, IMREAD_GRAYSCALE);
+            //int predictedLabel1 = model->predict(img);
+
+            //int currNum2 = getLabel(example->image2);
+            //bool known2  = classes.find(currNum2) != classes.end();
+            //img = imread(path+example->image2, IMREAD_GRAYSCALE);
+            //int predictedLabel2 = model->predict(img);
+
+            //if ((predictedLabel1 == predictedLabel2 && example->same) ||
+            //    (predictedLabel1 != predictedLabel2 && !example->same))
+            //{
+            //    correct++;
+            //} 
+            //else
+            //{
+            //    incorrect++;
+            //}
+            //printf("%4u %5u/%-5u %d (%d:%d)(%d:%d)(%4i/%-4i)(%4i/%-4i) \r", 
+            //    i, correct, incorrect, example->same, known1, known2, 
+            //    (currNum1==predictedLabel1),(currNum2==predictedLabel2),
+            //    currNum1,currNum2, predictedLabel2,predictedLabel1 ); 
         }
         p.push_back(1.0*correct/(correct+incorrect));
         printf("correct: %u, from: %u -> %f                                \n", correct, correct+incorrect, p.back());

@@ -12,9 +12,17 @@ namespace myface
     static const char *EXS[] = { "Pixels","Lbp","FPLbp","MTS","GaborLbp","Dct","OrbGrid","SiftGrid",0 };
     static const char *CLS[] = { "NORM_L2","NORM_L1","NORM_HAM","HIST_HELL","HIST_ISEC","SVM","SVMMulti","COSINE","FISHER",0 };
     static const char *PPS[] = { "none","eqhist","clahe","retina","tantriggs","crop",0 };
+
+
+    struct FaceVerifier
+    {
+         virtual void train(InputArrayOfArrays src, InputArray _labels) = 0;
+         virtual int same(const Mat & a, const Mat &b) const = 0;
+    };
 }
 
-Ptr<face::FaceRecognizer> createMyFaceRecognizer(int extract=0, int clsfy=0, int preproc=0, int precrop=0,int psize=250);
+//Ptr<face::FaceRecognizer> createMyFaceRecognizer(int extract=0, int clsfy=0, int preproc=0, int precrop=0,int psize=250);
+Ptr<myface::FaceVerifier> createMyFaceVerifier(int extract=0, int clsfy=0, int preproc=0, int precrop=0,int psize=250);
 
 
 #endif // __MyFace_onboard__
