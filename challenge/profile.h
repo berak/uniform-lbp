@@ -32,7 +32,7 @@ struct Profile
         fprintf(stderr, "%-24s %8u ",name.c_str(),c);
         fprintf(stderr, "%13.6f ",d_tc); 
         fprintf(stderr, "%13.6f ",d_t);
-        fprintf(stderr, "%14u",t);
+        fprintf(stderr, "%14llu",t);
         fprintf(stderr, "\n");
     }
 

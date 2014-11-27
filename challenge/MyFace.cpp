@@ -1,5 +1,4 @@
 #include "opencv2/opencv.hpp"
-#include "opencv2/bioinspired.hpp"
 using namespace cv;
 
 #include "MyFace.h"
@@ -23,8 +22,8 @@ class MyFace : public face::FaceRecognizer
 
 public:
 
-    MyFace(int extract=0, int clsfy=0, int preproc=0, int precrop=0,int psize=250)
-        : pre(preproc,precrop)
+    MyFace(int extract=0, int clsfy=0, int preproc=0, int crop=0,int psize=250)
+        : pre(preproc,crop)
         , doFlip(false)
     {
         switch(extract) 
