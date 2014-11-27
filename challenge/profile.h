@@ -29,10 +29,10 @@ struct Profile
     {}   
     ~Profile() 
     {
-        fprintf(stderr, "%-24s %8u ",name.c_str(),c);
+        fprintf(stderr, "%-24s %8ll ",name.c_str(),c);
         fprintf(stderr, "%13.6f ",d_tc); 
         fprintf(stderr, "%13.6f ",d_t);
-        fprintf(stderr, "%14llu",t);
+        fprintf(stderr, "%14ll",t);
         fprintf(stderr, "\n");
     }
 
