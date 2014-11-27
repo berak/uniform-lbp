@@ -96,7 +96,7 @@ protected:
     int GRIDX,GRIDY;
     bool doWeight;
 
-    void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo, int histSize, int histRange=256) const
+    static void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo, int histSize, int histRange=256) 
     {   
         for ( int i=0; i<feature.rows; i++ )
         {
@@ -136,8 +136,8 @@ public:
 
     GriddedHist(int gridx=8, int gridy=8, bool doweight=false) 
         : weights(8,8)
-        , GRIDY(gridy) 
         , GRIDX(gridx)
+        , GRIDY(gridy) 
         , doWeight(doweight)
     {
         if (doWeight) // not all patches have the same relevance.

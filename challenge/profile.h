@@ -12,7 +12,8 @@ using namespace std;
 
 struct Profile
 {
-    double dt(int64 t) { return double(t*1000/freq)/1000.0; }
+    double dt(int64 t) const { return double(t*1000/freq)/1000.0; }
+
     static double freq;
     cv::String name;
     int64 t; // accumulated time
@@ -29,10 +30,10 @@ struct Profile
     {}   
     ~Profile() 
     {
-        fprintf(stderr, "%-24s %8ll ",name.c_str(),c);
+        fprintf(stderr, "%-24s %8lld ",name.c_str(),c);
         fprintf(stderr, "%13.6f ",d_tc); 
         fprintf(stderr, "%13.6f ",d_t);
-        fprintf(stderr, "%14ll",t);
+        fprintf(stderr, "%14lld",t);
         fprintf(stderr, "\n");
     }
 

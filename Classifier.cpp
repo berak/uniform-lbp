@@ -72,7 +72,7 @@ public:
 
     ClassifierNearestFloat(int flag=NORM_L2) : ClassifierNearest(flag) {}
 
-    Mat tofloat(const Mat &src) const
+    static Mat tofloat(const Mat &src) 
     {
         Mat query;
         if ( src.type() != CV_32F )
