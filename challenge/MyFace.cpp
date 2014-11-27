@@ -31,7 +31,7 @@ public:
         switch(extract)
         {
             default:
-            case EXT_Pixels:   ext = createExtractorPixels(60,60); break;
+            case EXT_Pixels:   ext = createExtractorPixels(); break;
             case EXT_Lbp:      ext = createExtractorLbp(); break;
             case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
             case EXT_MTS:      ext = createExtractorMTS(); break;
