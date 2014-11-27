@@ -315,6 +315,7 @@ public:
 class ClassifierEigen : public TextureFeature::Classifier
 {
 protected:
+
     vector<Mat> _projections;
     Mat _labels;
     Mat _eigenvectors;
