@@ -26,22 +26,22 @@ using TextureFeature::Classifier;
 bool debug = false;
 RNG rng(getTickCount());
 
-double ct(int64 t) 
+double ct(int64 t)
 {
-    return double(t) / cv::getTickFrequency(); 
+    return double(t) / cv::getTickFrequency();
 }
 
 
 //
 // read a 'path <blank> label' list
 //
-int readtxt( const char * fname, std::vector<std::string> & names, std::vector<int> & labels, size_t maxim  ) 
+int readtxt(const char * fname, std::vector<std::string> & names, std::vector<int> & labels, size_t maxim)
 {
     int maxid=-1;
     std::ifstream in(fname);
-    while( in.good() && !in.eof() )
+    while(in.good() && !in.eof())
     {
-        std::string path ;
+        std::string path;
         in >> path;
         names.push_back(path);
 
@@ -50,7 +50,7 @@ int readtxt( const char * fname, std::vector<std::string> & names, std::vector<i
         labels.push_back(label);
 
         maxid=std::max(maxid,label);
-        if ( labels.size() >= maxim ) 
+        if (labels.size() >= maxim)
             break;
     }
     return maxid;
@@ -61,13 +61,13 @@ int readtxt( const char * fname, std::vector<std::string> & names, std::vector<i
 // imglists per person.
 //  no really, you can't just draw a random probability set from a set of multiple classes and call it a day ...
 //
-void setupPersons( const vector<int> & labels, vector<vector<int>> & persons )
+void setupPersons(const vector<int> & labels, vector<vector<int>> & persons)
 {
     // find out which index belongs to which person
     //
     persons.resize(1);
     int prvid=0;
-    for ( size_t j=0; j<labels.size(); j++ )
+    for (size_t j=0; j<labels.size(); j++)
     {
         int id = labels[j];
         if (prvid!=id)
@@ -83,21 +83,21 @@ int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int pre
 {
     // read face db
     vector<string> vec;
-    vector<int> vlabels; 
+    vector<int> vlabels;
     int nsubjects = 1 + readtxt(txtfile.c_str(), vec, vlabels, maxim);
 
     Preprocessor pre(preproc,precrop);
 
     //
-    // read the images, 
+    // read the images,
     //   correct labels if empty images are skipped
     //   also apply preprocessing,
     //
     int load_flag = preproc==-1 ? 1 : 0;
-    for ( size_t i=0; i<vec.size(); i++ )
+    for (size_t i=0; i<vec.size(); i++)
     {
         Mat m1 = imread(vec[i], load_flag);
-        if ( m1.empty() )
+        if (m1.empty())
             continue;
 
         Mat m2;
@@ -112,26 +112,26 @@ int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int pre
     return nsubjects;
 }
 
-int crossfoldData( Ptr<Extractor> ext,
-                    Mat & trainFeatures,
-                    Mat & trainLabels,
-                    Mat & testFeatures,
-                    Mat & testLabels,
-                    const vector<Mat> &images, 
-                    const vector<int> &labels, 
-                    const vector<vector<int>> &persons,
-                    size_t f, size_t fold )
+int crossfoldData(Ptr<Extractor> ext,
+                  Mat & trainFeatures,
+                  Mat & trainLabels,
+                  Mat & testFeatures,
+                  Mat & testLabels,
+                  const vector<Mat> &images,
+                  const vector<int> &labels,
+                  const vector<vector<int>> &persons,
+                  size_t f, size_t fold)
 {
     int fsiz=0;
 
     // split train/test set per person:
-    for ( size_t j=0; j<persons.size(); j++ )
+    for (size_t j=0; j<persons.size(); j++)
     {
         size_t n_per_person = persons[j].size();
         if (n_per_person < fold)
             continue;
         int r = (fold != 0) ? (n_per_person/fold) : -1;
-        for ( size_t n=0; n<n_per_person; n++ )
+        for (size_t n=0; n<n_per_person; n++)
         {
             int index = persons[j][n];
 
@@ -139,7 +139,7 @@ int crossfoldData( Ptr<Extractor> ext,
             fsiz = ext->extract(images[index],feature);
 
             // sliding window per fold
-            if ( (fold>1) && (n >= f*r) && (n <= (f+1)*r) ) 
+            if ((fold>1) && (n >= f*r) && (n <= (f+1)*r))
             {
                 testFeatures.push_back(feature);
                 testLabels.push_back(labels[index]);
@@ -155,7 +155,7 @@ int crossfoldData( Ptr<Extractor> ext,
 }
 
 
-double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> &images, const vector<int> &labels, const vector<vector<int>> &persons, size_t fold=10 ) 
+double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vector<Mat> &images, const vector<int> &labels, const vector<vector<int>> &persons, size_t fold=10)
 {
     //
     // for each fold, take alternating n/fold items for test, the others for training
@@ -167,7 +167,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
 
     int64 t0=getTickCount();
     int fsiz=0;
-    for ( size_t f=0; f<fold; f++ )
+    for (size_t f=0; f<fold; f++)
     {
         int64 t1 = cv::getTickCount();
         Mat trainFeatures, trainLabels;
@@ -178,14 +178,14 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
         cls->train(trainFeatures.reshape(1,trainLabels.rows),trainLabels);
 
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
-        for ( int i=0; i<testFeatures.rows; i++ )
+        for (int i=0; i<testFeatures.rows; i++)
         {
             Mat res;
             cls->predict(testFeatures.row(i).reshape(1,1), res);
     
             int pred = int(res.at<float>(0));
             int ground = testLabels.at<int>(i);
-            if ( pred<0 || ground<0 )
+            if (pred<0 || ground<0)
             {
                 cerr << "neg prediction " << f << " " << i << " " << pred << " " << ground << endl;
                 continue;
@@ -228,18 +228,18 @@ int main(int argc, const char *argv[])
     std::string db_path("senthil.txt");
     //std::string db_path("att.txt");
     //std::string db_path("yale.txt");
-    if ( argc>1 ) db_path = argv[1];
+    if (argc>1) db_path = argv[1];
 
     size_t fold = 4;
-    if ( argc>2 ) fold = atoi(argv[2]);
+    if (argc>2) fold = atoi(argv[2]);
 
     int rec = 1;
-    if ( argc>3 ) rec = atoi(argv[3]);
+    if (argc>3) rec = atoi(argv[3]);
 
     int preproc = 0; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
-    if ( argc>4 ) preproc = atoi(argv[4]);
+    if (argc>4) preproc = atoi(argv[4]);
 
-    if ( argc>5 ) debug = atoi(argv[5])!=0;
+    if (argc>5) debug = atoi(argv[5])!=0;
 
     
     extractDB(db_path, images, labels, preproc, 0, 500, 120);
@@ -252,7 +252,7 @@ int main(int argc, const char *argv[])
     // some diagnostics:
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
     char *pp[] = { "no preproc", "equalizeHist", "tan-triggs", "CLAHE", "retina" };
-    if ( rec==0 )
+    if (rec == 0)
         cout << "--------------------------------------------------------------" << endl;
     cout << format("%-19s",dbs.c_str()) << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[preproc] << endl;
     if ( rec==0 ) 
@@ -263,11 +263,11 @@ int main(int argc, const char *argv[])
 
     // loop through all tests for rec==0, do one test else.
     int n=42;
-    if ( rec > 0 ) 
+    if (rec > 0)
     {
         n = rec+1;
     }
-    for ( ; rec<n; rec++ ) 
+    for (; rec<n; rec++)
     {
         switch(rec)
         {

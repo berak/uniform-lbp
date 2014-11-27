@@ -103,7 +103,7 @@ class ClassifierHist : public ClassifierNearestFloat
 {
 public:
 
-    ClassifierHist(int flag=HISTCMP_CHISQR) 
+    ClassifierHist(int flag=HISTCMP_CHISQR)
         : ClassifierNearestFloat(flag)
     {}
 
@@ -136,14 +136,14 @@ public:
 
 class ClassifierKNN : public TextureFeature::Classifier
 {
-    Ptr<ml::KNearest> knn; 
+    Ptr<ml::KNearest> knn;
     int K;
 
 public:
 
     ClassifierKNN(int k=1) 
         : knn(ml::KNearest::create())
-        , K(k) 
+        , K(k)
     {}
 
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
@@ -175,8 +175,8 @@ public:
     ml::SVM::Params param;
 
 
-    ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5) 
-    //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5) 
+    ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
+    //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
     {
         param.kernelType = ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
         param.svmType = ml::SVM::NU_SVC; // NU_SVC
@@ -188,7 +188,7 @@ public:
         param.p = p; // for CV_SVM_EPS_SVR
         param.classWeights = NULL ; // for CV_SVM_C_SVC
 
-        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS ;
+        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
         param.termCrit.maxCount = 1000;
         param.termCrit.epsilon = 1e-6;
         svm = ml::SVM::create(param);
@@ -197,19 +197,19 @@ public:
     virtual int train(const Mat &src, const Mat &labels)
     {
         Mat trainData = src.reshape(1,labels.rows);
-        if ( trainData.type() != CV_32F )
+        if (trainData.type() != CV_32F)
             trainData.convertTo(trainData,CV_32F);
 
         svm->clear();
-        bool ok = svm->train( trainData , ml::ROW_SAMPLE , Mat(labels) );
+        bool ok = svm->train(trainData , ml::ROW_SAMPLE , Mat(labels));
         CV_Assert(ok&&"please check the input params(nu)");
         return trainData.rows;
     }
 
-    virtual int predict(const Mat &src, Mat &res) const    
+    virtual int predict(const Mat &src, Mat &res) const
     {
         Mat query;
-        if ( src.type() != CV_32F )
+        if (src.type() != CV_32F)
             src.convertTo(query,CV_32F);
         else
             query=src;
@@ -230,9 +230,9 @@ class ClassifierSvmMulti : public TextureFeature::Classifier
 
 public:
 
-    ClassifierSvmMulti() 
+    ClassifierSvmMulti()
     {
-        // 
+        //
         // again, call me helpless on parameterizing this ;[
         //
         param.kernelType = ml::SVM::LINEAR; //, CvSVM::LINEAR...
@@ -245,7 +245,7 @@ public:
         //param.p = p; // for CV_SVM_EPS_SVR
         //param.classWeights = NULL ; // for CV_SVM_C_SVC
         
-        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS ;
+        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
         param.termCrit.maxCount = 100;
         param.termCrit.epsilon = 1e-6;
     }
@@ -255,7 +255,7 @@ public:
         svms.clear();
 
         Mat trainData = src.reshape(1,labels.rows);
-        if ( trainData.type() != CV_32F )
+        if (trainData.type() != CV_32F)
             trainData.convertTo(trainData,CV_32F);
 
         //
@@ -277,13 +277,13 @@ public:
     }
 
 
-    virtual int predict(const Mat &src, Mat &res) const    
+    virtual int predict(const Mat &src, Mat &res) const
     {
         Mat query;
-        if ( src.type() != CV_32F )
+        if (src.type() != CV_32F)
             src.convertTo(query,CV_32F);
         else
-            query=src;
+            query = src;
 
         //
         // predict per-class, return best(largest) result
@@ -291,12 +291,12 @@ public:
         //
         float m = -1.0f;
         float mi = 0.0f;
-        for ( size_t j=0; j<svms.size(); ++j)
+        for (size_t j=0; j<svms.size(); ++j)
         {
             Mat r;
             svms[j]->predict(query, r);
             float p = r.at<float>(0);
-            if ( p > m ) 
+            if (p > m)
             {
                 m = p;
                 mi = float(j);
@@ -307,9 +307,9 @@ public:
     }
 };
 
-// 
+//
 // ref impl of eigen / fisher faces
-//   this is basically bytefish's code, 
+//   this is basically bytefish's code,
 //   (terribly) condensed to the bare minimum
 //
 class ClassifierEigen : public TextureFeature::Classifier
@@ -323,21 +323,25 @@ protected:
 
 public:
 
-    ClassifierEigen(int num_components=0) 
+    ClassifierEigen(int num_components=0)
         : _num_components(num_components) // we don't need a threshold here
     {}
 
-    void save_projections(const Mat &data) 
+    Mat project(const Mat &in) const
+    {
+        return LDA::subspaceProject(_eigenvectors, _mean, in);
+    }
+
+    void save_projections(const Mat &data)
     {
         _projections.clear();
-        for(int i=0; i<data.rows; i++) 
+        for(int i=0; i<data.rows; i++)
         {
-            Mat p = LDA::subspaceProject(_eigenvectors, _mean, data.row(i));
-            _projections.push_back(p);
+            _projections.push_back(project(data.row(i)));
         }
     }
 
-    virtual int train(const Mat &data, const Mat &labels) 
+    virtual int train(const Mat &data, const Mat &labels)
     {
         if((_num_components <= 0) || (_num_components > data.rows))
             _num_components = data.rows;
@@ -353,11 +357,11 @@ public:
 
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
-        Mat query = LDA::subspaceProject(_eigenvectors, _mean, testFeature.reshape(1,1));
+        Mat query = project(testFeature.reshape(1,1));
         double minDist = DBL_MAX;
         int minClass = -1;
         int minId = -1;
-        for (size_t idx=0; idx<_projections.size(); idx++) 
+        for (size_t idx=0; idx<_projections.size(); idx++)
         {
             double dist = norm(_projections[idx], query, NORM_L2);
             if (dist < minDist)
@@ -379,12 +383,12 @@ class ClassifierFisher : public ClassifierEigen
 {
 public:
 
-    ClassifierFisher(int num_components=0) 
-        : ClassifierEigen(num_components) 
+    ClassifierFisher(int num_components=0)
+        : ClassifierEigen(num_components)
     {}
 
-
-    virtual int train(const Mat &data, const Mat &labels)
+    // recycled in VerifierFisher..
+    void train_base(const Mat &data, const Mat &labels)
     {
         set<int> classes;
         int C = unique(labels,classes);
@@ -401,9 +405,14 @@ public:
         LDA lda(proj, labels, min(_num_components,pca.eigenvectors.rows));
 
         // step three, combine both:
-        Mat leigen; 
+        Mat leigen;
         lda.eigenvectors().convertTo(leigen, pca.eigenvectors.type());
         gemm(pca.eigenvectors, leigen, 1.0, Mat(), 0.0, _eigenvectors, GEMM_1_T);
+    }
+
+    virtual int train(const Mat &data, const Mat &labels)
+    {
+        train_base(data,labels);
 
         // step four, project training images to lda space for prediction:
         _labels = labels;
@@ -411,6 +420,8 @@ public:
         return 1;
     }
 };
+
+
 
 
 
@@ -427,7 +438,7 @@ struct VerifierNearest : TextureFeature::Verifier
     {
         return norm(a,b,flag);
     }
-    virtual int train( const Mat &features, const Mat &labels )
+    virtual int train(const Mat &features, const Mat &labels)
     {
         thresh = 0;
         double dSame=0, dNotSame=0;
@@ -439,7 +450,7 @@ struct VerifierNearest : TextureFeature::Verifier
                 //if (i==j) continue;
                 int j = i+1;
                 double d = distance(features.row(i), features.row(j));
-                if ( labels.at<int>(i) == labels.at<int>(j) )
+                if (labels.at<int>(i) == labels.at<int>(j))
                 {
                     dSame += d;
                     nSame ++;
@@ -482,10 +493,45 @@ struct VerifierHist : VerifierNearest
 
 
 
+
+class VerifierFisher
+    : public virtual VerifierNearest
+    , public virtual ClassifierFisher
+{
+public:
+
+    VerifierFisher(int flag, int num_components=0)
+        : VerifierNearest(flag)
+        , ClassifierFisher(num_components)
+    {}
+
+    virtual int train(const Mat &data, const Mat &labels)
+    {
+        ClassifierFisher::train_base(data,labels);
+
+        Mat projections;
+        for(int i=0; i<data.rows; i++)
+            projections.push_back(project(data.row(i)));
+
+        VerifierNearest::train(projections, labels);
+        return 1;
+    }
+
+    virtual int same( const Mat &a, const Mat &b ) const
+    {
+        Mat pa = project(a);
+        Mat pb = project(b);
+        double d = distance(pa,pb);
+        return d < thresh;
+    }
+};
+
+
+
 //
 // 'factory' functions (aka public api)
 //
-// verifiers (identification)
+// (identification)
 //
 //
 
@@ -526,4 +572,7 @@ cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
 
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
 { return makePtr<VerifierHist>(norm_flag); }
+
+cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int norm_flag)
+{ return makePtr<VerifierFisher>(norm_flag); }
 

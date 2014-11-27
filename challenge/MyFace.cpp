@@ -13,8 +13,8 @@ using namespace std;
 
 namespace myface {
 
-//class MyFace : public face::FaceRecognizer 
-class MyFace : public FaceVerifier 
+//class MyFace : public face::FaceRecognizer
+class MyFace : public FaceVerifier
 {
     Ptr<TextureFeature::Extractor> ext;
     Ptr<TextureFeature::Verifier> cls;
@@ -28,7 +28,7 @@ public:
         : pre(preproc,crop)
         , doFlip(false)
     {
-        switch(extract) 
+        switch(extract)
         {
             default:
             case EXT_Pixels:   ext = createExtractorPixels(60,60); break;
@@ -40,18 +40,18 @@ public:
             case EXT_OrbGrid:  ext = createExtractorORBGrid(15);
             case EXT_SiftGrid: ext = createExtractorSIFTGrid();
         }
-        switch(clsfy) 
+        switch(clsfy)
         {
             case CL_NORM_L2:   cls = createVerifierNearest(NORM_L2); break;
             case CL_NORM_L1:   cls = createVerifierNearest(NORM_L1); break;
             case CL_NORM_HAM:  cls = createVerifierNearest(NORM_HAMMING); break;
             case CL_HIST_HELL: cls = createVerifierHist(HISTCMP_HELLINGER); break;
             case CL_HIST_ISEC: cls = createVerifierHist(HISTCMP_INTERSECT); break;
+            case CL_FISHER:    cls = createVerifierFisher(); break;
             default: cerr << clsfy << " is not yet supported." << endl; exit(-1);
             //case CL_SVM:       cls = createClassifierSVM(); break;
             //case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;
             //case CL_COSINE:    cls = createClassifierCosine(); break;
-            //case CL_FISHER:    cls = createClassifierFisher(); break;
 
             //case CL_NORM_L2:   cls = createClassifierNearest(NORM_L2); break;
             //case CL_NORM_L1:   cls = createClassifierNearest(NORM_L1); break;
@@ -75,14 +75,14 @@ public:
         src.getMatVector(images);
         int nfeatbytes=0;
         Mat features;
-        for ( size_t i=0; i<images.size(); i++ )
+        for (size_t i=0; i<images.size(); i++)
         {
             Mat img = pre.process(images[i]);
 
             Mat feat1;
             nfeatbytes = ext->extract(img, feat1);
             features.push_back(feat1.reshape(1,1));
-            labels.push_back( labels1(i) );
+            labels.push_back(labels1(i));
 
             if (doFlip) // add a flipped duplicate
             {
@@ -91,10 +91,10 @@ public:
                 Mat feat2;
                 ext->extract(img, feat2);
                 features.push_back(feat2.reshape(1,1));
-                labels.push_back( labels1(i) );
+                labels.push_back(labels1(i));
             }
         }
-        cls->train( features, labels.reshape(1,features.rows) );
+        cls->train( features, labels.reshape(1,features.rows));
         cerr << "trained " << nfeatbytes << " bytes." << '\r';
     }
 
@@ -154,7 +154,5 @@ public:
 
 //Ptr<face::FaceRecognizer> createMyFaceRecognizer(int ex, int cl, int pr, int pc, int ps)
 Ptr<myface::FaceVerifier> createMyFaceVerifier(int ex, int cl, int pr, int pc, int ps)
-{
-    return makePtr<myface::MyFace>(ex, cl, pr, pc, ps);
-}
+{  return makePtr<myface::MyFace>(ex, cl, pr, pc, ps);  }
 

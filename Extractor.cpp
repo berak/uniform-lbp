@@ -25,9 +25,9 @@ public:
     virtual int extract(const Mat &img, Mat &features) const
     {
         if (resw>0 && resh>0)
-            resize(img, features, Size(resw,resh) );
+            resize(img, features, Size(resw,resh));
         else
-            features=img;
+            features = img;
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
@@ -76,7 +76,7 @@ public:
     virtual int extract(const Mat &img, Mat &features) const
     {
         features = mom(img).reshape(1,1);
-        return features.total() * features.elemSize() ;
+        return features.total() * features.elemSize();
     }
 };
 
@@ -96,11 +96,11 @@ protected:
     int GRIDX,GRIDY;
     bool doWeight;
 
-    static void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo, int histSize, int histRange=256) 
+    static void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo, int histSize, int histRange=256)
     {   
-        for ( int i=0; i<feature.rows; i++ )
+        for (int i=0; i<feature.rows; i++)
         {
-            for ( int j=0; j<feature.cols; j++ )
+            for (int j=0; j<feature.cols; j++)
             {
                 uchar bin = int(feature(i,j)) * histSize / histRange;
                 histo( bin ) += 1.0f;
@@ -109,22 +109,22 @@ protected:
     }
 
     void hist(const Mat &feature, Mat &histo, int histSize=256, int histRange=256) const
-    {   
+    {
         histo.release();
         //const float range[] = { 0, 256 } ;
         //const float* hist_range[] = { range };
         int sw = (feature.cols)/(GRIDX+1);
         int sh = (feature.rows)/(GRIDY+1);
-        for ( int i=0; i<GRIDX; i++ )
+        for (int i=0; i<GRIDX; i++)
         {
-            for ( int j=0; j<GRIDY; j++ )
-            {  
+            for (int j=0; j<GRIDY; j++)
+            {
                 Rect patch(i*sw,j*sh,sw,sh);
                 Mat fi( feature, patch );
                 Mat_<float> h(1,histSize,0.0f);
                 //calcHist( &fi, 1, 0, Mat(), h, 1, &histSize, &hist_range, true, false );
                 calc_hist(fi,h,histSize,histRange);
-                if ( doWeight )
+                if (doWeight)
                     h *= weights(j,i);
                 histo.push_back(h.reshape(1,1));
             }
@@ -134,10 +134,10 @@ protected:
 
 public:
 
-    GriddedHist(int gridx=8, int gridy=8, bool doweight=false) 
+    GriddedHist(int gridx=8, int gridy=8, bool doweight=false)
         : weights(8,8)
         , GRIDX(gridx)
-        , GRIDY(gridy) 
+        , GRIDY(gridy)
         , doWeight(doweight)
     {
         if (doWeight) // not all patches have the same relevance.
@@ -150,7 +150,7 @@ public:
                        1, 2, 3, 3, 3, 3, 2, 1,
                        1, 2, 3, 3, 3, 3, 2, 1,
                        1, 1, 1, 1, 1, 1, 1, 1;
-            if ( GRIDX != weights.rows || GRIDY != weights.cols )
+            if (GRIDX != weights.rows || GRIDY != weights.cols)
                 resize(weights, weights, Size(GRIDX,GRIDY));
             normalize(weights, weights);
         }
@@ -184,7 +184,7 @@ protected:
     //
     // "histogram of equivalence patterns" 
     //
-    virtual void hep( const Mat &I, Mat &fI ) const
+    virtual void hep(const Mat &I, Mat &fI) const
     {
 #if 0
         SHIFTED_MATS_3x3(I);
@@ -201,9 +201,9 @@ protected:
         Mat_<uchar> feature(I.size(),0);
         Mat_<uchar> img(I);
         const int m=1;
-        for ( int r=m; r<img.rows-m; r++ )
+        for (int r=m; r<img.rows-m; r++)
         {
-            for ( int c=m; c<img.cols-m; c++ )
+            for (int c=m; c<img.cols-m; c++)
             {
                 uchar v = 0;
                 uchar cen = img(r,c);
@@ -301,7 +301,7 @@ public:
 class ExtractorBGC1 : public ExtractorLbp
 {
 protected:
-    virtual void hep( const Mat &I, Mat &fI ) const
+    virtual void hep(const Mat &I, Mat &fI) const
     {
         SHIFTED_MATS_3x3(I);
 
@@ -316,8 +316,8 @@ protected:
     }
 
 public:
-    ExtractorBGC1(int gridx=8, int gridy=8, int u_table=UniformNone) 
-        : ExtractorLbp(gridx, gridy, u_table) 
+    ExtractorBGC1(int gridx=8, int gridy=8, int u_table=UniformNone)
+        : ExtractorLbp(gridx, gridy, u_table)
     {}
 };
 
@@ -326,8 +326,8 @@ class ExtractorLQP : public GriddedHist
 {
 
 public:
-    ExtractorLQP(int gridx=8, int gridy=8) 
-        : GriddedHist(gridx, gridy) 
+    ExtractorLQP(int gridx=8, int gridy=8)
+        : GriddedHist(gridx, gridy)
     {}
     virtual int extract(const Mat &img, Mat &features) const
     {
@@ -436,7 +436,7 @@ class WLD : public GriddedHist
                     src.at<uchar>(i+1,j),
                     src.at<uchar>(i+1,j-1),
                     src.at<uchar>(i,j-1),
-                    src.at<uchar>(i-1,j-1) 
+                    src.at<uchar>(i-1,j-1)
                 };
                 int p = n[0]+n[1]+n[2]+n[3]+n[4]+n[5]+n[6]+n[7];
                 p -= c*8;
@@ -447,7 +447,7 @@ class WLD : public GriddedHist
                 hist.at<T>(int(zeta)) += 1;
 
                 // (11), projected from [-pi/2,pi/2] to [0,size_theta]
-                for ( int i=0; i<size_theta_n; i++ ) 
+                for (int i=0; i<size_theta_n; i++)
                 {
                     double a = atan2(double(n[i]-n[(i+4)%8]),double(n[(i+2)%8]-n[(i+6)%8]));
                     double theta = CV_PI_4 * fmod( (a+CV_PI)/CV_PI_4+0.5f, 8 ) * size_theta_w; // (11)
@@ -455,7 +455,7 @@ class WLD : public GriddedHist
                 }
 
                 // additionally, add some bits of the actual center value (MSB).
-                int cen = c>>(8-size_center); 
+                int cen = c>>(8-size_center);
                 hist.at<T>(cen+size_zeta+size_theta * size_theta_n) += 1;
             }
         }
@@ -463,7 +463,7 @@ class WLD : public GriddedHist
 
 public:
 
-    WLD(int gridx=8, int gridy=8,int typeflag=CV_32F) 
+    WLD(int gridx=8, int gridy=8,int typeflag=CV_32F)
         : GriddedHist(gridx,gridy)
         , typeflag(typeflag)
     {}
@@ -486,8 +486,8 @@ public:
 class ExtractorMTS : public GriddedHist
 {
 public:
-    ExtractorMTS(int gridx=8, int gridy=8) 
-        : GriddedHist(gridx, gridy) 
+    ExtractorMTS(int gridx=8, int gridy=8)
+        : GriddedHist(gridx, gridy)
     {}
     virtual int extract(const Mat &img, Mat &features) const
     {
@@ -514,11 +514,10 @@ class ExtractorSTU : public GriddedHist
 {
     int kerP1;
 public:
-    ExtractorSTU(int gridx=8, int gridy=8, int kp1=8) 
-        : GriddedHist(gridx, gridy) 
+    ExtractorSTU(int gridx=8, int gridy=8, int kp1=8)
+        : GriddedHist(gridx, gridy)
         , kerP1(kp1)
     {}
-        
 
     virtual int extract(const Mat &img, Mat &features) const
     {
@@ -527,7 +526,7 @@ public:
         Mat h,fI;
 
         fI = eta1(abs(I6-IC),kerP1) & (1<<6)
-           | eta1(abs(I4-IC),kerP1) & (1<<4) 
+           | eta1(abs(I4-IC),kerP1) & (1<<4)
            | eta1(abs(I2-IC),kerP1) & (1<<2) 
            | eta1(abs(I0-IC),kerP1) & (1<<1);
         hist(fI,h,64,256);
@@ -541,12 +540,12 @@ public:
 class ExtractorGLCM : public GriddedHist
 {
 public:
-    ExtractorGLCM(int gridx=8, int gridy=8) 
-        : GriddedHist(gridx, gridy) 
+    ExtractorGLCM(int gridx=8, int gridy=8)
+        : GriddedHist(gridx, gridy)
     {}
     virtual int extract(const Mat &img, Mat &features) const
     {
-        int M = img.rows; 
+        int M = img.rows;
         int N = img.cols; 
         // shifted images (special case)
         Mat I7 = img(Range(1,M-1), Range(1,N-2));
@@ -575,8 +574,8 @@ class ExtractorGaborLbp : public ExtractorLbp
 {
     Size kernel_size;
 public:
-    ExtractorGaborLbp(int gridx=8, int gridy=8, int u_table=UniformNone, int kernel_siz=8) 
-        : ExtractorLbp(gridx, gridy, u_table) 
+    ExtractorGaborLbp(int gridx=8, int gridy=8, int u_table=UniformNone, int kernel_siz=8)
+        : ExtractorLbp(gridx, gridy, u_table)
         , kernel_size(kernel_siz, kernel_siz)
     {}
     void gabor(const Mat &src_f, Mat &features,double sigma, double theta, double lambda, double gamma, double psi) const
@@ -606,17 +605,17 @@ public:
 class ExtractorFPLbp : public GriddedHist
 {
 public:
-    ExtractorFPLbp(int gridx=8, int gridy=8) 
-        : GriddedHist(gridx, gridy) 
+    ExtractorFPLbp(int gridx=8, int gridy=8)
+        : GriddedHist(gridx, gridy)
     {}
     virtual int extract(const Mat &img, Mat &features) const
     {
         Mat_<uchar> fI(img.size(),0);
         Mat_<uchar> I(img);
         const int m=2;
-        for ( int r=m; r<I.rows-m; r++ )
+        for (int r=m; r<I.rows-m; r++)
         {
-            for ( int c=m; c<I.cols-m; c++ )
+            for (int c=m; c<I.cols-m; c++)
             {
                 uchar v = 0;
                 v |= ((I(r  ,c+1) - I(r+2,c+2)) > (I(r  ,c-1) - I(r-2,c-2))) * 1;
@@ -633,7 +632,7 @@ public:
 };
 
 //
-// grid it into 8x8 image patches, do a dct on each, 
+// grid it into 8x8 image patches, do a dct on each,
 //  concat downsampled 4x4(topleft) result to feature vector.
 //
 class ExtractorDct : public TextureFeature::Extractor
@@ -641,7 +640,7 @@ class ExtractorDct : public TextureFeature::Extractor
     int grid;
 public:
     ExtractorDct() : grid(8) {}
-    virtual int extract( const Mat &img, Mat &features ) const 
+    virtual int extract( const Mat &img, Mat &features ) const
     {
         Mat src;
         img.convertTo(src,CV_32F,1.0/255.0);
@@ -652,7 +651,7 @@ public:
                 Mat d;
                 dct(src(Rect(i,j,grid,grid)),d);
                 // downsampling is just a ROI operation here, still we need a clone()
-                Mat e = d(Rect(0,0,grid/2,grid/2)).clone(); 
+                Mat e = d(Rect(0,0,grid/2,grid/2)).clone();
                 features.push_back(e.reshape(1,1));
             }
         }
@@ -669,7 +668,7 @@ class ExtractorGridFeature : public TextureFeature::Extractor
     int grid;
 public:
     ExtractorGridFeature(int g=10) : grid(g) {}
-    virtual int extract(const Mat &img, Mat &features) const 
+    virtual int extract(const Mat &img, Mat &features) const
     {
         float gw = float(img.cols) / grid;
         float gh = float(img.rows) / grid;
@@ -682,7 +681,7 @@ public:
                 kp.push_back(k);
             }
         }
-        Ptr<Feature2D> f2d = Descriptor::create();                   
+        Ptr<Feature2D> f2d = Descriptor::create();         
         f2d->compute(img, kp, features);
 
         features = features.reshape(1,1);

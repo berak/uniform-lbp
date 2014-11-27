@@ -1,7 +1,6 @@
 #ifndef __profile_onboard__
 #define __profile_onboard__
 
-//#include "opencv2/core/core.hpp"
 #include "opencv2/core/utility.hpp"
 using namespace cv;
 #include <iostream>
@@ -27,11 +26,12 @@ struct Profile
         , c(0)
         , d_tc(0)
         , d_t(0)
-    {}   
-    ~Profile() 
+    {}
+
+    ~Profile()
     {
         fprintf(stderr, "%-24s %8lld ",name.c_str(),c);
-        fprintf(stderr, "%13.6f ",d_tc); 
+        fprintf(stderr, "%13.6f ",d_tc);
         fprintf(stderr, "%13.6f ",d_t);
         fprintf(stderr, "%14lld",t);
         fprintf(stderr, "\n");
@@ -40,6 +40,7 @@ struct Profile
     void tick(int64 delta)
     {
         if (delta <= 0)  return;
+
         t += delta;
         c ++;
         d_t  = dt(delta);
@@ -52,9 +53,9 @@ struct Profile
         Profile & p;
         int64 t;
 
-        Scope(Profile & p) 
-            : p(p) 
-            , t(get_ticks()) 
+        Scope(Profile & p)
+            : p(p)
+            , t(get_ticks())
         {}
 
         ~Scope() 

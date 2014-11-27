@@ -68,7 +68,6 @@ using namespace cv::face;
 
 map<string, int> people;
 
-int getLabel(const string &imagePath);
 int getLabel(const string &imagePath)
 {   
     size_t pos = imagePath.find('/');
@@ -82,11 +81,6 @@ int getLabel(const string &imagePath)
     return (*it).second;
 }
 
-string name(const string &s) 
-{
-    int e = s.find('/');
-    return s.substr(e+1);
-}
 
 void getprm(CommandLineParser &parser, const string & s, int & v)
 {
@@ -107,26 +101,16 @@ void printOptions()
 }
 
 
-//
-// find the number of unique labels, the class count
-//
-static int unique(const Mat &labels, set<int> &classes)
-{
-    for (size_t i=0; i<labels.total(); ++i)
-        classes.insert(labels.at<int>(i));
-    return classes.size();
-}
-
 int main(int argc, const char *argv[])
 {   
     PROFILE;
     const char *keys =
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
-            "{ ext e          |0   |    extractor enum }"
-            "{ cls c          |0   |    classifier enum }"
-            "{ pre P          |none|    preprocessing }"
-            "{ trn t          |0   |    train method: pairsDevTrain=0 pairs(split)=1 }";
+            "{ ext e          |0   | extractor enum }"
+            "{ cls c          |0   | classifier enum }"
+            "{ pre P          |none| preprocessing }"
+            "{ trn t          |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
@@ -136,15 +120,14 @@ int main(int argc, const char *argv[])
         printOptions();
         return -1;
     }
+    string trainMethod(parser.get<string>("trn")); 
     int ext = myface::EXT_MAX;
     int cls = myface::CL_NORM_L2;
     int pre = 1;
     int crp = 80;
-    int trainMethod = 0; 
     getprm(parser,"ext",ext);
     getprm(parser,"cls",cls);
     getprm(parser,"pre",pre);
-    getprm(parser,"trn",trainMethod);
     
     //Ptr<FaceRecognizer> model;
     //if ( ext>=myface::EXT_MAX )
@@ -158,14 +141,13 @@ int main(int argc, const char *argv[])
     // These vectors hold the images and corresponding labels.
     vector<Mat> images;
     vector<int> labels;
-    set<int> classes;
 
     // load dataset
     Ptr<FR_lfw> dataset = FR_lfw::create();
     dataset->load(path);
     unsigned int numSplits = dataset->getNumSplits();
 
-    if ( trainMethod == 0 ) // train on personsDevTrain.txt
+    if ( trainMethod == "dev" ) // train on personsDevTrain.txt
     {
         for (unsigned int i=0; i<dataset->getTrain().size(); ++i)
         {   
@@ -182,7 +164,6 @@ int main(int argc, const char *argv[])
             labels.push_back(currNum2);
         }
 
-        unique(Mat(labels),classes);
         {
             PROFILEX("train");
             model->train(images, labels);
@@ -196,18 +177,17 @@ int main(int argc, const char *argv[])
     for (unsigned int j=0; j<numSplits; ++j)
     {  
         PROFILEX("splits");
-        if (trainMethod == 1) // train on the remaining 9 splits from pairs.txt
+        if (trainMethod == "split") // train on the remaining 9 splits from pairs.txt
         {
             images.clear();
             labels.clear();
-            classes.clear();
             for (unsigned int j2=0; j2<numSplits; ++j2)
-            {   
+            {
                 if ( j==j2 ) continue;
 
                 vector < Ptr<Object> > &curr = dataset->getTest(j2);
                 for (unsigned int i=0; i<curr.size(); ++i)
-                {   
+                {
                     FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
                     int currNum1 = getLabel(example->image1);
                     Mat img = imread(path+example->image1, IMREAD_GRAYSCALE);
@@ -220,8 +200,7 @@ int main(int argc, const char *argv[])
                     labels.push_back(currNum2);
                 }
             }
-            int un = unique(Mat(labels),classes);
-            printf("%u/%u got data: %zu %d.\r",j,numSplits,images.size(), un);
+            cerr << "got data: " << j << " " << numSplits << " " <<images.size();
             {
                 PROFILEX("train");
                 model->train(images, labels);
@@ -233,13 +212,13 @@ int main(int argc, const char *argv[])
         unsigned int incorrect = 0, correct = 0;
         vector < Ptr<Object> > &curr = dataset->getTest(j);
         for (unsigned int i=0; i<curr.size(); ++i)
-        {   
+        {
             FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
 
             Mat img1 = imread(path+example->image1, IMREAD_GRAYSCALE);
             Mat img2 = imread(path+example->image2, IMREAD_GRAYSCALE);
             bool same = model->same(img1,img2)>0;
-            if ( same == example->same )
+            if (same == example->same)
                 correct++;
             else
                 incorrect++;
@@ -271,7 +250,7 @@ int main(int argc, const char *argv[])
             //    currNum1,currNum2, predictedLabel2,predictedLabel1 ); 
         }
         p.push_back(1.0*correct/(correct+incorrect));
-        printf("correct: %u, from: %u -> %f                                \n", correct, correct+incorrect, p.back());
+        printf("correct: %u, from: %u -> %f          \n", correct, correct+incorrect, p.back());
     }
     double mu = 0.0;
     for (vector<double>::iterator it=p.begin(); it!=p.end(); ++it)
