@@ -228,7 +228,7 @@ int main(int argc, const char *argv[])
                 }
             }
             int un = unique(Mat(labels),classes);
-            printf("%zu/%zu got data: %zu %d.\r",j,numSplits,images.size(), un);
+            printf("%u/%u got data: %zu %d.\r",j,numSplits,images.size(), un);
             {
                 PROFILEX("train");
                 model->train(images, labels);
