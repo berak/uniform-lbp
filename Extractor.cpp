@@ -610,12 +610,19 @@ public:
     {}
     virtual int extract(const Mat &img, Mat &features) const
     {
-        Mat_<uchar> fI(img.size(),0);
+        //Patches, v1:
+        //SHIFTED_MATS_3x3(img);
+        //Mat_<uchar> I = I7/9 + I6/9 + I5/9 + I4/9 + I3/9 + I2/9 + I1/9 + I0/9 + IC/9;
+
+        //Patches, v2:
+        //Mat_<uchar> I; resize(img,I,Size(img.cols-3,img.rows-3));
+
         Mat_<uchar> I(img);
-        const int m=2;
-        for (int r=m; r<I.rows-m; r++)
+        Mat_<uchar> fI(I.size(), 0);
+        const int border=2;
+        for (int r=border; r<I.rows-border; r++)
         {
-            for (int c=m; c<I.cols-m; c++)
+            for (int c=border; c<I.cols-border; c++)
             {
                 uchar v = 0;
                 v |= ((I(r  ,c+1) - I(r+2,c+2)) > (I(r  ,c-1) - I(r-2,c-2))) * 1;
@@ -625,7 +632,7 @@ public:
                 fI(r,c) = v;
             }
         }
-        hist(fI,features,16,16);
+        hist(fI, features, 16, 16);
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }

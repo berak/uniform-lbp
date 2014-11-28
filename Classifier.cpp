@@ -530,10 +530,10 @@ public:
 
 
 //
-// "Descriptor Based Methods in the Wild", 
-// 4.1 Distance thresholding for pair matching
+// Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
+//  4.1 Distance thresholding for pair matching
 //
-// svm trained on pairwise distances
+//  svm trained on pairwise distances
 //
 class VerifierSVM: public TextureFeature::Verifier 
 {
@@ -545,10 +545,10 @@ public:
         : dist_flag(2)
     {
         ml::SVM::Params param;
-        param.kernelType = ml::SVM::LINEAR; //, CvSVM::LINEAR...
+        param.kernelType = ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;
-        param.C = 1; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
-        param.nu = 0.5; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
+        param.C = 1;
+        param.nu = 0.5;
        
         param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
         param.termCrit.maxCount = 100;

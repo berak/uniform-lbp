@@ -110,7 +110,8 @@ int main(int argc, const char *argv[])
             "{ ext e          |0   | extractor enum }"
             "{ cls c          |6   | classifier enum }"
             "{ pre P          |none| preprocessing }"
-            "{ trn t          |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
+            "{ crop C         |80  | pre-crop }"
+            "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
@@ -120,7 +121,7 @@ int main(int argc, const char *argv[])
         printOptions();
         return -1;
     }
-    string trainMethod(parser.get<string>("trn")); 
+    string trainMethod(parser.get<string>("train")); 
     int ext = myface::EXT_Pixels;
     int cls = myface::CL_SVM;
     int pre = 0;
@@ -128,6 +129,7 @@ int main(int argc, const char *argv[])
     getprm(parser,"ext",ext);
     getprm(parser,"cls",cls);
     getprm(parser,"pre",pre);
+    getprm(parser,"crop",crp);
     
     cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << trainMethod << endl;
     Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,cls,pre,crp);
