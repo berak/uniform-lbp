@@ -81,14 +81,6 @@ int getLabel(const string &imagePath)
     return (*it).second;
 }
 
-
-void getprm(CommandLineParser &parser, const string & s, int & v)
-{
-    string x(parser.get<string>(s));
-    if (x=="true") return;
-    v = atoi(x.c_str());
-}
-
 void printOptions()
 {
     cerr << "extractors  :"<< endl;
@@ -109,7 +101,7 @@ int main(int argc, const char *argv[])
             "{ path p         |true| path to dataset (lfw2 folder) }"
             "{ ext e          |0   | extractor enum }"
             "{ cls c          |6   | classifier enum }"
-            "{ pre P          |none| preprocessing }"
+            "{ pre P          |0   | preprocessing }"
             "{ crop C         |80  | pre-crop }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
@@ -121,15 +113,11 @@ int main(int argc, const char *argv[])
         printOptions();
         return -1;
     }
+    int ext = parser.get<int>("ext");
+    int cls = parser.get<int>("cls");
+    int pre = parser.get<int>("pre");
+    int crp = parser.get<int>("crop");
     string trainMethod(parser.get<string>("train")); 
-    int ext = myface::EXT_Pixels;
-    int cls = myface::CL_SVM;
-    int pre = 0;
-    int crp = 80;
-    getprm(parser,"ext",ext);
-    getprm(parser,"cls",cls);
-    getprm(parser,"pre",pre);
-    getprm(parser,"crop",crp);
     
     cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << trainMethod << endl;
     Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,cls,pre,crp);
@@ -196,7 +184,7 @@ int main(int argc, const char *argv[])
                     labels.push_back(currNum2);
                 }
             }
-            cerr << "got data: " << j << " " << numSplits << " " <<images.size();
+            cerr << "got data: " << j << " " <<images.size();
             {
                 PROFILEX("train");
                 model->train(images, labels);
@@ -219,11 +207,11 @@ int main(int argc, const char *argv[])
             else
                 incorrect++;
 
-            printf("%4u %5u/%-5u %d                \r", i, correct,incorrect, example->same );
+            printf("%4u %5u/%-5u %d                          \r", i, correct,incorrect, example->same );
         }
     
         p.push_back(1.0*correct/(correct+incorrect));
-        printf("correct: %u, from: %u -> %f           \n", correct, correct+incorrect, p.back());
+        printf("correct: %u, from: %u -> %f                    \n", correct, correct+incorrect, p.back());
     }
 
     double mu = 0.0;

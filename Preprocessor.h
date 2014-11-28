@@ -5,7 +5,7 @@
 #include <opencv2/bioinspired.hpp>
 using namespace cv;
 
-class Preprocessor	
+class Preprocessor
 {
     int preproc, precrop;
     Ptr<CLAHE> clahe;

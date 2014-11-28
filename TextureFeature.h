@@ -7,28 +7,26 @@ using cv::Mat;
 //
 // interfaces
 //
-namespace TextureFeature	
+namespace TextureFeature
 {
-    struct Extractor 
+    struct Extractor
     {
-        virtual int extract( const Mat &img, Mat &features ) const = 0;
+        virtual int extract(const Mat &img, Mat &features) const = 0;
     };
 
-    struct Classifier // shallow wrapper around what should be a cv::StatModel. 
+    struct Classifier // shallow wrapper around what could be a cv::StatModel.
     {
-        virtual int train( const Mat &features, const Mat &labels ) = 0;
-        virtual int predict( const Mat &test, Mat &result ) const = 0;
+        virtual int train(const Mat &features, const Mat &labels) = 0;
+        virtual int predict(const Mat &test, Mat &result) const = 0;
     };
 
     struct Verifier // same-notSame
     {
-        // labels can be:
-        // *empty (restricted)
-        // *int   (unrestricted)
-        virtual int train( const Mat &features, const Mat &labels ) = 0;
-        virtual int same( const Mat &a, const Mat &b ) const = 0;
+        virtual int train(const Mat &features, const Mat &labels) = 0;
+        virtual int same(const Mat &a, const Mat &b) const = 0;
     };
 };
+
 
 
 //

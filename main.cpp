@@ -174,7 +174,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
         Mat testFeatures,  testLabels;
 
         fsiz = crossfoldData(ext,trainFeatures,trainLabels,testFeatures,testLabels,images,labels,persons,f,fold);
-       
+
         cls->train(trainFeatures.reshape(1,trainLabels.rows),trainLabels);
 
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
@@ -182,7 +182,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
         {
             Mat res;
             cls->predict(testFeatures.row(i).reshape(1,1), res);
-    
+
             int pred = int(res.at<float>(0));
             int ground = testLabels.at<int>(i);
             if (pred<0 || ground<0)
@@ -215,12 +215,12 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
 
 //
 //
-// face att.txt 5     5             1        0     
-// face db      fold  reco    preprocessing  debug 
+// face att.txt 5     5             1        0
+// face db      fold  reco    preprocessing  debug
 //
 // special: reco==0 will run *all* recognizers available on a given db
 //
-int main(int argc, const char *argv[]) 
+int main(int argc, const char *argv[])
 {
     vector<Mat> images;
     Mat labels;
@@ -241,7 +241,7 @@ int main(int argc, const char *argv[])
 
     if (argc>5) debug = atoi(argv[5])!=0;
 
-    
+
     extractDB(db_path, images, labels, preproc, 0, 500, 120);
 
     // per person id lookup
@@ -255,7 +255,7 @@ int main(int argc, const char *argv[])
     if (rec == 0)
         cout << "--------------------------------------------------------------" << endl;
     cout << format("%-19s",dbs.c_str()) << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[preproc] << endl;
-    if ( rec==0 ) 
+    if ( rec==0 )
     {
         cout << "--------------------------------------------------------------" << endl;
         cout << "[method]       [f_bytes]  [pos]  [neg]   [hit]   [time]  " << endl;

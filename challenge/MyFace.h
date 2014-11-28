@@ -3,7 +3,7 @@
 #include "opencv2/face.hpp"
 using namespace cv;
 
-namespace myface 
+namespace myface
 {
     enum EXT { EXT_Pixels,EXT_Lbp,EXT_TPLbp,EXT_FPLbp,EXT_MTS,EXT_GaborLbp,EXT_Dct,EXT_OrbGrid,EXT_SiftGrid,EXT_MAX };
     enum CLA { CL_NORM_L2,CL_NORM_L2SQR,CL_NORM_L1,CL_NORM_HAM,CL_HIST_HELL,CL_HIST_ISEC,CL_SVM,CL_SVMMulti,CL_COSINE,CL_FISHER,CL_MAX };

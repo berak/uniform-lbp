@@ -6,7 +6,7 @@ using namespace cv;
 //
 // taken from : https://github.com/bytefish/opencv/blob/master/misc/tan_triggs.cpp
 //
-static Mat tan_triggs_preprocessing(InputArray src, float alpha=0.1, float tau=10.0, float gamma=0.2, int sigma0=1, int sigma1=2) 
+static Mat tan_triggs_preprocessing(InputArray src, float alpha=0.1, float tau=10.0, float gamma=0.2, int sigma0=1, int sigma1=2)
 {
     // Convert to floating point:
     Mat X = src.getMat();
@@ -64,9 +64,9 @@ static Mat tan_triggs_preprocessing(InputArray src, float alpha=0.1, float tau=1
 
 
 
-Preprocessor::Preprocessor(int mode, int crop) 
+Preprocessor::Preprocessor(int mode, int crop)
     : preproc(mode)
-    , precrop(crop) 
+    , precrop(crop)
     , clahe(createCLAHE(50))
     , retina(bioinspired::createRetina(Size(90,90)))
 {
@@ -91,13 +91,13 @@ Mat Preprocessor::process(const Mat &imgin)  const
         case 2: clahe->apply(imgcropped,imgout); break;
         case 3: retina->run(imgcropped); retina->getParvo(imgout); break;
         case 4: cv::normalize( tan_triggs_preprocessing(imgcropped), imgout, 0, 255, NORM_MINMAX, CV_8UC1); break;
-        case 5: resize(imgcropped,imgout,Size(60,60)); break;
+        case 5: resize(imgcropped,imgout,Size(32,32)); break;
     }
     return imgout;
 }
 
-const char * Preprocessor::pps() const 
+const char * Preprocessor::pps() const
 {
     static const char *PPS[] = { "none","eqhist","clahe","retina","tan-triggs","crop",0 };
-    return PPS[preproc]; 
+    return PPS[preproc];
 }

@@ -38,8 +38,8 @@ public:
             case EXT_MTS:      ext = createExtractorMTS(); break;
             case EXT_GaborLbp: ext = createExtractorGaborLbp(); break;
             case EXT_Dct:      ext = createExtractorDct(); break;
-            case EXT_OrbGrid:  ext = createExtractorORBGrid(15);
-            case EXT_SiftGrid: ext = createExtractorSIFTGrid();
+            case EXT_OrbGrid:  ext = createExtractorORBGrid(15); break;
+            case EXT_SiftGrid: ext = createExtractorSIFTGrid(); break;
         }
         switch(clsfy)
         {

@@ -9,6 +9,7 @@ using namespace std;
 #define get_ticks cv::getTickCount
 #define get_freq  cv::getTickFrequency
 
+
 struct Profile
 {
     double dt(int64 t) const { return double(t*1000/freq)/1000.0; }
@@ -20,9 +21,9 @@ struct Profile
     double d_tc;
     double d_t;
 
-    Profile(cv::String name) 
+    Profile(cv::String name)
         : name(name)
-        , t(0) 
+        , t(0)
         , c(0)
         , d_tc(0)
         , d_t(0)
@@ -58,11 +59,11 @@ struct Profile
             , t(get_ticks())
         {}
 
-        ~Scope() 
-        { 
+        ~Scope()
+        {
             p.tick(get_ticks() - t);
         }
-    }; 
+    };
 };
 double Profile::freq = get_freq();
 

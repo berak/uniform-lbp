@@ -66,7 +66,7 @@ class ExtractorMoments : public TextureFeature::Extractor
             {
                 mom(z,mo,i,j,sw,sh);
             }
-        }        
+        }
         mo.convertTo(mo,CV_32F);
         normalize(mo,mo);
         return mo;
@@ -85,9 +85,9 @@ public:
 
 
 
-// 
-// base for lbph, calc features on the whole image, the hist on a grid, 
-//   so we avoid to waste border pixels 
+//
+// base for lbph, calc features on the whole image, the hist on a grid,
+//   so we avoid to waste border pixels
 //
 struct GriddedHist : public TextureFeature::Extractor
 {
@@ -97,7 +97,7 @@ protected:
     bool doWeight;
 
     static void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo, int histSize, int histRange=256)
-    {   
+    {
         for (int i=0; i<feature.rows; i++)
         {
             for (int j=0; j<feature.cols; j++)
@@ -182,7 +182,7 @@ protected:
     int utable;
 
     //
-    // "histogram of equivalence patterns" 
+    // "histogram of equivalence patterns"
     //
     virtual void hep(const Mat &I, Mat &fI) const
     {
@@ -196,7 +196,7 @@ protected:
              ((I3>IC)&8)   |
              ((I2>IC)&4)   |
              ((I1>IC)&2)   |
-             ((I0>IC)&1);  
+             ((I0>IC)&1);
 #else
         Mat_<uchar> feature(I.size(),0);
         Mat_<uchar> img(I);
@@ -233,8 +233,8 @@ public:
         UniformNone = -1  // 256, as-is
     };
 
-    ExtractorLbp(int gridx=8, int gridy=8, int u_table=UniformNone) 
-        : GriddedHist(gridx,gridy) 
+    ExtractorLbp(int gridx=8, int gridy=8, int u_table=UniformNone)
+        : GriddedHist(gridx,gridy)
         , utable(u_table)
     {}
 
@@ -251,7 +251,7 @@ public:
         }
 
         static int uniform[3][256] = {
-        {   // the well known original uniform2 pattern 
+        {   // the well known original uniform2 pattern
             0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
             14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
             58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
@@ -398,7 +398,7 @@ class WLD : public GriddedHist
     // [32 bins for zeta][2*64 bins for theta][16 bins for center intensity]
     // since the patches are pretty small(12x12), i can even get away using uchar for the historam bins
     // all those are heuristic/empirical, i.e, i found it works better with only the 1st 2 orientations
-    
+
     // configurable, yet hardcoded values
     enum {
         size_center  = 4,   // num bits from the center
@@ -406,28 +406,28 @@ class WLD : public GriddedHist
         size_theta_w = 8,   // each theta orientation channel is 8*w
         size_zeta    = 32,  // bins for zeta
 
-        size_theta = 8*size_theta_w, 
+        size_theta = 8*size_theta_w,
         size_all = (1<<size_center) + size_zeta + size_theta_n * size_theta
-        
+
         // 176 bytes per patch, * 8 * 8 = 11264 bytes per image.
     };
 
     int typeflag;
 
     template <class T>
-    void oper(const Mat &src, Mat &hist) const 
+    void oper(const Mat &src, Mat &hist) const
     {
         const double CV_PI_4 = CV_PI / 4.0;
         int radius = 1;
-        for(int i=radius; i<src.rows-radius; i++) 
+        for(int i=radius; i<src.rows-radius; i++)
         {
-            for(int j=radius; j<src.cols-radius; j++) 
+            for(int j=radius; j<src.cols-radius; j++)
             {
                 // 7 0 1
                 // 6 c 2
                 // 5 4 3
                 uchar c   = src.at<uchar>(i,j);
-                uchar n[8]= 
+                uchar n[8]=
                 {
                     src.at<uchar>(i-1,j),
                     src.at<uchar>(i-1,j+1),
@@ -440,7 +440,7 @@ class WLD : public GriddedHist
                 };
                 int p = n[0]+n[1]+n[2]+n[3]+n[4]+n[5]+n[6]+n[7];
                 p -= c*8;
-                
+
                 // (7), projected from [-pi/2,pi/2] to [0,size_zeta]
                 double zeta = 0;
                 if (p!=0) zeta = double(size_zeta) * (atan(double(p)/c) + CV_PI*0.5) / CV_PI;
@@ -527,7 +527,7 @@ public:
 
         fI = eta1(abs(I6-IC),kerP1) & (1<<6)
            | eta1(abs(I4-IC),kerP1) & (1<<4)
-           | eta1(abs(I2-IC),kerP1) & (1<<2) 
+           | eta1(abs(I2-IC),kerP1) & (1<<2)
            | eta1(abs(I0-IC),kerP1) & (1<<1);
         hist(fI,h,64,256);
 
@@ -546,7 +546,7 @@ public:
     virtual int extract(const Mat &img, Mat &features) const
     {
         int M = img.rows;
-        int N = img.cols; 
+        int N = img.cols;
         // shifted images (special case)
         Mat I7 = img(Range(1,M-1), Range(1,N-2));
         Mat I6 = img(Range(1,M-1), Range(2,N-1));
@@ -560,7 +560,7 @@ public:
         hist((IC|I5), h5);
         hist((IC|I6), h6);
         hist((IC|I7), h7);
-        // Average 
+        // Average
         features = (h4+h5+h6+h7)/4;
         return features.total() * features.elemSize();
     }
@@ -735,7 +735,7 @@ public:
                 kp.push_back(k);
             }
         }
-        Ptr<Feature2D> f2d = Descriptor::create();         
+        Ptr<Feature2D> f2d = Descriptor::create();
         f2d->compute(img, kp, features);
 
         features = features.reshape(1,1);
