@@ -43,13 +43,14 @@ public:
         switch(clsfy)
         {
             case CL_NORM_L2:   cls = createVerifierNearest(NORM_L2); break;
+            case CL_NORM_L2SQR:cls = createVerifierNearest(NORM_L2SQR); break;
             case CL_NORM_L1:   cls = createVerifierNearest(NORM_L1); break;
             case CL_NORM_HAM:  cls = createVerifierNearest(NORM_HAMMING); break;
             case CL_HIST_HELL: cls = createVerifierHist(HISTCMP_HELLINGER); break;
             case CL_HIST_ISEC: cls = createVerifierHist(HISTCMP_INTERSECT); break;
+            case CL_SVM:       cls = createVerifierSVM(); break;
             case CL_FISHER:    cls = createVerifierFisher(); break;
             default: cerr << clsfy << " is not yet supported." << endl; exit(-1);
-            //case CL_SVM:       cls = createClassifierSVM(); break;
             //case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;
             //case CL_COSINE:    cls = createClassifierCosine(); break;
 
@@ -94,7 +95,8 @@ public:
                 labels.push_back(labels1(i));
             }
         }
-        cls->train( features, labels.reshape(1,features.rows));
+        int ok = cls->train( features, labels.reshape(1,features.rows));
+        CV_Assert(ok);
         cerr << "trained " << nfeatbytes << " bytes." << '\r';
     }
 

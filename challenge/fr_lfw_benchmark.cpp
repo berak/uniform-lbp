@@ -108,7 +108,7 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
             "{ ext e          |0   | extractor enum }"
-            "{ cls c          |0   | classifier enum }"
+            "{ cls c          |6   | classifier enum }"
             "{ pre P          |none| preprocessing }"
             "{ trn t          |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
@@ -121,20 +121,14 @@ int main(int argc, const char *argv[])
         return -1;
     }
     string trainMethod(parser.get<string>("trn")); 
-    int ext = myface::EXT_MAX;
-    int cls = myface::CL_NORM_L2;
-    int pre = 1;
+    int ext = myface::EXT_Pixels;
+    int cls = myface::CL_SVM;
+    int pre = 0;
     int crp = 80;
     getprm(parser,"ext",ext);
     getprm(parser,"cls",cls);
     getprm(parser,"pre",pre);
     
-    //Ptr<FaceRecognizer> model;
-    //if ( ext>=myface::EXT_MAX )
-    //{
-    //    model = createLBPHFaceRecognizer();
-    //} 
-    //else 
     cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << trainMethod << endl;
     Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,cls,pre,crp);
 
@@ -147,7 +141,7 @@ int main(int argc, const char *argv[])
     dataset->load(path);
     unsigned int numSplits = dataset->getNumSplits();
 
-    if ( trainMethod == "dev" ) // train on personsDevTrain.txt
+    if (trainMethod == "dev") // train on personsDevTrain.txt
     {
         for (unsigned int i=0; i<dataset->getTrain().size(); ++i)
         {   
@@ -183,7 +177,7 @@ int main(int argc, const char *argv[])
             labels.clear();
             for (unsigned int j2=0; j2<numSplits; ++j2)
             {
-                if ( j==j2 ) continue;
+                if (j==j2) continue;
 
                 vector < Ptr<Object> > &curr = dataset->getTest(j2);
                 for (unsigned int i=0; i<curr.size(); ++i)
@@ -223,35 +217,13 @@ int main(int argc, const char *argv[])
             else
                 incorrect++;
 
-            printf("%4u %5u/%-5u %d  \r", i, correct,incorrect, example->same );
-
-            //int currNum1 = getLabel(example->image1);
-            //bool known1  = classes.find(currNum1) != classes.end();
-            //Mat img = imread(path+example->image1, IMREAD_GRAYSCALE);
-            //int predictedLabel1 = model->predict(img);
-
-            //int currNum2 = getLabel(example->image2);
-            //bool known2  = classes.find(currNum2) != classes.end();
-            //img = imread(path+example->image2, IMREAD_GRAYSCALE);
-            //int predictedLabel2 = model->predict(img);
-
-            //if ((predictedLabel1 == predictedLabel2 && example->same) ||
-            //    (predictedLabel1 != predictedLabel2 && !example->same))
-            //{
-            //    correct++;
-            //} 
-            //else
-            //{
-            //    incorrect++;
-            //}
-            //printf("%4u %5u/%-5u %d (%d:%d)(%d:%d)(%4i/%-4i)(%4i/%-4i) \r", 
-            //    i, correct, incorrect, example->same, known1, known2, 
-            //    (currNum1==predictedLabel1),(currNum2==predictedLabel2),
-            //    currNum1,currNum2, predictedLabel2,predictedLabel1 ); 
+            printf("%4u %5u/%-5u %d                \r", i, correct,incorrect, example->same );
         }
+    
         p.push_back(1.0*correct/(correct+incorrect));
-        printf("correct: %u, from: %u -> %f          \n", correct, correct+incorrect, p.back());
+        printf("correct: %u, from: %u -> %f           \n", correct, correct+incorrect, p.back());
     }
+
     double mu = 0.0;
     for (vector<double>::iterator it=p.begin(); it!=p.end(); ++it)
     {

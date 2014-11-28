@@ -20,6 +20,15 @@ static int unique(const Mat &labels, set<int> &classes)
 }
 
 
+static Mat tofloat(const Mat &src) 
+{
+    if ( src.type() == CV_32F )
+        return src;
+
+    Mat query;
+    src.convertTo(query,CV_32F);
+    return query;
+}
 
 
 class ClassifierNearest : public TextureFeature::Classifier
@@ -71,16 +80,6 @@ class ClassifierNearestFloat : public ClassifierNearest
 public:
 
     ClassifierNearestFloat(int flag=NORM_L2) : ClassifierNearest(flag) {}
-
-    static Mat tofloat(const Mat &src) 
-    {
-        Mat query;
-        if ( src.type() != CV_32F )
-            src.convertTo(query,CV_32F);
-        else
-            query=src;
-        return query;
-    }
 
     // TextureFeature::Classifier
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
@@ -325,7 +324,7 @@ protected:
 public:
 
     ClassifierEigen(int num_components=0)
-        : _num_components(num_components) // we don't need a threshold here
+        : _num_components(num_components) 
     {}
 
     Mat project(const Mat &in) const
@@ -435,10 +434,12 @@ struct VerifierNearest : TextureFeature::Verifier
         : thresh(0)
         , flag(f)
     {}
+
     virtual double distance(const Mat &a, const Mat &b) const
     {
         return norm(a,b,flag);
     }
+
     virtual int train(const Mat &features, const Mat &labels)
     {
         thresh = 0;
@@ -468,7 +469,7 @@ struct VerifierNearest : TextureFeature::Verifier
         dNotSame = (dNotSame/nNotSame);
         double dt = dNotSame - dSame;
         thresh = dSame + dt*0.25; //(dSame + dNotSame) / 2;
-        cerr << dSame << " " << dNotSame << " " << thresh << "\t" << nSame << " " << nNotSame <<  endl;
+        //cerr << dSame << " " << dNotSame << " " << thresh << "\t" << nSame << " " << nNotSame <<  endl;
         return 1;
     }
 
@@ -518,15 +519,80 @@ public:
         return 1;
     }
 
-    virtual int same( const Mat &a, const Mat &b ) const
+    virtual int same(const Mat &a, const Mat &b) const
     {
         Mat pa = project(a);
         Mat pb = project(b);
-        double d = distance(pa,pb);
+        double d = distance(pa, pb);
         return d < thresh;
     }
 };
 
+
+//
+// "Descriptor Based Methods in the Wild", 
+// 4.1 Distance thresholding for pair matching
+//
+// svm trained on pairwise distances
+//
+class VerifierSVM: public TextureFeature::Verifier 
+{
+    Ptr<ml::SVM> svm;
+    int dist_flag;
+public:
+
+    VerifierSVM()
+        : dist_flag(2)
+    {
+        ml::SVM::Params param;
+        param.kernelType = ml::SVM::LINEAR; //, CvSVM::LINEAR...
+        param.svmType = ml::SVM::NU_SVC;
+        param.C = 1; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
+        param.nu = 0.5; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
+       
+        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
+        param.termCrit.maxCount = 100;
+        param.termCrit.epsilon = 1e-6;
+
+        svm = ml::SVM::create(param);
+    }
+
+    Mat distance(const Mat &a, const Mat &b) const
+    {
+        Mat d;
+        switch(dist_flag)
+        {
+            case 0: absdiff(a,b,d); break;
+            case 1: d = a-b; multiply(d,d,d,1,CV_32F);
+            case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
+        }
+        return d; 
+    }
+
+    virtual int train(const Mat &features, const Mat &labels) 
+    {
+        Mat trainData = tofloat(features.reshape(1, labels.rows));
+
+        Mat distances;
+        Mat binlabels;
+        for (size_t i=0; i<labels.total()-1; i+=2)
+        {
+            int j = i+1;
+            distances.push_back(distance(trainData.row(i), trainData.row(j)));
+
+            int l = (labels.at<int>(i) == labels.at<int>(j)) ? 1 : -1;
+            binlabels.push_back(l);
+        }
+        return svm->train(distances, ml::ROW_SAMPLE, binlabels);
+    }
+
+    virtual int same(const Mat &a, const Mat &b) const
+    {
+        Mat fa = tofloat(a);
+        Mat fb = tofloat(b);
+        return svm->predict(distance(fa, fb)) > 0;
+    }
+};
 
 
 //
@@ -576,4 +642,7 @@ cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
 
 cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int norm_flag)
 { return makePtr<VerifierFisher>(norm_flag); }
+
+cv::Ptr<TextureFeature::Verifier> createVerifierSVM()
+{ return makePtr<VerifierSVM>(); }
 

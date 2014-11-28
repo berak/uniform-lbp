@@ -35,7 +35,7 @@ double ct(int64 t)
 //
 // read a 'path <blank> label' list
 //
-int readtxt(const char * fname, std::vector<std::string> & names, std::vector<int> & labels, size_t maxim)
+int readtxt(const char *fname, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim)
 {
     int maxid=-1;
     std::ifstream in(fname);
@@ -61,7 +61,7 @@ int readtxt(const char * fname, std::vector<std::string> & names, std::vector<in
 // imglists per person.
 //  no really, you can't just draw a random probability set from a set of multiple classes and call it a day ...
 //
-void setupPersons(const vector<int> & labels, vector<vector<int>> & persons)
+void setupPersons(const vector<int> &labels, vector<vector<int>> &persons)
 {
     // find out which index belongs to which person
     //
@@ -79,7 +79,7 @@ void setupPersons(const vector<int> & labels, vector<vector<int>> & persons)
     }
 }
 
-int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int preproc, int precrop, int maxim, int fixed_size)
+int extractDB(const string &txtfile, vector<Mat> &images, Mat &labels, int preproc, int precrop, int maxim, int fixed_size)
 {
     // read face db
     vector<string> vec;
@@ -101,7 +101,7 @@ int extractDB(const string &txtfile, vector<Mat> & images, Mat & labels, int pre
             continue;
 
         Mat m2;
-        resize(m1, m2, Size(fixed_size,fixed_size));
+        resize(m1, m2, Size(fixed_size, fixed_size));
 
         Mat m3 = pre.process(m2);
 
