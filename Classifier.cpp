@@ -20,7 +20,7 @@ static int unique(const Mat &labels, set<int> &classes)
 }
 
 
-static Mat tofloat(const Mat &src) 
+static Mat tofloat(const Mat &src)
 {
     if ( src.type() == CV_32F )
         return src;
@@ -140,7 +140,7 @@ class ClassifierKNN : public TextureFeature::Classifier
 
 public:
 
-    ClassifierKNN(int k=1) 
+    ClassifierKNN(int k=1)
         : knn(ml::KNearest::create())
         , K(k)
     {}
@@ -195,9 +195,7 @@ public:
 
     virtual int train(const Mat &src, const Mat &labels)
     {
-        Mat trainData = src.reshape(1,labels.rows);
-        if (trainData.type() != CV_32F)
-            trainData.convertTo(trainData,CV_32F);
+        Mat trainData = tofloat(src.reshape(1,labels.rows));
 
         svm->clear();
         bool ok = svm->train(trainData , ml::ROW_SAMPLE , Mat(labels));
@@ -243,7 +241,7 @@ public:
         param.nu = 0.5; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
         //param.p = p; // for CV_SVM_EPS_SVR
         //param.classWeights = NULL ; // for CV_SVM_C_SVC
-        
+
         param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
         param.termCrit.maxCount = 100;
         param.termCrit.epsilon = 1e-6;
@@ -253,10 +251,7 @@ public:
     {
         svms.clear();
 
-        Mat trainData = src.reshape(1,labels.rows);
-        if (trainData.type() != CV_32F)
-            trainData.convertTo(trainData,CV_32F);
-
+        Mat trainData = tofloat(src.reshape(1,labels.rows));
         //
         // train one svm per class:
         //
@@ -278,12 +273,7 @@ public:
 
     virtual int predict(const Mat &src, Mat &res) const
     {
-        Mat query;
-        if (src.type() != CV_32F)
-            src.convertTo(query,CV_32F);
-        else
-            query = src;
-
+        Mat query = tofloat(src);
         //
         // predict per-class, return best(largest) result
         // hrmm, this assumes, the labels are [0..N]
@@ -324,7 +314,7 @@ protected:
 public:
 
     ClassifierEigen(int num_components=0)
-        : _num_components(num_components) 
+        : _num_components(num_components)
     {}
 
     Mat project(const Mat &in) const
@@ -494,6 +484,34 @@ struct VerifierHist : VerifierNearest
 };
 
 
+struct VerifierPSNR : VerifierNearest
+{
+    VerifierPSNR()
+        : VerifierNearest(0)
+    {}
+
+    virtual double distance(const Mat &a, const Mat &b) const
+    {
+        Mat s1;
+        absdiff(a, b, s1);         // |I1 - I2|
+        s1.convertTo(s1, CV_32F);  // cannot make a square on 8 bits
+        s1 = s1.mul(s1);           // |I1 - I2|^2
+
+        Scalar s = sum(s1);        // sum elements per channel
+
+        double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
+
+        if( sse <= 1e-10) // for small values return zero
+            return 0;
+        else
+        {
+            double mse  = sse / (double)(a.channels() * a.total());
+            double psnr = 10.0 * log10((255 * 255) / mse);
+            return psnr;
+        }
+    }
+};
+
 
 
 class VerifierFisher
@@ -535,7 +553,7 @@ public:
 //
 //  svm trained on pairwise distances
 //
-class VerifierSVM: public TextureFeature::Verifier 
+class VerifierSVM: public TextureFeature::Verifier
 {
     Ptr<ml::SVM> svm;
     int dist_flag;
@@ -549,7 +567,7 @@ public:
         param.svmType = ml::SVM::NU_SVC;
         param.C = 1;
         param.nu = 0.5;
-       
+
         param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
         param.termCrit.maxCount = 100;
         param.termCrit.epsilon = 1e-6;
@@ -566,10 +584,10 @@ public:
             case 1: d = a-b; multiply(d,d,d,1,CV_32F);
             case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
         }
-        return d; 
+        return d;
     }
 
-    virtual int train(const Mat &features, const Mat &labels) 
+    virtual int train(const Mat &features, const Mat &labels)
     {
         Mat trainData = tofloat(features.reshape(1, labels.rows));
 
@@ -583,6 +601,7 @@ public:
             int l = (labels.at<int>(i) == labels.at<int>(j)) ? 1 : -1;
             binlabels.push_back(l);
         }
+        svm->clear();
         return svm->train(distances, ml::ROW_SAMPLE, binlabels);
     }
 
@@ -639,6 +658,9 @@ cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
 
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
 { return makePtr<VerifierHist>(norm_flag); }
+
+cv::Ptr<TextureFeature::Verifier> createVerifierPSNR()
+{ return makePtr<VerifierPSNR>(); }
 
 cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int norm_flag)
 { return makePtr<VerifierFisher>(norm_flag); }

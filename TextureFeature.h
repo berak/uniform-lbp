@@ -62,6 +62,7 @@ cv::Ptr<TextureFeature::Classifier> createClassifierFisher();
 cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int flag=cv::NORM_L2);
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int flag=cv::HISTCMP_CHISQR);
 cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int flag=cv::NORM_L2);
+cv::Ptr<TextureFeature::Verifier> createVerifierPSNR();
 cv::Ptr<TextureFeature::Verifier> createVerifierSVM();
 
 
