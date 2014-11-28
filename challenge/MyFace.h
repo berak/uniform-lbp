@@ -22,7 +22,7 @@ namespace myface
 }
 
 //Ptr<face::FaceRecognizer> createMyFaceRecognizer(int extract=0, int clsfy=0, int preproc=0, int precrop=0,int psize=250);
-Ptr<myface::FaceVerifier> createMyFaceVerifier(int extract=0, int clsfy=0, int preproc=0, int precrop=0,int psize=250);
+Ptr<myface::FaceVerifier> createMyFaceVerifier(int extract=0, int clsfy=0, int preproc=0, int precrop=0,bool flip=false);
 
 
 #endif // __MyFace_onboard__

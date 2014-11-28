@@ -103,6 +103,7 @@ int main(int argc, const char *argv[])
             "{ cls c          |6   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ crop C         |80  | pre-crop }"
+            "{ flip f         |0   | add a flipped image }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
     CommandLineParser parser(argc, argv, keys);
@@ -117,10 +118,11 @@ int main(int argc, const char *argv[])
     int cls = parser.get<int>("cls");
     int pre = parser.get<int>("pre");
     int crp = parser.get<int>("crop");
+    bool flp = parser.get<bool>("flip");
     string trainMethod(parser.get<string>("train")); 
     
-    cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << trainMethod << endl;
-    Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,cls,pre,crp);
+    cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << flp << " " << trainMethod << endl;
+    Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,cls,pre,crp,flp);
 
     // These vectors hold the images and corresponding labels.
     vector<Mat> images;

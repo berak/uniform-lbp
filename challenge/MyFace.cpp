@@ -24,9 +24,9 @@ class MyFace : public FaceVerifier
 
 public:
 
-    MyFace(int extract=0, int clsfy=0, int preproc=0, int crop=0,int psize=250)
+    MyFace(int extract=0, int clsfy=0, int preproc=0, int crop=0, bool flip=false)
         : pre(preproc,crop)
-        , doFlip(false)
+        , doFlip(flip)
     {
         switch(extract)
         {
@@ -156,6 +156,6 @@ public:
 } // myface
 
 //Ptr<face::FaceRecognizer> createMyFaceRecognizer(int ex, int cl, int pr, int pc, int ps)
-Ptr<myface::FaceVerifier> createMyFaceVerifier(int ex, int cl, int pr, int pc, int ps)
-{  return makePtr<myface::MyFace>(ex, cl, pr, pc, ps);  }
+Ptr<myface::FaceVerifier> createMyFaceVerifier(int ex, int cl, int pr, int pc, bool flip)
+{  return makePtr<myface::MyFace>(ex, cl, pr, pc, flip);  }
 
