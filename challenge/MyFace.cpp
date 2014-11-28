@@ -33,6 +33,7 @@ public:
             default:
             case EXT_Pixels:   ext = createExtractorPixels(); break;
             case EXT_Lbp:      ext = createExtractorLbp(); break;
+            case EXT_TPLbp:    ext = createExtractorTPLbp(); break;
             case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
             case EXT_MTS:      ext = createExtractorMTS(); break;
             case EXT_GaborLbp: ext = createExtractorGaborLbp(); break;

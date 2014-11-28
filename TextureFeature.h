@@ -38,6 +38,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw=0, int resh=0)
 cv::Ptr<TextureFeature::Extractor> createExtractorMoments();
 cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gridx=8, int gridy=8, int u_table=-1);
 cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx=8, int gy=8);
+cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx=8, int gy=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx=8, int gy=8, int utable=-1);
 cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx=8, int gy=8, int tf=CV_32F);
 cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx=8, int gy=8);

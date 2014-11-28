@@ -599,8 +599,11 @@ public:
     }
 };
 
+
+
 //
-// four-patch (well, more pixels) lbp
+// Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
+// 3.2 Four-Patch LBP Codes
 //
 class ExtractorFPLbp : public GriddedHist
 {
@@ -633,6 +636,50 @@ public:
             }
         }
         hist(fI, features, 16, 16);
+        features = features.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
+
+//
+// Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
+// 3.1 Three-Patch LBP Codes
+//
+class ExtractorTPLbp : public GriddedHist
+{
+public:
+    ExtractorTPLbp(int gridx=8, int gridy=8)
+        : GriddedHist(gridx, gridy)
+    {}
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        //Patches, v1:
+        //SHIFTED_MATS_3x3(img);
+        //Mat_<uchar> I = I7/9 + I6/9 + I5/9 + I4/9 + I3/9 + I2/9 + I1/9 + I0/9 + IC/9;
+
+        //Patches, v2:
+        //Mat_<uchar> I; resize(img,I,Size(img.cols-3,img.rows-3));
+
+        Mat_<uchar> I(img);
+        Mat_<uchar> fI(I.size(), 0);
+        const int border=2;
+        for (int r=border; r<I.rows-border; r++)
+        {
+            for (int c=border; c<I.cols-border; c++)
+            {
+                uchar v = 0;
+                v |= ((I(r,c) - I(r  ,c-2)) > (I(r,c) - I(r-2,c  ))) * 1;
+                v |= ((I(r,c) - I(r-1,c-1)) > (I(r,c) - I(r-1,c+1))) * 2;
+                v |= ((I(r,c) - I(r-2,c  )) > (I(r,c) - I(r  ,c+2))) * 4;
+                v |= ((I(r,c) - I(r-1,c+1)) > (I(r,c) - I(r+1,c+1))) * 8;
+                v |= ((I(r,c) - I(r  ,c+2)) > (I(r,c) - I(r+1,c  ))) * 16;
+                v |= ((I(r,c) - I(r+1,c+1)) > (I(r,c) - I(r+1,c-1))) * 32;
+                v |= ((I(r,c) - I(r+1,c  )) > (I(r,c) - I(r  ,c-2))) * 64;
+                v |= ((I(r,c) - I(r+1,c-1)) > (I(r,c) - I(r-1,c-1))) * 128;
+                fI(r,c) = v;
+            }
+        }
+        hist(fI, features, 256, 256);
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
@@ -717,6 +764,9 @@ cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gx, int gy, int utable
 
 cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx, int gy)
 {   return makePtr<ExtractorFPLbp>(gx, gy); }
+
+cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx, int gy)
+{   return makePtr<ExtractorTPLbp>(gx, gy); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx, int gy, int utable)
 {   return makePtr<ExtractorBGC1>(gx, gy, utable); }
