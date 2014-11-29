@@ -205,12 +205,7 @@ public:
 
     virtual int predict(const Mat &src, Mat &res) const
     {
-        Mat query;
-        if (src.type() != CV_32F)
-            src.convertTo(query,CV_32F);
-        else
-            query=src;
-        svm->predict(query, res);
+        svm->predict(tofloat(src), res);
         return res.rows;
     }
 };
@@ -465,9 +460,7 @@ struct VerifierNearest : TextureFeature::Verifier
 
     virtual int same( const Mat &a, const Mat &b ) const
     {
-        double d = distance(a,b);
-        //cerr << d << " ";
-        return d < thresh;
+        return (distance(a,b) < thresh);
     }
 };
 
@@ -482,36 +475,6 @@ struct VerifierHist : VerifierNearest
         return compareHist(a,b,flag);
     }
 };
-
-
-struct VerifierPSNR : VerifierNearest
-{
-    VerifierPSNR()
-        : VerifierNearest(0)
-    {}
-
-    virtual double distance(const Mat &a, const Mat &b) const
-    {
-        Mat s1;
-        absdiff(a, b, s1);         // |I1 - I2|
-        s1.convertTo(s1, CV_32F);  // cannot make a square on 8 bits
-        s1 = s1.mul(s1);           // |I1 - I2|^2
-
-        Scalar s = sum(s1);        // sum elements per channel
-
-        double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
-
-        if( sse <= 1e-10) // for small values return zero
-            return 0;
-        else
-        {
-            double mse  = sse / (double)(a.channels() * a.total());
-            double psnr = 10.0 * log10((255 * 255) / mse);
-            return psnr;
-        }
-    }
-};
-
 
 
 class VerifierFisher
@@ -658,9 +621,6 @@ cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
 
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
 { return makePtr<VerifierHist>(norm_flag); }
-
-cv::Ptr<TextureFeature::Verifier> createVerifierPSNR()
-{ return makePtr<VerifierPSNR>(); }
 
 cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int norm_flag)
 { return makePtr<VerifierFisher>(norm_flag); }

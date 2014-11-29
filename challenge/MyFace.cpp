@@ -45,9 +45,8 @@ public:
             case CL_NORM_L2SQR:cls = createVerifierNearest(NORM_L2SQR); break;
             case CL_NORM_L1:   cls = createVerifierNearest(NORM_L1); break;
             case CL_NORM_HAM:  cls = createVerifierNearest(NORM_HAMMING); break;
-            case CL_PSNR:      cls = createVerifierPSNR(); break;
             case CL_HIST_HELL: cls = createVerifierHist(HISTCMP_HELLINGER); break;
-            case CL_HIST_ISEC: cls = createVerifierHist(HISTCMP_INTERSECT); break;
+            case CL_HIST_CHI:  cls = createVerifierHist(HISTCMP_CHISQR); break;
             case CL_SVM:       cls = createVerifierSVM(); break;
             case CL_FISHER:    cls = createVerifierFisher(); break;
             default: cerr << clsfy << " is not yet supported." << endl; exit(-1);
@@ -69,6 +68,7 @@ public:
         for (size_t i=0; i<images.size(); i++)
         {
             Mat img = pre.process(images[i]);
+            images[i].release();
 
             Mat feat1;
             nfeatbytes = ext->extract(img, feat1);
