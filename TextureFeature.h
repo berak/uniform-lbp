@@ -45,8 +45,8 @@ cv::Ptr<TextureFeature::Extractor> createExtractorSTU(int gx=8, int gy=8, int kp
 cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, int u_table=0, int kernel_size=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorDct();
-cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g=25);
-cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid();
+cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g=10);
+cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g=10);
 
 cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=cv::NORM_L2);
 cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=cv::HISTCMP_CHISQR);
@@ -62,7 +62,8 @@ cv::Ptr<TextureFeature::Classifier> createClassifierFisher();
 cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int flag=cv::NORM_L2);
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int flag=cv::HISTCMP_CHISQR);
 cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int flag=cv::NORM_L2);
-cv::Ptr<TextureFeature::Verifier> createVerifierSVM();
+cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc=2, float scale=0);
+cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc=2, float scale=0);
 
 
 

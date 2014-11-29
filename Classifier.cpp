@@ -520,10 +520,12 @@ class VerifierSVM: public TextureFeature::Verifier
 {
     Ptr<ml::SVM> svm;
     int dist_flag;
+    float scale;
 public:
 
-    VerifierSVM()
-        : dist_flag(2)
+    VerifierSVM(int df=2, float sca=0)
+        : dist_flag(df)
+        , scale(sca)
     {
         ml::SVM::Params param;
         param.kernelType = ml::SVM::LINEAR;
@@ -547,6 +549,8 @@ public:
             case 1: d = a-b; multiply(d,d,d,1,CV_32F);
             case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
         }
+        if (scale > 0)
+            resize(d,d,Size(),scale,1); // desperate to save memory
         return d;
     }
 
@@ -573,6 +577,75 @@ public:
         Mat fa = tofloat(a);
         Mat fb = tofloat(b);
         return svm->predict(distance(fa, fb)) > 0;
+    }
+};
+
+
+
+class VerifierEM: public TextureFeature::Verifier // restricted !
+{
+    Ptr<ml::EM> em;
+    int dist_flag;
+    float scale;
+public:
+
+    VerifierEM(int df=2, float sca=0)
+        : dist_flag(df)
+        , scale(sca)
+    {
+    }
+
+    Mat distance(const Mat &a, const Mat &b) const
+    {
+        Mat d;
+        switch(dist_flag)
+        {
+            case 0: absdiff(a,b,d); break;
+            case 1: d = a-b; multiply(d,d,d,1,CV_32F);
+            case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
+        }
+        if (scale > 0)
+            resize(d,d,Size(),scale,1); // desperate to save memory
+        return d;
+    }
+
+    virtual int train(const Mat &features, const Mat &labels)
+    {
+        Mat trainData = tofloat(features.reshape(1, labels.rows));
+
+        Mat distances;
+        //Mat binlabels;
+        for (size_t i=0; i<labels.total()-1; i+=2)
+        {
+            int j = i+1;
+            distances.push_back(distance(trainData.row(i), trainData.row(j)));
+
+            //int l = (labels.at<int>(i) == labels.at<int>(j)) ? 1 : -1;
+            //binlabels.push_back(l);
+        }
+        Mat labls,logs,probs;
+
+        ml::EM::Params param;
+        param.nclusters = 2;
+        param.covMatType = ml::EM::COV_MAT_DIAGONAL;
+        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
+        param.termCrit.maxCount = 1000;
+        param.termCrit.epsilon = 1e-6;
+
+        em = ml::EM::train(distances,noArray(),noArray(),noArray(),param);
+        //cerr << labls.t() << endl;
+        //cerr << logs << endl;
+        //cerr << probs << endl;
+        return 1;
+    }
+
+    virtual int same(const Mat &a, const Mat &b) const
+    {
+        Mat fa = tofloat(a);
+        Mat fb = tofloat(b);
+        float s = em->predict(distance(fa, fb));
+        cerr << s << " ";
+        return s>=1;
     }
 };
 
@@ -625,6 +698,9 @@ cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
 cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int norm_flag)
 { return makePtr<VerifierFisher>(norm_flag); }
 
-cv::Ptr<TextureFeature::Verifier> createVerifierSVM()
-{ return makePtr<VerifierSVM>(); }
+cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc, float scale)
+{ return makePtr<VerifierSVM>(distfunc,scale); }
+
+cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc, float scale)
+{ return makePtr<VerifierEM>(distfunc,scale); }
 

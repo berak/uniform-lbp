@@ -100,8 +100,8 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
             "{ ext e          |0   | extractor enum }"
-            "{ cls c          |6   | classifier enum }"
-            "{ pre P          |0   | preprocessing }"
+            "{ cls c          |7   | classifier enum }"
+            "{ pre P          |5   | preprocessing }"
             "{ crop C         |80  | pre-crop }"
             "{ flip f         |0   | add a flipped image }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";

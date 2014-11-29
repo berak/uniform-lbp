@@ -160,6 +160,10 @@ public:
 
 
 
+//
+// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
+// "Texture description through histograms of equivalent patterns"
+//
 #define SHIFTED_MATS_3x3(I) \
         int M = I.rows; \
         int N = I.cols; \
@@ -322,6 +326,10 @@ public:
 };
 
 
+//
+// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
+// "Texture description through histograms of equivalent patterns"
+//
 class ExtractorLQP : public GriddedHist
 {
 
@@ -483,6 +491,10 @@ public:
 };
 
 
+//
+// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
+// "Texture description through histograms of equivalent patterns"
+//
 class ExtractorMTS : public GriddedHist
 {
 public:
@@ -510,6 +522,10 @@ inline Mat eta1(Mat a, int p)
     return c > (p*p);
 }
 
+//
+// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
+// "Texture description through histograms of equivalent patterns"
+//
 class ExtractorSTU : public GriddedHist
 {
     int kerP1;
@@ -536,7 +552,10 @@ public:
     }
 };
 
-
+//
+// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
+// "Texture description through histograms of equivalent patterns"
+//
 class ExtractorGLCM : public GriddedHist
 {
 public:
@@ -795,6 +814,6 @@ cv::Ptr<TextureFeature::Extractor> createExtractorDct()
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g)
 {   return makePtr<ExtractorORBGrid>(g); }
 
-cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid()
-{   return makePtr<ExtractorSIFTGrid>(); }
+cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g)
+{   return makePtr<ExtractorSIFTGrid>(g); }
 

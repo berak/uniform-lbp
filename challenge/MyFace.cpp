@@ -31,13 +31,14 @@ public:
             default:
             case EXT_Pixels:   ext = createExtractorPixels(); break;
             case EXT_Lbp:      ext = createExtractorLbp(); break;
+            case EXT_Lbpu:     ext = createExtractorLbp(8,8,0); break;
             case EXT_TPLbp:    ext = createExtractorTPLbp(); break;
             case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
             case EXT_MTS:      ext = createExtractorMTS(); break;
             case EXT_GaborLbp: ext = createExtractorGaborLbp(); break;
             case EXT_Dct:      ext = createExtractorDct(); break;
             case EXT_OrbGrid:  ext = createExtractorORBGrid(15); break;
-            case EXT_SiftGrid: ext = createExtractorSIFTGrid(); break;
+            case EXT_SiftGrid: ext = createExtractorSIFTGrid(15); break;
         }
         switch(clsfy)
         {
@@ -47,7 +48,8 @@ public:
             case CL_NORM_HAM:  cls = createVerifierNearest(NORM_HAMMING); break;
             case CL_HIST_HELL: cls = createVerifierHist(HISTCMP_HELLINGER); break;
             case CL_HIST_CHI:  cls = createVerifierHist(HISTCMP_CHISQR); break;
-            case CL_SVM:       cls = createVerifierSVM(); break;
+            case CL_SVM:       cls = createVerifierSVM(2); break;
+            case CL_EM:        cls = createVerifierEM(2, 0.25f); break;
             case CL_FISHER:    cls = createVerifierFisher(); break;
             default: cerr << clsfy << " is not yet supported." << endl; exit(-1);
             //case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;
@@ -90,7 +92,7 @@ public:
         cerr << "trained " << nfeatbytes << " bytes." << '\r';
     }
 
-    // Gets a prediction from a FaceRecognizer.
+    
     virtual int same(const Mat & a, const Mat &b) const
     {
         Mat feat1;
