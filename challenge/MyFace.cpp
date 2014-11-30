@@ -50,6 +50,7 @@ public:
             case CL_HIST_CHI:  cls = createVerifierHist(HISTCMP_CHISQR); break;
             case CL_SVM:       cls = createVerifierSVM(2); break;
             case CL_EM:        cls = createVerifierEM(2, 0.25f); break;
+            case CL_LR:        cls = createVerifierLR(2, 0.5f); break;
             case CL_FISHER:    cls = createVerifierFisher(); break;
             default: cerr << clsfy << " is not yet supported." << endl; exit(-1);
             //case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;

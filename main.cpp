@@ -86,7 +86,7 @@ int extractDB(const string &txtfile, vector<Mat> &images, Mat &labels, int prepr
     vector<int> vlabels;
     int nsubjects = 1 + readtxt(txtfile.c_str(), vec, vlabels, maxim);
 
-    Preprocessor pre(preproc,precrop);
+    Preprocessor pre(preproc,precrop,fixed_size);
 
     //
     // read the images,
@@ -251,7 +251,7 @@ int main(int argc, const char *argv[])
 
     // some diagnostics:
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
-    char *pp[] = { "no preproc", "equalizeHist", "tan-triggs", "CLAHE", "retina" };
+    char *pp[] = { "no preproc","eqhist","clahe","retina","tan-triggs","crop",0 };
     if (rec == 0)
         cout << "--------------------------------------------------------------" << endl;
     cout << format("%-19s",dbs.c_str()) << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[preproc] << endl;
@@ -284,7 +284,9 @@ int main(int argc, const char *argv[])
         case 10: runtest("lbpu_red_hell",createExtractorLbp(8,8,2),        createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         case 11: runtest("fplbp_svm",    createExtractorFPLbp(),           createClassifierSVM(),                   images,labels,persons, fold); break;
         case 12: runtest("fplbp_hell",   createExtractorFPLbp(),           createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        case 13: runtest("bgc1_hell",    createExtractorBGC1(),            createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
+        case 13: runtest("tplbp_hell",   createExtractorTPLbp(),           createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
+        case 14: runtest("tplbp_svm",    createExtractorTPLbp(),           createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 15: runtest("bgc1_hell",    createExtractorBGC1(),            createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 13: runtest("bgc1_red_hell",createExtractorBGC1(8,8,2),       createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 14: runtest("wld_L1",       createExtractorWLD(8,8,CV_8U),    createClassifierNearest(NORM_L1),        images,labels,persons, fold); break;
         //case 15: runtest("wld_hell",     createExtractorWLD(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;

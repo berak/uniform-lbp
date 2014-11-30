@@ -64,11 +64,11 @@ static Mat tan_triggs_preprocessing(InputArray src, float alpha=0.1, float tau=1
 
 
 
-Preprocessor::Preprocessor(int mode, int crop)
+Preprocessor::Preprocessor(int mode, int crop, int retsize)
     : preproc(mode)
     , precrop(crop)
     , clahe(createCLAHE(50))
-    , retina(bioinspired::createRetina(Size(90,90)))
+    , retina(bioinspired::createRetina(Size(retsize,retsize)))
 {
     //// (realistic setup)
     bioinspired::Retina::RetinaParameters ret_params;

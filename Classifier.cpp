@@ -511,34 +511,21 @@ public:
 
 
 //
-// Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
-//  4.1 Distance thresholding for pair matching
+// base class for svm,em,lr
 //
-//  svm trained on pairwise distances
-//
-class VerifierSVM: public TextureFeature::Verifier
+template < class LabelType >
+class VerifierPairDistance : public TextureFeature::Verifier
 {
-    Ptr<ml::SVM> svm;
+protected:
+    Ptr<ml::StatModel> model;
     int dist_flag;
     float scale;
 public:
 
-    VerifierSVM(int df=2, float sca=0)
+    VerifierPairDistance(int df=2, float sca=0)
         : dist_flag(df)
         , scale(sca)
-    {
-        ml::SVM::Params param;
-        param.kernelType = ml::SVM::LINEAR;
-        param.svmType = ml::SVM::NU_SVC;
-        param.C = 1;
-        param.nu = 0.5;
-
-        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
-        param.termCrit.maxCount = 100;
-        param.termCrit.epsilon = 1e-6;
-
-        svm = ml::SVM::create(param);
-    }
+    {}
 
     Mat distance(const Mat &a, const Mat &b) const
     {
@@ -550,7 +537,7 @@ public:
             case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
         }
         if (scale > 0)
-            resize(d,d,Size(),scale,1); // desperate to save memory
+            resize(d, d, Size(), scale, 1); // desperate to save memory
         return d;
     }
 
@@ -565,65 +552,67 @@ public:
             int j = i+1;
             distances.push_back(distance(trainData.row(i), trainData.row(j)));
 
-            int l = (labels.at<int>(i) == labels.at<int>(j)) ? 1 : -1;
+            LabelType l = (labels.at<int>(i) == labels.at<int>(j)) ? LabelType(1) : LabelType(-1);
             binlabels.push_back(l);
         }
-        svm->clear();
-        return svm->train(distances, ml::ROW_SAMPLE, binlabels);
+        model->clear();
+        return model->train(ml::TrainData::create(distances, ml::ROW_SAMPLE, binlabels));
     }
 
     virtual int same(const Mat &a, const Mat &b) const
     {
         Mat fa = tofloat(a);
         Mat fb = tofloat(b);
-        return svm->predict(distance(fa, fb)) > 0;
+        Mat res;
+        model->predict(distance(fa, fb), res);
+        LabelType r = res.at<LabelType>(0);
+        cerr << res << "\t";
+        return  r > 0;
+    }
+};
+
+//
+// Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
+//  4.1 Distance thresholding for pair matching
+//
+//  svm trained on pairwise distances
+//
+
+struct VerifierSVM : public VerifierPairDistance<int>
+{
+    VerifierSVM(int df=2, float sca=0)
+        : VerifierPairDistance(df, sca)
+    {
+        ml::SVM::Params param;
+        param.kernelType = ml::SVM::LINEAR;
+        param.svmType = ml::SVM::NU_SVC;
+        param.C = 1;
+        param.nu = 0.5;
+
+        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
+        param.termCrit.maxCount = 100;
+        param.termCrit.epsilon = 1e-6;
+
+        model = ml::SVM::create(param);
     }
 };
 
 
-
-class VerifierEM: public TextureFeature::Verifier // restricted !
+struct VerifierEM : public VerifierPairDistance<int> // restricted !
 {
-    Ptr<ml::EM> em;
-    int dist_flag;
-    float scale;
-public:
-
     VerifierEM(int df=2, float sca=0)
-        : dist_flag(df)
-        , scale(sca)
-    {
-    }
-
-    Mat distance(const Mat &a, const Mat &b) const
-    {
-        Mat d;
-        switch(dist_flag)
-        {
-            case 0: absdiff(a,b,d); break;
-            case 1: d = a-b; multiply(d,d,d,1,CV_32F);
-            case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
-        }
-        if (scale > 0)
-            resize(d,d,Size(),scale,1); // desperate to save memory
-        return d;
-    }
+        : VerifierPairDistance(df,sca)
+    {}
 
     virtual int train(const Mat &features, const Mat &labels)
     {
         Mat trainData = tofloat(features.reshape(1, labels.rows));
-
         Mat distances;
-        //Mat binlabels;
         for (size_t i=0; i<labels.total()-1; i+=2)
         {
             int j = i+1;
             distances.push_back(distance(trainData.row(i), trainData.row(j)));
-
-            //int l = (labels.at<int>(i) == labels.at<int>(j)) ? 1 : -1;
-            //binlabels.push_back(l);
         }
-        Mat labls,logs,probs;
 
         ml::EM::Params param;
         param.nclusters = 2;
@@ -632,10 +621,7 @@ public:
         param.termCrit.maxCount = 1000;
         param.termCrit.epsilon = 1e-6;
 
-        em = ml::EM::train(distances,noArray(),noArray(),noArray(),param);
-        //cerr << labls.t() << endl;
-        //cerr << logs << endl;
-        //cerr << probs << endl;
+        model = ml::EM::train(distances,noArray(),noArray(),noArray(),param);
         return 1;
     }
 
@@ -643,9 +629,26 @@ public:
     {
         Mat fa = tofloat(a);
         Mat fb = tofloat(b);
-        float s = em->predict(distance(fa, fb));
-        cerr << s << " ";
+        float s = model->predict(distance(fa, fb));
+        //cerr << s << " ";
         return s>=1;
+    }
+};
+
+
+struct VerifierLR : public VerifierPairDistance<float> // unrestricted/supervised !
+{
+    VerifierLR(int df=2, float sca=0)
+        : VerifierPairDistance(df,sca)
+    {
+        ml::LogisticRegression::Params params;
+        params.alpha = 0.005;
+        params.num_iters = 10000;
+        params.norm = ml::LogisticRegression::REG_L2;
+        params.regularized = 1;
+        //params.train_method = ml::LogisticRegression::MINI_BATCH;
+        //params.mini_batch_size = 10;
+        model = ml::LogisticRegression::create(params);
     }
 };
 
@@ -703,4 +706,7 @@ cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc, float scale)
 
 cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc, float scale)
 { return makePtr<VerifierEM>(distfunc,scale); }
+
+cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc, float scale)
+{ return makePtr<VerifierLR>(distfunc,scale); }
 

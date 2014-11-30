@@ -25,6 +25,7 @@ it all builds on top of opencv30 .
     lbp_hell          65536    391     58    0.871   36.448    * hellinger distance
     lbpu_red_hell      4352    325    124    0.724    4.255    * reduced uniform2 (17 bins)
     fplbp_svm          4096    398     51    0.886    3.517
+    tplbp_svm         65536    374     75    0.833   41.345
     bgc1_hell         65536    368     81    0.820   36.526
     wld_hell          45056    279    170    0.621   40.767
     mts_svm            4096    394     55    0.878    3.086
@@ -52,6 +53,7 @@ it all builds on top of opencv30 .
     lbp_hell          65536    733     27    0.964   70.904
     lbpu_red_hell      4352    715     45    0.941    8.528
     fplbp_svm          4096    735     25    0.967    7.733
+    tplbp_svm         65536    734     26    0.966  107.602
     bgc1_hell         65536    737     23    0.970   71.093
     wld_hell          45056    753      7    0.991   82.840
     mts_svm            4096    738     22    0.971    6.449
@@ -79,6 +81,7 @@ it all builds on top of opencv30 .
     lbp_hell          65536    381    117    0.765   50.370
     lbpu_red_hell      4352    302    196    0.606    6.586
     fplbp_svm          4096    404     94    0.811    8.052
+    tplbp_svm         65536    418     80    0.839  116.441
     bgc1_hell         65536    375    123    0.753   50.531
     wld_hell          45056    133    365    0.267   67.659
     mts_svm            4096    417     81    0.837    6.952
@@ -105,6 +108,7 @@ it all builds on top of opencv30 .
     lbp_svm           65536     92      8    0.920    4.607
     lbp_hell          65536     94      6    0.940    3.050
     lbpu_red_hell      4352     94      6    0.940    0.965
+    tplbp_svm         65536     94      6    0.940    5.083
     bgc1_hell         65536     94      6    0.940    3.055
     wld_hell          45056     98      2    0.980    8.841
     mts_svm            4096     92      8    0.920    1.275
@@ -132,6 +136,7 @@ it all builds on top of opencv30 .
     lbp_hell          65536    576     12    0.980   74.394
     lbpu_red_hell      4352    551     37    0.937    9.455
     fplbp_svm          4096     93      7    0.930    1.013
+    tplbp_svm         65536    577     11    0.981  130.829
     bgc1_hell         65536    576     12    0.980   75.753
     wld_hell          45056    587      1    0.998   92.920
     mts_svm            4096    578     10    0.983    9.411
@@ -159,6 +164,7 @@ it all builds on top of opencv30 .
     lbp_hell          65536    278     22    0.927   12.964
     lbpu_red_hell      4352    240     60    0.800    2.302
     fplbp_svm          4096    273     27    0.910    2.233
+    tplbp_svm         65536    260     40    0.867   14.470
     bgc1_hell         65536    271     29    0.903   12.908
     wld_hell          45056    242     58    0.807   20.438
     mts_svm            4096    266     34    0.887    1.570
@@ -186,6 +192,7 @@ it all builds on top of opencv30 .
     lbp_hell          65536    542      8    0.985   72.184
     lbpu_red_hell      4352    534     16    0.971    9.592
     fplbp_svm          4096    548      2    0.996    8.397
+    tplbp_svm         65536    549      1    0.998  100.864
     bgc1_hell         65536    540     10    0.982   72.937
     wld_hell          45056    247    303    0.449   91.548
     mts_svm            4096    547      3    0.995    7.994
@@ -214,6 +221,7 @@ it all builds on top of opencv30 .
     lbp_hell          65536    477     13    0.973   62.588
     lbpu_red_hell      4352    460     30    0.939    8.651
     fplbp_svm          4096    471     19    0.961    8.891
+    tplbp_svm         65536    465     25    0.949   39.720
     bgc1_hell         65536    471     19    0.961   62.711
     wld_hell          45056    462     28    0.943   84.162
     mts_svm            4096    467     23    0.953    5.227
@@ -248,6 +256,7 @@ retina / parvo preprocessing !!
     lbp_hell          65536    476     22    0.956   51.524
     lbpu_red_hell      4352    427     71    0.857    6.956
     fplbp_svm          4096    466     32    0.936    7.607
+    tplbp_svm         65536    480     18    0.964  103.811
     bgc1_hell         65536    473     25    0.950   51.583
     mts_svm            4096    482     16    0.968    6.071
     mts_hell           4096    467     31    0.938    5.568
