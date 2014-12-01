@@ -510,9 +510,14 @@ public:
 };
 
 
+
 //
-// base class for svm,em,lr
+// Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
+//  4.1 Distance thresholding for pair matching
 //
+//  base class for svm,em,lr
+//
+
 template < class LabelType >
 class VerifierPairDistance : public TextureFeature::Verifier
 {
@@ -561,22 +566,14 @@ public:
 
     virtual int same(const Mat &a, const Mat &b) const
     {
-        Mat fa = tofloat(a);
-        Mat fb = tofloat(b);
         Mat res;
-        model->predict(distance(fa, fb), res);
+        model->predict(distance(tofloat(a), tofloat(b)), res);
         LabelType r = res.at<LabelType>(0);
-        cerr << res << "\t";
+        //cerr << res << "\t";
         return  r > 0;
     }
 };
 
-//
-// Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
-//  4.1 Distance thresholding for pair matching
-//
-//  svm trained on pairwise distances
-//
 
 struct VerifierSVM : public VerifierPairDistance<int>
 {
@@ -590,7 +587,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
         param.nu = 0.5;
 
         param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
-        param.termCrit.maxCount = 100;
+        param.termCrit.maxCount = 1000;
         param.termCrit.epsilon = 1e-6;
 
         model = ml::SVM::create(param);
