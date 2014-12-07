@@ -237,7 +237,8 @@ int main(int argc, const char *argv[])
     cerr << format("%-8s",myface::EXS[ext]) << " ";
     cerr << format("%-9s",myface::CLS[cls]) << " ";
     cerr << format("%-8s",myface::PPS[pre]) << " ";
-    cerr << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
+    cerr << format("%-6s",trainMethod.c_str()) << "\t";
+    //cerr << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
     cerr << format("%9.4f %9.4f %9.4f", mu, se, ((t1-t0)/getTickFrequency())) << endl;
 
     return 0;

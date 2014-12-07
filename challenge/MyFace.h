@@ -5,7 +5,7 @@ using namespace cv;
 
 namespace myface
 {
-    enum EXT { 
+    enum EXT {
         EXT_Pixels,
         EXT_Lbp,
         EXT_Lbpu,
@@ -25,7 +25,7 @@ namespace myface
         EXT_OrbGrid,
         EXT_SiftGrid,
         EXT_MAX };
-    static const char *EXS[] = { 
+    static const char *EXS[] = {
         "Pixels",
         "Lbp",
         "Lbpu",
@@ -44,9 +44,9 @@ namespace myface
         "Dct",
         "OrbGrid",
         "SiftGrid",
-        0 
+        0
     };
-    enum CLA { 
+    enum CLA {
         CL_NORM_L2,
         CL_NORM_L2SQR,
         CL_NORM_L1,
@@ -58,9 +58,9 @@ namespace myface
         CL_LR,
         CL_COSINE,
         CL_FISHER,
-        CL_MAX 
+        CL_MAX
     };
-    static const char *CLS[] = { 
+    static const char *CLS[] = {
         "NORM_L2",
         "NORM_LSQR",
         "NORM_L1",
@@ -72,25 +72,25 @@ namespace myface
         "LR",
         "COSINE",
         "FISHER",
-        0 
+        0
     };
-    enum PRE { 
+    enum PRE {
         PRE_none,
         PRE_eqhist,
         PRE_clahe,
         PRE_retina,
         PRE_tantriggs,
         PRE_crop,
-        PRE_MAX 
+        PRE_MAX
     };
-    static const char *PPS[] = { 
+    static const char *PPS[] = {
         "none",
         "eqhist",
         "clahe",
         "retina",
         "tantriggs",
         "crop",
-        0 
+        0
     };
 
 

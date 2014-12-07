@@ -2,16 +2,13 @@
 // run k fold crossvalidation train/test on  person db
 //
 
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
+#include <opencv2/opencv.hpp>
 #include <opencv2/core/utility.hpp>
 using namespace cv;
 
 
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <map>
 using namespace std;
 
