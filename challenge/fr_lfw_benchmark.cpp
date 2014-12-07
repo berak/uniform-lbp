@@ -99,9 +99,9 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
-            "{ ext e          |0   | extractor enum }"
-            "{ cls c          |8   | classifier enum }"
-            "{ pre P          |5   | preprocessing }"
+            "{ ext e          |8   | extractor enum }"
+            "{ cls c          |5   | classifier enum }"
+            "{ pre P          |0   | preprocessing }"
             "{ crop C         |80  | pre-crop }"
             "{ flip f         |0   | add a flipped image }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
@@ -199,6 +199,7 @@ int main(int argc, const char *argv[])
         vector < Ptr<Object> > &curr = dataset->getTest(j);
         for (unsigned int i=0; i<curr.size(); ++i)
         {
+            PROFILEX("tests");
             FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
 
             Mat img1 = imread(path+example->image1, IMREAD_GRAYSCALE);

@@ -33,13 +33,13 @@ namespace TextureFeature
 // supplied impls
 //
 cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw=0, int resh=0);
-cv::Ptr<TextureFeature::Extractor> createExtractorMoments();
+//cv::Ptr<TextureFeature::Extractor> createExtractorMoments();
 cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gridx=8, int gridy=8, int u_table=-1);
 cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx=8, int gy=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx=8, int gy=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx=8, int gy=8, int utable=-1);
-cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx=8, int gy=8, int tf=CV_32F);
-cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx=8, int gy=8);
+//cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx=8, int gy=8, int tf=CV_32F);
+//cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx=8, int gy=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx=8, int gy=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorSTU(int gx=8, int gy=8, int kp1=5);
 cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx=8, int gy=8);
@@ -47,6 +47,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, i
 cv::Ptr<TextureFeature::Extractor> createExtractorDct();
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g=10);
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g=10);
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticMTS();
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticLbp();
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticFpLbp();
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticTpLbp();
 
 cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=cv::NORM_L2);
 cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=cv::HISTCMP_CHISQR);

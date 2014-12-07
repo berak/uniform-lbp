@@ -28,17 +28,21 @@ public:
     {
         switch(extract)
         {
-            default:
             case EXT_Pixels:   ext = createExtractorPixels(); break;
             case EXT_Lbp:      ext = createExtractorLbp(); break;
             case EXT_Lbpu:     ext = createExtractorLbp(8,8,0); break;
             case EXT_TPLbp:    ext = createExtractorTPLbp(); break;
             case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
             case EXT_MTS:      ext = createExtractorMTS(); break;
+            case EXT_MTS_E:    ext = createExtractorElasticMTS(); break;
+            case EXT_LBP_E:    ext = createExtractorElasticLbp(); break;
+            case EXT_TPLBP_E:  ext = createExtractorElasticTpLbp(); break;
+            case EXT_FPLBP_E:  ext = createExtractorElasticFpLbp(); break;
             case EXT_GaborLbp: ext = createExtractorGaborLbp(); break;
             case EXT_Dct:      ext = createExtractorDct(); break;
             case EXT_OrbGrid:  ext = createExtractorORBGrid(15); break;
             case EXT_SiftGrid: ext = createExtractorSIFTGrid(15); break;
+            default: cerr << clsfy << " is not yet supported." << endl; exit(-1);
         }
         switch(clsfy)
         {

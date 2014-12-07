@@ -472,6 +472,9 @@ struct VerifierHist : VerifierNearest
     {}
     virtual double distance(const Mat &a, const Mat &b) const
     {
+        int ta = a.type();
+        int tb = b.type();
+        int td = a.depth();
         return compareHist(a,b,flag);
     }
 };

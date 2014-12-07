@@ -233,7 +233,7 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if (argc>2) fold = atoi(argv[2]);
 
-    int rec = 1;
+    int rec = 19;
     if (argc>3) rec = atoi(argv[3]);
 
     int preproc = 0; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
@@ -293,7 +293,8 @@ int main(int argc, const char *argv[])
         case 16: runtest("mts_svm",      createExtractorMTS(),             createClassifierSVM(),                   images,labels,persons, fold); break;
         case 17: runtest("mts_hell",     createExtractorMTS(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         case 18: runtest("mts_fisher",   createExtractorMTS(),             createClassifierFisher(),                images,labels,persons, fold); break;
-        case 19: runtest("stu_svm",      createExtractorSTU(),             createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 19: runtest("mts_e_hell",   createExtractorElasticMTS(),      createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
+        case 20: runtest("mts_e_svm",    createExtractorElasticMTS(),      createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 19: runtest("glcm_hell",    createExtractorGLCM(),            createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 19: runtest("glcm_svm",     createExtractorGLCM(),            createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 18: runtest("lqp_hell",     createExtractorLQP(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;

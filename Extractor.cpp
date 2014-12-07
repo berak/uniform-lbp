@@ -36,126 +36,7 @@ public:
 
 
 
-
 //
-// gridded hu-moments
-//
-class ExtractorMoments : public TextureFeature::Extractor
-{
-    static void mom(const Mat &z, Mat &feature, int i, int j, int w, int h)
-    {
-        double hu[7];
-        Mat roi(z, cv::Rect(i*w,j*h,w,h));
-        HuMoments(moments(roi, false), hu);
-        feature.push_back(hu[0]);
-        feature.push_back(hu[1]);
-        feature.push_back(hu[2]);
-        feature.push_back(hu[3]);
-        feature.push_back(hu[4]);
-        feature.push_back(hu[5]);
-        feature.push_back(hu[6]);
-    }
-    static Mat mom(const Mat & z)
-    {
-        Mat mo;
-        int sw = (z.cols)/8;
-        int sh = (z.rows)/8;
-        for (int i=0; i<8; i++)
-        {
-            for (int j=0; j<8; j++)
-            {
-                mom(z,mo,i,j,sw,sh);
-            }
-        }
-        mo.convertTo(mo,CV_32F);
-        normalize(mo,mo);
-        return mo;
-    }
-public:
-    // TextureFeature::Extractor
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        features = mom(img).reshape(1,1);
-        return features.total() * features.elemSize();
-    }
-};
-
-
-
-
-
-
-//
-// base for lbph, calc features on the whole image, the hist on a grid,
-//   so we avoid to waste border pixels
-//
-struct GriddedHist : public TextureFeature::Extractor
-{
-protected:
-    Mat_<float> weights;
-    int GRIDX,GRIDY;
-    bool doWeight;
-
-    static void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo, int histSize, int histRange=256)
-    {
-        for (int i=0; i<feature.rows; i++)
-        {
-            for (int j=0; j<feature.cols; j++)
-            {
-                uchar bin = int(feature(i,j)) * histSize / histRange;
-                histo( bin ) += 1.0f;
-            }
-        }
-    }
-
-    void hist(const Mat &feature, Mat &histo, int histSize=256, int histRange=256) const
-    {
-        histo.release();
-        //const float range[] = { 0, 256 } ;
-        //const float* hist_range[] = { range };
-        int sw = (feature.cols)/(GRIDX+1);
-        int sh = (feature.rows)/(GRIDY+1);
-        for (int i=0; i<GRIDX; i++)
-        {
-            for (int j=0; j<GRIDY; j++)
-            {
-                Rect patch(i*sw,j*sh,sw,sh);
-                Mat fi( feature, patch );
-                Mat_<float> h(1,histSize,0.0f);
-                //calcHist( &fi, 1, 0, Mat(), h, 1, &histSize, &hist_range, true, false );
-                calc_hist(fi,h,histSize,histRange);
-                if (doWeight)
-                    h *= weights(j,i);
-                histo.push_back(h.reshape(1,1));
-            }
-        }
-        normalize(histo.reshape(1,1),histo);
-    }
-
-public:
-
-    GriddedHist(int gridx=8, int gridy=8, bool doweight=false)
-        : weights(8,8)
-        , GRIDX(gridx)
-        , GRIDY(gridy)
-        , doWeight(doweight)
-    {
-        if (doWeight) // not all patches have the same relevance.
-        {
-            weights << 1, 1, 1, 1, 1, 1, 1, 1,
-                       1, 2, 2, 2, 2, 2, 2, 1,
-                       1, 3, 3, 3, 3, 3, 3, 1,
-                       1, 3, 3, 3, 3, 3, 3, 1,
-                       1, 2, 3, 3, 3, 3, 2, 1,
-                       1, 2, 3, 3, 3, 3, 2, 1,
-                       1, 2, 3, 3, 3, 3, 2, 1,
-                       1, 1, 1, 1, 1, 1, 1, 1;
-            if (GRIDX != weights.rows || GRIDY != weights.cols)
-                resize(weights, weights, Size(GRIDX,GRIDY));
-            normalize(weights, weights);
-        }
-    }
-};
 
 
 
@@ -179,16 +60,9 @@ public:
 
 
 
-class ExtractorLbp : public GriddedHist
+struct FeatureLbp
 {
-protected:
-
-    int utable;
-
-    //
-    // "histogram of equivalence patterns"
-    //
-    virtual void hep(const Mat &I, Mat &fI) const
+    int operator() (const Mat &I, Mat &fI) const
     {
 #if 0
         SHIFTED_MATS_3x3(I);
@@ -223,89 +97,17 @@ protected:
             }
         }
         fI = feature;
+        return 256;
 #endif
-    }
-
-
-public:
-
-    enum UniformTable
-    {
-        UniformNormal,    // 58 + noise
-        UniformModified,  // 58
-        UniformReduced,   // 16 + noise
-        UniformNone = -1  // 256, as-is
-    };
-
-    ExtractorLbp(int gridx=8, int gridy=8, int u_table=UniformNone)
-        : GriddedHist(gridx,gridy)
-        , utable(u_table)
-    {}
-
-    // TextureFeature::Extractor
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        Mat fI;
-        hep(img,fI);
-
-        if (utable == UniformNone)
-        {
-            hist(fI,features,256,256);
-            return features.total() * features.elemSize();
-        }
-
-        static int uniform[3][256] = {
-        {   // the well known original uniform2 pattern
-            0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
-            14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
-            58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
-            58,58,58,58,58,58,58,58,58,58,58,58,23,58,58,58,58,58,58,58,58,58,58,58,58,58,
-            58,58,24,58,58,58,58,58,58,58,25,58,58,58,26,58,27,28,29,30,58,31,58,58,58,32,58,
-            58,58,58,58,58,58,33,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,34,58,58,58,58,
-            58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
-            58,35,36,37,58,38,58,58,58,39,58,58,58,58,58,58,58,40,58,58,58,58,58,58,58,58,58,
-            58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
-            58,58,58,50,51,52,58,53,54,55,56,57 },
-        {   // 'noise' ones mapped to their closest hamming uniform neighbour
-            0,1,2,3,4,1,5,6,7,1,2,3,8,8,9,10,11,1,2,3,4,1,5,6,12,12,12,15,13,13,14,15,16,1,2,
-            3,4,1,5,6,7,1,2,3,8,8,9,10,17,17,17,3,17,17,20,21,18,18,18,21,19,19,20,21,22,1,
-            2,3,4,1,5,6,7,1,2,3,8,8,9,10,11,1,2,3,4,58,5,6,12,12,12,15,13,13,14,15,23,23,23,
-            44,23,23,5,45,23,23,23,28,26,26,27,28,24,24,24,49,24,24,27,28,25,25,25,28,26,26,
-            27,28,29,30,2,31,4,30,5,32,7,30,2,31,8,33,9,33,11,30,2,31,4,30,5,32,12,12,12,34,
-            13,34,14,34,16,30,2,31,4,30,5,32,7,30,58,31,8,33,9,33,17,48,17,49,17,35,20,35,18,
-            52,18,35,19,35,20,35,36,37,36,38,36,37,39,39,36,37,36,38,8,40,40,40,36,37,36,38,
-            36,37,39,39,51,52,41,41,54,41,41,41,42,43,42,44,42,43,45,45,42,43,42,44,54,46,46,
-            46,47,48,47,49,47,48,50,50,51,52,51,53,54,55,56,57 },
-        {   // 'reduced' set (16 + 1 bins)
-            16,0,16,16,16,16,1,16,2,16,16,16,16,16,16,16,3,16,16,16,16,16,16,16,16,16,16,16,
-            16,16,16,4,5,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
-            16,16,16,16,16,16,6,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
-            16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
-            16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,7,16,8,16,16,16,16,16,16,16,16,16,16,
-            16,16,16,16,16,16,9,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
-            16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
-            16,16,16,16,16,10,16,16,16,11,16,16,16,16,16,16,16,12,16,16,16,16,16,16,16,16,16,
-            16,16,16,16,16,16,16,16,16,16,13,16,16,16,16,16,16,16,16,16,16,16,16,16,14,16,15,
-            16,16,16,16,16,16,16,16,16,16,16,16 }
-        };
-
-        Mat h59;
-        Mat lu(1,256,CV_8U, uniform[utable]);
-        LUT(fI,lu,h59);
-
-        int histlen[] = {59,58,17};
-        hist(h59,features,histlen[utable],histlen[utable]);
-        features = features.reshape(1,1);
-        return features.total() * features.elemSize();
     }
 };
 
 
 
-class ExtractorBGC1 : public ExtractorLbp
+
+struct FeatureBGC1
 {
-protected:
-    virtual void hep(const Mat &I, Mat &fI) const
+    int operator () (const Mat &I, Mat &fI) const
     {
         SHIFTED_MATS_3x3(I);
 
@@ -317,304 +119,110 @@ protected:
              ((I2>=I3)&  4) |
              ((I1>=I2)&  2) |
              ((I0>=I1)&  1);
-    }
 
-public:
-    ExtractorBGC1(int gridx=8, int gridy=8, int u_table=UniformNone)
-        : ExtractorLbp(gridx, gridy, u_table)
-    {}
-};
-
-
-//
-// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
-// "Texture description through histograms of equivalent patterns"
-//
-class ExtractorLQP : public GriddedHist
-{
-
-public:
-    ExtractorLQP(int gridx=8, int gridy=8)
-        : GriddedHist(gridx, gridy)
-    {}
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        int kerP1=5;
-        int kerP2=5;
-        Mat fI_2,fI_1,fI1,fI2;
-
-        SHIFTED_MATS_3x3(img);
-
-        Mat Icplus1  = IC+kerP1;
-        Mat Icplus2  = IC+kerP2;
-        Mat Icminus1 = IC-kerP1;
-        Mat Icminus2 = IC-kerP2;
-        fI_2 =  ((I7<Icminus2)&128 ) |
-                ((I6<Icminus2)& 64 ) |
-                ((I5<Icminus2)& 32 ) |
-                ((I4<Icminus2)& 16 ) |
-                ((I3<Icminus2)&  8 ) |
-                ((I2<Icminus2)&  4 ) |
-                ((I1<Icminus2)&  2 ) |
-                ((I0<Icminus2)&  1 );
-        fI_1 =  (((I7>=Icminus2) &(I7<Icminus1))&128 ) |
-                (((I6>=Icminus2) &(I6<Icminus1))& 64 ) |
-                (((I5>=Icminus2) &(I5<Icminus1))& 32 ) |
-                (((I4>=Icminus2) &(I4<Icminus1))& 16 ) |
-                (((I3>=Icminus2) &(I3<Icminus1))&  8 ) |
-                (((I2>=Icminus2) &(I2<Icminus1))&  4 ) |
-                (((I1>=Icminus2) &(I1<Icminus1))&  2 ) |
-                (((I0>=Icminus2) &(I0<Icminus1))&  1 );
-        fI1 =   (((I7>=Icplus1) &(I7<Icplus2))&128 ) |
-                (((I6>=Icplus1) &(I6<Icplus2))& 64 ) |
-                (((I5>=Icplus1) &(I5<Icplus2))& 32 ) |
-                (((I4>=Icplus1) &(I4<Icplus2))& 16 ) |
-                (((I3>=Icplus1) &(I3<Icplus2))&  8 ) |
-                (((I2>=Icplus1) &(I2<Icplus2))&  4 ) |
-                (((I1>=Icplus1) &(I1<Icplus2))&  2 ) |
-                (((I0>=Icplus1) &(I0<Icplus2))&  1 );
-        fI2 =   ((I7>=Icplus2)&128 ) |
-                ((I6>=Icplus2)& 64 ) |
-                ((I5>=Icplus2)& 32 ) |
-                ((I4>=Icplus2)& 16 ) |
-                ((I3>=Icplus2)&  8 ) |
-                ((I2>=Icplus2)&  4 ) |
-                ((I1>=Icplus2)&  2 ) |
-                ((I0>=Icplus2)&  1 );
-
-        Mat h1,h2,h3,h4,h;
-        hist(fI_2,h1,256);
-        hist(fI_1,h2,256);
-        hist(fI1, h3,256);
-        hist(fI2, h4,256);
-        h.push_back(h1);
-        h.push_back(h2);
-        h.push_back(h3);
-        h.push_back(h4);
-        features = h.reshape(1,1);
-        return features.total() * features.elemSize();
+        return 256;
     }
 };
 
+//
+////
+//// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
+//// "Texture description through histograms of equivalent patterns"
+////
 
-//
-//  A Robust Descriptor based on Weber’s Law (i terribly crippled it)
-//
-class WLD : public GriddedHist
+
+struct FeatureMTS
 {
-    // my histograms looks like this:
-    // [32 bins for zeta][2*64 bins for theta][16 bins for center intensity]
-    // since the patches are pretty small(12x12), i can even get away using uchar for the historam bins
-    // all those are heuristic/empirical, i.e, i found it works better with only the 1st 2 orientations
-
-    // configurable, yet hardcoded values
-    enum {
-        size_center  = 4,   // num bits from the center
-        size_theta_n = 2,   // orientation channels used
-        size_theta_w = 8,   // each theta orientation channel is 8*w
-        size_zeta    = 32,  // bins for zeta
-
-        size_theta = 8*size_theta_w,
-        size_all = (1<<size_center) + size_zeta + size_theta_n * size_theta
-
-        // 176 bytes per patch, * 8 * 8 = 11264 bytes per image.
-    };
-
-    int typeflag;
-
-    template <class T>
-    void oper(const Mat &src, Mat &hist) const
+    int operator () (const Mat &I, Mat &fI) const
     {
-        const double CV_PI_4 = CV_PI / 4.0;
-        int radius = 1;
-        for(int i=radius; i<src.rows-radius; i++)
+        //SHIFTED_MATS_3x3(img);
+        //fI = ((IC>=I7)&8) | ((IC>=I6)&4) | ((IC>=I5)&2) | ((IC>=I4)&1);       
+
+        Mat_<uchar> img(I);
+        Mat_<uchar> fea(I.size(), 0);
+        const int m=1;
+        for (int r=m; r<img.rows-m; r++)
         {
-            for(int j=radius; j<src.cols-radius; j++)
+            for (int c=m; c<img.cols-m; c++)
             {
-                // 7 0 1
-                // 6 c 2
-                // 5 4 3
-                uchar c   = src.at<uchar>(i,j);
-                uchar n[8]=
-                {
-                    src.at<uchar>(i-1,j),
-                    src.at<uchar>(i-1,j+1),
-                    src.at<uchar>(i,j+1),
-                    src.at<uchar>(i+1,j+1),
-                    src.at<uchar>(i+1,j),
-                    src.at<uchar>(i+1,j-1),
-                    src.at<uchar>(i,j-1),
-                    src.at<uchar>(i-1,j-1)
-                };
-                int p = n[0]+n[1]+n[2]+n[3]+n[4]+n[5]+n[6]+n[7];
-                p -= c*8;
-
-                // (7), projected from [-pi/2,pi/2] to [0,size_zeta]
-                double zeta = 0;
-                if (p!=0) zeta = double(size_zeta) * (atan(double(p)/c) + CV_PI*0.5) / CV_PI;
-                hist.at<T>(int(zeta)) += 1;
-
-                // (11), projected from [-pi/2,pi/2] to [0,size_theta]
-                for (int i=0; i<size_theta_n; i++)
-                {
-                    double a = atan2(double(n[i]-n[(i+4)%8]),double(n[(i+2)%8]-n[(i+6)%8]));
-                    double theta = CV_PI_4 * fmod( (a+CV_PI)/CV_PI_4+0.5f, 8 ) * size_theta_w; // (11)
-                    hist.at<T>(int(theta)+size_zeta+size_theta * i) += 1;
-                }
-
-                // additionally, add some bits of the actual center value (MSB).
-                int cen = c>>(8-size_center);
-                hist.at<T>(cen+size_zeta+size_theta * size_theta_n) += 1;
+                uchar v = 0;
+                uchar cen = img(r,c);
+                v |= (img(r-1,c  ) > cen) << 0;
+                v |= (img(r-1,c+1) > cen) << 1;
+                v |= (img(r  ,c+1) > cen) << 2;
+                v |= (img(r+1,c+1) > cen) << 3;
+                fea(r,c) = v;
             }
         }
-    }
-
-public:
-
-    WLD(int gridx=8, int gridy=8,int typeflag=CV_32F)
-        : GriddedHist(gridx,gridy)
-        , typeflag(typeflag)
-    {}
-
-    // TextureFeature::Extractor
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        features = Mat::zeros(WLD::size_all*GRIDX*GRIDY,1,typeflag);
-        switch(typeflag)
-        {
-            case CV_32F:  oper<float>(img,features);  break;
-            case CV_8U:   oper<uchar>(img,features);  break;
-        }
-        features = features.reshape(1,1);
-        return features.total() * features.elemSize();
+        fI = fea;
+        return 16;
     }
 };
+
 
 
 //
 // Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
 // "Texture description through histograms of equivalent patterns"
 //
-class ExtractorMTS : public GriddedHist
-{
-public:
-    ExtractorMTS(int gridx=8, int gridy=8)
-        : GriddedHist(gridx, gridy)
-    {}
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        SHIFTED_MATS_3x3(img);
-
-        Mat h,fI;
-
-        fI = ((IC>=I7)&8) | ((IC>=I6)&4) | ((IC>=I5)&2) | ((IC>=I4)&1);
-        hist(fI,h,16,16);
-        features = h.reshape(1,1);
-        return features.total() * features.elemSize();
-    }
-};
-
-
-inline Mat eta1(Mat a, int p)
-{
-    Mat c;
-    multiply(a,a,c);
-    return c > (p*p);
-}
-
-//
-// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
-// "Texture description through histograms of equivalent patterns"
-//
-class ExtractorSTU : public GriddedHist
+struct FeatureSTU 
 {
     int kerP1;
-public:
-    ExtractorSTU(int gridx=8, int gridy=8, int kp1=8)
-        : GriddedHist(gridx, gridy)
-        , kerP1(kp1)
+    FeatureSTU(int kp1=8)
+        : kerP1(kp1)
     {}
 
-    virtual int extract(const Mat &img, Mat &features) const
+    inline Mat eta1(Mat a, int p)const
+    {
+        Mat c;
+        multiply(a,a,c);
+        return c > (p*p);
+    }
+
+    int operator () (const Mat &img, Mat &fI) const
     {
         SHIFTED_MATS_3x3(img);
 
-        Mat h,fI;
+        fI = eta1(abs(I6-IC),kerP1) & 8
+           | eta1(abs(I4-IC),kerP1) & 4
+           | eta1(abs(I2-IC),kerP1) & 2
+           | eta1(abs(I0-IC),kerP1) & 1;
 
-        fI = eta1(abs(I6-IC),kerP1) & (1<<6)
-           | eta1(abs(I4-IC),kerP1) & (1<<4)
-           | eta1(abs(I2-IC),kerP1) & (1<<2)
-           | eta1(abs(I0-IC),kerP1) & (1<<1);
-        hist(fI,h,64,256);
-
-        features = h.reshape(1,1);
-        return features.total() * features.elemSize();
-    }
-};
-
-//
-// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
-// "Texture description through histograms of equivalent patterns"
-//
-class ExtractorGLCM : public GriddedHist
-{
-public:
-    ExtractorGLCM(int gridx=8, int gridy=8)
-        : GriddedHist(gridx, gridy)
-    {}
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        int M = img.rows;
-        int N = img.cols;
-        // shifted images (special case)
-        Mat I7 = img(Range(1,M-1), Range(1,N-2));
-        Mat I6 = img(Range(1,M-1), Range(2,N-1));
-        Mat I5 = img(Range(1,M-1), Range(3,N  ));
-        Mat I4 = img(Range(2,M  ), Range(3,N  ));
-        Mat IC = img(Range(2,M  ), Range(2,N-1));
-        // Compute and normalize the histograms
-        // one pixel displacements in orientations 0є, 45є, 90є and 135є
-        Mat h4,h5,h6,h7;
-        hist((IC|I4), h4);
-        hist((IC|I5), h5);
-        hist((IC|I6), h6);
-        hist((IC|I7), h7);
-        // Average
-        features = (h4+h5+h6+h7)/4;
-        return features.total() * features.elemSize();
+        return 16;
     }
 };
 
 
 //
-// concat histograms from lbp(u) features generated from a bank of gabor filtered images
+// Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
+// 3.1 Three-Patch LBP Codes
 //
-class ExtractorGaborLbp : public ExtractorLbp
+struct FeatureTPLbp 
 {
-    Size kernel_size;
 public:
-    ExtractorGaborLbp(int gridx=8, int gridy=8, int u_table=UniformNone, int kernel_siz=8)
-        : ExtractorLbp(gridx, gridy, u_table)
-        , kernel_size(kernel_siz, kernel_siz)
-    {}
-    void gabor(const Mat &src_f, Mat &features,double sigma, double theta, double lambda, double gamma, double psi) const
+    int operator () (const Mat &img, Mat &features) const
     {
-        Mat dest,dest8u,his;
-        cv::filter2D(src_f, dest, CV_32F, getGaborKernel(kernel_size, sigma,theta, lambda, gamma, psi));
-        dest.convertTo(dest8u, CV_8U);
-        ExtractorLbp::extract(dest8u, his);
-        features.push_back(his.reshape(1, 1));
-    }
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        Mat src_f;
-        img.convertTo(src_f, CV_32F, 1.0/255.0);
-        gabor(src_f, features, 8,4,90,15,0);
-        gabor(src_f, features, 8,4,45,30,1);
-        gabor(src_f, features, 8,4,45,45,0);
-        gabor(src_f, features, 8,4,90,60,1);
-        features = features.reshape(1,1);
-        return features.total() * features.elemSize();
+        Mat_<uchar> I(img);
+        Mat_<uchar> fI(I.size(), 0);
+        const int border=2;
+        for (int r=border; r<I.rows-border; r++)
+        {
+            for (int c=border; c<I.cols-border; c++)
+            {
+                uchar v = 0;
+                v |= ((I(r,c) - I(r  ,c-2)) > (I(r,c) - I(r-2,c  ))) * 1;
+                v |= ((I(r,c) - I(r-1,c-1)) > (I(r,c) - I(r-1,c+1))) * 2;
+                v |= ((I(r,c) - I(r-2,c  )) > (I(r,c) - I(r  ,c+2))) * 4;
+                v |= ((I(r,c) - I(r-1,c+1)) > (I(r,c) - I(r+1,c+1))) * 8;
+                v |= ((I(r,c) - I(r  ,c+2)) > (I(r,c) - I(r+1,c  ))) * 16;
+                v |= ((I(r,c) - I(r+1,c+1)) > (I(r,c) - I(r+1,c-1))) * 32;
+                v |= ((I(r,c) - I(r+1,c  )) > (I(r,c) - I(r  ,c-2))) * 64;
+                v |= ((I(r,c) - I(r+1,c-1)) > (I(r,c) - I(r-1,c-1))) * 128;
+                fI(r,c) = v;
+            }
+        }
+        features = fI;
+        return 256;
     }
 };
 
@@ -624,13 +232,9 @@ public:
 // Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
 // 3.2 Four-Patch LBP Codes
 //
-class ExtractorFPLbp : public GriddedHist
+struct FeatureFPLbp 
 {
-public:
-    ExtractorFPLbp(int gridx=8, int gridy=8)
-        : GriddedHist(gridx, gridy)
-    {}
-    virtual int extract(const Mat &img, Mat &features) const
+    int operator () (const Mat &img, Mat &features) const
     {
         //Patches, v1:
         //SHIFTED_MATS_3x3(img);
@@ -654,55 +258,302 @@ public:
                 fI(r,c) = v;
             }
         }
-        hist(fI, features, 16, 16);
-        features = features.reshape(1,1);
-        return features.total() * features.elemSize();
+        features = fI;
+        return 16;
     }
 };
 
-//
-// Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
-// 3.1 Three-Patch LBP Codes
-//
-class ExtractorTPLbp : public GriddedHist
+
+
+
+
+
+
+
+
+
+static void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo)
 {
-public:
-    ExtractorTPLbp(int gridx=8, int gridy=8)
-        : GriddedHist(gridx, gridy)
-    {}
-    virtual int extract(const Mat &img, Mat &features) const
+    for (int i=0; i<feature.rows; i++)
     {
-        //Patches, v1:
-        //SHIFTED_MATS_3x3(img);
-        //Mat_<uchar> I = I7/9 + I6/9 + I5/9 + I4/9 + I3/9 + I2/9 + I1/9 + I0/9 + IC/9;
-
-        //Patches, v2:
-        //Mat_<uchar> I; resize(img,I,Size(img.cols-3,img.rows-3));
-
-        Mat_<uchar> I(img);
-        Mat_<uchar> fI(I.size(), 0);
-        const int border=2;
-        for (int r=border; r<I.rows-border; r++)
+        for (int j=0; j<feature.cols; j++)
         {
-            for (int c=border; c<I.cols-border; c++)
+            uchar bin = int(feature(i,j));
+            histo( bin ) += 1.0f;
+        }
+    }
+}
+
+//
+// base for lbph, calc features on the whole image, the hist on a grid,
+//   so we avoid to waste border pixels
+//
+
+
+struct GriddedHist 
+{
+    Mat_<float> weights;
+    int GRIDX,GRIDY;
+    bool doWeight;
+
+
+    GriddedHist(int gridx=8, int gridy=8, bool doweight=false)
+        : weights(8,8)
+        , GRIDX(gridx)
+        , GRIDY(gridy)
+        , doWeight(doweight)
+    {
+        if (doWeight) // not all patches have the same relevance.
+        {
+            weights << 1, 1, 1, 1, 1, 1, 1, 1,
+                       1, 2, 2, 2, 2, 2, 2, 1,
+                       1, 3, 3, 3, 3, 3, 3, 1,
+                       1, 3, 3, 3, 3, 3, 3, 1,
+                       1, 2, 3, 3, 3, 3, 2, 1,
+                       1, 2, 3, 3, 3, 3, 2, 1,
+                       1, 2, 3, 3, 3, 3, 2, 1,
+                       1, 1, 1, 1, 1, 1, 1, 1;
+            if (GRIDX != weights.rows || GRIDY != weights.cols)
+                resize(weights, weights, Size(GRIDX,GRIDY));
+            normalize(weights, weights);
+        }
+    }
+
+    void hist(const Mat &feature, Mat &histo, int histSize=256) const
+    {
+        histo.release();
+        //const float range[] = { 0, 256 } ;
+        //const float* hist_range[] = { range };
+        int sw = (feature.cols)/(GRIDX+1);
+        int sh = (feature.rows)/(GRIDY+1);
+        for (int i=0; i<GRIDX; i++)
+        {
+            for (int j=0; j<GRIDY; j++)
             {
-                uchar v = 0;
-                v |= ((I(r,c) - I(r  ,c-2)) > (I(r,c) - I(r-2,c  ))) * 1;
-                v |= ((I(r,c) - I(r-1,c-1)) > (I(r,c) - I(r-1,c+1))) * 2;
-                v |= ((I(r,c) - I(r-2,c  )) > (I(r,c) - I(r  ,c+2))) * 4;
-                v |= ((I(r,c) - I(r-1,c+1)) > (I(r,c) - I(r+1,c+1))) * 8;
-                v |= ((I(r,c) - I(r  ,c+2)) > (I(r,c) - I(r+1,c  ))) * 16;
-                v |= ((I(r,c) - I(r+1,c+1)) > (I(r,c) - I(r+1,c-1))) * 32;
-                v |= ((I(r,c) - I(r+1,c  )) > (I(r,c) - I(r  ,c-2))) * 64;
-                v |= ((I(r,c) - I(r+1,c-1)) > (I(r,c) - I(r-1,c-1))) * 128;
-                fI(r,c) = v;
+                Rect patch(i*sw,j*sh,sw,sh);
+                Mat fi( feature, patch );
+                Mat_<float> h(1,histSize,0.0f);
+                //calcHist( &fi, 1, 0, Mat(), h, 1, &histSize, &hist_range, true, false );
+                calc_hist(fi,h);
+                if (doWeight)
+                    h *= weights(j,i);
+                histo.push_back(h.reshape(1,1));
             }
         }
-        hist(fI, features, 256, 256);
+        normalize(histo.reshape(1,1),histo);
+    }
+};
+
+
+
+struct ElasticParts
+{
+    void hist(const Mat &feature, Mat &histo, int histSize=256) const
+    {
+        const int nparts = 64;
+        static struct Part { 
+            Rect r; double eq,ne,k; 
+            Part() {}
+            Part(int x,int y,int w,int h,double e=0,double n=0)
+                : r(x,y,w,h)
+                , eq(e)
+                , ne(n)
+                , k(0)
+            {}
+        } parts[nparts] = {
+Part(15,23,48, 5), // 0.701167 // 1.504 // gen5
+Part(24, 0,22,11),
+Part(24,23,55, 4),
+Part(56,21,34, 7),
+Part(24, 9,25,10),
+Part(25,23,52, 4),
+Part( 0,52,60, 4),
+Part(40,27,35, 7),
+Part(36,59,31, 8),
+Part( 5,24,38, 6),
+Part( 5, 0,21,11),
+Part( 4, 2,24,10),
+Part( 1,51,36, 6),
+Part(25,29,18,13),
+Part(10, 1,26, 9),
+Part(50,27,25,10),
+Part(42,17,17,14),
+Part( 6,26,30, 8),
+Part(34, 6,13,19),
+Part(65, 1,24,10),
+Part(20,24,37, 6),
+Part(22,22,41, 6),
+Part(60,22,30, 7),
+Part(53,21,37, 6),
+Part(32,19,13,19),
+Part(45,17,29, 8),
+Part(30,23,55, 4),
+Part(52,17,30, 8),
+Part(21,27,44, 5),
+Part(39,27,38, 6),
+Part(53,12,28, 8),
+Part(22,29,21,11),
+Part(16, 6,35, 7),
+Part(31,20,11,22),
+Part(14,24,55, 4),
+Part(37,15,13,19),
+Part(30,61,38, 6),
+Part(76,11,14,17),
+Part(38,13,25,10),
+Part(26,30,17,14),
+Part(25,30,20,12),
+Part( 1, 6,17,14),
+Part( 5, 8,22,11),
+Part(56,11,24,10),
+Part(69,14,20,12),
+Part(41,20,16,15),
+Part(22,22,43, 5),
+Part(64,58,16,15),
+Part(70,42,13,19),
+Part(39,14,15,16),
+Part(25,60,30, 8),
+Part(10,64,23,10),
+Part(26, 1,17,14),
+Part(46,77,20,12),
+Part(56, 8,15,16),
+Part(66,55,19,13),
+Part( 8,64,28, 8),
+Part(70,53,20,12),
+Part(62, 7,12,20),
+Part( 2,24,56, 4),
+Part(25,48,25,10),
+Part(44,27,34, 7),
+Part(58,21,31, 8),
+Part(49,80,16,10)
+        };
+        histo.release();
+        for (size_t k=0; k<nparts; k++)
+        {
+            Mat roi(feature, parts[k].r);
+            Mat_<float> h(1, histSize, 0.0f);
+            calc_hist(roi, h);
+            histo.push_back(h.reshape(1,1));
+        }
+        normalize(histo.reshape(1,1),histo);
+    }
+};
+
+
+
+//
+// layered baseclass
+//
+template <typename Feature, typename Grid>
+struct UniformExtractor : public TextureFeature::Extractor
+{
+    Feature ext;
+    Grid grid;
+    enum UniformTable
+    {
+        UniformNormal,    // 58 + noise
+        UniformModified,  // 58
+        UniformReduced,   // 16 + noise
+        UniformNone = -1  // 256, as-is
+    };
+    int utable;
+
+    UniformExtractor(const Feature &ext, const Grid &grid, int u_table=-1)
+        : grid(grid)
+        , ext(ext)
+        , utable(u_table)
+    {}
+
+    // TextureFeature::Extractor
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        Mat fI;
+        int histSize = ext(img, fI);
+
+        if (utable != UniformNone)
+        {
+            static int uniform[3][256] = {
+            {   // the well known original uniform2 pattern
+                0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
+                14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
+                58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
+                58,58,58,58,58,58,58,58,58,58,58,58,23,58,58,58,58,58,58,58,58,58,58,58,58,58,
+                58,58,24,58,58,58,58,58,58,58,25,58,58,58,26,58,27,28,29,30,58,31,58,58,58,32,58,
+                58,58,58,58,58,58,33,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,34,58,58,58,58,
+                58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
+                58,35,36,37,58,38,58,58,58,39,58,58,58,58,58,58,58,40,58,58,58,58,58,58,58,58,58,
+                58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
+                58,58,58,50,51,52,58,53,54,55,56,57 },
+            {   // 'noise' ones mapped to their closest hamming uniform neighbour
+                0,1,2,3,4,1,5,6,7,1,2,3,8,8,9,10,11,1,2,3,4,1,5,6,12,12,12,15,13,13,14,15,16,1,2,
+                3,4,1,5,6,7,1,2,3,8,8,9,10,17,17,17,3,17,17,20,21,18,18,18,21,19,19,20,21,22,1,
+                2,3,4,1,5,6,7,1,2,3,8,8,9,10,11,1,2,3,4,58,5,6,12,12,12,15,13,13,14,15,23,23,23,
+                44,23,23,5,45,23,23,23,28,26,26,27,28,24,24,24,49,24,24,27,28,25,25,25,28,26,26,
+                27,28,29,30,2,31,4,30,5,32,7,30,2,31,8,33,9,33,11,30,2,31,4,30,5,32,12,12,12,34,
+                13,34,14,34,16,30,2,31,4,30,5,32,7,30,58,31,8,33,9,33,17,48,17,49,17,35,20,35,18,
+                52,18,35,19,35,20,35,36,37,36,38,36,37,39,39,36,37,36,38,8,40,40,40,36,37,36,38,
+                36,37,39,39,51,52,41,41,54,41,41,41,42,43,42,44,42,43,45,45,42,43,42,44,54,46,46,
+                46,47,48,47,49,47,48,50,50,51,52,51,53,54,55,56,57 },
+            {   // 'reduced' set (16 + 1 bins)
+                16,0,16,16,16,16,1,16,2,16,16,16,16,16,16,16,3,16,16,16,16,16,16,16,16,16,16,16,
+                16,16,16,4,5,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
+                16,16,16,16,16,16,6,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
+                16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
+                16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,7,16,8,16,16,16,16,16,16,16,16,16,16,
+                16,16,16,16,16,16,9,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
+                16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,
+                16,16,16,16,16,10,16,16,16,11,16,16,16,16,16,16,16,12,16,16,16,16,16,16,16,16,16,
+                16,16,16,16,16,16,16,16,16,16,13,16,16,16,16,16,16,16,16,16,16,16,16,16,14,16,15,
+                16,16,16,16,16,16,16,16,16,16,16,16 }
+            };
+
+            Mat lu(1, 256, CV_8U, uniform[utable]);
+            LUT(fI, lu, fI);
+            int fsiz[3] = {59, 58, 17};
+            histSize = fsiz[utable];
+        }
+
+        grid.hist(fI, features, histSize);
+        return features.total() * features.elemSize();
+    }
+};
+
+
+
+//
+////
+//// concat histograms from lbp(u) features generated from a bank of gabor filtered images
+////
+
+template <typename Feature, typename Grid>
+class ExtractorGabor : public UniformExtractor<Feature,Grid>
+{
+    Size kernel_size;
+public:
+    ExtractorGabor(const Feature &ext, const Grid &grid, int u_table=UniformNone, int kernel_siz=8)
+        : UniformExtractor(ext, grid, u_table)
+        , kernel_size(kernel_siz, kernel_siz)
+    {}
+    void gabor(const Mat &src_f, Mat &features,double sigma, double theta, double lambda, double gamma, double psi) const
+    {
+        Mat dest,dest8u,his;
+        cv::filter2D(src_f, dest, CV_32F, getGaborKernel(kernel_size, sigma,theta, lambda, gamma, psi));
+        dest.convertTo(dest8u, CV_8U);
+        UniformExtractor::extract(dest8u, his);
+        features.push_back(his.reshape(1, 1));
+    }
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        Mat src_f;
+        img.convertTo(src_f, CV_32F, 1.0/255.0);
+        gabor(src_f, features, 8,4,90,15,0);
+        gabor(src_f, features, 8,4,45,30,1);
+        gabor(src_f, features, 8,4,45,45,0);
+        gabor(src_f, features, 8,4,90,60,1);
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
 };
+//
 
 //
 // grid it into 8x8 image patches, do a dct on each,
@@ -773,47 +624,88 @@ typedef ExtractorGridFeature<xfeatures2d::BriefDescriptorExtractor> ExtractorBRI
 //
 
 cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw, int resh)
-{   return makePtr<ExtractorPixels>(resw, resh); }
+{   
+    return makePtr<ExtractorPixels>(resw, resh); 
+}
 
-cv::Ptr<TextureFeature::Extractor> createExtractorMoments()
-{   return makePtr<ExtractorMoments>(); }
+//cv::Ptr<TextureFeature::Extractor> createExtractorMoments()
+//{   return makePtr<ExtractorMoments>(); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gx, int gy, int utable)
-{   return makePtr<ExtractorLbp>(gx, gy, utable); }
+{
+    return makePtr< UniformExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(gx, gy), utable); 
+}
 
 cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx, int gy)
-{   return makePtr<ExtractorFPLbp>(gx, gy); }
+{
+    return makePtr< UniformExtractor<FeatureFPLbp,GriddedHist> >(FeatureFPLbp(), GriddedHist(gx, gy)); 
+}
 
 cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx, int gy)
-{   return makePtr<ExtractorTPLbp>(gx, gy); }
+{
+    return makePtr< UniformExtractor<FeatureTPLbp,GriddedHist> >(FeatureTPLbp(), GriddedHist(gx, gy)); 
+}
 
 cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx, int gy, int utable)
-{   return makePtr<ExtractorBGC1>(gx, gy, utable); }
+{
+    return makePtr< UniformExtractor<FeatureBGC1,GriddedHist> >(FeatureBGC1(), GriddedHist(gx, gy)); 
+}
 
-cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx, int gy)
-{   return makePtr<ExtractorLQP>(gx, gy); }
+//cv::Ptr<TextureFeature::Extractor> createExtractorLQP(int gx, int gy)
+//{   return makePtr<ExtractorLQP>(gx, gy); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx, int gy)
-{   return makePtr<ExtractorMTS>(gx, gy); }
+{
+    return makePtr< UniformExtractor<FeatureMTS,GriddedHist> >(FeatureMTS(), GriddedHist(gx, gy)); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticMTS()
+{
+    return makePtr< UniformExtractor<FeatureMTS,ElasticParts> >(FeatureMTS(), ElasticParts()); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticLbp()
+{
+    return makePtr< UniformExtractor<FeatureLbp,ElasticParts> >(FeatureLbp(), ElasticParts()); 
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticFpLbp()
+{
+    return makePtr< UniformExtractor<FeatureFPLbp,ElasticParts> >(FeatureFPLbp(), ElasticParts()); 
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticTpLbp()
+{
+    return makePtr< UniformExtractor<FeatureTPLbp,ElasticParts> >(FeatureTPLbp(), ElasticParts()); 
+}
 
 cv::Ptr<TextureFeature::Extractor> createExtractorSTU(int gx, int gy,int kp1)
-{   return makePtr<ExtractorSTU>(); }
+{
+    return makePtr< UniformExtractor<FeatureSTU,GriddedHist> >(FeatureSTU(kp1), GriddedHist(gx, gy)); 
+}
 
-cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx, int gy)
-{   return makePtr<ExtractorGLCM>(gx, gy); }
+//cv::Ptr<TextureFeature::Extractor> createExtractorGLCM(int gx, int gy)
+//{   return makePtr<ExtractorGLCM>(gx, gy); }
 
-cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx, int gy, int tf)
-{   return makePtr<WLD>(gx, gy, tf); }
+//cv::Ptr<TextureFeature::Extractor> createExtractorWLD(int gx, int gy, int tf)
+//{   return makePtr<WLD>(gx, gy, tf); }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx, int gy, int u_table, int kernel_siz)
-{   return makePtr<ExtractorGaborLbp>(gx, gy, u_table, kernel_siz); }
+{
+    return makePtr< ExtractorGabor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(gx, gy), u_table, kernel_siz); 
+}
 
 cv::Ptr<TextureFeature::Extractor> createExtractorDct()
-{   return makePtr<ExtractorDct>(); }
+{   
+    return makePtr<ExtractorDct>(); 
+}
 
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g)
-{   return makePtr<ExtractorORBGrid>(g); }
+{
+    return makePtr<ExtractorORBGrid>(g); 
+}
 
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g)
-{   return makePtr<ExtractorSIFTGrid>(g); }
+{
+    return makePtr<ExtractorSIFTGrid>(g); 
+}
 
