@@ -577,11 +577,13 @@ public:
     }
 };
 
-
+//
+// binary (2 class) svm, same or not same based on distance
+//
 struct VerifierSVM : public VerifierPairDistance<int>
 {
-    VerifierSVM(int df=2, float sca=0)
-        : VerifierPairDistance(df, sca)
+    VerifierSVM(int distFlag=2, float scale=0)
+        : VerifierPairDistance(distFlag, scale)
     {
         ml::SVM::Params param;
         param.kernelType = ml::SVM::LINEAR;
@@ -598,10 +600,13 @@ struct VerifierSVM : public VerifierPairDistance<int>
 };
 
 
-struct VerifierEM : public VerifierPairDistance<int> // restricted !
+//
+// the only restricted / unsupervised case!
+//
+struct VerifierEM : public VerifierPairDistance<int> 
 {
-    VerifierEM(int df=2, float sca=0)
-        : VerifierPairDistance(df,sca)
+    VerifierEM(int distFlag=2, float scale=0)
+        : VerifierPairDistance(distFlag,scale)
     {}
 
     virtual int train(const Mat &features, const Mat &labels)
@@ -638,8 +643,8 @@ struct VerifierEM : public VerifierPairDistance<int> // restricted !
 
 struct VerifierLR : public VerifierPairDistance<float> // unrestricted/supervised !
 {
-    VerifierLR(int df=2, float sca=0)
-        : VerifierPairDistance(df,sca)
+    VerifierLR(int distFlag=2, float scale=0)
+        : VerifierPairDistance(distFlag,scale)
     {
         ml::LogisticRegression::Params params;
         params.alpha = 0.005;

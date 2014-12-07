@@ -47,7 +47,7 @@
 
 #include "MyFace.h"
 
-#if 1
+#if 0
  #include "profile.h"
 #else
  #define PROFILE ;
@@ -99,10 +99,10 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
-            "{ ext e          |8   | extractor enum }"
-            "{ cls c          |5   | classifier enum }"
+            "{ ext e          |0   | extractor enum }"
+            "{ cls c          |0   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
-            "{ crop C         |80  | pre-crop }"
+            "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ flip f         |0   | add a flipped image }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
@@ -120,8 +120,9 @@ int main(int argc, const char *argv[])
     int crp = parser.get<int>("crop");
     bool flp = parser.get<bool>("flip");
     string trainMethod(parser.get<string>("train")); 
-    
-    cerr << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << flp << " " << trainMethod << endl;
+    cout << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << flp << " " << trainMethod << '\r';
+
+    int64 t0 = getTickCount();
     Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,cls,pre,crp,flp);
 
     // These vectors hold the images and corresponding labels.
@@ -186,7 +187,7 @@ int main(int argc, const char *argv[])
                     labels.push_back(currNum2);
                 }
             }
-            cerr << "got data: " << j << " " <<images.size();
+            //cerr << "got data: " << j << " " <<images.size();
             {
                 PROFILEX("train");
                 model->train(images, labels);
@@ -210,11 +211,12 @@ int main(int argc, const char *argv[])
             else
                 incorrect++;
 
-            printf("%4u %5u/%-5u %d                          \r", i, correct,incorrect, example->same );
+            double acc = double(correct)/(correct+incorrect);
         }
     
-        p.push_back(1.0*correct/(correct+incorrect));
-        printf("correct: %u, from: %u -> %f                    \n", correct, correct+incorrect, p.back());
+        double acc = double(correct)/(correct+incorrect);
+        printf("%4u %5u/%-5u  %2.3f                        \r", j, correct,incorrect,acc );
+        p.push_back(acc);
     }
 
     double mu = 0.0;
@@ -230,7 +232,13 @@ int main(int argc, const char *argv[])
     }
     sigma = sqrt(sigma/p.size());
     double se = sigma/sqrt(double(p.size()));
-    printf("estimated mean accuracy: %f and the standard error of the mean: %f\n", mu, se);
+
+    int64 t1 = getTickCount();
+    cerr << format("%-8s",myface::EXS[ext]) << " ";
+    cerr << format("%-9s",myface::CLS[cls]) << " ";
+    cerr << format("%-8s",myface::PPS[pre]) << " ";
+    cerr << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
+    cerr << format("%9.4f %9.4f %9.4f", mu, se, ((t1-t0)/getTickFrequency())) << endl;
 
     return 0;
 }

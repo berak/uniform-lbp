@@ -284,65 +284,69 @@ static void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo)
     }
 }
 
-//
-// base for lbph, calc features on the whole image, the hist on a grid,
-//   so we avoid to waste border pixels
-//
-
 
 struct GriddedHist 
 {
-    Mat_<float> weights;
     int GRIDX,GRIDY;
-    bool doWeight;
 
 
-    GriddedHist(int gridx=8, int gridy=8, bool doweight=false)
-        : weights(8,8)
-        , GRIDX(gridx)
+    GriddedHist(int gridx=8, int gridy=8)
+        : GRIDX(gridx)
         , GRIDY(gridy)
-        , doWeight(doweight)
+    {}
+
+    void hist_patch(const Mat &fi, Mat &histo, int histSize=256) const
     {
-        if (doWeight) // not all patches have the same relevance.
-        {
-            weights << 1, 1, 1, 1, 1, 1, 1, 1,
-                       1, 2, 2, 2, 2, 2, 2, 1,
-                       1, 3, 3, 3, 3, 3, 3, 1,
-                       1, 3, 3, 3, 3, 3, 3, 1,
-                       1, 2, 3, 3, 3, 3, 2, 1,
-                       1, 2, 3, 3, 3, 3, 2, 1,
-                       1, 2, 3, 3, 3, 3, 2, 1,
-                       1, 1, 1, 1, 1, 1, 1, 1;
-            if (GRIDX != weights.rows || GRIDY != weights.cols)
-                resize(weights, weights, Size(GRIDX,GRIDY));
-            normalize(weights, weights);
-        }
+        Mat_<float> h(1,histSize,0.0f);
+        calc_hist(fi,h);
+        histo.push_back(h.reshape(1,1));
     }
 
     void hist(const Mat &feature, Mat &histo, int histSize=256) const
     {
         histo.release();
-        //const float range[] = { 0, 256 } ;
-        //const float* hist_range[] = { range };
-        int sw = (feature.cols)/(GRIDX+1);
-        int sh = (feature.rows)/(GRIDY+1);
-        for (int i=0; i<GRIDX; i++)
+        int sw = (feature.cols)/(GRIDX);
+        int sh = (feature.rows)/(GRIDY);
+        for (int i=0; i<GRIDX-1; i++)
         {
-            for (int j=0; j<GRIDY; j++)
+            for (int j=0; j<GRIDY-1; j++)
             {
                 Rect patch(i*sw,j*sh,sw,sh);
-                Mat fi( feature, patch );
-                Mat_<float> h(1,histSize,0.0f);
-                //calcHist( &fi, 1, 0, Mat(), h, 1, &histSize, &hist_range, true, false );
-                calc_hist(fi,h);
-                if (doWeight)
-                    h *= weights(j,i);
-                histo.push_back(h.reshape(1,1));
+                hist_patch(feature(patch), histo,histSize);
             }
         }
         normalize(histo.reshape(1,1),histo);
     }
 };
+
+struct OverlapGridHist : public GriddedHist
+{
+    int over;
+
+
+    OverlapGridHist(int gridx=8, int gridy=8, int over=0) 
+        : GriddedHist(gridx, gridy)
+        , over(over)
+    { }
+
+    void hist(const Mat &feature, Mat &histo, int histSize=256) const
+    {
+        histo.release();
+        int sw = (feature.cols)/GRIDX;
+        int sh = (feature.rows)/GRIDY;
+        for (int r=over; r<feature.rows-sh-2*over; r+=sh)
+        {
+            for (int c=over; c<feature.cols-sh-2*over; c+=sw)
+            {
+                Rect patch(c-over,r-over,sw+2*over,sh+2*over);
+                hist_patch(feature(patch), histo,histSize);
+            }
+        }
+        normalize(histo.reshape(1,1),histo);
+    }
+};
+
+
 
 
 
@@ -352,80 +356,34 @@ struct ElasticParts
     {
         const int nparts = 64;
         static struct Part { 
-            Rect r; double eq,ne,k; 
+            Rect r; 
+            //double eq,ne,k; 
             Part() {}
-            Part(int x,int y,int w,int h,double e=0,double n=0)
+            //Part(int x,int y,int w,int h,double e=0,double n=0)
+            Part(int x,int y,int w,int h)
                 : r(x,y,w,h)
-                , eq(e)
-                , ne(n)
-                , k(0)
+                //, eq(e)
+                //, ne(n)
+                //, k(0)
             {}
         } parts[nparts] = {
-Part(15,23,48, 5), // 0.701167 // 1.504 // gen5
-Part(24, 0,22,11),
-Part(24,23,55, 4),
-Part(56,21,34, 7),
-Part(24, 9,25,10),
-Part(25,23,52, 4),
-Part( 0,52,60, 4),
-Part(40,27,35, 7),
-Part(36,59,31, 8),
-Part( 5,24,38, 6),
-Part( 5, 0,21,11),
-Part( 4, 2,24,10),
-Part( 1,51,36, 6),
-Part(25,29,18,13),
-Part(10, 1,26, 9),
-Part(50,27,25,10),
-Part(42,17,17,14),
-Part( 6,26,30, 8),
-Part(34, 6,13,19),
-Part(65, 1,24,10),
-Part(20,24,37, 6),
-Part(22,22,41, 6),
-Part(60,22,30, 7),
-Part(53,21,37, 6),
-Part(32,19,13,19),
-Part(45,17,29, 8),
-Part(30,23,55, 4),
-Part(52,17,30, 8),
-Part(21,27,44, 5),
-Part(39,27,38, 6),
-Part(53,12,28, 8),
-Part(22,29,21,11),
-Part(16, 6,35, 7),
-Part(31,20,11,22),
-Part(14,24,55, 4),
-Part(37,15,13,19),
-Part(30,61,38, 6),
-Part(76,11,14,17),
-Part(38,13,25,10),
-Part(26,30,17,14),
-Part(25,30,20,12),
-Part( 1, 6,17,14),
-Part( 5, 8,22,11),
-Part(56,11,24,10),
-Part(69,14,20,12),
-Part(41,20,16,15),
-Part(22,22,43, 5),
-Part(64,58,16,15),
-Part(70,42,13,19),
-Part(39,14,15,16),
-Part(25,60,30, 8),
-Part(10,64,23,10),
-Part(26, 1,17,14),
-Part(46,77,20,12),
-Part(56, 8,15,16),
-Part(66,55,19,13),
-Part( 8,64,28, 8),
-Part(70,53,20,12),
-Part(62, 7,12,20),
-Part( 2,24,56, 4),
-Part(25,48,25,10),
-Part(44,27,34, 7),
-Part(58,21,31, 8),
-Part(49,80,16,10)
-        };
+            Part(15,23,48, 5), // 0.701167 // 1.504 // gen5
+            Part(24, 0,22,11),            Part(24,23,55, 4),            Part(56,21,34, 7),            Part(24, 9,25,10),
+            Part(25,23,52, 4),            Part( 0,52,60, 4),            Part(40,27,35, 7),            Part(36,59,31, 8),
+            Part( 5,24,38, 6),            Part( 5, 0,21,11),            Part( 4, 2,24,10),            Part( 1,51,36, 6),
+            Part(25,29,18,13),            Part(10, 1,26, 9),            Part(50,27,25,10),            Part(42,17,17,14),
+            Part( 6,26,30, 8),            Part(34, 6,13,19),            Part(65, 1,24,10),            Part(20,24,37, 6),
+            Part(22,22,41, 6),            Part(60,22,30, 7),            Part(53,21,37, 6),            Part(32,19,13,19),
+            Part(45,17,29, 8),            Part(30,23,55, 4),            Part(52,17,30, 8),            Part(21,27,44, 5),
+            Part(39,27,38, 6),            Part(53,12,28, 8),            Part(22,29,21,11),            Part(16, 6,35, 7),
+            Part(31,20,11,22),            Part(14,24,55, 4),            Part(37,15,13,19),            Part(30,61,38, 6),
+            Part(76,11,14,17),            Part(38,13,25,10),            Part(26,30,17,14),            Part(25,30,20,12),
+            Part( 1, 6,17,14),            Part( 5, 8,22,11),            Part(56,11,24,10),            Part(69,14,20,12),
+            Part(41,20,16,15),            Part(22,22,43, 5),            Part(64,58,16,15),            Part(70,42,13,19),
+            Part(39,14,15,16),            Part(25,60,30, 8),            Part(10,64,23,10),            Part(26, 1,17,14),
+            Part(46,77,20,12),            Part(56, 8,15,16),            Part(66,55,19,13),            Part( 8,64,28, 8),
+            Part(70,53,20,12),            Part(62, 7,12,20),            Part( 2,24,56, 4),            Part(25,48,25,10),
+            Part(44,27,34, 7),            Part(58,21,31, 8),            Part(49,80,16,10)        };
         histo.release();
         for (size_t k=0; k<nparts; k++)
         {
@@ -441,7 +399,8 @@ Part(49,80,16,10)
 
 
 //
-// layered baseclass
+//
+// layered base for lbph, calc features on the whole image, the hist on a grid,
 //
 template <typename Feature, typename Grid>
 struct UniformExtractor : public TextureFeature::Extractor
@@ -659,6 +618,23 @@ cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx, int gy)
     return makePtr< UniformExtractor<FeatureMTS,GriddedHist> >(FeatureMTS(), GriddedHist(gx, gy)); 
 }
 
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapMTS(int gx, int gy, int over)
+{
+    return makePtr< UniformExtractor<FeatureMTS,OverlapGridHist> >(FeatureMTS(), OverlapGridHist(gx, gy, over)); 
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapFpLbp(int gx, int gy, int over)
+{
+    return makePtr< UniformExtractor<FeatureFPLbp,OverlapGridHist> >(FeatureFPLbp(), OverlapGridHist(gx, gy, over)); 
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx, int gy, int over)
+{
+    return makePtr< UniformExtractor<FeatureTPLbp,OverlapGridHist> >(FeatureTPLbp(), OverlapGridHist(gx, gy, over)); 
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapLbp(int gx, int gy, int over)
+{
+    return makePtr< UniformExtractor<FeatureLbp,OverlapGridHist> >(FeatureLbp(), OverlapGridHist(gx, gy, over)); 
+}
+
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticMTS()
 {
     return makePtr< UniformExtractor<FeatureMTS,ElasticParts> >(FeatureMTS(), ElasticParts()); 
@@ -673,6 +649,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorElasticFpLbp()
 {
     return makePtr< UniformExtractor<FeatureFPLbp,ElasticParts> >(FeatureFPLbp(), ElasticParts()); 
 }
+
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticTpLbp()
 {
     return makePtr< UniformExtractor<FeatureTPLbp,ElasticParts> >(FeatureTPLbp(), ElasticParts()); 

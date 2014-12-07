@@ -47,6 +47,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, i
 cv::Ptr<TextureFeature::Extractor> createExtractorDct();
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g=10);
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g=10);
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapMTS(int gx=8,int gy=8,int over=5);
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapLbp(int gx=8,int gy=8,int over=5);
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapFpLbp(int gx=8,int gy=8,int over=5);
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx=8,int gy=8,int over=5);
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticMTS();
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticLbp();
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticFpLbp();
