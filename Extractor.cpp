@@ -61,18 +61,16 @@ struct FeatureLbp
 {
     int operator() (const Mat &I, Mat &fI) const
     {
-#if 0
-        SHIFTED_MATS_3x3(I);
+        //SHIFTED_MATS_3x3(I);
+        //fI = ((I7>IC)&128) |
+        //     ((I6>IC)&64)  |
+        //     ((I5>IC)&32)  |
+        //     ((I4>IC)&16)  |
+        //     ((I3>IC)&8)   |
+        //     ((I2>IC)&4)   |
+        //     ((I1>IC)&2)   |
+        //     ((I0>IC)&1);
 
-        fI = ((I7>IC)&128) |
-             ((I6>IC)&64)  |
-             ((I5>IC)&32)  |
-             ((I4>IC)&16)  |
-             ((I3>IC)&8)   |
-             ((I2>IC)&4)   |
-             ((I1>IC)&2)   |
-             ((I0>IC)&1);
-#else
         Mat_<uchar> feature(I.size(),0);
         Mat_<uchar> img(I);
         const int m=1;
@@ -95,7 +93,6 @@ struct FeatureLbp
         }
         fI = feature;
         return 256;
-#endif
     }
 };
 
@@ -106,26 +103,46 @@ struct FeatureBGC1
 {
     int operator () (const Mat &I, Mat &fI) const
     {
-        SHIFTED_MATS_3x3(I);
+        //SHIFTED_MATS_3x3(I);
+        //fI = ((I7>=I0)&128) |
+        //     ((I6>=I7)& 64) |
+        //     ((I5>=I6)& 32) |
+        //     ((I4>=I5)& 16) |
+        //     ((I3>=I4)&  8) |
+        //     ((I2>=I3)&  4) |
+        //     ((I1>=I2)&  2) |
+        //     ((I0>=I1)&  1);
 
-        fI = ((I7>=I0)&128) |
-             ((I6>=I7)& 64) |
-             ((I5>=I6)& 32) |
-             ((I4>=I5)& 16) |
-             ((I3>=I4)&  8) |
-             ((I2>=I3)&  4) |
-             ((I1>=I2)&  2) |
-             ((I0>=I1)&  1);
-
+        Mat_<uchar> feature(I.size(),0);
+        Mat_<uchar> img(I);
+        const int m=1;
+        for (int r=m; r<img.rows-m; r++)
+        {
+            for (int c=m; c<img.cols-m; c++)
+            {
+                uchar v = 0;
+                uchar cen = img(r,c);
+                v |= (img(r-1,c  ) > img(r-1,c-1)) << 0;
+                v |= (img(r-1,c+1) > img(r-1,c  )) << 1;
+                v |= (img(r  ,c+1) > img(r-1,c+1)) << 2;
+                v |= (img(r+1,c+1) > img(r  ,c+1)) << 3;
+                v |= (img(r+1,c  ) > img(r+1,c+1)) << 4;
+                v |= (img(r+1,c-1) > img(r+1,c  )) << 5;
+                v |= (img(r  ,c-1) > img(r+1,c-1)) << 6;
+                v |= (img(r-1,c-1) > img(r  ,c-1)) << 7;
+                feature(r,c) = v;
+            }
+        }
+        fI = feature;
         return 256;
     }
 };
 
+
 //
-////
-//// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
-//// "Texture description through histograms of equivalent patterns"
-////
+// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
+// "Texture description through histograms of equivalent patterns"
+//
 
 
 struct FeatureMTS
@@ -631,25 +648,32 @@ cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx, int gy, i
     return makePtr< UniformExtractor<FeatureTPLbp,OverlapGridHist> >(FeatureTPLbp(), OverlapGridHist(gx, gy, over));
 }
 
-cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx, int gy, int utable)
-{
-    return makePtr< UniformExtractor<FeatureBGC1,GriddedHist> >(FeatureBGC1(), GriddedHist(gx, gy));
-}
-
 cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx, int gy)
 {
     return makePtr< UniformExtractor<FeatureMTS,GriddedHist> >(FeatureMTS(), GriddedHist(gx, gy));
 }
-
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticMTS()
 {
     return makePtr< UniformExtractor<FeatureMTS,ElasticParts> >(FeatureMTS(), ElasticParts());
 }
-
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapMTS(int gx, int gy, int over)
 {
     return makePtr< UniformExtractor<FeatureMTS,OverlapGridHist> >(FeatureMTS(), OverlapGridHist(gx, gy, over));
 }
+
+cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx, int gy, int utable)
+{
+    return makePtr< UniformExtractor<FeatureBGC1,GriddedHist> >(FeatureBGC1(), GriddedHist(gx, gy));
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticBGC1()
+{
+    return makePtr< UniformExtractor<FeatureBGC1,ElasticParts> >(FeatureBGC1(), ElasticParts());
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapBGC1(int gx, int gy, int over)
+{
+    return makePtr< UniformExtractor<FeatureBGC1,OverlapGridHist> >(FeatureBGC1(), OverlapGridHist(gx, gy, over));
+}
+
 
 cv::Ptr<TextureFeature::Extractor> createExtractorSTU(int gx, int gy,int kp1)
 {
@@ -659,6 +683,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorSTU(int gx, int gy,int kp1)
 cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx, int gy, int u_table, int kernel_siz)
 {
     return makePtr< ExtractorGabor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(gx, gy), u_table, kernel_siz);
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticGaborLbp(int u_table, int kernel_siz)
+{
+    return makePtr< ExtractorGabor<FeatureLbp,ElasticParts> >(FeatureLbp(), ElasticParts(), u_table, kernel_siz);
 }
 
 cv::Ptr<TextureFeature::Extractor> createExtractorDct()
