@@ -583,7 +583,7 @@ public:
 struct VerifierSVM : public VerifierPairDistance<int>
 {
     VerifierSVM(int distFlag=2, float scale=0)
-        : VerifierPairDistance(distFlag, scale)
+        : VerifierPairDistance<int>(distFlag, scale)
     {
         ml::SVM::Params param;
         param.kernelType = ml::SVM::LINEAR;
@@ -606,7 +606,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
 struct VerifierEM : public VerifierPairDistance<int>
 {
     VerifierEM(int distFlag=2, float scale=0)
-        : VerifierPairDistance(distFlag,scale)
+        : VerifierPairDistance<int>(distFlag,scale)
     {}
 
     virtual int train(const Mat &features, const Mat &labels)
@@ -644,7 +644,7 @@ struct VerifierEM : public VerifierPairDistance<int>
 struct VerifierLR : public VerifierPairDistance<float> // unrestricted/supervised !
 {
     VerifierLR(int distFlag=2, float scale=0)
-        : VerifierPairDistance(distFlag,scale)
+        : VerifierPairDistance<float>(distFlag,scale)
     {
         ml::LogisticRegression::Params params;
         params.alpha = 0.005;
