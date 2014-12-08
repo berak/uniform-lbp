@@ -509,8 +509,8 @@ class ExtractorGabor : public UniformExtractor<Feature,Grid>
 {
     Size kernel_size;
 public:
-    ExtractorGabor(const Feature &ext, const Grid &grid, int u_table=UniformNone, int kernel_siz=8)
-        : UniformExtractor(ext, grid, u_table)
+    ExtractorGabor(const Feature &ext, const Grid &grid, int u_table=-1, int kernel_siz=8)
+        : UniformExtractor<Feature,Grid>(ext, grid, u_table)
         , kernel_size(kernel_siz, kernel_siz)
     {}
     void gabor(const Mat &src_f, Mat &features,double sigma, double theta, double lambda, double gamma, double psi) const
@@ -518,7 +518,7 @@ public:
         Mat dest,dest8u,his;
         cv::filter2D(src_f, dest, CV_32F, getGaborKernel(kernel_size, sigma,theta, lambda, gamma, psi));
         dest.convertTo(dest8u, CV_8U);
-        UniformExtractor::extract(dest8u, his);
+        UniformExtractor<Feature,Grid>::extract(dest8u, his);
         features.push_back(his.reshape(1, 1));
     }
     virtual int extract(const Mat &img, Mat &features) const
