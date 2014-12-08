@@ -31,14 +31,11 @@ static Mat tofloat(const Mat &src)
 }
 
 
-class ClassifierNearest : public TextureFeature::Classifier
+struct ClassifierNearest : public TextureFeature::Classifier
 {
-protected:
     Mat features;
     Mat labels;
     int flag;
-
-public:
 
     ClassifierNearest(int flag=NORM_L2) : flag(flag) {}
 
@@ -75,9 +72,8 @@ public:
     }
 };
 
-class ClassifierNearestFloat : public ClassifierNearest
+struct ClassifierNearestFloat : public ClassifierNearest
 {
-public:
 
     ClassifierNearestFloat(int flag=NORM_L2) : ClassifierNearest(flag) {}
 
@@ -98,10 +94,8 @@ public:
 // just swap the comparison
 //   the flag enums are overlapping, so i like to have this in a different class
 //
-class ClassifierHist : public ClassifierNearestFloat
+struct ClassifierHist : public ClassifierNearestFloat
 {
-public:
-
     ClassifierHist(int flag=HISTCMP_CHISQR)
         : ClassifierNearestFloat(flag)
     {}
@@ -117,10 +111,8 @@ public:
 //
 // Negated Mahalanobis Cosine Distance
 //
-class ClassifierCosine : public ClassifierNearest
+struct ClassifierCosine : public ClassifierNearest
 {
-public:
-    // ClassifierNearest
     virtual double distance(const cv::Mat &trainFeature, const cv::Mat &testFeature) const
     {
         double a = trainFeature.dot(testFeature);
@@ -133,12 +125,10 @@ public:
 
 
 
-class ClassifierKNN : public TextureFeature::Classifier
+struct ClassifierKNN : public TextureFeature::Classifier
 {
     Ptr<ml::KNearest> knn;
     int K;
-
-public:
 
     ClassifierKNN(int k=1)
         : knn(ml::KNearest::create())
@@ -167,9 +157,8 @@ public:
 //
 // single svm, multi class.
 //
-class ClassifierSvm : public TextureFeature::Classifier
+struct ClassifierSvm : public TextureFeature::Classifier
 {
-public:
     Ptr<ml::SVM> svm;
     ml::SVM::Params param;
 
@@ -215,12 +204,10 @@ public:
 //
 // single class(one vs. all), multi svm approach
 //
-class ClassifierSvmMulti : public TextureFeature::Classifier
+struct ClassifierSvmMulti : public TextureFeature::Classifier
 {
     vector< Ptr<ml::SVM> > svms;
     ml::SVM::Params param;
-
-public:
 
     ClassifierSvmMulti()
     {
@@ -296,17 +283,13 @@ public:
 //   this is basically bytefish's code,
 //   (terribly) condensed to the bare minimum
 //
-class ClassifierEigen : public TextureFeature::Classifier
+struct ClassifierEigen : public TextureFeature::Classifier
 {
-protected:
-
     vector<Mat> _projections;
     Mat _labels;
     Mat _eigenvectors;
     Mat _mean;
     int _num_components;
-
-public:
 
     ClassifierEigen(int num_components=0)
         : _num_components(num_components)
@@ -364,10 +347,8 @@ public:
 };
 
 
-class ClassifierFisher : public ClassifierEigen
+struct ClassifierFisher : public ClassifierEigen
 {
-public:
-
     ClassifierFisher(int num_components=0)
         : ClassifierEigen(num_components)
     {}
@@ -480,12 +461,10 @@ struct VerifierHist : VerifierNearest
 };
 
 
-class VerifierFisher
+struct VerifierFisher
     : public virtual VerifierNearest
     , public virtual ClassifierFisher
 {
-public:
-
     VerifierFisher(int flag, int num_components=0)
         : VerifierNearest(flag)
         , ClassifierFisher(num_components)
@@ -522,13 +501,11 @@ public:
 //
 
 template < class LabelType >
-class VerifierPairDistance : public TextureFeature::Verifier
+struct VerifierPairDistance : public TextureFeature::Verifier
 {
-protected:
     Ptr<ml::StatModel> model;
     int dist_flag;
     float scale;
-public:
 
     VerifierPairDistance(int df=2, float sca=0)
         : dist_flag(df)
@@ -640,6 +617,18 @@ struct VerifierEM : public VerifierPairDistance<int>
     }
 };
 
+struct VerifierBoost : public VerifierPairDistance<int>
+{
+    VerifierBoost(int distFlag=2, float scale=0)
+        : VerifierPairDistance<int>(distFlag, scale)
+    {
+        ml::Boost::Params param;
+        param.boostType = ml::Boost::DISCRETE;
+        model = ml::Boost::create(param);
+    }
+};
+
+
 
 struct VerifierLR : public VerifierPairDistance<float> // unrestricted/supervised !
 {
@@ -714,4 +703,7 @@ cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc, float scale)
 
 cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc, float scale)
 { return makePtr<VerifierLR>(distfunc,scale); }
+
+cv::Ptr<TextureFeature::Verifier> createVerifierBoost(int distfunc, float scale)
+{ return makePtr<VerifierBoost>(distfunc,scale); }
 

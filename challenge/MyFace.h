@@ -54,6 +54,7 @@ namespace myface
         CL_SVM,
         CL_EM,
         CL_LR,
+        CL_BOOST,
         CL_COSINE,
         CL_FISHER,
         CL_MAX
@@ -68,6 +69,7 @@ namespace myface
         "SVM",
         "EM",
         "LR",
+        "BOOST",
         "COSINE",
         "FISHER",
         0

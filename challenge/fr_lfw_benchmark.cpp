@@ -100,7 +100,7 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
             "{ ext e          |0   | extractor enum }"
-            "{ cls c          |0   | classifier enum }"
+            "{ cls c          |9   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ flip f         |0   | add a flipped image }"

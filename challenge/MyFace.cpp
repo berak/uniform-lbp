@@ -16,7 +16,7 @@ namespace myface {
 class MyFace : public FaceVerifier
 {
     Ptr<TextureFeature::Extractor> ext;
-    Ptr<TextureFeature::Verifier> cls;
+    Ptr<TextureFeature::Verifier>  cls;
     Preprocessor pre;
     bool doFlip;
 
@@ -30,7 +30,7 @@ public:
         {
             case EXT_Pixels:   ext = createExtractorPixels(); break;
             case EXT_Lbp:      ext = createExtractorLbp(); break;
-            case EXT_Lbpu:     ext = createExtractorLbp(8,8,0); break;
+            case EXT_Lbpu:     ext = createExtractorLbp(8,8); break;
             case EXT_LBP_E:    ext = createExtractorElasticLbp(); break;
             case EXT_TPLbp:    ext = createExtractorTPLbp(); break;
             case EXT_TPLBP_E:  ext = createExtractorElasticTpLbp(); break;
@@ -58,6 +58,7 @@ public:
             case CL_SVM:       cls = createVerifierSVM(2); break;
             case CL_EM:        cls = createVerifierEM(2, 0.25f); break;
             case CL_LR:        cls = createVerifierLR(2, 0.5f); break;
+            case CL_BOOST:     cls = createVerifierBoost(2); break;
             case CL_FISHER:    cls = createVerifierFisher(); break;
             default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
             //case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;
