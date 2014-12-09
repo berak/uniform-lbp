@@ -390,7 +390,9 @@ struct ClassifierFisher : public ClassifierEigen
 
 
 
-
+//
+// train a single threshold value
+//
 struct VerifierNearest : TextureFeature::Verifier
 {
     double thresh;
@@ -617,6 +619,10 @@ struct VerifierEM : public VerifierPairDistance<int>
     }
 };
 
+
+//
+// crashes weirdly , atm.
+//
 struct VerifierBoost : public VerifierPairDistance<int>
 {
     VerifierBoost(int distFlag=2, float scale=0)
@@ -629,8 +635,10 @@ struct VerifierBoost : public VerifierPairDistance<int>
 };
 
 
-
-struct VerifierLR : public VerifierPairDistance<float> // unrestricted/supervised !
+//
+// unrestricted/supervised !
+//
+struct VerifierLR : public VerifierPairDistance<float> 
 {
     VerifierLR(int distFlag=2, float scale=0)
         : VerifierPairDistance<float>(distFlag,scale)
@@ -645,6 +653,7 @@ struct VerifierLR : public VerifierPairDistance<float> // unrestricted/supervise
         model = ml::LogisticRegression::create(params);
     }
 };
+
 
 
 //

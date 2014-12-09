@@ -30,7 +30,7 @@ namespace TextureFeature
 
 
 //
-// supplied impementation:
+// supplied impementations:
 //
 
 //

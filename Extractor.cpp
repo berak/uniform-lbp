@@ -67,8 +67,9 @@ struct FeatureLbp
 };
 
 
-
-
+//
+// just run around in a circle (instead of comparing to the center) ..
+//
 struct FeatureBGC1
 {
     int operator () (const Mat &I, Mat &fI) const
@@ -81,7 +82,6 @@ struct FeatureBGC1
             for (int c=m; c<img.cols-m; c++)
             {
                 uchar v = 0;
-                uchar cen = img(r,c);
                 v |= (img(r-1,c  ) > img(r-1,c-1)) << 0;
                 v |= (img(r-1,c+1) > img(r-1,c  )) << 1;
                 v |= (img(r  ,c+1) > img(r-1,c+1)) << 2;
@@ -103,13 +103,12 @@ struct FeatureBGC1
 // Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
 // "Texture description through histograms of equivalent patterns"
 //
+//    basically, this is just 1/2 of the full lbp-circle (4bits / 16 bins only!)
+//
 struct FeatureMTS
 {
     int operator () (const Mat &I, Mat &fI) const
     {
-        //SHIFTED_MATS_3x3(img);
-        //fI = ((IC>=I7)&8) | ((IC>=I6)&4) | ((IC>=I5)&2) | ((IC>=I4)&1);
-
         Mat_<uchar> img(I);
         Mat_<uchar> fea(I.size(), 0);
         const int m=1;
@@ -168,7 +167,7 @@ struct FeatureTPLbp
 
 //
 // Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
-// 3.2 Four-Patch LBP Codes
+// 3.2 Four-Patch LBP Codes (4bits / 16bins only !)
 //
 struct FeatureFPLbp
 {
@@ -229,14 +228,14 @@ struct GriddedHist
     void hist(const Mat &feature, Mat &histo, int histSize=256) const
     {
         histo.release();
-        int sw = (feature.cols)/(GRIDX);
-        int sh = (feature.rows)/(GRIDY);
-        for (int i=0; i<GRIDX-1; i++)
+        int sw = feature.cols/GRIDX;
+        int sh = feature.rows/GRIDY;
+        for (int i=0; i<GRIDX; i++)
         {
-            for (int j=0; j<GRIDY-1; j++)
+            for (int j=0; j<GRIDY; j++)
             {
-                Rect patch(i*sw,j*sh,sw,sh);
-                hist_patch(feature(patch), histo,histSize);
+                Mat patch(feature, Range(j*sh,(j+1)*sh), Range(i*sw,(i+1)*sw));
+                hist_patch(patch, histo, histSize);
             }
         }
         normalize(histo.reshape(1,1),histo);
@@ -247,24 +246,25 @@ struct GriddedHist
 
 struct OverlapGridHist : public GriddedHist
 {
-    int over;
+    int over,over2;
 
     OverlapGridHist(int gridx=8, int gridy=8, int over=0)
         : GriddedHist(gridx, gridy)
         , over(over)
+        , over2(over*2)
     { }
 
     void hist(const Mat &feature, Mat &histo, int histSize=256) const
     {
         histo.release();
-        int sw = (feature.cols)/GRIDX;
-        int sh = (feature.rows)/GRIDY;
-        for (int r=over; r<feature.rows-sh-2*over; r+=sh)
+        int sw = (feature.cols - over2)/GRIDX;
+        int sh = (feature.rows - over2)/GRIDY;
+        for (int r=over; r<feature.rows-sh-over2; r+=sh)
         {
-            for (int c=over; c<feature.cols-sh-2*over; c+=sw)
+            for (int c=over; c<feature.cols-sh-over2; c+=sw)
             {
-                Rect patch(c-over,r-over,sw+2*over,sh+2*over);
-                hist_patch(feature(patch), histo,histSize);
+                Rect patch(c-over, r-over, sw+over2, sh+over2);
+                hist_patch(feature(patch), histo, histSize);
             }
         }
         normalize(histo.reshape(1,1),histo);
@@ -276,49 +276,39 @@ struct OverlapGridHist : public GriddedHist
 //
 // hardcoded to funneled, 90x90 images.
 //
-//   the train thing uses a majority vote over rects,
-//   the current impl concatened histograms (the majority scheme seems to play nicer)
+//   the (offline) train thing uses a majority vote over rects,
+//   the current impl concatenated histograms (the majority scheme seems to play nicer)
 //
 struct ElasticParts
 {
     void hist(const Mat &feature, Mat &histo, int histSize=256) const
     {
         const int nparts = 64;
-        static struct Part {
-            Rect r;
-            //double eq,ne,k;
-            Part() {}
-            //Part(int x,int y,int w,int h,double e=0,double n=0)
-            Part(int x,int y,int w,int h)
-                : r(x,y,w,h)
-                //, eq(e)
-                //, ne(n)
-                //, k(0)
-            {}
-        } parts[nparts] = {
-            Part(15,23,48, 5), // 0.701167 // 1.504 // gen5
-            Part(24, 0,22,11),            Part(24,23,55, 4),            Part(56,21,34, 7),            Part(24, 9,25,10),
-            Part(25,23,52, 4),            Part( 0,52,60, 4),            Part(40,27,35, 7),            Part(36,59,31, 8),
-            Part( 5,24,38, 6),            Part( 5, 0,21,11),            Part( 4, 2,24,10),            Part( 1,51,36, 6),
-            Part(25,29,18,13),            Part(10, 1,26, 9),            Part(50,27,25,10),            Part(42,17,17,14),
-            Part( 6,26,30, 8),            Part(34, 6,13,19),            Part(65, 1,24,10),            Part(20,24,37, 6),
-            Part(22,22,41, 6),            Part(60,22,30, 7),            Part(53,21,37, 6),            Part(32,19,13,19),
-            Part(45,17,29, 8),            Part(30,23,55, 4),            Part(52,17,30, 8),            Part(21,27,44, 5),
-            Part(39,27,38, 6),            Part(53,12,28, 8),            Part(22,29,21,11),            Part(16, 6,35, 7),
-            Part(31,20,11,22),            Part(14,24,55, 4),            Part(37,15,13,19),            Part(30,61,38, 6),
-            Part(76,11,14,17),            Part(38,13,25,10),            Part(26,30,17,14),            Part(25,30,20,12),
-            Part( 1, 6,17,14),            Part( 5, 8,22,11),            Part(56,11,24,10),            Part(69,14,20,12),
-            Part(41,20,16,15),            Part(22,22,43, 5),            Part(64,58,16,15),            Part(70,42,13,19),
-            Part(39,14,15,16),            Part(25,60,30, 8),            Part(10,64,23,10),            Part(26, 1,17,14),
-            Part(46,77,20,12),            Part(56, 8,15,16),            Part(66,55,19,13),            Part( 8,64,28, 8),
-            Part(70,53,20,12),            Part(62, 7,12,20),            Part( 2,24,56, 4),            Part(25,48,25,10),
-            Part(44,27,34, 7),            Part(58,21,31, 8),            Part(49,80,16,10)
+        Rect parts[nparts] =
+        {
+            Rect(15,23,48, 5), // 0.701167 // 1.504 // gen5
+            Rect(24, 0,22,11),            Rect(24,23,55, 4),            Rect(56,21,34, 7),            Rect(24, 9,25,10),
+            Rect(25,23,52, 4),            Rect( 0,52,60, 4),            Rect(40,27,35, 7),            Rect(36,59,31, 8),
+            Rect( 5,24,38, 6),            Rect( 5, 0,21,11),            Rect( 4, 2,24,10),            Rect( 1,51,36, 6),
+            Rect(25,29,18,13),            Rect(10, 1,26, 9),            Rect(50,27,25,10),            Rect(42,17,17,14),
+            Rect( 6,26,30, 8),            Rect(34, 6,13,19),            Rect(65, 1,24,10),            Rect(20,24,37, 6),
+            Rect(22,22,41, 6),            Rect(60,22,30, 7),            Rect(53,21,37, 6),            Rect(32,19,13,19),
+            Rect(45,17,29, 8),            Rect(30,23,55, 4),            Rect(52,17,30, 8),            Rect(21,27,44, 5),
+            Rect(39,27,38, 6),            Rect(53,12,28, 8),            Rect(22,29,21,11),            Rect(16, 6,35, 7),
+            Rect(31,20,11,22),            Rect(14,24,55, 4),            Rect(37,15,13,19),            Rect(30,61,38, 6),
+            Rect(76,11,14,17),            Rect(38,13,25,10),            Rect(26,30,17,14),            Rect(25,30,20,12),
+            Rect( 1, 6,17,14),            Rect( 5, 8,22,11),            Rect(56,11,24,10),            Rect(69,14,20,12),
+            Rect(41,20,16,15),            Rect(22,22,43, 5),            Rect(64,58,16,15),            Rect(70,42,13,19),
+            Rect(39,14,15,16),            Rect(25,60,30, 8),            Rect(10,64,23,10),            Rect(26, 1,17,14),
+            Rect(46,77,20,12),            Rect(56, 8,15,16),            Rect(66,55,19,13),            Rect( 8,64,28, 8),
+            Rect(70,53,20,12),            Rect(62, 7,12,20),            Rect( 2,24,56, 4),            Rect(25,48,25,10),
+            Rect(44,27,34, 7),            Rect(58,21,31, 8),            Rect(49,80,16,10)
         };
 
         histo.release();
         for (size_t k=0; k<nparts; k++)
         {
-            Mat roi(feature, parts[k].r);
+            Mat roi(feature, parts[k]);
             Mat_<float> h(1, histSize, 0.0f);
             calc_hist(roi, h);
             histo.push_back(h.reshape(1,1));
@@ -334,7 +324,7 @@ struct ElasticParts
 // layered base for lbph,
 //  * calc features on the whole image,
 //  * calculate the hist on a set of rectangles
-//    (which could come from a grid, or a Parts based model).
+//    (which could come from a grid, or a Rects based model).
 //
 template <typename Feature, typename Grid>
 struct GenericExtractor : public TextureFeature::Extractor
@@ -360,7 +350,7 @@ struct GenericExtractor : public TextureFeature::Extractor
 
 
 //
-// concat histograms from lbp(u) features generated from a bank of gabor filtered images
+// concat histograms from lbp-like features generated from a bank of gabor filtered images
 //
 template <typename Feature, typename Grid>
 struct ExtractorGabor : public GenericExtractor<Feature,Grid>
@@ -461,7 +451,6 @@ typedef ExtractorGridFeature<BRISK> ExtractorBRISKGrid;
 typedef ExtractorGridFeature<xfeatures2d::FREAK> ExtractorFREAKGrid;
 typedef ExtractorGridFeature<xfeatures2d::SIFT> ExtractorSIFTGrid;
 typedef ExtractorGridFeature<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
-
 
 
 

@@ -159,8 +159,6 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Classifier> cls, const vecto
     //
     // each test is confused on its own over a lot of folds..
     Mat confusion = Mat::zeros(persons.size(),persons.size(),CV_32F);
-    //~ vector<float> tpr;
-    //~ vector<float> fnr;
 
     int64 t0=getTickCount();
     int fsiz=0;
@@ -255,7 +253,7 @@ int main(int argc, const char *argv[])
     if ( rec==0 )
     {
         cout << "--------------------------------------------------------------" << endl;
-        cout << "[method]       [f_bytes]  [pos]  [neg]   [hit]   [time]  " << endl;
+        cout << "[method]       [f_bytes]  [hit]  [miss]  [acc]   [time]  " << endl;
     }
 
     // loop through all tests for rec==0, do one test else.
@@ -272,7 +270,7 @@ int main(int argc, const char *argv[])
         case 1:  runtest("pixels_L2",    createExtractorPixels(120,120),   createClassifierNearest(),               images,labels,persons, fold); break;
         case 2:  runtest("pixels_svm",   createExtractorPixels(60,60),     createClassifierSVM(),                   images,labels,persons, fold); break;
         case 3:  runtest("pixels_cosine",createExtractorPixels(120,120),   createClassifierCosine(),                images,labels,persons, fold); break;
-        case 4:  runtest("pixels_multi", createExtractorPixels(60,60),     createClassifierSVMMulti(),              images,labels,persons, fold); break;
+        // case 4:  runtest("pixels_multi", createExtractorPixels(60,60),     createClassifierSVMMulti(),              images,labels,persons, fold); break;
         case 5:  runtest("lbp_L2",       createExtractorLbp(),             createClassifierNearest(),               images,labels,persons, fold); break;
         case 6:  runtest("lbp_svm",      createExtractorLbp(),             createClassifierSVM(),                   images,labels,persons, fold); break;
         case 8:  runtest("lbp_hell",     createExtractorLbp(),             createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
@@ -298,11 +296,11 @@ int main(int argc, const char *argv[])
         case 30: runtest("bgc1_o_svm",   createExtractorOverlapBGC1(),     createClassifierSVM(),                   images,labels,persons, fold); break;
         case 32: runtest("gabor_svm",    createExtractorGaborLbp(),        createClassifierSVM(),                   images,labels,persons, fold); break;
         case 33: runtest("dct_cosine",   createExtractorDct(),             createClassifierCosine(),                images,labels,persons, fold); break;
-        case 34: runtest("dct_L2",       createExtractorDct(),             createClassifierNearest(),               images,labels,persons, fold); break;
+        case 34: runtest("dct_svm",      createExtractorDct(),             createClassifierSVM(),               images,labels,persons, fold); break;
         case 36: runtest("dct_svm",      createExtractorDct(),             createClassifierSVM(),                   images,labels,persons, fold); break;
         case 37: runtest("orb_L1",       createExtractorORBGrid(),         createClassifierNearest(NORM_L1),        images,labels,persons, fold); break;
         case 38: runtest("sift_L2",      createExtractorSIFTGrid(),        createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
-        case 39: runtest("sift_fisher",  createExtractorSIFTGrid(),        createClassifierFisher(),                images,labels,persons, fold); break;
+        case 39: runtest("sift_svm",     createExtractorSIFTGrid(),        createClassifierSVM(),                   images,labels,persons, fold); break;
         case 40: runtest("eigen",        createExtractorPixels(),          createClassifierEigen(),                 images,labels,persons, fold); break;
         case 41: runtest("fisher",       createExtractorPixels(),          createClassifierFisher(),                images,labels,persons, fold); break;
         }

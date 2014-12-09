@@ -30,8 +30,8 @@ public:
         {
             case EXT_Pixels:   ext = createExtractorPixels(); break;
             case EXT_Lbp:      ext = createExtractorLbp(); break;
-            case EXT_Lbpu:     ext = createExtractorLbp(8,8); break;
             case EXT_LBP_E:    ext = createExtractorElasticLbp(); break;
+            case EXT_LBP_O:    ext = createExtractorOverlapLbp(); break;
             case EXT_TPLbp:    ext = createExtractorTPLbp(); break;
             case EXT_TPLBP_E:  ext = createExtractorElasticTpLbp(); break;
             case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
@@ -40,8 +40,8 @@ public:
             case EXT_MTS_E:    ext = createExtractorElasticMTS(); break;
             case EXT_BGC1:     ext = createExtractorBGC1(); break;
             case EXT_BGC1_E:   ext = createExtractorElasticBGC1(); break;
-            case EXT_GaborLbp: ext = createExtractorGaborLbp(); break;
-            case EXT_GaborLbp_E: ext = createExtractorElasticGaborLbp(1); break;
+            case EXT_Gabor:    ext = createExtractorGaborLbp(); break;
+            case EXT_Gabor_E:  ext = createExtractorElasticGaborLbp(1); break;
             case EXT_Dct:      ext = createExtractorDct(); break;
             case EXT_OrbGrid:  ext = createExtractorORBGrid(15); break;
             case EXT_SiftGrid: ext = createExtractorSIFTGrid(15); break;
@@ -52,7 +52,6 @@ public:
             case CL_NORM_L2:   cls = createVerifierNearest(NORM_L2); break;
             case CL_NORM_L2SQR:cls = createVerifierNearest(NORM_L2SQR); break;
             case CL_NORM_L1:   cls = createVerifierNearest(NORM_L1); break;
-            //case CL_NORM_HAM:  cls = createVerifierNearest(NORM_HAMMING); break;
             case CL_HIST_HELL: cls = createVerifierHist(HISTCMP_HELLINGER); break;
             case CL_HIST_CHI:  cls = createVerifierHist(HISTCMP_CHISQR); break;
             case CL_SVM:       cls = createVerifierSVM(2); break;
@@ -61,12 +60,10 @@ public:
             case CL_BOOST:     cls = createVerifierBoost(2); break;
             case CL_FISHER:    cls = createVerifierFisher(); break;
             default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
-            //case CL_SVMMulti:  cls = createClassifierSVMMulti(); break;
-            //case CL_COSINE:    cls = createClassifierCosine(); break;
         }
     }
 
-    // Trains a FaceRecognizer.
+    // Trains a FaceVerifier.
     virtual void train(InputArrayOfArrays src, InputArray _labels)
     {
         Mat_<int> labels1 = _labels.getMat();
@@ -116,6 +113,9 @@ public:
 
 } // myface
 
+
 Ptr<myface::FaceVerifier> createMyFaceVerifier(int ex, int cl, int pr, int pc, bool flip)
-{  return makePtr<myface::MyFace>(ex, cl, pr, pc, flip);  }
+{
+    return makePtr<myface::MyFace>(ex, cl, pr, pc, flip);
+}
 
