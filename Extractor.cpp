@@ -66,6 +66,93 @@ struct FeatureLbp
     }
 };
 
+//
+// "Description of Interest Regions with Center-Symmetric Local Binary Patterns"
+// (http://www.ee.oulu.fi/mvg/files/pdf/pdf_750.pdf).
+//    (w/o threshold)
+//
+struct FeatureCsLbp
+{
+    int operator() (const Mat &I, Mat &fI) const
+    {
+        Mat_<uchar> feature(I.size(),0);
+        Mat_<uchar> img(I);
+        const int m=1;
+        for (int r=m; r<img.rows-m; r++)
+        {
+            for (int c=m; c<img.cols-m; c++)
+            {
+                uchar v = 0;
+                v |= (img(r-1,c  ) > img(r+1,c  )) << 0;
+                v |= (img(r-1,c+1) > img(r+1,c-1)) << 1;
+                v |= (img(r  ,c+1) > img(r  ,c-1)) << 2;
+                v |= (img(r+1,c+1) > img(r-1,c-1)) << 3;
+                feature(r,c) = v;
+            }
+        }
+        fI = feature;
+        return 16;
+    }
+};
+
+
+//
+// / \
+// \ /
+//
+struct FeatureDiamondLbp
+{
+    int operator() (const Mat &I, Mat &fI) const
+    {
+        Mat_<uchar> feature(I.size(),0);
+        Mat_<uchar> img(I);
+        const int m=1;
+        for (int r=m; r<img.rows-m; r++)
+        {
+            for (int c=m; c<img.cols-m; c++)
+            {
+                uchar v = 0;
+                v |= (img(r-1,c  ) > img(r  ,c+1)) << 0;
+                v |= (img(r  ,c+1) > img(r+1,c  )) << 1;
+                v |= (img(r+1,c  ) > img(r  ,c-1)) << 2;
+                v |= (img(r  ,c-1) > img(r-1,c  )) << 3;
+                feature(r,c) = v;
+            }
+        }
+        fI = feature;
+        return 16;
+    }
+};
+
+
+//  _ _
+// |   |
+// |_ _|
+//
+struct FeatureSquareLbp
+{
+    int operator() (const Mat &I, Mat &fI) const
+    {
+        Mat_<uchar> feature(I.size(),0);
+        Mat_<uchar> img(I);
+        const int m=1;
+        for (int r=m; r<img.rows-m; r++)
+        {
+            for (int c=m; c<img.cols-m; c++)
+            {
+                uchar v = 0;
+                v |= (img(r-1,c-1) > img(r-1,c+1)) << 0;
+                v |= (img(r-1,c+1) > img(r+1,c+1)) << 1;
+                v |= (img(r+1,c+1) > img(r+1,c-1)) << 2;
+                v |= (img(r+1,c-1) > img(r-1,c-1)) << 3;
+                feature(r,c) = v;
+            }
+        }
+        fI = feature;
+        return 16;
+    }
+};
+
 
 //
 // just run around in a circle (instead of comparing to the center) ..
@@ -196,16 +283,18 @@ struct FeatureFPLbp
 
 
 
-static void calc_hist(const Mat_<uchar> &feature, Mat_<float> &histo)
+
+static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
 {
-    for (int i=0; i<feature.rows; i++)
+    Mat_<float> h(1,histSize,0.0f);
+    for (int i=0; i<fI.rows; i++)
     {
-        for (int j=0; j<feature.cols; j++)
+        for (int j=0; j<fI.cols; j++)
         {
-            uchar bin = int(feature(i,j));
-            histo( bin ) += 1.0f;
+            h( int(fI(i,j)) ) += 1.0f;
         }
     }
+    histo.push_back(h.reshape(1,1));
 }
 
 
@@ -217,13 +306,6 @@ struct GriddedHist
         : GRIDX(gridx)
         , GRIDY(gridy)
     {}
-
-    void hist_patch(const Mat &fi, Mat &histo, int histSize=256) const
-    {
-        Mat_<float> h(1,histSize,0.0f);
-        calc_hist(fi,h);
-        histo.push_back(h.reshape(1,1));
-    }
 
     void hist(const Mat &feature, Mat &histo, int histSize=256) const
     {
@@ -244,6 +326,35 @@ struct GriddedHist
 
 
 
+struct PyramidGrid
+{
+    void hist_level(const Mat &feature, Mat &histo, int GRIDX, int GRIDY,int histSize=256) const
+    {
+        int sw = feature.cols/GRIDX;
+        int sh = feature.rows/GRIDY;
+        for (int i=0; i<GRIDX; i++)
+        {
+            for (int j=0; j<GRIDY; j++)
+            {
+                Mat patch(feature, Range(j*sh,(j+1)*sh), Range(i*sw,(i+1)*sw));
+                hist_patch(patch, histo, histSize);
+            }
+        }
+    }
+
+    void hist(const Mat &feature, Mat &histo, int histSize=256) const
+    {
+        histo.release();
+        int levels[] = {5,6,7,8};
+        for (int i=0; i<4; i++)
+        {
+            hist_level(feature,histo,levels[i],levels[i],histSize);
+        }
+        normalize(histo.reshape(1,1),histo);
+    }
+};
+
+
 struct OverlapGridHist : public GriddedHist
 {
     int over,over2;
@@ -259,9 +370,9 @@ struct OverlapGridHist : public GriddedHist
         histo.release();
         int sw = (feature.cols - over2)/GRIDX;
         int sh = (feature.rows - over2)/GRIDY;
-        for (int r=over; r<feature.rows-sh-over2; r+=sh)
+        for (int r=over; r<feature.rows-sh; r+=sh)
         {
-            for (int c=over; c<feature.cols-sh-over2; c+=sw)
+            for (int c=over; c<feature.cols-sw; c+=sw)
             {
                 Rect patch(c-over, r-over, sw+over2, sh+over2);
                 hist_patch(feature(patch), histo, histSize);
@@ -308,10 +419,7 @@ struct ElasticParts
         histo.release();
         for (size_t k=0; k<nparts; k++)
         {
-            Mat roi(feature, parts[k]);
-            Mat_<float> h(1, histSize, 0.0f);
-            calc_hist(roi, h);
-            histo.push_back(h.reshape(1,1));
+            hist_patch(feature(parts[k]), histo, histSize);
         }
         normalize(histo.reshape(1,1),histo);
     }
@@ -343,6 +451,40 @@ struct GenericExtractor : public TextureFeature::Extractor
         Mat fI;
         int histSize = ext(img, fI);
         grid.hist(fI, features, histSize);
+        return features.total() * features.elemSize();
+    }
+};
+
+
+template <typename Grid>
+struct CombinedExtractor : public TextureFeature::Extractor
+{
+    FeatureCsLbp cslbp;
+    FeatureDiamondLbp dialbp;
+    FeatureSquareLbp sqlbp;
+    Grid grid;
+
+    CombinedExtractor(const Grid &grid)
+        : grid(grid)
+    {}
+
+    // TextureFeature::Extractor
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        Mat fI, f;
+        int histSize = cslbp(img, f);
+        grid.hist(f, fI, histSize);
+        features.push_back(fI.reshape(1,1));
+
+        histSize = dialbp(img, f);
+        grid.hist(f, fI, histSize);
+        features.push_back(fI.reshape(1,1));
+
+        histSize = sqlbp(img, f);
+        grid.hist(f, fI, histSize);
+        features.push_back(fI.reshape(1,1));
+        
+        features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
 };
@@ -475,6 +617,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorOverlapLbp(int gx, int gy, int
 {
     return makePtr< GenericExtractor<FeatureLbp,OverlapGridHist> >(FeatureLbp(), OverlapGridHist(gx, gy, over));
 }
+cv::Ptr<TextureFeature::Extractor> createExtractorPyramidLbp()
+{
+    return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid());
+}
 
 cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx, int gy)
 {
@@ -488,6 +634,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorOverlapFpLbp(int gx, int gy, i
 {
     return makePtr< GenericExtractor<FeatureFPLbp,OverlapGridHist> >(FeatureFPLbp(), OverlapGridHist(gx, gy, over));
 }
+cv::Ptr<TextureFeature::Extractor> createExtractorPyramidFpLbp()
+{
+    return makePtr< GenericExtractor<FeatureFPLbp,PyramidGrid> >(FeatureFPLbp(), PyramidGrid());
+}
 
 cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx, int gy)
 {
@@ -496,6 +646,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx, int gy)
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticTpLbp()
 {
     return makePtr< GenericExtractor<FeatureTPLbp,ElasticParts> >(FeatureTPLbp(), ElasticParts());
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorPyramidTpLbp()
+{
+    return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid());
 }
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx, int gy, int over)
 {
@@ -510,6 +664,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorElasticMTS()
 {
     return makePtr< GenericExtractor<FeatureMTS,ElasticParts> >(FeatureMTS(), ElasticParts());
 }
+cv::Ptr<TextureFeature::Extractor> createExtractorPyramidMTS()
+{
+    return makePtr< GenericExtractor<FeatureMTS,PyramidGrid> >(FeatureMTS(), PyramidGrid());
+}
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapMTS(int gx, int gy, int over)
 {
     return makePtr< GenericExtractor<FeatureMTS,OverlapGridHist> >(FeatureMTS(), OverlapGridHist(gx, gy, over));
@@ -523,10 +681,32 @@ cv::Ptr<TextureFeature::Extractor> createExtractorElasticBGC1()
 {
     return makePtr< GenericExtractor<FeatureBGC1,ElasticParts> >(FeatureBGC1(), ElasticParts());
 }
+cv::Ptr<TextureFeature::Extractor> createExtractorPyramidBGC1()
+{
+    return makePtr< GenericExtractor<FeatureBGC1,PyramidGrid> >(FeatureBGC1(), PyramidGrid());
+}
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapBGC1(int gx, int gy, int over)
 {
     return makePtr< GenericExtractor<FeatureBGC1,OverlapGridHist> >(FeatureBGC1(), OverlapGridHist(gx, gy, over));
 }
+
+cv::Ptr<TextureFeature::Extractor> createExtractorCombined(int gx, int gy)
+{
+    return makePtr< CombinedExtractor<GriddedHist> >(GriddedHist(gx, gy));
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticCombined()
+{
+    return makePtr< CombinedExtractor<ElasticParts> >(ElasticParts());
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorPyramidCombined()
+{
+    return makePtr< CombinedExtractor<PyramidGrid> >(PyramidGrid());
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorOverlapCombined(int gx, int gy, int over)
+{
+    return makePtr< CombinedExtractor<OverlapGridHist> >(OverlapGridHist(gx, gy, over));
+}
+
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx, int gy, int kernel_siz)
 {

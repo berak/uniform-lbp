@@ -32,14 +32,27 @@ public:
             case EXT_Lbp:      ext = createExtractorLbp(); break;
             case EXT_LBP_E:    ext = createExtractorElasticLbp(); break;
             case EXT_LBP_O:    ext = createExtractorOverlapLbp(); break;
+            case EXT_LBP_P:    ext = createExtractorPyramidLbp(); break;
             case EXT_TPLbp:    ext = createExtractorTPLbp(); break;
             case EXT_TPLBP_E:  ext = createExtractorElasticTpLbp(); break;
+            case EXT_TPLBP_O:  ext = createExtractorOverlapTpLbp(); break;
+            case EXT_TPLBP_P:  ext = createExtractorPyramidTpLbp(); break;
             case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
             case EXT_FPLBP_E:  ext = createExtractorElasticFpLbp(); break;
+            case EXT_FPLBP_O:  ext = createExtractorOverlapFpLbp(); break;
+            case EXT_FPLBP_P:  ext = createExtractorPyramidFpLbp(); break;
             case EXT_MTS:      ext = createExtractorMTS(); break;
             case EXT_MTS_E:    ext = createExtractorElasticMTS(); break;
+            case EXT_MTS_O:    ext = createExtractorOverlapMTS(); break;
+            case EXT_MTS_P:    ext = createExtractorPyramidMTS(); break;
             case EXT_BGC1:     ext = createExtractorBGC1(); break;
             case EXT_BGC1_E:   ext = createExtractorElasticBGC1(); break;
+            case EXT_BGC1_O:   ext = createExtractorOverlapBGC1(); break;
+            case EXT_BGC1_P:   ext = createExtractorPyramidBGC1(); break;
+            case EXT_COMB:     ext = createExtractorCombined(); break;
+            case EXT_COMB_E:   ext = createExtractorElasticCombined(); break;
+            case EXT_COMB_O:   ext = createExtractorOverlapCombined(); break;
+            case EXT_COMB_P:   ext = createExtractorPyramidCombined(); break;
             case EXT_Gabor:    ext = createExtractorGaborLbp(); break;
             case EXT_Gabor_E:  ext = createExtractorElasticGaborLbp(1); break;
             case EXT_Dct:      ext = createExtractorDct(); break;
@@ -76,7 +89,6 @@ public:
         for (size_t i=0; i<images.size(); i++)
         {
             Mat img = pre.process(images[i]);
-            images[i].release();
 
             Mat feat1;
             nfeatbytes = ext->extract(img, feat1);
@@ -93,6 +105,7 @@ public:
                 labels.push_back(labels1(i));
             }
         }
+        images.clear();
         int ok = cls->train(features, labels.reshape(1,features.rows));
         CV_Assert(ok);
         // cerr << "trained " << nfeatbytes << " bytes." << '\r';

@@ -210,10 +210,8 @@ int main(int argc, const char *argv[])
                 correct++;
             else
                 incorrect++;
-
-            double acc = double(correct)/(correct+incorrect);
         }
-    
+
         double acc = double(correct)/(correct+incorrect);
         printf("%4u %5u/%-5u  %2.3f                        \r", j, correct,incorrect,acc );
         p.push_back(acc);

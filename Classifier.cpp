@@ -278,6 +278,7 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
     }
 };
 
+
 //
 // ref impl of eigen / fisher faces
 //   this is basically bytefish's code,
@@ -455,9 +456,6 @@ struct VerifierHist : VerifierNearest
     {}
     virtual double distance(const Mat &a, const Mat &b) const
     {
-        int ta = a.type();
-        int tb = b.type();
-        int td = a.depth();
         return compareHist(a,b,flag);
     }
 };
@@ -638,7 +636,7 @@ struct VerifierBoost : public VerifierPairDistance<int>
 //
 // unrestricted/supervised !
 //
-struct VerifierLR : public VerifierPairDistance<float> 
+struct VerifierLR : public VerifierPairDistance<float>
 {
     VerifierLR(int distFlag=2, float scale=0)
         : VerifierPairDistance<float>(distFlag,scale)
