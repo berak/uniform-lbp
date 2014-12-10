@@ -493,14 +493,16 @@ struct CombinedExtractor : public TextureFeature::Extractor
 
 //
 // concat histograms from lbp-like features generated from a bank of gabor filtered images
-//
-template <typename Feature, typename Grid>
-struct ExtractorGabor : public GenericExtractor<Feature,Grid>
+//   ( due to memory restrictions, it can't use plain lbp(64k), 
+//     but has to inherit the 2nd best bed (combined(12k)) )
+// 
+template <typename Grid>
+struct ExtractorGabor : public CombinedExtractor<Grid>
 {
     Size kernel_size;
 
-    ExtractorGabor(const Feature &ext, const Grid &grid, int kernel_siz=8)
-        : GenericExtractor<Feature,Grid>(ext, grid)
+    ExtractorGabor(const Grid &grid, int kernel_siz=8)
+        : CombinedExtractor<Grid>(grid)
         , kernel_size(kernel_siz, kernel_siz)
     {}
 
@@ -509,7 +511,7 @@ struct ExtractorGabor : public GenericExtractor<Feature,Grid>
         Mat dest,dest8u,his;
         cv::filter2D(src_f, dest, CV_32F, getGaborKernel(kernel_size, sigma,theta, lambda, gamma, psi));
         dest.convertTo(dest8u, CV_8U);
-        GenericExtractor<Feature,Grid>::extract(dest8u, his);
+        CombinedExtractor<Grid>::extract(dest8u, his);
         features.push_back(his.reshape(1, 1));
     }
 
@@ -710,13 +712,22 @@ cv::Ptr<TextureFeature::Extractor> createExtractorOverlapCombined(int gx, int gy
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx, int gy, int kernel_siz)
 {
-    return makePtr< ExtractorGabor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(gx, gy), kernel_siz);
+    return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist(gx, gy), kernel_siz);
 }
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticGaborLbp(int kernel_siz)
 {
-    return makePtr< ExtractorGabor<FeatureLbp,ElasticParts> >(FeatureLbp(), ElasticParts(), kernel_siz);
+    return makePtr< ExtractorGabor<ElasticParts> >(ElasticParts(), kernel_siz);
 }
 
+//cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx, int gy, int kernel_siz)
+//{
+//    return makePtr< ExtractorGabor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(gx, gy), kernel_siz);
+//}
+//cv::Ptr<TextureFeature::Extractor> createExtractorElasticGaborLbp(int kernel_siz)
+//{
+//    return makePtr< ExtractorGabor<FeatureLbp,ElasticParts> >(FeatureLbp(), ElasticParts(), kernel_siz);
+//}
+//
 cv::Ptr<TextureFeature::Extractor> createExtractorDct()
 {
     return makePtr<ExtractorDct>();
