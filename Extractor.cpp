@@ -456,6 +456,9 @@ struct GenericExtractor : public TextureFeature::Extractor
 };
 
 
+//
+// cslbp + dialbp + sqlbp = 3*16 bins = 12288 feature-bytes.
+//
 template <typename Grid>
 struct CombinedExtractor : public TextureFeature::Extractor
 {
