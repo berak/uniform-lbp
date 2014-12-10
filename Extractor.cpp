@@ -598,6 +598,7 @@ typedef ExtractorGridFeature<xfeatures2d::BriefDescriptorExtractor> ExtractorBRI
 
 
 
+
 //
 // 'factory' functions (aka public api)
 //
@@ -606,6 +607,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw, int resh)
 {
     return makePtr<ExtractorPixels>(resw, resh);
 }
+
 
 cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gx, int gy)
 {
@@ -624,6 +626,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPyramidLbp()
     return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid());
 }
 
+
 cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx, int gy)
 {
     return makePtr< GenericExtractor<FeatureFPLbp,GriddedHist> >(FeatureFPLbp(), GriddedHist(gx, gy));
@@ -640,6 +643,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPyramidFpLbp()
 {
     return makePtr< GenericExtractor<FeatureFPLbp,PyramidGrid> >(FeatureFPLbp(), PyramidGrid());
 }
+
 
 cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx, int gy)
 {
@@ -658,6 +662,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx, int gy, i
     return makePtr< GenericExtractor<FeatureTPLbp,OverlapGridHist> >(FeatureTPLbp(), OverlapGridHist(gx, gy, over));
 }
 
+
 cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx, int gy)
 {
     return makePtr< GenericExtractor<FeatureMTS,GriddedHist> >(FeatureMTS(), GriddedHist(gx, gy));
@@ -675,6 +680,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorOverlapMTS(int gx, int gy, int
     return makePtr< GenericExtractor<FeatureMTS,OverlapGridHist> >(FeatureMTS(), OverlapGridHist(gx, gy, over));
 }
 
+
 cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx, int gy)
 {
     return makePtr< GenericExtractor<FeatureBGC1,GriddedHist> >(FeatureBGC1(), GriddedHist(gx, gy));
@@ -691,6 +697,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorOverlapBGC1(int gx, int gy, in
 {
     return makePtr< GenericExtractor<FeatureBGC1,OverlapGridHist> >(FeatureBGC1(), OverlapGridHist(gx, gy, over));
 }
+
 
 cv::Ptr<TextureFeature::Extractor> createExtractorCombined(int gx, int gy)
 {
@@ -719,15 +726,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorElasticGaborLbp(int kernel_siz
     return makePtr< ExtractorGabor<ElasticParts> >(ElasticParts(), kernel_siz);
 }
 
-//cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx, int gy, int kernel_siz)
-//{
-//    return makePtr< ExtractorGabor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(gx, gy), kernel_siz);
-//}
-//cv::Ptr<TextureFeature::Extractor> createExtractorElasticGaborLbp(int kernel_siz)
-//{
-//    return makePtr< ExtractorGabor<FeatureLbp,ElasticParts> >(FeatureLbp(), ElasticParts(), kernel_siz);
-//}
-//
+
 cv::Ptr<TextureFeature::Extractor> createExtractorDct()
 {
     return makePtr<ExtractorDct>();
