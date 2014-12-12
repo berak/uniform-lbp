@@ -228,7 +228,7 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if (argc>2) fold = atoi(argv[2]);
 
-    int rec = 34;
+    int rec = 44;
     if (argc>3) rec = atoi(argv[3]);
 
     int preproc = 0; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
@@ -257,7 +257,7 @@ int main(int argc, const char *argv[])
     }
 
     // loop through all tests for rec==0, do one test else.
-    int n=47;
+    int n=50; // it's gettin a *bit* crowded ;)
     if (rec > 0)
     {
         n = rec+1;
@@ -298,7 +298,7 @@ int main(int argc, const char *argv[])
         case 30: runtest("bgc1_e_svm",   createExtractorElasticBGC1(),     createClassifierSVM(),                   images,labels,persons, fold); break;
         case 31: runtest("bgc1_o_svm",   createExtractorOverlapBGC1(),     createClassifierSVM(),                   images,labels,persons, fold); break;
         case 32: runtest("bgc1_p_svm",   createExtractorPyramidBGC1(),     createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 33: runtest("bgc1_hell",    createExtractorBGC1(),            createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
+        case 33: runtest("comb_hell",    createExtractorCombined(),        createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         case 34: runtest("comb_svm",     createExtractorCombined(),        createClassifierSVM(),                    images,labels,persons, fold); break;
         case 35: runtest("comb_e_svm",   createExtractorElasticCombined(), createClassifierSVM(),                   images,labels,persons, fold); break;
         case 36: runtest("comb_o_svm",   createExtractorOverlapCombined(), createClassifierSVM(),                   images,labels,persons, fold); break;
@@ -310,8 +310,9 @@ int main(int argc, const char *argv[])
         case 42: runtest("orb_L1",       createExtractorORBGrid(),         createClassifierNearest(NORM_L1),        images,labels,persons, fold); break;
         case 43: runtest("sift_L2",      createExtractorSIFTGrid(),        createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
         case 44: runtest("sift_svm",     createExtractorSIFTGrid(),        createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 45: runtest("eigen",        createExtractorPixels(),          createClassifierEigen(),                 images,labels,persons, fold); break;
-        case 46: runtest("fisher",       createExtractorPixels(),          createClassifierFisher(),                images,labels,persons, fold); break;
+        case 45: runtest("sift_gfft_svm",createExtractorSIFTGfft(),        createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 46: runtest("eigen",        createExtractorPixels(),          createClassifierEigen(),                 images,labels,persons, fold); break;
+        case 47: runtest("fisher",       createExtractorPixels(),          createClassifierFisher(),                images,labels,persons, fold); break;
         }
     }
     return 0;

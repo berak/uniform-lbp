@@ -628,9 +628,11 @@ struct VerifierBoost : public VerifierPairDistance<int>
     {
         ml::Boost::Params param;
         param.boostType = ml::Boost::DISCRETE;
+        param.weightTrimRate = 0.6;
         model = ml::Boost::create(param);
     }
 };
+
 
 
 //

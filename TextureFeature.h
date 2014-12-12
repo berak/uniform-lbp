@@ -75,6 +75,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorDct();
 // feature2D abuse
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g=10);
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g=10);
+cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGfft();
 
 
 //

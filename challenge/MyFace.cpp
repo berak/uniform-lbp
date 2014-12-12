@@ -58,6 +58,7 @@ public:
             case EXT_Dct:      ext = createExtractorDct(); break;
             case EXT_OrbGrid:  ext = createExtractorORBGrid(15); break;
             case EXT_SiftGrid: ext = createExtractorSIFTGrid(15); break;
+            case EXT_SiftGfft: ext = createExtractorSIFTGfft(); break;
             default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
         }
         switch(clsfy)
