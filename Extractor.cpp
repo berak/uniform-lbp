@@ -431,105 +431,23 @@ struct ElasticParts
         const int nparts = 64;
         Rect parts[nparts] =
         {
-            //Rect(15,23,48, 5), // 0.701167 // 1.504 // gen5
-            //Rect(24, 0,22,11),            Rect(24,23,55, 4),            Rect(56,21,34, 7),            Rect(24, 9,25,10),
-            //Rect(25,23,52, 4),            Rect( 0,52,60, 4),            Rect(40,27,35, 7),            Rect(36,59,31, 8),
-            //Rect( 5,24,38, 6),            Rect( 5, 0,21,11),            Rect( 4, 2,24,10),            Rect( 1,51,36, 6),
-            //Rect(25,29,18,13),            Rect(10, 1,26, 9),            Rect(50,27,25,10),            Rect(42,17,17,14),
-            //Rect( 6,26,30, 8),            Rect(34, 6,13,19),            Rect(65, 1,24,10),            Rect(20,24,37, 6),
-            //Rect(22,22,41, 6),            Rect(60,22,30, 7),            Rect(53,21,37, 6),            Rect(32,19,13,19),
-            //Rect(45,17,29, 8),            Rect(30,23,55, 4),            Rect(52,17,30, 8),            Rect(21,27,44, 5),
-            //Rect(39,27,38, 6),            Rect(53,12,28, 8),            Rect(22,29,21,11),            Rect(16, 6,35, 7),
-            //Rect(31,20,11,22),            Rect(14,24,55, 4),            Rect(37,15,13,19),            Rect(30,61,38, 6),
-            //Rect(76,11,14,17),            Rect(38,13,25,10),            Rect(26,30,17,14),            Rect(25,30,20,12),
-            //Rect( 1, 6,17,14),            Rect( 5, 8,22,11),            Rect(56,11,24,10),            Rect(69,14,20,12),
-            //Rect(41,20,16,15),            Rect(22,22,43, 5),            Rect(64,58,16,15),            Rect(70,42,13,19),
-            //Rect(39,14,15,16),            Rect(25,60,30, 8),            Rect(10,64,23,10),            Rect(26, 1,17,14),
-            //Rect(46,77,20,12),            Rect(56, 8,15,16),            Rect(66,55,19,13),            Rect( 8,64,28, 8),
-            //Rect(70,53,20,12),            Rect(62, 7,12,20),            Rect( 2,24,56, 4),            Rect(25,48,25,10),
-            //Rect(44,27,34, 7),            Rect(58,21,31, 8),            Rect(49,80,16,10)
-
-Rect(58,15,10,14),
-Rect(14,23,17, 8),
-Rect(23,60,12,11),
-Rect(15,29,20, 7),
-Rect(37,40,20, 7),
-Rect(81,50, 4,31),
-Rect(26,48,10,14),
-Rect(40,36,23, 6),
-Rect(57,24,10,14),
-Rect(23, 5, 6,21),
-Rect(15,18,14,10),
-Rect(20,19,14,10),
-Rect(32,38, 3,44),
-Rect(25,18, 8,17),
-Rect(25,25,15, 9),
-Rect(26,23,14,10),
-Rect(50,21,15, 9),
-Rect(63,20,14,10),
-Rect(27,24,11,12),
-Rect(31,28, 8,17),
-Rect(46,50,23, 6),
-Rect(37,16, 8,17),
-Rect(59,14,10,13),
-Rect(51,20,14,10),
-Rect(49,20,17, 8),
-Rect(37, 6, 8,16),
-Rect(62, 1, 9,15),
-Rect(11,22,28, 5),
-Rect(58,24, 9,15),
-Rect(60,41,11,12),
-Rect(16,58,28, 5),
-Rect(56,25,10,14),
-Rect(53,19,14,10),
-Rect( 8,24,20, 7),
-Rect(12,79,12,11),
-Rect(67,10, 7,20),
-Rect(74,13,12,11),
-Rect(61,18,10,13),
-Rect(41,27,17, 8),
-Rect(54,41,11,12),
-Rect(44,16, 8,16),
-Rect(62,15,20, 7),
-Rect(57,56,17, 8),
-Rect(56,34, 6,23),
-Rect(68,15,22, 6),
-Rect( 2,21,23, 6),
-Rect(50,68,23, 6),
-Rect(57, 5, 4,32),
-Rect(20,27,15, 9),
-Rect(81,51, 3,39),
-Rect(22,63,10,13),
-Rect(52,35,10,13),
-Rect(40,62,12,11),
-Rect(64,14,12,11),
-Rect(32,27, 3,40),
-Rect(70,12, 9,15),
-Rect(24, 7, 6,23),
-Rect(10,29,23, 6),
-Rect(51, 4,17, 8),
-Rect(23,38, 4,32),
-Rect(41,13, 6,23),
-Rect(12,21,28, 5),
-Rect(24,57,14,10),
-Rect(59,43,10,13),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            Rect(15,23,48, 5), // 0.701167 // 1.504 // gen5
+            Rect(24, 0,22,11),            Rect(24,23,55, 4),            Rect(56,21,34, 7),            Rect(24, 9,25,10),
+            Rect(25,23,52, 4),            Rect( 0,52,60, 4),            Rect(40,27,35, 7),            Rect(36,59,31, 8),
+            Rect( 5,24,38, 6),            Rect( 5, 0,21,11),            Rect( 4, 2,24,10),            Rect( 1,51,36, 6),
+            Rect(25,29,18,13),            Rect(10, 1,26, 9),            Rect(50,27,25,10),            Rect(42,17,17,14),
+            Rect( 6,26,30, 8),            Rect(34, 6,13,19),            Rect(65, 1,24,10),            Rect(20,24,37, 6),
+            Rect(22,22,41, 6),            Rect(60,22,30, 7),            Rect(53,21,37, 6),            Rect(32,19,13,19),
+            Rect(45,17,29, 8),            Rect(30,23,55, 4),            Rect(52,17,30, 8),            Rect(21,27,44, 5),
+            Rect(39,27,38, 6),            Rect(53,12,28, 8),            Rect(22,29,21,11),            Rect(16, 6,35, 7),
+            Rect(31,20,11,22),            Rect(14,24,55, 4),            Rect(37,15,13,19),            Rect(30,61,38, 6),
+            Rect(76,11,14,17),            Rect(38,13,25,10),            Rect(26,30,17,14),            Rect(25,30,20,12),
+            Rect( 1, 6,17,14),            Rect( 5, 8,22,11),            Rect(56,11,24,10),            Rect(69,14,20,12),
+            Rect(41,20,16,15),            Rect(22,22,43, 5),            Rect(64,58,16,15),            Rect(70,42,13,19),
+            Rect(39,14,15,16),            Rect(25,60,30, 8),            Rect(10,64,23,10),            Rect(26, 1,17,14),
+            Rect(46,77,20,12),            Rect(56, 8,15,16),            Rect(66,55,19,13),            Rect( 8,64,28, 8),
+            Rect(70,53,20,12),            Rect(62, 7,12,20),            Rect( 2,24,56, 4),            Rect(25,48,25,10),
+            Rect(44,27,34, 7),            Rect(58,21,31, 8),            Rect(49,80,16,10)
         };
 
         histo.release();
@@ -540,6 +458,61 @@ Rect(59,43,10,13),
         normalize(histo.reshape(1,1),histo);
     }
 };
+
+
+
+//
+// hardcoded, precalculated gfft keypoints from the 90x90 cropped mean lfw2 img
+//
+void gfft(vector<KeyPoint> &kp)
+{
+    kp.push_back(KeyPoint(14, 33, 3));        kp.push_back(KeyPoint(29, 77, 3));        kp.push_back(KeyPoint(55, 60, 3));
+    kp.push_back(KeyPoint(63, 76, 3));        kp.push_back(KeyPoint(76, 32, 3));        kp.push_back(KeyPoint(35, 60, 3));
+    kp.push_back(KeyPoint(69, 21, 3));        kp.push_back(KeyPoint(45, 30, 3));        kp.push_back(KeyPoint(27, 31, 3));
+    kp.push_back(KeyPoint(64, 26, 3));        kp.push_back(KeyPoint(21, 22, 3));        kp.push_back(KeyPoint(25, 27, 3));
+    kp.push_back(KeyPoint(69, 31, 3));        kp.push_back(KeyPoint(54, 81, 3));        kp.push_back(KeyPoint(62, 30, 3));
+    kp.push_back(KeyPoint(20, 32, 3));        kp.push_back(KeyPoint(52, 33, 3));        kp.push_back(KeyPoint(37, 32, 3));
+    kp.push_back(KeyPoint(38, 81, 3));        kp.push_back(KeyPoint(36, 82, 3));        kp.push_back(KeyPoint(32, 31, 3));
+    kp.push_back(KeyPoint(78, 17, 3));        kp.push_back(KeyPoint(59, 24, 3));        kp.push_back(KeyPoint(30, 24, 3));
+    kp.push_back(KeyPoint(11, 18, 3));        kp.push_back(KeyPoint(13, 17, 3));        kp.push_back(KeyPoint(56, 30, 3));
+    kp.push_back(KeyPoint(73, 15, 3));        kp.push_back(KeyPoint(19, 15, 3));        kp.push_back(KeyPoint(57, 53, 3));
+    kp.push_back(KeyPoint(33, 54, 3));        kp.push_back(KeyPoint(34, 52, 3));        kp.push_back(KeyPoint(49, 25, 3));
+    kp.push_back(KeyPoint(66, 33, 3));        kp.push_back(KeyPoint(55, 49, 3));        kp.push_back(KeyPoint(61, 33, 3));
+    kp.push_back(KeyPoint(39, 29, 3));        kp.push_back(KeyPoint(60, 46, 3));        kp.push_back(KeyPoint(40, 26, 3));
+    kp.push_back(KeyPoint(41, 76, 3));        kp.push_back(KeyPoint(50, 76, 3));        kp.push_back(KeyPoint(53, 41, 3));
+    kp.push_back(KeyPoint(44, 23, 3));        kp.push_back(KeyPoint(29, 60, 3));        kp.push_back(KeyPoint(54, 54, 3));
+    kp.push_back(KeyPoint(30, 47, 3));        kp.push_back(KeyPoint(45, 50, 3));        kp.push_back(KeyPoint(83, 35, 3));
+    kp.push_back(KeyPoint(36, 54, 3));        kp.push_back(KeyPoint(13, 46, 3));        kp.push_back(KeyPoint(36, 44, 3));
+    kp.push_back(KeyPoint(83, 38, 3));        kp.push_back(KeyPoint(49, 53, 3));        kp.push_back(KeyPoint(33, 83, 3));
+    kp.push_back(KeyPoint(17, 88, 3));        kp.push_back(KeyPoint(31, 63, 3));        kp.push_back(KeyPoint(13, 27, 3));
+    kp.push_back(KeyPoint(50, 62, 3));        kp.push_back(KeyPoint(11, 43, 3));        kp.push_back(KeyPoint(45, 55, 3));
+    kp.push_back(KeyPoint(45, 56, 3));        kp.push_back(KeyPoint(79, 43, 3));        kp.push_back(KeyPoint(74, 88, 3));
+    kp.push_back(KeyPoint(41, 62, 3));
+}
+
+
+struct GfftGrid
+{
+    void hist(const Mat &feature, Mat &histo, int histSize=256) const
+    {
+        int gr=4;
+
+        vector<KeyPoint> kp;
+        gfft(kp);
+
+        histo.release();
+        Rect bounds(0,0,90,90);
+        for (size_t k=0; k<kp.size(); k++)
+        {
+            Rect part(int(kp[k].pt.x)-gr, int(kp[k].pt.y)-gr, gr*2, gr*2 );
+            part &= bounds;
+            hist_patch(feature(part), histo, histSize);
+        }
+        normalize(histo.reshape(1,1),histo);
+    }
+};
+
+
 
 
 
@@ -573,6 +546,7 @@ struct GenericExtractor : public TextureFeature::Extractor
 
 
 //
+// instead of adding more bits, concateneate several histograms,
 // cslbp + dialbp + sqlbp = 3*16 bins = 12288 feature-bytes.
 //
 template <typename Grid>
@@ -708,13 +682,6 @@ struct ExtractorGridFeature : public TextureFeature::Extractor
         Ptr<Feature2D> f2d = Descriptor::create();
         f2d->compute(img, kp, features);
         
-        //PCA pca(features, Mat(), PCA::DATA_AS_ROW, 64);
-        //Mat proj;
-        //for ( int i=0; i<features.rows; i++ )
-        //{
-        //    proj.push_back(pca.project(features.row(i)));
-        //}
-        //features = proj.reshape(1,1);
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
@@ -725,79 +692,15 @@ typedef ExtractorGridFeature<xfeatures2d::FREAK> ExtractorFREAKGrid;
 typedef ExtractorGridFeature<xfeatures2d::SIFT> ExtractorSIFTGrid;
 typedef ExtractorGridFeature<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
 
-//
-// hardcoded, precalced gfft keypoints from the mean lfw2 img
-//
+
+
 template < class Descriptor >
 struct ExtractorGfftFeature : public TextureFeature::Extractor
 {
     virtual int extract(const Mat &img, Mat &features) const
     {
         vector<KeyPoint> kp;
-        kp.push_back(KeyPoint( 14, 33, 3));
-        kp.push_back(KeyPoint( 29, 77, 3));
-        kp.push_back(KeyPoint( 55, 60, 3));
-        kp.push_back(KeyPoint( 63, 76, 3));
-        kp.push_back(KeyPoint( 76, 32, 3));
-        kp.push_back(KeyPoint( 35, 60, 3));
-        kp.push_back(KeyPoint( 69, 21, 3));
-        kp.push_back(KeyPoint( 45, 30, 3));
-        kp.push_back(KeyPoint( 27, 31, 3));
-        kp.push_back(KeyPoint( 64, 26, 3));
-        kp.push_back(KeyPoint( 21, 22, 3));
-        kp.push_back(KeyPoint( 25, 27, 3));
-        kp.push_back(KeyPoint( 69, 31, 3));
-        kp.push_back(KeyPoint( 54, 81, 3));
-        kp.push_back(KeyPoint( 62, 30, 3));
-        kp.push_back(KeyPoint( 20, 32, 3));
-        kp.push_back(KeyPoint( 52, 33, 3));
-        kp.push_back(KeyPoint( 37, 32, 3));
-        kp.push_back(KeyPoint( 38, 81, 3));
-        kp.push_back(KeyPoint( 36, 82, 3));
-        kp.push_back(KeyPoint( 32, 31, 3));
-        kp.push_back(KeyPoint( 78, 17, 3));
-        kp.push_back(KeyPoint( 59, 24, 3));
-        kp.push_back(KeyPoint( 30, 24, 3));
-        kp.push_back(KeyPoint( 11, 18, 3));
-        kp.push_back(KeyPoint( 13, 17, 3));
-        kp.push_back(KeyPoint( 56, 30, 3));
-        kp.push_back(KeyPoint( 73, 15, 3));
-        kp.push_back(KeyPoint( 19, 15, 3));
-        kp.push_back(KeyPoint( 57, 53, 3));
-        kp.push_back(KeyPoint( 33, 54, 3));
-        kp.push_back(KeyPoint( 34, 52, 3));
-        kp.push_back(KeyPoint( 49, 25, 3));
-        kp.push_back(KeyPoint( 66, 33, 3));
-        kp.push_back(KeyPoint( 55, 49, 3));
-        kp.push_back(KeyPoint( 61, 33, 3));
-        kp.push_back(KeyPoint( 39, 29, 3));
-        kp.push_back(KeyPoint( 60, 46, 3));
-        kp.push_back(KeyPoint( 40, 26, 3));
-        kp.push_back(KeyPoint( 41, 76, 3));
-        kp.push_back(KeyPoint( 50, 76, 3));
-        kp.push_back(KeyPoint( 53, 41, 3));
-        kp.push_back(KeyPoint( 44, 23, 3));
-        kp.push_back(KeyPoint( 29, 60, 3));
-        kp.push_back(KeyPoint( 54, 54, 3));
-        kp.push_back(KeyPoint( 30, 47, 3));
-        kp.push_back(KeyPoint( 45, 50, 3));
-        kp.push_back(KeyPoint( 83, 35, 3));
-        kp.push_back(KeyPoint( 36, 54, 3));
-        kp.push_back(KeyPoint( 13, 46, 3));
-        kp.push_back(KeyPoint( 36, 44, 3));
-        kp.push_back(KeyPoint( 83, 38, 3));
-        kp.push_back(KeyPoint( 49, 53, 3));
-        kp.push_back(KeyPoint( 33, 83, 3));
-        kp.push_back(KeyPoint( 17, 88, 3));
-        kp.push_back(KeyPoint( 31, 63, 3));
-        kp.push_back(KeyPoint( 13, 27, 3));
-        kp.push_back(KeyPoint( 50, 62, 3));
-        kp.push_back(KeyPoint( 11, 43, 3));
-        kp.push_back(KeyPoint( 45, 55, 3));
-        kp.push_back(KeyPoint( 45, 56, 3));
-        kp.push_back(KeyPoint( 79, 43, 3));
-        kp.push_back(KeyPoint( 74, 88, 3));
-        kp.push_back(KeyPoint( 41, 62, 3));
+        gfft(kp);
 
         Ptr<Feature2D> f2d = Descriptor::create();
         f2d->compute(img, kp, features);
@@ -806,10 +709,7 @@ struct ExtractorGfftFeature : public TextureFeature::Extractor
     }
 };
 typedef ExtractorGfftFeature<ORB> ExtractorORBGfft;
-typedef ExtractorGfftFeature<BRISK> ExtractorBRISKGfft;
-typedef ExtractorGfftFeature<xfeatures2d::FREAK> ExtractorFREAKGfft;
 typedef ExtractorGfftFeature<xfeatures2d::SIFT> ExtractorSIFTGfft;
-typedef ExtractorGfftFeature<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGfft;
 
 
 
@@ -874,6 +774,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPyramidTpLbp()
 {
     return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid());
 }
+cv::Ptr<TextureFeature::Extractor> createExtractorGfftTpLbp()
+{
+    return makePtr< GenericExtractor<FeatureTPLbp,GfftGrid> >(FeatureTPLbp(), GfftGrid());
+}
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx, int gy, int over)
 {
     return makePtr< GenericExtractor<FeatureTPLbp,OverlapGridHist> >(FeatureTPLbp(), OverlapGridHist(gx, gy, over));
@@ -931,6 +835,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPyramidCombined()
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapCombined(int gx, int gy, int over)
 {
     return makePtr< CombinedExtractor<OverlapGridHist> >(OverlapGridHist(gx, gy, over));
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorGfftCombined()
+{
+    return makePtr< CombinedExtractor<GfftGrid> >(GfftGrid());
 }
 
 

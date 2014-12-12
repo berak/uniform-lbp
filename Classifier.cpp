@@ -188,6 +188,7 @@ struct ClassifierSvm : public TextureFeature::Classifier
 
         svm->clear();
         bool ok = svm->train(trainData , ml::ROW_SAMPLE , Mat(labels));
+        // damn thing fails silently, if nu was not acceptable
         CV_Assert(ok&&"please check the input params(nu)");
         return trainData.rows;
     }
@@ -245,8 +246,8 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
             Ptr<ml::SVM> svm = ml::SVM::create(param);
             Mat slabels; // you against all others, that's the only difference.
             for ( size_t j=0; j<labels.total(); ++j)
-                slabels.push_back( ( *it == labels.at<int>(j) ) ? 1 : -1 );
-            svm->train( trainData , ml::ROW_SAMPLE , slabels ); // same data, different labels.
+                slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 );
+            svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
             svms.push_back(svm);
         }
         return trainData.rows;

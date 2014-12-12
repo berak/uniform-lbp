@@ -298,3 +298,4 @@ retina / parvo preprocessing !!
     sift_L2          115200    550      0    1.000  658.560
     eigen             14400    538     12    0.978  499.964
     fisher            14400    550      0    1.000  451.933
+    sift_gfft_svm     32768    550      0    1.000   66.906

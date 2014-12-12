@@ -37,6 +37,7 @@ public:
             case EXT_TPLBP_E:  ext = createExtractorElasticTpLbp(); break;
             case EXT_TPLBP_O:  ext = createExtractorOverlapTpLbp(); break;
             case EXT_TPLBP_P:  ext = createExtractorPyramidTpLbp(); break;
+            case EXT_TPLBP_G:  ext = createExtractorGfftTpLbp(); break;
             case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
             case EXT_FPLBP_E:  ext = createExtractorElasticFpLbp(); break;
             case EXT_FPLBP_O:  ext = createExtractorOverlapFpLbp(); break;
@@ -53,6 +54,7 @@ public:
             case EXT_COMB_E:   ext = createExtractorElasticCombined(); break;
             case EXT_COMB_O:   ext = createExtractorOverlapCombined(); break;
             case EXT_COMB_P:   ext = createExtractorPyramidCombined(); break;
+            case EXT_COMB_G:   ext = createExtractorGfftCombined(); break;
             case EXT_Gabor:    ext = createExtractorGaborLbp(); break;
             case EXT_Gabor_E:  ext = createExtractorElasticGaborLbp(1); break;
             case EXT_Dct:      ext = createExtractorDct(); break;

@@ -51,6 +51,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPyramidFpLbp();
 cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx=8, int gy=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticTpLbp();
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidTpLbp();
+cv::Ptr<TextureFeature::Extractor> createExtractorGfftTpLbp();
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx=8,int gy=8,int over=5);
 // reverse lbp circle
 cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx=8, int gy=8);
@@ -66,6 +67,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPyramidMTS();
 cv::Ptr<TextureFeature::Extractor> createExtractorCombined(int gx=8, int gy=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticCombined();
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidCombined();
+cv::Ptr<TextureFeature::Extractor> createExtractorGfftCombined();
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapCombined(int gx=8, int gy=8, int over=5);
 // phase based
 cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx=8, int gy=8, int kernel_size=8);
