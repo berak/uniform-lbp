@@ -79,6 +79,9 @@ cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g=10);
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g=10);
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGftt();
 
+cv::Ptr<TextureFeature::Extractor> createExtractorGrad();
+cv::Ptr<TextureFeature::Extractor> createExtractorGfttGrad();
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticGrad();
 
 //
 // identification task (get the closest item from a trained db)

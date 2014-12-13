@@ -311,8 +311,10 @@ int main(int argc, const char *argv[])
         case 43: runtest("sift_L2",      createExtractorSIFTGrid(),        createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
         case 44: runtest("sift_svm",     createExtractorSIFTGrid(),        createClassifierSVM(),                   images,labels,persons, fold); break;
         case 45: runtest("sift_gftt_svm",createExtractorSIFTGftt(),        createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 46: runtest("eigen",        createExtractorPixels(),          createClassifierEigen(),                 images,labels,persons, fold); break;
-        case 47: runtest("fisher",       createExtractorPixels(),          createClassifierFisher(),                images,labels,persons, fold); break;
+        case 46: runtest("grad_svm",     createExtractorGrad(),            createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 47: runtest("grad_gftt_svm",createExtractorGfttGrad(),        createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 48: runtest("eigen",        createExtractorPixels(),          createClassifierEigen(),                 images,labels,persons, fold); break;
+        case 49: runtest("fisher",       createExtractorPixels(),          createClassifierFisher(),                images,labels,persons, fold); break;
         }
     }
     return 0;

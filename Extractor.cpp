@@ -38,6 +38,23 @@ struct ExtractorPixels : public TextureFeature::Extractor
 
 
 
+struct FeatureGrad
+{
+    int nbins;
+    FeatureGrad(int nbins=45) : nbins(nbins) {}
+
+    int operator() (const Mat &I, Mat &fI) const
+    {
+        Mat s1, s2, s3(I.size(), CV_32F);
+        Sobel(I, s1, CV_32F, 1, 0);
+        Sobel(I, s2, CV_32F, 0, 1);
+        fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+        fI = s3 / (360/nbins);
+        return nbins;
+    }
+};
+
+
 struct FeatureLbp
 {
     int operator() (const Mat &I, Mat &fI) const
@@ -66,6 +83,7 @@ struct FeatureLbp
         return 256;
     }
 };
+
 
 //
 // "Description of Interest Regions with Center-Symmetric Local Binary Patterns"
@@ -459,113 +477,42 @@ static void gftt64(vector<KeyPoint> &kp)
 
 static void gftt96(vector<KeyPoint> &kp)
 {
-
-kp.push_back(KeyPoint(14, 33, 3));
-kp.push_back(KeyPoint(29, 77, 3));
-kp.push_back(KeyPoint(55, 60, 3));
-kp.push_back(KeyPoint(63, 76, 3));
-kp.push_back(KeyPoint(76, 32, 3));
-kp.push_back(KeyPoint(35, 60, 3));
-kp.push_back(KeyPoint(69, 21, 3));
-kp.push_back(KeyPoint(45, 30, 3));
-kp.push_back(KeyPoint(27, 31, 3));
-kp.push_back(KeyPoint(64, 26, 3));
-kp.push_back(KeyPoint(21, 22, 3));
-kp.push_back(KeyPoint(25, 27, 3));
-kp.push_back(KeyPoint(69, 31, 3));
-kp.push_back(KeyPoint(54, 81, 3));
-kp.push_back(KeyPoint(62, 30, 3));
-kp.push_back(KeyPoint(20, 32, 3));
-kp.push_back(KeyPoint(52, 33, 3));
-kp.push_back(KeyPoint(37, 32, 3));
-kp.push_back(KeyPoint(38, 81, 3));
-kp.push_back(KeyPoint(36, 82, 3));
-kp.push_back(KeyPoint(32, 31, 3));
-kp.push_back(KeyPoint(78, 17, 3));
-kp.push_back(KeyPoint(59, 24, 3));
-kp.push_back(KeyPoint(30, 24, 3));
-kp.push_back(KeyPoint(11, 18, 3));
-kp.push_back(KeyPoint(13, 17, 3));
-kp.push_back(KeyPoint(56, 30, 3));
-kp.push_back(KeyPoint(73, 15, 3));
-kp.push_back(KeyPoint(19, 15, 3));
-kp.push_back(KeyPoint(57, 53, 3));
-kp.push_back(KeyPoint(33, 54, 3));
-kp.push_back(KeyPoint(34, 52, 3));
-kp.push_back(KeyPoint(49, 25, 3));
-kp.push_back(KeyPoint(66, 33, 3));
-kp.push_back(KeyPoint(55, 49, 3));
-kp.push_back(KeyPoint(61, 33, 3));
-kp.push_back(KeyPoint(39, 29, 3));
-kp.push_back(KeyPoint(60, 46, 3));
-kp.push_back(KeyPoint(40, 26, 3));
-kp.push_back(KeyPoint(41, 76, 3));
-kp.push_back(KeyPoint(50, 76, 3));
-kp.push_back(KeyPoint(53, 41, 3));
-kp.push_back(KeyPoint(44, 23, 3));
-kp.push_back(KeyPoint(29, 60, 3));
-kp.push_back(KeyPoint(54, 54, 3));
-kp.push_back(KeyPoint(30, 47, 3));
-kp.push_back(KeyPoint(45, 50, 3));
-kp.push_back(KeyPoint(83, 35, 3));
-kp.push_back(KeyPoint(36, 54, 3));
-kp.push_back(KeyPoint(13, 46, 3));
-kp.push_back(KeyPoint(36, 44, 3));
-kp.push_back(KeyPoint(83, 38, 3));
-kp.push_back(KeyPoint(49, 53, 3));
-kp.push_back(KeyPoint(33, 83, 3));
-kp.push_back(KeyPoint(17, 88, 3));
-kp.push_back(KeyPoint(31, 63, 3));
-kp.push_back(KeyPoint(13, 27, 3));
-kp.push_back(KeyPoint(50, 62, 3));
-kp.push_back(KeyPoint(11, 43, 3));
-kp.push_back(KeyPoint(45, 55, 3));
-kp.push_back(KeyPoint(79, 43, 3));
-kp.push_back(KeyPoint(74, 88, 3));
-kp.push_back(KeyPoint(41, 62, 3));
-kp.push_back(KeyPoint(24, 15, 3));
-kp.push_back(KeyPoint(7,  40, 3)); 
-kp.push_back(KeyPoint(76, 45, 3));
-kp.push_back(KeyPoint(8,  42, 3)); 
-kp.push_back(KeyPoint(62, 14, 3));
-kp.push_back(KeyPoint(21, 83, 3));
-kp.push_back(KeyPoint(76, 25, 3));
-kp.push_back(KeyPoint(46, 67, 3));
-kp.push_back(KeyPoint(31, 13, 3));
-kp.push_back(KeyPoint(59, 67, 3));
-kp.push_back(KeyPoint(29, 14, 3));
-kp.push_back(KeyPoint(62, 63, 3));
-kp.push_back(KeyPoint(24, 66, 3));
-kp.push_back(KeyPoint(20, 58, 3));
-kp.push_back(KeyPoint(72, 57, 3));
-kp.push_back(KeyPoint(67, 64, 3));
-kp.push_back(KeyPoint(18, 76, 3));
-kp.push_back(KeyPoint(46, 78, 3));
-kp.push_back(KeyPoint(74,  1, 3));
-kp.push_back(KeyPoint(74, 74, 3));
-kp.push_back(KeyPoint(16, 60, 3));
-kp.push_back(KeyPoint(26, 69, 3));
-kp.push_back(KeyPoint(17, 62, 3));
-kp.push_back(KeyPoint(57, 88, 3));
-kp.push_back(KeyPoint(81, 24, 3));
-kp.push_back(KeyPoint(69, 54, 3));
-kp.push_back(KeyPoint(69, 58, 3));
-kp.push_back(KeyPoint(58, 73, 3));
-kp.push_back(KeyPoint(44, 71, 3));
-kp.push_back(KeyPoint(76, 63, 3));
-kp.push_back(KeyPoint(25, 59, 3));
-kp.push_back(KeyPoint( 25, 59, 3));
-kp.push_back(KeyPoint( 75, 61, 3));
-}
+    kp.push_back(KeyPoint(14, 33, 3));  kp.push_back(KeyPoint(29, 77, 3));  kp.push_back(KeyPoint(55, 60, 3));  kp.push_back(KeyPoint(63, 76, 3));
+    kp.push_back(KeyPoint(76, 32, 3));  kp.push_back(KeyPoint(35, 60, 3));  kp.push_back(KeyPoint(69, 21, 3));  kp.push_back(KeyPoint(45, 30, 3));
+    kp.push_back(KeyPoint(27, 31, 3));  kp.push_back(KeyPoint(64, 26, 3));  kp.push_back(KeyPoint(21, 22, 3));  kp.push_back(KeyPoint(25, 27, 3));
+    kp.push_back(KeyPoint(69, 31, 3));  kp.push_back(KeyPoint(54, 81, 3));  kp.push_back(KeyPoint(62, 30, 3));  kp.push_back(KeyPoint(20, 32, 3));
+    kp.push_back(KeyPoint(52, 33, 3));  kp.push_back(KeyPoint(37, 32, 3));  kp.push_back(KeyPoint(38, 81, 3));  kp.push_back(KeyPoint(36, 82, 3));
+    kp.push_back(KeyPoint(32, 31, 3));  kp.push_back(KeyPoint(78, 17, 3));  kp.push_back(KeyPoint(59, 24, 3));  kp.push_back(KeyPoint(30, 24, 3));
+    kp.push_back(KeyPoint(11, 18, 3));  kp.push_back(KeyPoint(13, 17, 3));  kp.push_back(KeyPoint(56, 30, 3));  kp.push_back(KeyPoint(73, 15, 3));
+    kp.push_back(KeyPoint(19, 15, 3));  kp.push_back(KeyPoint(57, 53, 3));  kp.push_back(KeyPoint(33, 54, 3));  kp.push_back(KeyPoint(34, 52, 3));
+    kp.push_back(KeyPoint(49, 25, 3));  kp.push_back(KeyPoint(66, 33, 3));  kp.push_back(KeyPoint(55, 49, 3));  kp.push_back(KeyPoint(61, 33, 3));
+    kp.push_back(KeyPoint(39, 29, 3));  kp.push_back(KeyPoint(60, 46, 3));  kp.push_back(KeyPoint(40, 26, 3));  kp.push_back(KeyPoint(41, 76, 3));
+    kp.push_back(KeyPoint(50, 76, 3));  kp.push_back(KeyPoint(53, 41, 3));  kp.push_back(KeyPoint(44, 23, 3));  kp.push_back(KeyPoint(29, 60, 3));
+    kp.push_back(KeyPoint(54, 54, 3));  kp.push_back(KeyPoint(30, 47, 3));  kp.push_back(KeyPoint(45, 50, 3));  kp.push_back(KeyPoint(83, 35, 3));
+    kp.push_back(KeyPoint(36, 54, 3));  kp.push_back(KeyPoint(13, 46, 3));  kp.push_back(KeyPoint(36, 44, 3));  kp.push_back(KeyPoint(83, 38, 3));
+    kp.push_back(KeyPoint(49, 53, 3));  kp.push_back(KeyPoint(33, 83, 3));  kp.push_back(KeyPoint(17, 88, 3));  kp.push_back(KeyPoint(31, 63, 3));
+    kp.push_back(KeyPoint(13, 27, 3));  kp.push_back(KeyPoint(50, 62, 3));  kp.push_back(KeyPoint(11, 43, 3));  kp.push_back(KeyPoint(45, 55, 3));
+    kp.push_back(KeyPoint(79, 43, 3));  kp.push_back(KeyPoint(74, 88, 3));  kp.push_back(KeyPoint(41, 62, 3));  kp.push_back(KeyPoint(24, 15, 3));
+    kp.push_back(KeyPoint(7,  40, 3));  kp.push_back(KeyPoint(76, 45, 3));  kp.push_back(KeyPoint(8,  42, 3));  kp.push_back(KeyPoint(62, 14, 3));
+    kp.push_back(KeyPoint(21, 83, 3));  kp.push_back(KeyPoint(76, 25, 3));  kp.push_back(KeyPoint(46, 67, 3));  kp.push_back(KeyPoint(31, 13, 3));
+    kp.push_back(KeyPoint(59, 67, 3));  kp.push_back(KeyPoint(29, 14, 3));  kp.push_back(KeyPoint(62, 63, 3));  kp.push_back(KeyPoint(24, 66, 3));
+    kp.push_back(KeyPoint(20, 58, 3));  kp.push_back(KeyPoint(72, 57, 3));  kp.push_back(KeyPoint(67, 64, 3));  kp.push_back(KeyPoint(18, 76, 3));
+    kp.push_back(KeyPoint(46, 78, 3));  kp.push_back(KeyPoint(74,  1, 3));  kp.push_back(KeyPoint(74, 74, 3));  kp.push_back(KeyPoint(16, 60, 3));
+    kp.push_back(KeyPoint(26, 69, 3));  kp.push_back(KeyPoint(17, 62, 3));  kp.push_back(KeyPoint(57, 88, 3));  kp.push_back(KeyPoint(81, 24, 3));
+    kp.push_back(KeyPoint(69, 54, 3));  kp.push_back(KeyPoint(69, 58, 3));  kp.push_back(KeyPoint(58, 73, 3));  kp.push_back(KeyPoint(44, 71, 3));
+    kp.push_back(KeyPoint(76, 63, 3));  kp.push_back(KeyPoint(25, 59, 3));  kp.push_back(KeyPoint(25, 59, 3));  kp.push_back(KeyPoint(75, 61, 3));
+}       
 
 struct GfttGrid
 {
+    int gr;
+    GfttGrid(int gr=4) : gr(gr) {} // 8x8 rect by default
+
     void hist(const Mat &feature, Mat &histo, int histSize=256) const
     {
-        int gr=4;
 
         vector<KeyPoint> kp;
-        gftt64(kp);
+        gftt96(kp);
 
         histo.release();
         Rect bounds(0,0,90,90);
@@ -768,9 +715,11 @@ struct ExtractorGfttFeature : public TextureFeature::Extractor
     virtual int extract(const Mat &img, Mat &features) const
     {
         vector<KeyPoint> kp;
-        gftt96(kp);
+        gftt64(kp);
 
         f2d->compute(img, kp, features);
+        // resize(features,features,Size(),0.5,1.0);
+        // features = features(Rect(64,0,64,features.rows)).clone();
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
@@ -907,6 +856,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGfttCombined()
 }
 
 
+
 cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx, int gy, int kernel_siz)
 {
     return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist(gx, gy), kernel_siz);
@@ -934,4 +884,17 @@ cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g)
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGftt()
 {
     return makePtr<ExtractorGfttFeature>(xfeatures2d::SIFT::create(200,5,0.01));
+}
+
+cv::Ptr<TextureFeature::Extractor> createExtractorGrad()
+{
+    return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist());
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorElasticGrad()
+{
+    return makePtr< GenericExtractor<FeatureGrad,ElasticParts> >(FeatureGrad(),ElasticParts());
+}
+cv::Ptr<TextureFeature::Extractor> createExtractorGfttGrad()
+{
+    return makePtr< GenericExtractor<FeatureGrad,GfttGrid> >(FeatureGrad(),GfttGrid());
 }

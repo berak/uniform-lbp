@@ -36,9 +36,12 @@ namespace myface
         EXT_Gabor,
         EXT_Gabor_E,
         EXT_Dct,
-        EXT_OrbGrid,
-        EXT_SiftGrid,
-        EXT_SiftGftt,
+        EXT_Orb,
+        EXT_Sift,
+        EXT_Sift_G,
+        EXT_Grad,
+        EXT_Grad_E,
+        EXT_Grad_G,
         EXT_MAX };
     static const char *EXS[] = {
         "Pixels",
@@ -71,9 +74,12 @@ namespace myface
         "Gabor",
         "Gabor_E",
         "Dct",
-        "OrbGrid",
-        "SiftGrid",
-        "SiftGftt",
+        "Orb",
+        "Sift",
+        "Sift_G",
+        "Grad",
+        "Grad_E",
+        "Grad_G",
         0
     };
     enum CLA {

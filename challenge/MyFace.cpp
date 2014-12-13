@@ -58,9 +58,12 @@ public:
             case EXT_Gabor:    ext = createExtractorGaborLbp(); break;
             case EXT_Gabor_E:  ext = createExtractorElasticGaborLbp(1); break;
             case EXT_Dct:      ext = createExtractorDct(); break;
-            case EXT_OrbGrid:  ext = createExtractorORBGrid(15); break;
-            case EXT_SiftGrid: ext = createExtractorSIFTGrid(15); break;
-            case EXT_SiftGftt: ext = createExtractorSIFTGftt(); break;
+            case EXT_Orb:      ext = createExtractorORBGrid(15); break;
+            case EXT_Sift:     ext = createExtractorSIFTGrid(15); break;
+            case EXT_Sift_G:   ext = createExtractorSIFTGftt(); break;
+            case EXT_Grad:     ext = createExtractorGrad(); break;
+            case EXT_Grad_E:   ext = createExtractorElasticGrad(); break;
+            case EXT_Grad_G:   ext = createExtractorGfttGrad(); break;
             default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
         }
         switch(clsfy)
