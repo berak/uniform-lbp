@@ -443,7 +443,7 @@ struct VerifierNearest : TextureFeature::Verifier
         return 1;
     }
 
-    virtual int same( const Mat &a, const Mat &b ) const
+    virtual bool same( const Mat &a, const Mat &b ) const
     {
         return (distance(a,b) < thresh);
     }
@@ -483,7 +483,7 @@ struct VerifierFisher
         return 1;
     }
 
-    virtual int same(const Mat &a, const Mat &b) const
+    virtual bool same(const Mat &a, const Mat &b) const
     {
         Mat pa = project(a);
         Mat pb = project(b);
@@ -545,12 +545,11 @@ struct VerifierPairDistance : public TextureFeature::Verifier
         return model->train(ml::TrainData::create(distances, ml::ROW_SAMPLE, binlabels));
     }
 
-    virtual int same(const Mat &a, const Mat &b) const
+    virtual bool same(const Mat &a, const Mat &b) const
     {
         Mat res;
         model->predict(distance(tofloat(a), tofloat(b)), res);
         LabelType r = res.at<LabelType>(0);
-        //cerr << res << "\t";
         return  r > 0;
     }
 };
@@ -608,7 +607,7 @@ struct VerifierEM : public VerifierPairDistance<int>
         return 1;
     }
 
-    virtual int same(const Mat &a, const Mat &b) const
+    virtual bool same(const Mat &a, const Mat &b) const
     {
         Mat fa = tofloat(a);
         Mat fb = tofloat(b);
@@ -636,9 +635,6 @@ struct VerifierBoost : public VerifierPairDistance<int>
 
 
 
-//
-// unrestricted/supervised !
-//
 struct VerifierLR : public VerifierPairDistance<float>
 {
     VerifierLR(int distFlag=2, float scale=0)

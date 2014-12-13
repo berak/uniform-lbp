@@ -38,7 +38,7 @@ namespace myface
         EXT_Dct,
         EXT_OrbGrid,
         EXT_SiftGrid,
-        EXT_SiftGfft,
+        EXT_SiftGftt,
         EXT_MAX };
     static const char *EXS[] = {
         "Pixels",
@@ -73,7 +73,7 @@ namespace myface
         "Dct",
         "OrbGrid",
         "SiftGrid",
-        "SiftGfft",
+        "SiftGftt",
         0
     };
     enum CLA {

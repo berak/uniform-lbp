@@ -90,7 +90,7 @@ Mat Preprocessor::process(const Mat &imgin)  const
         case 1: equalizeHist(imgcropped,imgout); break;
         case 2: clahe->apply(imgcropped,imgout); break;
         case 3: retina->run(imgcropped); retina->getParvo(imgout); break;
-        case 4: cv::normalize( tan_triggs_preprocessing(imgcropped), imgout, 0, 255, NORM_MINMAX, CV_8UC1); break;
+        case 4: cv::normalize(tan_triggs_preprocessing(imgcropped), imgout, 0, 255, NORM_MINMAX, CV_8UC1); break;
         case 5: resize(imgcropped,imgout,Size(32,32)); break;
     }
     return imgout;
