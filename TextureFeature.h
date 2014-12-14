@@ -19,7 +19,7 @@ namespace TextureFeature
         virtual int train(const Mat &features, const Mat &labels) = 0;
         virtual int reduce(const Mat &src, Mat &dest) const = 0;
     };
-    
+
     struct Classifier // identification
     {
         virtual int train(const Mat &features, const Mat &labels) = 0;
@@ -96,7 +96,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorDct();
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g=10);
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g=10);
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGftt();
-
+// gradients
 cv::Ptr<TextureFeature::Extractor> createExtractorGrad();
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttGrad();
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticGrad();

@@ -44,7 +44,7 @@ struct ReductorPCA : public TextureFeature::Reductor
 
         if (whitening)
         {
-            Mat m2; 
+            Mat m2;
             sqrt(pca.eigenvalues, m2);
             m2 = 1.0 / Mat::diag(m2);
             gemm(m2, pca.eigenvectors, 1, Mat(), 0, eigenvectors);

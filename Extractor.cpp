@@ -502,7 +502,7 @@ static void gftt96(vector<KeyPoint> &kp)
     kp.push_back(KeyPoint(26, 69, 3));  kp.push_back(KeyPoint(17, 62, 3));  kp.push_back(KeyPoint(57, 88, 3));  kp.push_back(KeyPoint(81, 24, 3));
     kp.push_back(KeyPoint(69, 54, 3));  kp.push_back(KeyPoint(69, 58, 3));  kp.push_back(KeyPoint(58, 73, 3));  kp.push_back(KeyPoint(44, 71, 3));
     kp.push_back(KeyPoint(76, 63, 3));  kp.push_back(KeyPoint(25, 59, 3));  kp.push_back(KeyPoint(25, 59, 3));  kp.push_back(KeyPoint(75, 61, 3));
-}       
+}
 
 struct GfttGrid
 {
@@ -660,9 +660,9 @@ struct GradMagExtractor : public TextureFeature::Extractor
 
 //
 // concat histograms from lbp-like features generated from a bank of gabor filtered images
-//   ( due to memory restrictions, it can't use plain lbp(64k), 
+//   ( due to memory restrictions, it can't use plain lbp(64k),
 //     but has to inherit the 2nd best bed (combined(12k)) )
-// 
+//
 template <typename Grid>
 struct ExtractorGabor : public CombinedExtractor<Grid>
 {
@@ -751,7 +751,7 @@ struct ExtractorGridFeature2d : public TextureFeature::Extractor
         }
         Ptr<Feature2D> f2d = Descriptor::create();
         f2d->compute(img, kp, features);
-        
+
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }

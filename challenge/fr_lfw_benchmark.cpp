@@ -69,7 +69,7 @@ using namespace cv::face;
 map<string, int> people;
 
 int getLabel(const string &imagePath)
-{   
+{
     size_t pos = imagePath.find('/');
     string curr = imagePath.substr(0, pos);
     map<string, int>::iterator it = people.find(curr);
@@ -96,7 +96,7 @@ void printOptions()
 
 
 int main(int argc, const char *argv[])
-{   
+{
     PROFILE;
     const char *keys =
             "{ help h usage ? |    | show this message }"
@@ -123,7 +123,7 @@ int main(int argc, const char *argv[])
     int pre = parser.get<int>("pre");
     int crp = parser.get<int>("crop");
     bool flp = parser.get<bool>("flip");
-    string trainMethod(parser.get<string>("train")); 
+    string trainMethod(parser.get<string>("train"));
     cout << myface::EXS[ext] << " " << myface::REDS[red] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << flp << " " << trainMethod << '\r';
 
     int64 t0 = getTickCount();
@@ -141,7 +141,7 @@ int main(int argc, const char *argv[])
     if (trainMethod == "dev") // train on personsDevTrain.txt
     {
         for (unsigned int i=0; i<dataset->getTrain().size(); ++i)
-        {   
+        {
             FR_lfwObj *example = static_cast<FR_lfwObj *>(dataset->getTrain()[i].get());
 
             int currNum1 = getLabel(example->image1);
@@ -166,7 +166,7 @@ int main(int argc, const char *argv[])
 
     vector<double> p;
     for (unsigned int j=0; j<numSplits; ++j)
-    {  
+    {
         PROFILEX("splits");
         if (trainMethod == "split") // train on the remaining 9 splits from pairs.txt
         {
