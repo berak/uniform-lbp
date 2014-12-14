@@ -85,6 +85,8 @@ void printOptions()
 {
     cerr << "extractors  :"<< endl;
     for (size_t i=0; i<myface::EXT_MAX; ++i) cerr << "  " << myface::EXS[i] << "(" << i << ")" << endl;
+    cerr << endl << "reductors :" << endl;
+    for (size_t i=0; i<myface::RED_MAX; ++i)  cerr <<  "  " << myface::REDS[i] << "(" << i << ")" << endl;
     cerr << endl << "classifiers :" << endl;
     for (size_t i=0; i<myface::CL_MAX; ++i)  cerr <<  "  " << myface::CLS[i] << "(" << i << ")" << endl;
     cerr << endl << "preproc :" << endl;
@@ -100,6 +102,7 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
             "{ ext e          |37  | extractor enum }"
+            "{ red r          |0   | reductor enum }"
             "{ cls c          |6   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
@@ -115,15 +118,16 @@ int main(int argc, const char *argv[])
         return -1;
     }
     int ext = parser.get<int>("ext");
+    int red = parser.get<int>("red");
     int cls = parser.get<int>("cls");
     int pre = parser.get<int>("pre");
     int crp = parser.get<int>("crop");
     bool flp = parser.get<bool>("flip");
     string trainMethod(parser.get<string>("train")); 
-    cout << myface::EXS[ext] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << flp << " " << trainMethod << '\r';
+    cout << myface::EXS[ext] << " " << myface::REDS[red] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << flp << " " << trainMethod << '\r';
 
     int64 t0 = getTickCount();
-    Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,cls,pre,crp,flp);
+    Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,red,cls,pre,crp,flp);
 
     // These vectors hold the images and corresponding labels.
     vector<Mat> images;
@@ -232,9 +236,10 @@ int main(int argc, const char *argv[])
     double se = sigma/sqrt(double(p.size()));
 
     int64 t1 = getTickCount();
-    cerr << format("%-8s",myface::EXS[ext]) << " ";
-    cerr << format("%-9s",myface::CLS[cls]) << " ";
-    cerr << format("%-8s",myface::PPS[pre]) << " ";
+    cerr << format("%-8s",myface::EXS[ext])  << " ";
+    cerr << format("%-6s",myface::REDS[red]) << " ";
+    cerr << format("%-9s",myface::CLS[cls])  << " ";
+    cerr << format("%-8s",myface::PPS[pre])  << " ";
     cerr << format("%-6s",trainMethod.c_str()) << "\t";
     //cerr << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
     cerr << format("%9.4f %9.4f %9.4f", mu, se, ((t1-t0)/getTickFrequency())) << endl;

@@ -14,6 +14,12 @@ namespace TextureFeature
         virtual int extract(const Mat &img, Mat &features) const = 0;
     };
 
+    struct Reductor
+    {
+        virtual int train(const Mat &features) = 0;
+        virtual int reduce(const Mat &src, Mat &dest) const = 0;
+    };
+    
     struct Classifier // identification
     {
         virtual int train(const Mat &features, const Mat &labels) = 0;
@@ -84,6 +90,14 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGfttGrad();
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticGrad();
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidGrad();
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttGradMag();
+
+
+//
+// reductors
+//
+cv::Ptr<TextureFeature::Reductor> createReductorNone();
+cv::Ptr<TextureFeature::Reductor> createReductorPCA(int nc=0, bool whitening=false);
+
 
 //
 // identification task (get the closest item from a trained db)

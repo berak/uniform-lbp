@@ -86,6 +86,20 @@ namespace myface
         "GradMag",
         0
     };
+    enum RED {
+        RED_NONE,
+        RED_PCA,
+        RED_PCA64,
+        RED_PCA64_W,
+        RED_MAX
+    };
+    static const char *REDS[] = {
+        "none",
+        "PCA",
+        "PCA64",
+        "PCA64W",
+        0
+    };
     enum CLA {
         CL_NORM_L2,
         CL_NORM_L2SQR,
@@ -144,7 +158,7 @@ namespace myface
     };
 }
 
-Ptr<myface::FaceVerifier> createMyFaceVerifier(int extract=0, int clsfy=0, int preproc=0, int precrop=0,bool flip=false);
+Ptr<myface::FaceVerifier> createMyFaceVerifier(int extract=0, int redu=0, int clsfy=0, int preproc=0, int precrop=0,bool flip=false);
 
 
 #endif // __MyFace_onboard__
