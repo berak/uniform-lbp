@@ -318,6 +318,15 @@ struct ClassifierEigen : public TextureFeature::Classifier
 
         PCA pca(data, Mat(), cv::PCA::DATA_AS_ROW, _num_components);
 
+        //if ( 1 ) // whitening
+        //{
+        //    Mat m = Mat::zeros(pca.eigenvectors.size(), pca.eigenvectors.type());
+        //    Mat m2; sqrt(m.diag(pca.eigenvalues), m2);
+        //    m2 = 1.0 / m2;
+        //    cerr << m2(Rect(0,0,10,10)) << endl;   
+        //    gemm( m2, pca.eigenvectors,1,Mat(),0,_eigenvectors);
+        //    cerr << _eigenvectors(Rect(0,0,10,10)) << endl;   
+        //}
         _labels = labels;
         _mean   = pca.mean.reshape(1,1);
         transpose(pca.eigenvectors, _eigenvectors);

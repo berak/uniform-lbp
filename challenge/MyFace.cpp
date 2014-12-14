@@ -64,6 +64,8 @@ public:
             case EXT_Grad:     ext = createExtractorGrad(); break;
             case EXT_Grad_E:   ext = createExtractorElasticGrad(); break;
             case EXT_Grad_G:   ext = createExtractorGfttGrad(); break;
+            case EXT_Grad_P:   ext = createExtractorPyramidGrad(); break;
+            case EXT_GradMag:  ext = createExtractorGfttGradMag(); break;
             default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
         }
         switch(clsfy)

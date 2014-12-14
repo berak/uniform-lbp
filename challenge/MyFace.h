@@ -42,6 +42,8 @@ namespace myface
         EXT_Grad,
         EXT_Grad_E,
         EXT_Grad_G,
+        EXT_Grad_P,
+        EXT_GradMag,
         EXT_MAX };
     static const char *EXS[] = {
         "Pixels",
@@ -80,6 +82,8 @@ namespace myface
         "Grad",
         "Grad_E",
         "Grad_G",
+        "Grad_P",
+        "GradMag",
         0
     };
     enum CLA {

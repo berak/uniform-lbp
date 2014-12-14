@@ -228,7 +228,7 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if (argc>2) fold = atoi(argv[2]);
 
-    int rec = 44;
+    int rec = 49;
     if (argc>3) rec = atoi(argv[3]);
 
     int preproc = 0; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
@@ -257,7 +257,7 @@ int main(int argc, const char *argv[])
     }
 
     // loop through all tests for rec==0, do one test else.
-    int n=50; // it's gettin a *bit* crowded ;)
+    int n=64; // it's gettin a *bit* crowded ;)
     if (rec > 0)
     {
         n = rec+1;
@@ -313,8 +313,9 @@ int main(int argc, const char *argv[])
         case 45: runtest("sift_gftt_svm",createExtractorSIFTGftt(),        createClassifierSVM(),                   images,labels,persons, fold); break;
         case 46: runtest("grad_svm",     createExtractorGrad(),            createClassifierSVM(),                   images,labels,persons, fold); break;
         case 47: runtest("grad_gftt_svm",createExtractorGfttGrad(),        createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 48: runtest("eigen",        createExtractorPixels(),          createClassifierEigen(),                 images,labels,persons, fold); break;
-        case 49: runtest("fisher",       createExtractorPixels(),          createClassifierFisher(),                images,labels,persons, fold); break;
+        case 48: runtest("gradmag_svm",  createExtractorGfttGradMag(),     createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 49: runtest("eigen",        createExtractorPixels(),          createClassifierEigen(),                 images,labels,persons, fold); break;
+        case 50: runtest("fisher",       createExtractorPixels(),          createClassifierFisher(),                images,labels,persons, fold); break;
         }
     }
     return 0;
