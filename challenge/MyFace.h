@@ -44,7 +44,8 @@ namespace myface
         EXT_Grad_G,
         EXT_Grad_P,
         EXT_GradMag,
-        EXT_MAX };
+        EXT_MAX 
+    };
     static const char *EXS[] = {
         "Pixels",
         "Lbp",
@@ -114,7 +115,6 @@ namespace myface
         CL_LR,
         CL_BOOST,
         CL_COSINE,
-//        CL_FISHER,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -129,7 +129,6 @@ namespace myface
         "LR",
         "BOOST",
         "COSINE",
-//        "FISHER",
         0
     };
     enum PRE {

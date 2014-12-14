@@ -90,7 +90,6 @@ public:
             case CL_EM:        cls = createVerifierEM(2, 0.25f); break;
             case CL_LR:        cls = createVerifierLR(2, 0.5f); break;
             case CL_BOOST:     cls = createVerifierBoost(2); break;
-//            case CL_FISHER:    cls = createVerifierFisher(); break;
             default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
         }
     }

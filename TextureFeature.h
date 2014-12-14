@@ -121,9 +121,6 @@ cv::Ptr<TextureFeature::Classifier> createClassifierCosine();
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int n=1);                // TODO: needs a way to get to the k-1 others
 cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5);
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti();
-//// reference
-//cv::Ptr<TextureFeature::Classifier> createClassifierEigen();
-//cv::Ptr<TextureFeature::Classifier> createClassifierFisher();
 
 //
 // verification task (same / not same)
