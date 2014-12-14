@@ -279,126 +279,123 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
     }
 };
 
-
+////
+//// ref impl of eigen / fisher faces
+////   this is basically bytefish's code,
+////   (terribly) condensed to the bare minimum
+////
+//struct ClassifierEigen : public TextureFeature::Classifier
+//{
+//    vector<Mat> _projections;
+//    Mat _labels;
+//    Mat _eigenvectors;
+//    Mat _mean;
+//    int _num_components;
 //
-// ref impl of eigen / fisher faces
-//   this is basically bytefish's code,
-//   (terribly) condensed to the bare minimum
+//    ClassifierEigen(int num_components=0)
+//        : _num_components(num_components)
+//    {}
 //
-struct ClassifierEigen : public TextureFeature::Classifier
-{
-    vector<Mat> _projections;
-    Mat _labels;
-    Mat _eigenvectors;
-    Mat _mean;
-    int _num_components;
-
-    ClassifierEigen(int num_components=0)
-        : _num_components(num_components)
-    {}
-
-    Mat project(const Mat &in) const
-    {
-        return LDA::subspaceProject(_eigenvectors, _mean, in);
-    }
-
-    void save_projections(const Mat &data)
-    {
-        _projections.clear();
-        for(int i=0; i<data.rows; i++)
-        {
-            _projections.push_back(project(data.row(i)));
-        }
-    }
-
-    virtual int train(const Mat &data, const Mat &labels)
-    {
-        if((_num_components <= 0) || (_num_components > data.rows))
-            _num_components = data.rows;
-
-        PCA pca(data, Mat(), cv::PCA::DATA_AS_ROW, _num_components);
-
-        //if ( 1 ) // whitening
-        //{
-        //    Mat m = Mat::zeros(pca.eigenvectors.size(), pca.eigenvectors.type());
-        //    Mat m2; sqrt(m.diag(pca.eigenvalues), m2);
-        //    m2 = 1.0 / m2;
-        //    cerr << m2(Rect(0,0,10,10)) << endl;   
-        //    gemm( m2, pca.eigenvectors,1,Mat(),0,_eigenvectors);
-        //    cerr << _eigenvectors(Rect(0,0,10,10)) << endl;   
-        //}
-        _labels = labels;
-        _mean   = pca.mean.reshape(1,1);
-        transpose(pca.eigenvectors, _eigenvectors);
-        save_projections(data);
-        return 1;
-    }
-
-    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
-    {
-        Mat query = project(testFeature.reshape(1,1));
-        double minDist = DBL_MAX;
-        int minClass = -1;
-        int minId = -1;
-        for (size_t idx=0; idx<_projections.size(); idx++)
-        {
-            double dist = norm(_projections[idx], query, NORM_L2);
-            if (dist < minDist)
-            {
-                minId    = idx;
-                minDist  = dist;
-                minClass = _labels.at<int>((int)idx);
-            }
-        }
-        results.push_back(float(minClass));
-        results.push_back(float(minDist));
-        results.push_back(float(minId));
-        return 3;
-    }
-};
-
-
-struct ClassifierFisher : public ClassifierEigen
-{
-    ClassifierFisher(int num_components=0)
-        : ClassifierEigen(num_components)
-    {}
-
-    // recycled in VerifierFisher..
-    void train_base(const Mat &data, const Mat &labels)
-    {
-        set<int> classes;
-        int C = unique(labels,classes);
-        int N = data.rows;
-        if((_num_components <= 0) || (_num_components > (C-1))) // btw, why C-1 ?
-            _num_components = (C-1);
-
-        // step one, do pca on the original(pixel) data:
-        PCA pca(data, Mat(), cv::PCA::DATA_AS_ROW, (N-C));
-        _mean = pca.mean.reshape(1,1);
-
-        // step two, do lda on data projected to pca space:
-        Mat proj = LDA::subspaceProject(pca.eigenvectors.t(), _mean, data);
-        LDA lda(proj, labels, min(_num_components,pca.eigenvectors.rows));
-
-        // step three, combine both:
-        Mat leigen;
-        lda.eigenvectors().convertTo(leigen, pca.eigenvectors.type());
-        gemm(pca.eigenvectors, leigen, 1.0, Mat(), 0.0, _eigenvectors, GEMM_1_T);
-    }
-
-    virtual int train(const Mat &data, const Mat &labels)
-    {
-        train_base(data,labels);
-
-        // step four, project training images to lda space for prediction:
-        _labels = labels;
-        save_projections(data);
-        return 1;
-    }
-};
-
-
+//    Mat project(const Mat &in) const
+//    {
+//        return LDA::subspaceProject(_eigenvectors, _mean, in);
+//    }
+//
+//    void save_projections(const Mat &data)
+//    {
+//        _projections.clear();
+//        for(int i=0; i<data.rows; i++)
+//        {
+//            _projections.push_back(project(data.row(i)));
+//        }
+//    }
+//
+//    virtual int train(const Mat &data, const Mat &labels)
+//    {
+//        if((_num_components <= 0) || (_num_components > data.rows))
+//            _num_components = data.rows;
+//
+//        PCA pca(data, Mat(), cv::PCA::DATA_AS_ROW, _num_components);
+//
+//        //if ( 1 ) // whitening
+//        //{
+//        //    Mat m = Mat::zeros(pca.eigenvectors.size(), pca.eigenvectors.type());
+//        //    Mat m2; sqrt(m.diag(pca.eigenvalues), m2);
+//        //    m2 = 1.0 / m2;
+//        //    cerr << m2(Rect(0,0,10,10)) << endl;   
+//        //    gemm( m2, pca.eigenvectors,1,Mat(),0,_eigenvectors);
+//        //    cerr << _eigenvectors(Rect(0,0,10,10)) << endl;   
+//        //}
+//        _labels = labels;
+//        _mean   = pca.mean.reshape(1,1);
+//        transpose(pca.eigenvectors, _eigenvectors);
+//        save_projections(data);
+//        return 1;
+//    }
+//
+//    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
+//    {
+//        Mat query = project(testFeature.reshape(1,1));
+//        double minDist = DBL_MAX;
+//        int minClass = -1;
+//        int minId = -1;
+//        for (size_t idx=0; idx<_projections.size(); idx++)
+//        {
+//            double dist = norm(_projections[idx], query, NORM_L2);
+//            if (dist < minDist)
+//            {
+//                minId    = idx;
+//                minDist  = dist;
+//                minClass = _labels.at<int>((int)idx);
+//            }
+//        }
+//        results.push_back(float(minClass));
+//        results.push_back(float(minDist));
+//        results.push_back(float(minId));
+//        return 3;
+//    }
+//};
+//
+//
+//struct ClassifierFisher : public ClassifierEigen
+//{
+//    ClassifierFisher(int num_components=0)
+//        : ClassifierEigen(num_components)
+//    {}
+//
+//    // recycled in VerifierFisher..
+//    void train_base(const Mat &data, const Mat &labels)
+//    {
+//        set<int> classes;
+//        int C = unique(labels,classes);
+//        int N = data.rows;
+//        if((_num_components <= 0) || (_num_components > (C-1))) // btw, why C-1 ?
+//            _num_components = (C-1);
+//
+//        // step one, do pca on the original(pixel) data:
+//        PCA pca(data, Mat(), cv::PCA::DATA_AS_ROW, (N-C));
+//        _mean = pca.mean.reshape(1,1);
+//
+//        // step two, do lda on data projected to pca space:
+//        Mat proj = LDA::subspaceProject(pca.eigenvectors.t(), _mean, data);
+//        LDA lda(proj, labels, min(_num_components,pca.eigenvectors.rows));
+//
+//        // step three, combine both:
+//        Mat leigen;
+//        lda.eigenvectors().convertTo(leigen, pca.eigenvectors.type());
+//        gemm(pca.eigenvectors, leigen, 1.0, Mat(), 0.0, _eigenvectors, GEMM_1_T);
+//    }
+//
+//    virtual int train(const Mat &data, const Mat &labels)
+//    {
+//        train_base(data,labels);
+//
+//        // step four, project training images to lda space for prediction:
+//        _labels = labels;
+//        save_projections(data);
+//        return 1;
+//    }
+//};
 
 
 //
@@ -470,36 +467,36 @@ struct VerifierHist : VerifierNearest
     }
 };
 
-
-struct VerifierFisher
-    : public virtual VerifierNearest
-    , public virtual ClassifierFisher
-{
-    VerifierFisher(int flag, int num_components=0)
-        : VerifierNearest(flag)
-        , ClassifierFisher(num_components)
-    {}
-
-    virtual int train(const Mat &data, const Mat &labels)
-    {
-        ClassifierFisher::train_base(data,labels);
-
-        Mat projections;
-        for(int i=0; i<data.rows; i++)
-            projections.push_back(project(data.row(i)));
-
-        VerifierNearest::train(projections, labels);
-        return 1;
-    }
-
-    virtual bool same(const Mat &a, const Mat &b) const
-    {
-        Mat pa = project(a);
-        Mat pb = project(b);
-        double d = distance(pa, pb);
-        return d < thresh;
-    }
-};
+//
+//struct VerifierFisher
+//    : public virtual VerifierNearest
+//    , public virtual ClassifierFisher
+//{
+//    VerifierFisher(int flag, int num_components=0)
+//        : VerifierNearest(flag)
+//        , ClassifierFisher(num_components)
+//    {}
+//
+//    virtual int train(const Mat &data, const Mat &labels)
+//    {
+//        ClassifierFisher::train_base(data,labels);
+//
+//        Mat projections;
+//        for(int i=0; i<data.rows; i++)
+//            projections.push_back(project(data.row(i)));
+//
+//        VerifierNearest::train(projections, labels);
+//        return 1;
+//    }
+//
+//    virtual bool same(const Mat &a, const Mat &b) const
+//    {
+//        Mat pa = project(a);
+//        Mat pb = project(b);
+//        double d = distance(pa, pb);
+//        return d < thresh;
+//    }
+//};
 
 
 
@@ -687,15 +684,15 @@ cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree, double ga
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
 { return makePtr<ClassifierSvmMulti>(); }
 
+////
+//// reference impl
+////
+//cv::Ptr<TextureFeature::Classifier> createClassifierEigen()
+//{ return makePtr<ClassifierEigen>(); }
 //
-// reference impl
+//cv::Ptr<TextureFeature::Classifier> createClassifierFisher()
+//{ return makePtr<ClassifierFisher>(); }
 //
-cv::Ptr<TextureFeature::Classifier> createClassifierEigen()
-{ return makePtr<ClassifierEigen>(); }
-
-cv::Ptr<TextureFeature::Classifier> createClassifierFisher()
-{ return makePtr<ClassifierFisher>(); }
-
 
 //
 // (verification)
@@ -707,8 +704,8 @@ cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
 { return makePtr<VerifierHist>(norm_flag); }
 
-cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int norm_flag)
-{ return makePtr<VerifierFisher>(norm_flag); }
+//cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int norm_flag)
+//{ return makePtr<VerifierFisher>(norm_flag); }
 
 cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc, float scale)
 { return makePtr<VerifierSVM>(distfunc,scale); }

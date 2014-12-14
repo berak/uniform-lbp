@@ -75,6 +75,7 @@ public:
             case RED_PCA:      red = createReductorPCA(); break;
             case RED_PCA64:    red = createReductorPCA(64); break;
             case RED_PCA64_W:  red = createReductorPCA(64, true); break;
+            case RED_PCA_LDA:  red = createReductorPCA_LDA(); break;
             default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
         }
         switch(clsfy)
@@ -89,7 +90,7 @@ public:
             case CL_EM:        cls = createVerifierEM(2, 0.25f); break;
             case CL_LR:        cls = createVerifierLR(2, 0.5f); break;
             case CL_BOOST:     cls = createVerifierBoost(2); break;
-            case CL_FISHER:    cls = createVerifierFisher(); break;
+//            case CL_FISHER:    cls = createVerifierFisher(); break;
             default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
         }
     }
@@ -127,7 +128,7 @@ public:
 
         if (! red.empty())
         {
-            red->train(features);
+            red->train(features,labels);
             Mat f;
             for (int r=0; r<features.rows; ++r)
             {

@@ -237,7 +237,7 @@ int main(int argc, const char *argv[])
 
     int64 t1 = getTickCount();
     cerr << format("%-8s",myface::EXS[ext])  << " ";
-    cerr << format("%-6s",myface::REDS[red]) << " ";
+    cerr << format("%-7s",myface::REDS[red]) << " ";
     cerr << format("%-9s",myface::CLS[cls])  << " ";
     cerr << format("%-8s",myface::PPS[pre])  << " ";
     cerr << format("%-6s",trainMethod.c_str()) << "\t";

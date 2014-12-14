@@ -91,6 +91,7 @@ namespace myface
         RED_PCA,
         RED_PCA64,
         RED_PCA64_W,
+        RED_PCA_LDA,
         RED_MAX
     };
     static const char *REDS[] = {
@@ -98,6 +99,7 @@ namespace myface
         "PCA",
         "PCA64",
         "PCA64W",
+        "PCA_LDA",
         0
     };
     enum CLA {
@@ -112,7 +114,7 @@ namespace myface
         CL_LR,
         CL_BOOST,
         CL_COSINE,
-        CL_FISHER,
+//        CL_FISHER,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -127,7 +129,7 @@ namespace myface
         "LR",
         "BOOST",
         "COSINE",
-        "FISHER",
+//        "FISHER",
         0
     };
     enum PRE {
