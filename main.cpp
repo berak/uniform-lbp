@@ -246,7 +246,7 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if (argc>2) fold = atoi(argv[2]);
 
-    int rec = 49;
+    int rec = 51;
     if (argc>3) rec = atoi(argv[3]);
 
     int preproc = 0; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
@@ -334,6 +334,7 @@ int main(int argc, const char *argv[])
         case 48: runtest("gradmag_svm",  createExtractorGfttGradMag(),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 49: runtest("eigen",        createExtractorPixels(),         createReductorPCA(),               createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
         case 50: runtest("fisher",       createExtractorPixels(),         createReductorPCA_LDA(),           createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
+        case 51: runtest("orb_fwh_L2",   createExtractorORBGrid(),        createReductorWalshHadamard(),    createClassifierSVM(),        images,labels,persons, fold); break;
         }                                                          
     }
     return 0;

@@ -124,7 +124,7 @@ public:
             }
         }
         images.clear();
-
+        cerr << ".";
         if (! red.empty())
         {
             red->train(features,labels);
@@ -137,7 +137,9 @@ public:
             }
             features = f;
         }
+        cerr << ".";
         int ok = cls->train(features, labels.reshape(1,features.rows));
+        cerr << ".";
         CV_Assert(ok);
         // cerr << "trained " << nfeatbytes << " bytes." << '\r';
     }

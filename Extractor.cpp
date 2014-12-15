@@ -13,6 +13,8 @@ using namespace cv;
 #include "TextureFeature.h"
 
 
+namespace TextureFeatureImpl
+{
 
 
 //
@@ -511,9 +513,8 @@ struct GfttGrid
 
     void hist(const Mat &feature, Mat &histo, int histSize=256) const
     {
-
         vector<KeyPoint> kp;
-        gftt96(kp);
+        gftt64(kp);
 
         histo.release();
         Rect bounds(0,0,90,90);
@@ -529,25 +530,6 @@ struct GfttGrid
 
 
 
-struct PreNone
-{
-    Mat operator()(const Mat&m) const
-    {
-        return m;
-    }
-};
-
-struct PreLaplacian
-{
-    Mat operator()(const Mat&m) const
-    {
-        Mat m2;
-        Laplacian(m,m2,CV_8U);
-        return m2;
-    }
-};
-
-
 //
 //
 // layered base for lbph,
@@ -555,24 +537,22 @@ struct PreLaplacian
 //  * calculate the hist on a set of rectangles
 //    (which could come from a grid, or a Rects based model).
 //
-template <typename Feature, typename Grid, typename PreFilter=PreNone>
+template <typename Feature, typename Grid>
 struct GenericExtractor : public TextureFeature::Extractor
 {
     Feature ext;
     Grid grid;
-    PreFilter pre;
 
-    GenericExtractor(const Feature &ext, const Grid &grid, const PreFilter &pre=PreNone())
+    GenericExtractor(const Feature &ext, const Grid &grid)
         : ext(ext)
         , grid(grid)
-        , pre(pre)
     {}
 
     // TextureFeature::Extractor
     virtual int extract(const Mat &img, Mat &features) const
     {
         Mat fI;
-        int histSize = ext(pre(img), fI);
+        int histSize = ext(img, fI);
         grid.hist(fI, features, histSize);
         return features.total() * features.elemSize();
     }
@@ -763,7 +743,6 @@ typedef ExtractorGridFeature2d<xfeatures2d::SIFT> ExtractorSIFTGrid;
 typedef ExtractorGridFeature2d<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
 
 
-
 //template < class Descriptor >
 struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 {
@@ -786,17 +765,18 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
     }
 };
 
-
-
+} // namespace TextureFeatureImpl
 
 
 
 //
 // 'factory' functions (aka public api)
 //
+using namespace TextureFeatureImpl;
+
 
 cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw, int resh)
-{   return makePtr<ExtractorPixels>(resw, resh); }
+{   return makePtr< ExtractorPixels >(resw, resh); }
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gx, int gy)
@@ -871,15 +851,15 @@ cv::Ptr<TextureFeature::Extractor> createExtractorElasticGaborLbp(int kernel_siz
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorDct()
-{   return makePtr<ExtractorDct>(); }
+{   return makePtr< ExtractorDct >(); }
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g)
-{   return makePtr<ExtractorORBGrid>(g); }
+{   return makePtr< ExtractorORBGrid >(g); }
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g)
-{   return makePtr<ExtractorSIFTGrid>(g); }
+{   return makePtr< ExtractorSIFTGrid >(g); }
 cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGftt()
-{   return makePtr<ExtractorGfttFeature2d>(xfeatures2d::SIFT::create()); }
+{   return makePtr< ExtractorGfttFeature2d >(xfeatures2d::SIFT::create()); }
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGrad()

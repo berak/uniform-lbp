@@ -5,6 +5,17 @@ but meanwhile it morphed into a testbed for comparing preprocessing/extraction/c
 
 it all builds on top of opencv30 .
 
+     the pipeline is:
+        extractor -> reductor -> classifier (or verifier)
+
+     e.g, opencv's eigenface recognition would be modelled as:
+          pixels  ->  pca     -> l2_norm
+     the lbph reco would be :
+          lbp     ->  none    -> hist_chisqr
+     ofc. you can build your own, like pca-sift:
+          sift    ->  pca64   -> svm
+
+
 
 ------------------------------------------------------
 

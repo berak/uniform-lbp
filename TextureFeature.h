@@ -36,10 +36,14 @@ namespace TextureFeature
 
 //
 // the pipeline is:
-//    extractor -> reductor -> classifier
+//    extractor -> reductor -> classifier (or verifier)
 //
 // e.g, opencv's eigenface recognition would be:
 //      pixels  ->  pca     -> l2_norm
+// the lbph reco would be :
+//      lbp     ->  none    -> hist_chisqr
+// ofc. you can build your own, like pca-sift:
+//      sift    ->  pca64   -> l2_norm (or svm)
 //
 
 
@@ -110,6 +114,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGfttGradMag();
 cv::Ptr<TextureFeature::Reductor> createReductorNone();
 cv::Ptr<TextureFeature::Reductor> createReductorPCA(int nc=0, bool whitening=false);
 cv::Ptr<TextureFeature::Reductor> createReductorPCA_LDA(int nc=0, bool whitening=false);
+cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard();
 
 
 //

@@ -9,15 +9,9 @@ using namespace cv;
 #include "TextureFeature.h"
 
 
-//
-// find the number of unique labels, the class count
-//
-static int unique(const Mat &labels, set<int> &classes)
+
+namespace TextureFeatureImpl
 {
-    for (size_t i=0; i<labels.total(); ++i)
-        classes.insert(labels.at<int>(i));
-    return classes.size();
-}
 
 
 static Mat tofloat(const Mat &src)
@@ -152,6 +146,12 @@ struct ClassifierKNN : public TextureFeature::Classifier
     }
 };
 
+static int unique(const Mat &labels, set<int> &classes)
+{
+    for (size_t i=0; i<labels.total(); ++i)
+        classes.insert(labels.at<int>(i));
+    return classes.size();
+}
 
 
 //
@@ -508,6 +508,7 @@ struct VerifierLR : public VerifierPairDistance<float>
     }
 };
 
+} // namespace TextureFeatureImpl
 
 
 //
@@ -518,22 +519,22 @@ struct VerifierLR : public VerifierPairDistance<float>
 //
 
 cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag)
-{ return makePtr<ClassifierNearest>(norm_flag); }
+{ return makePtr<TextureFeatureImpl::ClassifierNearest>(norm_flag); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag)
-{ return makePtr<ClassifierHist>(flag); }
+{ return makePtr<TextureFeatureImpl::ClassifierHist>(flag); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierCosine()
-{ return makePtr<ClassifierCosine>(); }
+{ return makePtr<TextureFeatureImpl::ClassifierCosine>(); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k)
-{ return makePtr<ClassifierKNN>(k); }
+{ return makePtr<TextureFeatureImpl::ClassifierKNN>(k); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree, double gamma, double coef0, double C, double nu, double p)
-{ return makePtr<ClassifierSvm>(degree, gamma, coef0, C, nu, p); }
+{ return makePtr<TextureFeatureImpl::ClassifierSvm>(degree, gamma, coef0, C, nu, p); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
-{ return makePtr<ClassifierSvmMulti>(); }
+{ return makePtr<TextureFeatureImpl::ClassifierSvmMulti>(); }
 
 
 
@@ -542,20 +543,20 @@ cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
 //
 
 cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
-{ return makePtr<VerifierNearest>(norm_flag); }
+{ return makePtr<TextureFeatureImpl::VerifierNearest>(norm_flag); }
 
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
-{ return makePtr<VerifierHist>(norm_flag); }
+{ return makePtr<TextureFeatureImpl::VerifierHist>(norm_flag); }
 
 cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc, float scale)
-{ return makePtr<VerifierSVM>(distfunc,scale); }
+{ return makePtr<TextureFeatureImpl::VerifierSVM>(distfunc,scale); }
 
 cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc, float scale)
-{ return makePtr<VerifierEM>(distfunc,scale); }
+{ return makePtr<TextureFeatureImpl::VerifierEM>(distfunc,scale); }
 
 cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc, float scale)
-{ return makePtr<VerifierLR>(distfunc,scale); }
+{ return makePtr<TextureFeatureImpl::VerifierLR>(distfunc,scale); }
 
 cv::Ptr<TextureFeature::Verifier> createVerifierBoost(int distfunc, float scale)
-{ return makePtr<VerifierBoost>(distfunc,scale); }
+{ return makePtr<TextureFeatureImpl::VerifierBoost>(distfunc,scale); }
 
