@@ -101,7 +101,7 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
-            "{ ext e          |37  | extractor enum }"
+            "{ ext e          |32  | extractor enum }"
             "{ red r          |0   | reductor enum }"
             "{ cls c          |6   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
@@ -191,7 +191,6 @@ int main(int argc, const char *argv[])
                     labels.push_back(currNum2);
                 }
             }
-            //cerr << "got data: " << j << " " <<images.size();
             {
                 PROFILEX("train");
                 model->train(images, labels);

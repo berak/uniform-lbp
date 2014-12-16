@@ -39,7 +39,9 @@ struct ExtractorPixels : public TextureFeature::Extractor
 };
 
 
-
+//
+// later use gridded histograms the same way as with lbp(h)
+//
 struct FeatureGrad
 {
     int nbins;
@@ -506,6 +508,79 @@ static void gftt96(vector<KeyPoint> &kp)
     kp.push_back(KeyPoint(76, 63, 3));  kp.push_back(KeyPoint(25, 59, 3));  kp.push_back(KeyPoint(25, 59, 3));  kp.push_back(KeyPoint(75, 61, 3));
 }
 
+
+//static void kaze68(vector<KeyPoint> &kp)
+//{
+//    kp.push_back(KeyPoint(27.4944,27.4944,3.45017,0,0.000281822,0,1));
+//    kp.push_back(KeyPoint(60.7918,60.7918,3.53006,0,0.000282409,0,1));
+//    kp.push_back(KeyPoint(36.5051,36.5051,3.26296,0,0.000274295,0,1));
+//    kp.push_back(KeyPoint(52.8934,52.8934,3.48683,0,0.000252284,0,1));
+//    kp.push_back(KeyPoint(66.3295,66.3295,3.49387,0,0.000258634,0,1));
+//    kp.push_back(KeyPoint(23.2497,23.2497,3.4835,0,0.000265935,0,1));
+//    kp.push_back(KeyPoint(74.0797,74.0797,3.47205,0,0.000124293,0,1));
+//    kp.push_back(KeyPoint(15.621,15.621,3.44209,0,9.33073e-005,0,1));
+//    kp.push_back(KeyPoint(44.8184,44.8184,3.48868,0,9.98184e-005,0,1));
+//    kp.push_back(KeyPoint(45.1538,45.1538,3.49922,0,0.000117935,0,1));
+//    kp.push_back(KeyPoint(37.6811,37.6811,3.4808,0,0.000174207,0,1));
+//    kp.push_back(KeyPoint(52.8511,52.8511,3.48227,0,0.000179145,0,1));
+//    kp.push_back(KeyPoint(30.5142,30.5142,3.45987,0,0.000255786,0,1));
+//    kp.push_back(KeyPoint(61.2927,61.2927,3.48152,0,0.000236908,0,1));
+//    kp.push_back(KeyPoint(41.9462,41.9462,3.47688,0,0.000100007,0,1));
+//    kp.push_back(KeyPoint(49.5838,49.5838,3.48637,0,8.8374e-005,0,1));
+//    kp.push_back(KeyPoint(56.6576,56.6576,5.82947,0,8.60938e-005,0,3));
+//    kp.push_back(KeyPoint(74.6498,74.6498,5.82559,0,0.000118211,0,3));
+//    kp.push_back(KeyPoint(14.6058,14.6058,5.82144,0,9.15729e-005,0,3));
+//    kp.push_back(KeyPoint(44.0071,44.0071,5.80607,0,8.0062e-005,0,3));
+//    kp.push_back(KeyPoint(59.8736,59.8736,5.8303,0,0.000698108,0,3));
+//    kp.push_back(KeyPoint(28.6222,28.6222,5.81338,0,0.000649863,0,3));
+//    kp.push_back(KeyPoint(53.6239,53.6239,5.83005,0,0.000746579,0,3));
+//    kp.push_back(KeyPoint(35.5916,35.5916,5.85862,0,0.000819563,0,3));
+//    kp.push_back(KeyPoint(66.824,66.824,5.72109,0,0.000496898,0,3));
+//    kp.push_back(KeyPoint(22.8104,22.8104,5.72611,0,0.000512763,0,3));
+//    kp.push_back(KeyPoint(44.8096,44.8096,5.81657,0,0.000218073,0,3));
+//    kp.push_back(KeyPoint(77.9507,77.9507,5.81966,0,0.000146646,0,3));
+//    kp.push_back(KeyPoint(13.2319,13.2319,5.81375,0,0.000130066,0,3));
+//    kp.push_back(KeyPoint(67.182,67.182,5.78567,0,0.000158542,0,3));
+//    kp.push_back(KeyPoint(22.7371,22.7371,5.77589,0,0.000179158,0,3));
+//    kp.push_back(KeyPoint(45.0772,45.0772,5.80566,0,0.000414799,0,3));
+//    kp.push_back(KeyPoint(32.0687,32.0687,5.78577,0,0.000109121,0,3));
+//    kp.push_back(KeyPoint(58.4252,58.4252,5.7886,0,0.000100188,0,3));
+//    kp.push_back(KeyPoint(38.0302,38.0302,5.6334,0,0.000296356,0,3));
+//    kp.push_back(KeyPoint(52.516,52.516,5.66556,0,0.000332958,0,3));
+//    kp.push_back(KeyPoint(31.8716,31.8716,5.6748,0,0.000129986,0,3));
+//    kp.push_back(KeyPoint(59.6684,59.6684,5.69548,0,9.97044e-005,0,3));
+//    kp.push_back(KeyPoint(30.8984,30.8984,5.72677,0,0.000589375,0,3));
+//    kp.push_back(KeyPoint(60.8055,60.8055,5.71895,0,0.000538367,0,3));
+//    kp.push_back(KeyPoint(44.1731,44.1731,5.60895,0,0.00011946,0,3));
+//    kp.push_back(KeyPoint(35.2463,35.2463,8.66642,0,0.000258567,1,3));
+//    kp.push_back(KeyPoint(52.2887,52.2887,7.44359,0,0.00031925,1,3));
+//    kp.push_back(KeyPoint(59.9239,59.9239,7.80696,0,0.00063019,1,3));
+//    kp.push_back(KeyPoint(31.71,31.71,7.7768,0,0.000677617,1,3));
+//    kp.push_back(KeyPoint(5.09974,5.09974,9.71148,0,0.000112506,1,3));
+//    kp.push_back(KeyPoint(83.9628,83.9628,9.64139,0,0.000141023,1,3));
+//    kp.push_back(KeyPoint(72.179,72.179,9.5667,0,0.000362108,1,3));
+//    kp.push_back(KeyPoint(18.7375,18.7375,9.68951,0,0.00029743,1,3));
+//    kp.push_back(KeyPoint(29.3473,29.3473,9.70155,0,0.000354124,1,3));
+//    kp.push_back(KeyPoint(44.2008,44.2008,9.67961,0,0.000492206,1,3));
+//    kp.push_back(KeyPoint(57.8679,57.8679,9.73704,0,0.00290712,1,3));
+//    kp.push_back(KeyPoint(31.3913,31.3913,9.7223,0,0.00288728,1,3));
+//    kp.push_back(KeyPoint(44.8766,44.8766,9.38119,0,0.000998569,1,3));
+//    kp.push_back(KeyPoint(71.9363,71.9363,9.61687,0,0.000755731,1,3));
+//    kp.push_back(KeyPoint(19.2296,19.2296,9.56398,0,0.000820478,1,3));
+//    kp.push_back(KeyPoint(5.40294,5.40294,9.81644,0,0.000150715,1,3));
+//    kp.push_back(KeyPoint(83.9404,83.9404,9.66577,0,0.000145931,1,3));
+//    kp.push_back(KeyPoint(7.71002,7.71002,15.6641,0,0.000194516,2,3));
+//    kp.push_back(KeyPoint(61.8089,61.8089,15.1278,0,0.00425046,2,3));
+//    kp.push_back(KeyPoint(27.3649,27.3649,15.0582,0,0.00412382,2,3));
+//    kp.push_back(KeyPoint(44.7603,44.7603,15.2567,0,0.00151651,2,3));
+//    kp.push_back(KeyPoint(71.252,71.252,15.3051,0,0.00157806,2,3));
+//    kp.push_back(KeyPoint(18.8966,18.8966,15.4628,0,0.00172129,2,3));
+//    kp.push_back(KeyPoint(62.6084,62.6084,18.0159,0,0.000948287,2,3));
+//    kp.push_back(KeyPoint(27.8684,27.8684,18.8863,0,0.000989029,2,3));
+//    kp.push_back(KeyPoint(46.0632,46.0632,18.25,0,0.0002139,2,3));
+//    kp.push_back(KeyPoint(10.6673,10.6673,21.4973,0,0.000119884,2,3));
+//}
+
 struct GfttGrid
 {
     int gr;
@@ -515,6 +590,7 @@ struct GfttGrid
     {
         vector<KeyPoint> kp;
         gftt64(kp);
+        //kaze68(kp);
 
         histo.release();
         Rect bounds(0,0,90,90);
@@ -756,6 +832,7 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
     {
         vector<KeyPoint> kp;
         gftt64(kp);
+        //kaze68(kp);
 
         f2d->compute(img, kp, features);
         // resize(features,features,Size(),0.5,1.0);                  // not good.
