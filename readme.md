@@ -12,8 +12,6 @@ it all builds on top of opencv30 .
           pixels  ->  pca     -> l2_norm
      the lbph reco would be :
           lbp     ->  none    -> hist_chisqr
-     ofc. you can build your own, like pca-sift:
-          sift    ->  pca64   -> svm
 
 
 

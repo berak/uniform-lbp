@@ -351,6 +351,7 @@ struct VerifierHist : VerifierNearest
 
 
 
+
 //
 // Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
 //  4.1 Distance thresholding for pair matching

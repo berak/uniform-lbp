@@ -44,6 +44,7 @@ namespace myface
         EXT_Grad_G,
         EXT_Grad_P,
         EXT_GradMag,
+        EXT_HDLBP,
         EXT_MAX 
     };
     static const char *EXS[] = {
@@ -85,22 +86,31 @@ namespace myface
         "Grad_G",
         "Grad_P",
         "GradMag",
+        "HDLBP",
         0
     };
     enum RED {
         RED_NONE,
         RED_PCA,
-        RED_PCA64,
+        RED_PCA1k,
         RED_PCA64_W,
         RED_PCA_LDA,
+        RED_HELL,
+        RED_WHAD,
+        RED_RP_64,
+        RED_RP_1000,
         RED_MAX
     };
     static const char *REDS[] = {
         "none",
         "PCA",
-        "PCA64",
+        "PCA1k",
         "PCA64W",
         "PCA_LDA",
+        "HELL",
+        "WHAD",
+        "RP_64",
+        "RP_1k",
         0
     };
     enum CLA {

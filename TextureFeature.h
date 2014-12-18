@@ -107,6 +107,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorElasticGrad();
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidGrad();
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttGradMag();
 
+cv::Ptr<TextureFeature::Extractor> createExtractorHighDimLbp();
 
 //
 // reductors
@@ -114,7 +115,9 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGfttGradMag();
 cv::Ptr<TextureFeature::Reductor> createReductorNone();
 cv::Ptr<TextureFeature::Reductor> createReductorPCA(int nc=0, bool whitening=false);
 cv::Ptr<TextureFeature::Reductor> createReductorPCA_LDA(int nc=0, bool whitening=false);
-cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard();
+cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int e=2);
+cv::Ptr<TextureFeature::Reductor> createReductorHellinger();
+cv::Ptr<TextureFeature::Reductor> createReductorRandomProj(int k);
 
 
 //

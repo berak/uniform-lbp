@@ -246,7 +246,7 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if (argc>2) fold = atoi(argv[2]);
 
-    int rec = 51;
+    int rec = 56;
     if (argc>3) rec = atoi(argv[3]);
 
     int preproc = 0; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
@@ -327,14 +327,19 @@ int main(int argc, const char *argv[])
         case 41: runtest("orb_ham2",     createExtractorORBGrid(),        Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_HAMMING2),  images,labels,persons, fold); break;
         case 42: runtest("orb_L1",       createExtractorORBGrid(),        Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_L1),        images,labels,persons, fold); break;
         case 43: runtest("sift_L2",      createExtractorSIFTGrid(),       Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
-        case 44: runtest("sift_svm",     createExtractorSIFTGrid(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 45: runtest("sift_gftt_svm",createExtractorSIFTGftt(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 44: runtest("sift_svm",     createExtractorSIFTGrid(),       createReductorHellinger(),         createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 45: runtest("sift_gftt_svm",createExtractorSIFTGftt(),       createReductorHellinger(),         createClassifierSVM(),                   images,labels,persons, fold); break;
         case 46: runtest("grad_svm",     createExtractorGrad(),           Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 47: runtest("grad_gftt_svm",createExtractorGfttGrad(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 48: runtest("gradmag_svm",  createExtractorGfttGradMag(),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 49: runtest("eigen",        createExtractorPixels(),         createReductorPCA(),               createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
         case 50: runtest("fisher",       createExtractorPixels(),         createReductorPCA_LDA(),           createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
-        case 51: runtest("orb_fwh_L2",   createExtractorORBGrid(),        createReductorWalshHadamard(),    createClassifierSVM(),        images,labels,persons, fold); break;
+        case 51: runtest("orb_had_svm",  createExtractorORBGrid(),        createReductorWalshHadamard(),     createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 52: runtest("orb_hell_svm", createExtractorORBGrid(),        createReductorHellinger(),         createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 55: runtest("hdlbp_svm",    createExtractorHighDimLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 56: runtest("hdlbp_rp_svm", createExtractorHighDimLbp(),     createReductorRandomProj(6000),    createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 57: runtest("hdlbp_pca_svm",createExtractorHighDimLbp(),     createReductorPCA_LDA(),           createClassifierSVM(),                   images,labels,persons, fold); break;
+        //case 52: runtest("hdlbp_svm",    createExtractorHighDimLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         }                                                          
     }
     return 0;

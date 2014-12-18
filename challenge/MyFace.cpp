@@ -67,15 +67,20 @@ public:
             case EXT_Grad_G:   ext = createExtractorGfttGrad(); break;
             case EXT_Grad_P:   ext = createExtractorPyramidGrad(); break;
             case EXT_GradMag:  ext = createExtractorGfttGradMag(); break;
+            case EXT_HDLBP:    ext = createExtractorHighDimLbp(); break;
             default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
         }
         switch(redu)
         {
             case RED_NONE:     break; //red = createReductorNone(); break;
             case RED_PCA:      red = createReductorPCA(); break;
-            case RED_PCA64:    red = createReductorPCA(64); break;
+            case RED_PCA1k:    red = createReductorPCA(1000); break;
             case RED_PCA64_W:  red = createReductorPCA(64, true); break;
             case RED_PCA_LDA:  red = createReductorPCA_LDA(); break;
+            case RED_HELL:     red = createReductorHellinger(); break;
+            case RED_WHAD:     red = createReductorWalshHadamard(128); break;
+            case RED_RP_64:    red = createReductorRandomProj(64); break;
+            case RED_RP_1000:  red = createReductorRandomProj(6000); break;
             default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
         }
         switch(clsfy)
@@ -137,7 +142,7 @@ public:
             }
             features = f;
         }
-        cerr << ".";
+        cerr << "." << features.size() << " ";
         int ok = cls->train(features, labels.reshape(1,features.rows));
         cerr << ".";
         CV_Assert(ok);

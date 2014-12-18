@@ -308,14 +308,32 @@ struct FeatureFPLbp
 
 
 
-static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
+static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256, bool uni=false)
 {
-    Mat_<float> h(1,histSize,0.0f);
+    static int uniform[256] = 
+    {   // the well known original uniform2 pattern
+        0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
+        14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
+        58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
+        58,58,58,58,58,58,58,58,58,58,58,58,23,58,58,58,58,58,58,58,58,58,58,58,58,58,
+        58,58,24,58,58,58,58,58,58,58,25,58,58,58,26,58,27,28,29,30,58,31,58,58,58,32,58,
+        58,58,58,58,58,58,33,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,34,58,58,58,58,
+        58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
+        58,35,36,37,58,38,58,58,58,39,58,58,58,58,58,58,58,40,58,58,58,58,58,58,58,58,58,
+        58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
+        58,58,58,50,51,52,58,53,54,55,56,57 
+    };
+
+    Mat_<float> h(1, (uni ? 59 : histSize), 0.0f);
     for (int i=0; i<fI.rows; i++)
     {
         for (int j=0; j<fI.cols; j++)
         {
-            h( int(fI(i,j)) ) += 1.0f;
+            int v = int(fI(i,j));
+            if (uni)
+                h( uniform[v] ) += 1.0f;
+            else
+                h( v ) += 1.0f;
         }
     }
     histo.push_back(h.reshape(1,1));
@@ -509,6 +527,41 @@ static void gftt96(vector<KeyPoint> &kp)
 }
 
 
+static void gftt32(vector<KeyPoint> &kp)
+{
+    kp.push_back(KeyPoint(14,33,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(29,77,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(55,60,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(63,76,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(76,32,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(35,60,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(69,21,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(45,30,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(27,31,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(64,26,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(21,22,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(25,27,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(69,31,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(54,81,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(62,30,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(20,32,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(52,33,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(37,32,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(38,81,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(36,82,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(32,31,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(78,17,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(59,24,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(30,24,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(11,18,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(13,17,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(56,30,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(73,15,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(19,15,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(57,53,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(33,54,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(34,52,3,-1,0,0,-1));
+}
 //static void kaze68(vector<KeyPoint> &kp)
 //{
 //    kp.push_back(KeyPoint(27.4944,27.4944,3.45017,0,0.000281822,0,1));
@@ -831,9 +884,9 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
     virtual int extract(const Mat &img, Mat &features) const
     {
         vector<KeyPoint> kp;
-        gftt64(kp);
+        //gftt64(kp);
+        gftt96(kp);
         //kaze68(kp);
-
         f2d->compute(img, kp, features);
         // resize(features,features,Size(),0.5,1.0);                  // not good.
         // features = features(Rect(64,0,64,features.rows)).clone();  // amazing.
@@ -841,6 +894,55 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
         return features.total() * features.elemSize();
     }
 };
+
+struct HighDimLbp : public TextureFeature::Extractor
+{
+    FeatureCsLbp lbp;
+
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        bool uni=false;
+        int gr=8;
+        vector<KeyPoint> kp;
+        gftt64(kp);
+
+        Mat histo;
+        float scale[] = {1.f, 1.8f, 2.5f, 3.2f};
+        for (int i=0; i<3; i++)
+        {
+            float s = scale[i];
+
+            Mat f1,imgs;
+            resize(img,imgs,Size(),s,s);
+            int histSize = lbp(imgs,f1);
+
+            Rect bounds(0,0,int(90*s),int(90*s));
+            for (size_t k=0; k<kp.size(); k++)
+            {
+                Rect part(int(kp[k].pt.x*s)-gr, int(kp[k].pt.y)-gr, gr, gr);
+                part &= bounds;
+                hist_patch(f1(part), histo, histSize, uni);
+
+                Rect part1(int(kp[k].pt.x*s), int(kp[k].pt.y)-gr, gr, gr);
+                part1 &= bounds;
+                hist_patch(f1(part1), histo, histSize, uni);
+
+                Rect part2(int(kp[k].pt.x*s-gr), int(kp[k].pt.y), gr, gr);
+                part2 &= bounds;
+                hist_patch(f1(part2), histo, histSize, uni);
+
+                Rect part3(int(kp[k].pt.x*s), int(kp[k].pt.y), gr, gr);
+                part3 &= bounds;
+                hist_patch(f1(part3), histo, histSize, uni);
+            }
+        }
+
+        features = histo.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
+
+
 
 } // namespace TextureFeatureImpl
 
@@ -950,3 +1052,6 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPyramidGrad()
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttGradMag()
 {   return makePtr< GradMagExtractor<GfttGrid> >(GfttGrid()); }
+
+cv::Ptr<TextureFeature::Extractor> createExtractorHighDimLbp()
+{   return makePtr< HighDimLbp >(); }
