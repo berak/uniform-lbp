@@ -126,12 +126,12 @@ namespace myface
         CL_MAX
     };
     static const char *CLS[] = {
-        "NORM_L2",
-        "NORM_LSQR",
-        "NORM_L1",
-        "NORM_HAM",
-        "HIST_HELL",
-        "HIST_CHI",
+        "N_L2",
+        "N_L2SQR",
+        "N_L1",
+        "N_HAM",
+        "H_HELL",
+        "H_CHI",
         "SVM",
         "EM",
         "LR",

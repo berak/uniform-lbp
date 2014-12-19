@@ -182,12 +182,12 @@ struct ReductorDct : public TextureFeature::Reductor
         Mat h; src.convertTo(h,CV_32F);
         Mat h2(h.size(), h.type());
 
-        dct(h,h2);
+        dft(h,h2); // solves pow2 issue
 
         Mat h3 = (keep>0) ?
                  h2(Rect(0,0,std::min(keep,h2.cols-1),1)) : 
                  h2;
-        dct(h3,dest,DCT_INVERSE);
+        dft(h3,dest,DCT_INVERSE);
         return 0; 
     }
 };
