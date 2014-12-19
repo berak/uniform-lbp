@@ -92,25 +92,23 @@ namespace myface
     enum RED {
         RED_NONE,
         RED_PCA,
-        RED_PCA1k,
-        RED_PCA64_W,
+        RED_PCA_6k,
         RED_PCA_LDA,
         RED_HELL,
         RED_WHAD,
-        RED_RP_64,
-        RED_RP_1000,
+        RED_RP,
+        RED_DCT,
         RED_MAX
     };
     static const char *REDS[] = {
         "none",
         "PCA",
-        "PCA1k",
-        "PCA64W",
+        "PCA_6k",
         "PCA_LDA",
         "HELL",
         "WHAD",
-        "RP_64",
-        "RP_1k",
+        "RP",
+        "DCT",
         0
     };
     enum CLA {

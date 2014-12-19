@@ -129,9 +129,9 @@ struct ReductorPCA_LDA : public ReductorPCA
 
 struct ReductorWalshHadamard : public TextureFeature::Reductor
 {
-    int end;
+    int keep;
     
-    ReductorWalshHadamard(int e=2) : end(e) {}
+    ReductorWalshHadamard(int k=0) : keep(k) {}
 
     template<class T>
     void fast_had(int ndim, int lev, T *in, T *out) const
@@ -149,20 +149,45 @@ struct ReductorWalshHadamard : public TextureFeature::Reductor
         }
     }
     virtual int train(const Mat &features, const Mat &labels) 
-    { 
-        return 0; 
-    }
+    {   return 0;  }
 
     virtual int reduce(const Mat &src, Mat &dest) const  
     {
         Mat h; src.convertTo(h,CV_32F);
         Mat h2(h.size(), h.type());
-        for (int j=src.total(); j>end; j/=2)
+        for (int j=src.total(); j>2; j/=2)
         {
             fast_had(src.total(), j, h.ptr<float>(), h2.ptr<float>());
-            if (j>2*end) cv::swap(h,h2);
+            if (j>4) cv::swap(h,h2);
         }
-        h2.convertTo(dest, CV_32F);
+        if (keep>0)
+            dest = h2(Rect(0,0,std::min(keep,h2.cols-1),1));
+        else
+            dest = h2;
+        return 0; 
+    }
+};
+
+struct ReductorDct : public TextureFeature::Reductor
+{
+    int keep;
+    
+    ReductorDct(int k=0) : keep(k) {}
+
+    virtual int train(const Mat &features, const Mat &labels) 
+    {   return 0;  }
+
+    virtual int reduce(const Mat &src, Mat &dest) const  
+    {
+        Mat h; src.convertTo(h,CV_32F);
+        Mat h2(h.size(), h.type());
+
+        dct(h,h2);
+
+        Mat h3 = (keep>0) ?
+                 h2(Rect(0,0,std::min(keep,h2.cols-1),1)) : 
+                 h2;
+        dct(h3,dest,DCT_INVERSE);
         return 0; 
     }
 };
@@ -185,12 +210,13 @@ struct ReductorHellinger : public TextureFeature::Reductor
     }
 };
 
-struct ReductorRandomProj : public TextureFeature::Reductor
+struct ReductorRandomProjection : public TextureFeature::Reductor
 {
     int K;
     Mat proj;
     RNG rng;
-    ReductorRandomProj(int k)
+
+    ReductorRandomProjection(int k)
         : K(k)
         , rng(37183927)
     {}
@@ -230,11 +256,14 @@ cv::Ptr<TextureFeature::Reductor> createReductorPCA(int nc, bool whi)
 cv::Ptr<TextureFeature::Reductor> createReductorPCA_LDA(int nc, bool whi)
 {    return makePtr<TextureFeatureImpl::ReductorPCA_LDA>(nc,whi); }
 
-cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int e)
-{    return makePtr<TextureFeatureImpl::ReductorWalshHadamard>(e); }
+cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int keep)
+{    return makePtr<TextureFeatureImpl::ReductorWalshHadamard>(keep); }
 
 cv::Ptr<TextureFeature::Reductor> createReductorHellinger()
 {    return makePtr<TextureFeatureImpl::ReductorHellinger>(); }
 
-cv::Ptr<TextureFeature::Reductor> createReductorRandomProj(int k)
-{    return makePtr<TextureFeatureImpl::ReductorRandomProj>(k); }
+cv::Ptr<TextureFeature::Reductor> createReductorRandomProjection(int k)
+{    return makePtr<TextureFeatureImpl::ReductorRandomProjection>(k); }
+
+cv::Ptr<TextureFeature::Reductor> createReductorDct(int k)
+{    return makePtr<TextureFeatureImpl::ReductorDct>(k); }

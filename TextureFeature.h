@@ -115,9 +115,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorHighDimLbp();
 cv::Ptr<TextureFeature::Reductor> createReductorNone();
 cv::Ptr<TextureFeature::Reductor> createReductorPCA(int nc=0, bool whitening=false);
 cv::Ptr<TextureFeature::Reductor> createReductorPCA_LDA(int nc=0, bool whitening=false);
-cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int e=2);
+cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int keep=0);
 cv::Ptr<TextureFeature::Reductor> createReductorHellinger();
-cv::Ptr<TextureFeature::Reductor> createReductorRandomProj(int k);
+cv::Ptr<TextureFeature::Reductor> createReductorRandomProjection(int k=0);
+cv::Ptr<TextureFeature::Reductor> createReductorDct(int k=0);
 
 
 //

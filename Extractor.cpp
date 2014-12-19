@@ -907,7 +907,7 @@ struct HighDimLbp : public TextureFeature::Extractor
         gftt64(kp);
 
         Mat histo;
-        float scale[] = {1.f, 1.8f, 2.5f, 3.2f};
+        float scale[] = {1.f, 1.8f, 2.5f, 3.5f};
         for (int i=0; i<3; i++)
         {
             float s = scale[i];

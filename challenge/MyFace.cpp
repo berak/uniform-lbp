@@ -74,13 +74,12 @@ public:
         {
             case RED_NONE:     break; //red = createReductorNone(); break;
             case RED_PCA:      red = createReductorPCA(); break;
-            case RED_PCA1k:    red = createReductorPCA(1000); break;
-            case RED_PCA64_W:  red = createReductorPCA(64, true); break;
+            case RED_PCA_6k:   red = createReductorPCA(6000); break;
             case RED_PCA_LDA:  red = createReductorPCA_LDA(); break;
             case RED_HELL:     red = createReductorHellinger(); break;
-            case RED_WHAD:     red = createReductorWalshHadamard(128); break;
-            case RED_RP_64:    red = createReductorRandomProj(64); break;
-            case RED_RP_1000:  red = createReductorRandomProj(6000); break;
+            case RED_WHAD:     red = createReductorWalshHadamard(6000); break;
+            case RED_RP:       red = createReductorRandomProjection(6000); break;
+            case RED_DCT:      red = createReductorDct(6000); break;
             default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
         }
         switch(clsfy)
