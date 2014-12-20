@@ -33,11 +33,11 @@ struct ReductorWalshHadamard : public TextureFeature::Reductor
         int h = lev/2;
         for (int j=0; j<ndim/lev; j++)
         {
-	        for(int i=0; i<h; i++)
-	        {
-		        out[i]   = in[i] + in[i+h];
-		        out[i+h] = in[i] - in[i+h];
-	        }
+            for(int i=0; i<h; i++)
+            {
+                out[i]   = in[i] + in[i+h];
+                out[i+h] = in[i] - in[i+h];
+            }
             out += lev;
             in  += lev;
         }
