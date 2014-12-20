@@ -562,6 +562,8 @@ static void gftt32(vector<KeyPoint> &kp)
     kp.push_back(KeyPoint(33,54,3,-1,0,0,-1));
     kp.push_back(KeyPoint(34,52,3,-1,0,0,-1));
 }
+
+
 //static void kaze68(vector<KeyPoint> &kp)
 //{
 //    kp.push_back(KeyPoint(27.4944,27.4944,3.45017,0,0.000281822,0,1));
@@ -633,6 +635,7 @@ static void gftt32(vector<KeyPoint> &kp)
 //    kp.push_back(KeyPoint(46.0632,46.0632,18.25,0,0.0002139,2,3));
 //    kp.push_back(KeyPoint(10.6673,10.6673,21.4973,0,0.000119884,2,3));
 //}
+
 
 struct GfttGrid
 {
@@ -898,17 +901,30 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 struct HighDimLbp : public TextureFeature::Extractor
 {
     FeatureCsLbp lbp;
+    //FeatureLbp lbp;
 
     virtual int extract(const Mat &img, Mat &features) const
     {
         bool uni=false;
+        //bool uni=true;
         int gr=8;
         vector<KeyPoint> kp;
-        gftt64(kp);
+        gftt32(kp);
 
         Mat histo;
-        float scale[] = {1.f, 1.8f, 2.5f, 3.5f};
-        for (int i=0; i<3; i++)
+        //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
+        float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f};
+        //int offsets[16][2] = {       -1,-1,  -1, 0,
+        //                              0,-1,   0, 0, 
+        //                     -2,-2,  -2,-1,  -2, 0,  -2, 1,
+        //                     -1,-2,                  -1, 1,
+        //                      0,-2,                   0, 1,
+        //                      1,-2,   1,-1,   1, 0,   1, 1,
+        //};
+        double offsets[9][2] = { -1.5,-1.5,   -1.5,-0.5,  -1.5, 0.5,
+                                 -0.5,-1.5,   -0.5,-0.5,  -0.5, 0.5,
+                                  1.5,-1.5,    1.5,-0.5,   1.5, 0.5 };
+        for (int i=0; i<5; i++)
         {
             float s = scale[i];
 
@@ -918,22 +934,14 @@ struct HighDimLbp : public TextureFeature::Extractor
 
             Rect bounds(0,0,int(90*s),int(90*s));
             for (size_t k=0; k<kp.size(); k++)
+            //for (size_t k=0; k<20; k++)
             {
-                Rect part(int(kp[k].pt.x*s)-gr, int(kp[k].pt.y)-gr, gr, gr);
-                part &= bounds;
-                hist_patch(f1(part), histo, histSize, uni);
-
-                Rect part1(int(kp[k].pt.x*s), int(kp[k].pt.y)-gr, gr, gr);
-                part1 &= bounds;
-                hist_patch(f1(part1), histo, histSize, uni);
-
-                Rect part2(int(kp[k].pt.x*s-gr), int(kp[k].pt.y), gr, gr);
-                part2 &= bounds;
-                hist_patch(f1(part2), histo, histSize, uni);
-
-                Rect part3(int(kp[k].pt.x*s), int(kp[k].pt.y), gr, gr);
-                part3 &= bounds;
-                hist_patch(f1(part3), histo, histSize, uni);
+                for (int o=0; o<9; o++)
+                {
+                    Rect part(int(kp[k].pt.x*s)+offsets[o][0]*gr, int(kp[k].pt.y)+offsets[o][1]*gr, gr, gr);
+                    part &= bounds;
+                    hist_patch(f1(part), histo, histSize, uni);
+                }
             }
         }
 

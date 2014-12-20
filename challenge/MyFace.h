@@ -91,28 +91,30 @@ namespace myface
     };
     enum RED {
         RED_NONE,
-        RED_PCA,
-        RED_PCA_6k,
-        RED_PCA_LDA,
+        //RED_PCA,
+        //RED_PCA_6k,
+        //RED_PCA_LDA,
         RED_HELL,
         RED_WHAD,
-        RED_RP,
+        //RED_RP,
         RED_DCT8,
         RED_DCT12,
         RED_DCT16,
+        RED_DCT24,
         RED_MAX
     };
     static const char *REDS[] = {
         "none",
-        "PCA",
-        "PCA_6k",
-        "PCA_LDA",
+        //"PCA",
+        //"PCA_6k",
+        //"PCA_LDA",
         "HELL",
         "WHAD",
-        "RP",
+        //"RP",
         "DCT8",
         "DCT12",
         "DCT16",
+        "DCT24",
         0
     };
     enum CLA {
@@ -126,7 +128,7 @@ namespace myface
         CL_EM,
         CL_LR,
         CL_BOOST,
-        CL_COSINE,
+        CL_KMEANS,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -140,7 +142,7 @@ namespace myface
         "EM",
         "LR",
         "BOOST",
-        "COSINE",
+        "KMEANS",
         0
     };
     enum PRE {
@@ -166,7 +168,9 @@ namespace myface
 
     struct FaceVerifier
     {
-         virtual void train(InputArrayOfArrays src, InputArray _labels) = 0;
+         //virtual void train(InputArrayOfArrays src, InputArray _labels) = 0;
+         virtual int addTraining(const Mat & img, int label) = 0;
+         virtual bool train() = 0;
          virtual int same(const Mat & a, const Mat &b) const = 0;
     };
 }

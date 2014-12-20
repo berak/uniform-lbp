@@ -16,10 +16,13 @@ namespace myface {
 class MyFace : public FaceVerifier
 {
     Ptr<TextureFeature::Extractor> ext;
-    Ptr<TextureFeature::Verifier>  cls;
     Ptr<TextureFeature::Reductor>  red;
+    Ptr<TextureFeature::Verifier>  cls;
     Preprocessor pre;
     bool doFlip;
+
+    Mat labels;
+    Mat features;
 
 public:
 
@@ -60,7 +63,7 @@ public:
             case EXT_Gabor_E:  ext = createExtractorElasticGaborLbp(1); break;
             case EXT_Dct:      ext = createExtractorDct(); break;
             case EXT_Orb:      ext = createExtractorORBGrid(15); break;
-            case EXT_Sift:     ext = createExtractorSIFTGrid(15); break;
+            case EXT_Sift:     ext = createExtractorSIFTGrid(20); break;
             case EXT_Sift_G:   ext = createExtractorSIFTGftt(); break;
             case EXT_Grad:     ext = createExtractorGrad(); break;
             case EXT_Grad_E:   ext = createExtractorElasticGrad(); break;
@@ -73,15 +76,16 @@ public:
         switch(redu)
         {
             case RED_NONE:     break; //red = createReductorNone(); break;
-            case RED_PCA:      red = createReductorPCA(); break;
-            case RED_PCA_6k:   red = createReductorPCA(6000); break;
-            case RED_PCA_LDA:  red = createReductorPCA_LDA(); break;
+            //case RED_PCA:      red = createReductorPCA(); break;
+            //case RED_PCA_6k:   red = createReductorPCA(6000); break;
+            //case RED_PCA_LDA:  red = createReductorPCA_LDA(); break;
             case RED_HELL:     red = createReductorHellinger(); break;
-            case RED_WHAD:     red = createReductorWalshHadamard(6000); break;
-            case RED_RP:       red = createReductorRandomProjection(6000); break;
+            case RED_WHAD:     red = createReductorWalshHadamard(8000); break;
+            //case RED_RP:       red = createReductorRandomProjection(8000); break;
             case RED_DCT8:     red = createReductorDct(8000); break;
             case RED_DCT12:    red = createReductorDct(12000); break;
             case RED_DCT16:    red = createReductorDct(16000); break;
+            case RED_DCT24:    red = createReductorDct(24000); break;
             default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
         }
         switch(clsfy)
@@ -92,13 +96,40 @@ public:
             case CL_NORM_HAM:  cls = createVerifierNearest(NORM_HAMMING2); break;
             case CL_HIST_HELL: cls = createVerifierHist(HISTCMP_HELLINGER); break;
             case CL_HIST_CHI:  cls = createVerifierHist(HISTCMP_CHISQR); break;
-            case CL_SVM:       cls = createVerifierSVM(2); break;
-            case CL_EM:        cls = createVerifierEM(2, 0.25f); break;
-            case CL_LR:        cls = createVerifierLR(2, 0.5f); break;
-            case CL_BOOST:     cls = createVerifierBoost(2); break;
+            case CL_SVM:       cls = createVerifierSVM(); break;
+            case CL_EM:        cls = createVerifierEM(); break;
+            case CL_LR:        cls = createVerifierLR(); break;
+            case CL_BOOST:     cls = createVerifierBoost(); break;
+            case CL_KMEANS:    cls = createVerifierKmeans(); break;
             default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
         }
     }
+
+    virtual int addTraining(const Mat & img, int label) 
+    {
+        Mat feat1;
+        ext->extract(pre.process(img), feat1);
+
+        Mat fr = feat1.reshape(1,1);
+        if (! red.empty())
+            red->reduce(fr,fr);
+
+        features.push_back(fr);
+        labels.push_back(label);
+        cerr <<fr.cols << " i_" << labels.rows << "\r";
+        return labels.rows;
+    }
+    virtual bool train()
+    {
+        cerr << "." << features.cols << "     ";
+        int ok = cls->train(features, labels.reshape(1,features.rows));
+        cerr << ".\r";
+        CV_Assert(ok);
+        features.release();
+        labels.release();
+        return ok!=0;
+    }
+
 
     // Trains a FaceVerifier.
     virtual void train(InputArrayOfArrays src, InputArray _labels)
@@ -116,36 +147,22 @@ public:
 
             Mat feat1;
             nfeatbytes = ext->extract(img, feat1);
-            features.push_back(feat1.reshape(1,1));
+
+            Mat fr = feat1.reshape(1,1);
+            if (! red.empty())
+                red->reduce(fr,fr);
+
+            features.push_back(fr);
+
             labels.push_back(labels1(i));
 
-            if (doFlip) // add a flipped duplicate
-            {
-                flip(img,img,1);
-
-                Mat feat2;
-                ext->extract(img, feat2);
-                features.push_back(feat2.reshape(1,1));
-                labels.push_back(labels1(i));
-            }
+            images[i].release();
+            cerr << i << "/" << images.size() << "\r";
         }
         images.clear();
-        cerr << ".";
-        if (! red.empty())
-        {
-            red->train(features,labels);
-            Mat f;
-            for (int r=0; r<features.rows; ++r)
-            {
-                Mat fr;
-                red->reduce(features.row(r),fr);
-                f.push_back(fr);
-            }
-            features = f;
-        }
-        cerr << "." << features.size() << " ";
+        cerr << "." << features.cols;
         int ok = cls->train(features, labels.reshape(1,features.rows));
-        cerr << ".";
+        cerr << ".\r";
         CV_Assert(ok);
         // cerr << "trained " << nfeatbytes << " bytes." << '\r';
     }

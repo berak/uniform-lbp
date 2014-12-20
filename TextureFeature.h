@@ -16,7 +16,6 @@ namespace TextureFeature
 
     struct Reductor
     {
-        virtual int train(const Mat &features, const Mat &labels) = 0;
         virtual int reduce(const Mat &src, Mat &dest) const = 0;
     };
 
@@ -38,11 +37,6 @@ namespace TextureFeature
 //
 // the pipeline is:
 //    extractor -> reductor -> classifier (or verifier)
-//
-// e.g, opencv's eigenface recognition would be:
-//      pixels  ->  pca     -> l2_norm
-// the lbph reco would be :
-//      lbp     ->  none    -> hist_chisqr
 //
 
 
@@ -112,10 +106,8 @@ cv::Ptr<TextureFeature::Extractor> createExtractorHighDimLbp();
 // reductors
 //
 cv::Ptr<TextureFeature::Reductor> createReductorNone();
-cv::Ptr<TextureFeature::Reductor> createReductorPCA(int nc=0, bool whitening=false);
-cv::Ptr<TextureFeature::Reductor> createReductorPCA_LDA(int nc=0, bool whitening=false);
 cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int keep=0); // 0==all
-cv::Ptr<TextureFeature::Reductor> createReductorRandomProjection(int keep=0);
+//cv::Ptr<TextureFeature::Reductor> createReductorRandomProjection(int keep=0);
 cv::Ptr<TextureFeature::Reductor> createReductorDct(int keep=0);
 cv::Ptr<TextureFeature::Reductor> createReductorHellinger();
 
@@ -129,6 +121,8 @@ cv::Ptr<TextureFeature::Classifier> createClassifierCosine();
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1);
 cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5);
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti();
+cv::Ptr<TextureFeature::Classifier> createClassifierPCA(int n=0);
+cv::Ptr<TextureFeature::Classifier> createClassifierPCA_LDA(int n=0);
 
 //
 // verification task (same / not same)
@@ -136,10 +130,11 @@ cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti();
 cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int flag=cv::NORM_L2);
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int flag=cv::HISTCMP_CHISQR);
 cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int flag=cv::NORM_L2);
-cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc=2, float scale=0);
-cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc=2, float scale=0);
-cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc=2, float scale=0);
-cv::Ptr<TextureFeature::Verifier> createVerifierBoost(int distfunc=2, float scale=0);
+cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc=2);
+cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc=2);
+cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc=2);
+cv::Ptr<TextureFeature::Verifier> createVerifierBoost(int distfunc=2);
+cv::Ptr<TextureFeature::Verifier> createVerifierKmeans();
 
 
 

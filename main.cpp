@@ -64,14 +64,14 @@ void setupPersons(const vector<int> &labels, vector<vector<int>> &persons)
     // find out which index belongs to which person
     //
     persons.resize(1);
-    int prvid=0;
+    int previd=0;
     for (size_t j=0; j<labels.size(); j++)
     {
         int id = labels[j];
-        if (prvid!=id)
+        if (previd!=id)
         {
             persons.push_back(vector<int>());
-            prvid=id;
+            previd=id;
         }
         persons.back().push_back(j);
     }
@@ -111,6 +111,7 @@ int extractDB(const string &txtfile, vector<Mat> &images, Mat &labels, int prepr
 }
 
 int crossfoldData(Ptr<Extractor> ext,
+                  Ptr<Reductor> red,
                   Mat & trainFeatures,
                   Mat & trainLabels,
                   Mat & testFeatures,
@@ -134,7 +135,14 @@ int crossfoldData(Ptr<Extractor> ext,
             int index = persons[j][n];
 
             Mat feature;
-            fsiz = ext->extract(images[index],feature);
+            ext->extract(images[index],feature);
+
+            if (!red.empty())
+            {
+                red->reduce(feature, feature);
+            }
+
+            fsiz = feature.total() * feature.elemSize();
 
             // sliding window per fold
             if ((fold>1) && (n >= f*r) && (n <= (f+1)*r))
@@ -169,31 +177,16 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
         Mat trainFeatures, trainLabels;
         Mat testFeatures,  testLabels;
 
-        fsiz = crossfoldData(ext,trainFeatures,trainLabels,testFeatures,testLabels,images,labels,persons,f,fold);
+        fsiz = crossfoldData(ext,red,trainFeatures,trainLabels,testFeatures,testLabels,images,labels,persons,f,fold);
         trainFeatures = trainFeatures.reshape(1,trainLabels.rows);
-        if (!red.empty())
-        {
-            red->train(trainFeatures,trainLabels);
-            Mat f;
-            for (int r=0; r<trainFeatures.rows; ++r)
-            {
-                Mat fr;
-                red->reduce(trainFeatures.row(r),fr);
-                f.push_back(fr);
-            }
-            trainFeatures = f;
-        }
+
         cls->train(trainFeatures,trainLabels);
 
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
         for (int i=0; i<testFeatures.rows; i++)
         {
-            Mat res, feat=testFeatures.row(i);
-            if (!red.empty())
-            {
-                red->reduce(feat,feat);
-            }
-
+            Mat res;
+            Mat feat = testFeatures.row(i);
             cls->predict(feat.reshape(1,1), res);
 
             int pred = int(res.at<float>(0));
@@ -246,10 +239,10 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if (argc>2) fold = atoi(argv[2]);
 
-    int rec = 56;
+    int rec = 50;
     if (argc>3) rec = atoi(argv[3]);
 
-    int preproc = 0; // 0-none 1-eqhist 2-tan_triggs 3-clahe 4-retina
+    int preproc = 0; 
     if (argc>4) preproc = atoi(argv[4]);
 
     if (argc>5) debug = atoi(argv[5])!=0;
@@ -306,7 +299,6 @@ int main(int argc, const char *argv[])
         case 20: runtest("tplbp_p_svm",  createExtractorPyramidTpLbp(),   Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 21: runtest("mts_svm",      createExtractorMTS(),            Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 22: runtest("mts_hell",     createExtractorMTS(),            Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        case 23: runtest("mts_fisher",   createExtractorMTS(),            createReductorPCA_LDA(),           createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
         case 24: runtest("mts_e_hell",   createExtractorElasticMTS(),     Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         case 25: runtest("mts_e_svm",    createExtractorElasticMTS(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 26: runtest("mts_o_svm",    createExtractorOverlapMTS(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
@@ -327,18 +319,18 @@ int main(int argc, const char *argv[])
         case 41: runtest("orb_ham2",     createExtractorORBGrid(),        Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_HAMMING2),  images,labels,persons, fold); break;
         case 42: runtest("orb_L1",       createExtractorORBGrid(),        Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_L1),        images,labels,persons, fold); break;
         case 43: runtest("sift_L2",      createExtractorSIFTGrid(),       Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
-        case 44: runtest("sift_svm",     createExtractorSIFTGrid(),       createReductorDct(8000),         createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 45: runtest("sift_gftt_svm",createExtractorSIFTGftt(),       createReductorDct(8000),         createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 44: runtest("sift_svm",     createExtractorSIFTGrid(),       createReductorDct(8000),           createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 45: runtest("sift_gftt_svm",createExtractorSIFTGftt(),       createReductorDct(8000),           createClassifierSVM(),                   images,labels,persons, fold); break;
         case 46: runtest("grad_svm",     createExtractorGrad(),           Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 47: runtest("grad_gftt_svm",createExtractorGfttGrad(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 48: runtest("gradmag_svm",  createExtractorGfttGradMag(),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 49: runtest("eigen",        createExtractorPixels(),         createReductorPCA(),               createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
-        case 50: runtest("fisher",       createExtractorPixels(),         createReductorPCA_LDA(),           createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
+        case 49: runtest("eigen",        createExtractorPixels(),         Ptr<TextureFeature::Reductor>(),   createClassifierPCA(),                   images,labels,persons, fold); break;
+        case 50: runtest("fisher",       createExtractorPixels(),         Ptr<TextureFeature::Reductor>(),   createClassifierPCA_LDA(),               images,labels,persons, fold); break;
         case 51: runtest("orb_had_svm",  createExtractorORBGrid(),        createReductorWalshHadamard(),     createClassifierSVM(),                   images,labels,persons, fold); break;
         case 52: runtest("orb_hell_svm", createExtractorORBGrid(),        createReductorHellinger(),         createClassifierSVM(),                   images,labels,persons, fold); break;
         case 55: runtest("hdlbp_svm",    createExtractorHighDimLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 56: runtest("hdlbp_dct_svm", createExtractorHighDimLbp(),     createReductorDct(12000),    createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 57: runtest("hdlbp_hel_svm",createExtractorHighDimLbp(),     createReductorHellinger(),           createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 56: runtest("hdlbp_dct_svm",createExtractorHighDimLbp(),     createReductorDct(12000),          createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 57: runtest("hdlbp_hel_svm",createExtractorHighDimLbp(),     createReductorHellinger(),         createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 52: runtest("hdlbp_svm",    createExtractorHighDimLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         }                                                          
     }

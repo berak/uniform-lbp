@@ -33,9 +33,9 @@ struct ClassifierNearest : public TextureFeature::Classifier
 
     ClassifierNearest(int flag=NORM_L2) : flag(flag) {}
 
-    virtual double distance(const cv::Mat &trainFeature, const cv::Mat &testFeature) const
+    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
     {
-        return norm(trainFeature, testFeature, flag);
+        return norm(testFeature, trainFeature, flag);
     }
     // TextureFeature::Classifier
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
@@ -68,7 +68,6 @@ struct ClassifierNearest : public TextureFeature::Classifier
 
 struct ClassifierNearestFloat : public ClassifierNearest
 {
-
     ClassifierNearestFloat(int flag=NORM_L2) : ClassifierNearest(flag) {}
 
     // TextureFeature::Classifier
@@ -95,9 +94,9 @@ struct ClassifierHist : public ClassifierNearestFloat
     {}
 
     // ClassifierNearest
-    virtual double distance(const cv::Mat &trainFeature, const cv::Mat &testFeature) const
+    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
     {
-         return compareHist(trainFeature, testFeature, flag);
+         return compareHist(testFeature, trainFeature, flag);
     }
 };
 
@@ -107,7 +106,7 @@ struct ClassifierHist : public ClassifierNearestFloat
 //
 struct ClassifierCosine : public ClassifierNearest
 {
-    virtual double distance(const cv::Mat &trainFeature, const cv::Mat &testFeature) const
+    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
     {
         double a = trainFeature.dot(testFeature);
         double b = trainFeature.dot(trainFeature);
@@ -280,6 +279,102 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
 };
 
 
+
+struct ClassifierPCA : public ClassifierNearestFloat
+{
+    Mat eigenvectors;
+    Mat mean;
+    int num_components;
+
+    ClassifierPCA(int num_components=0)
+        : num_components(num_components)
+    {}
+
+    inline
+    Mat project(const Mat &src) const
+    {
+        return LDA::subspaceProject(eigenvectors, mean, src);
+    }
+
+    virtual int train(const Mat &trainData, const Mat &trainLabels)
+    {
+        if((num_components <= 0) || (num_components > trainData.rows))
+            num_components = trainData.rows;
+
+        //FileStorage fsr(format("pca%d.yml",num_components),FileStorage::READ);
+        //if (fsr.isOpened())
+        //{
+        //    fsr["comp"] >> num_components;
+        //    fsr["mean"] >> mean;
+        //    fsr["evec"] >> eigenvectors;
+        //    return 1;
+        //}
+
+        PCA pca(trainData, Mat(), cv::PCA::DATA_AS_ROW, num_components);
+
+        transpose(pca.eigenvectors, eigenvectors);
+        mean = pca.mean.reshape(1,1);
+        labels = trainLabels;
+        features.release();
+        for (int i=0; i<trainData.rows; i++)
+            features.push_back(project(trainData.row(i)));
+        //FileStorage fsw(format("pca%d.yml",num_components),FileStorage::WRITE);
+        //fsw << "comp" << num_components;
+        //fsw << "mean" << mean;
+        //fsw << "evec" << eigenvectors;
+        return 1;
+    }
+
+    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
+    {
+        return ClassifierNearestFloat::predict(project(testFeature), results);
+    }
+};
+
+
+
+struct ClassifierPCA_LDA : public ClassifierPCA
+{
+    ClassifierPCA_LDA(int num_components=0)
+        : ClassifierPCA(num_components)
+    {}
+
+    virtual int train(const Mat &trainData, const Mat &trainLabels)
+    {
+        set<int> classes;
+        int C = TextureFeatureImpl::unique(trainLabels,classes);
+        int N = trainData.rows;
+        if((num_components <= 0) || (num_components > (C-1)))
+            num_components = (C-1);
+
+        // step one, do pca on the original data:
+        PCA pca(trainData, Mat(), cv::PCA::DATA_AS_ROW, (N-C));
+        mean = pca.mean.reshape(1,1);
+
+        // step two, do lda on data projected to pca space:
+        Mat proj = LDA::subspaceProject(pca.eigenvectors.t(), mean, trainData);
+        LDA lda(proj, trainLabels, num_components);
+
+        // step three, combine both:
+        Mat leigen;
+        lda.eigenvectors().convertTo(leigen, pca.eigenvectors.type());
+        gemm(pca.eigenvectors, leigen, 1.0, Mat(), 0.0, eigenvectors, GEMM_1_T);
+
+        // step four, keep labels and projected dataset:
+        features.release();
+        for (int i=0; i<trainData.rows; i++)
+            features.push_back(project(trainData.row(i)));
+        labels = trainLabels;
+        return 1;
+    }
+};
+
+
+
+
+
+
+
 //
 // train a single threshold value
 //
@@ -321,7 +416,7 @@ struct VerifierNearest : TextureFeature::Verifier
                     nNotSame ++;
                 }
             }
-            cerr << i << "/" << labels.total() << '\r';
+            // cerr << i << "/" << labels.total() << '\r';
         }
         dSame    = (dSame/nSame);
         dNotSame = (dNotSame/nNotSame);
@@ -364,11 +459,9 @@ struct VerifierPairDistance : public TextureFeature::Verifier
 {
     Ptr<ml::StatModel> model;
     int dist_flag;
-    float scale;
 
-    VerifierPairDistance(int df=2, float sca=0)
+    VerifierPairDistance(int df=2)
         : dist_flag(df)
-        , scale(sca)
     {}
 
     Mat distance(const Mat &a, const Mat &b) const
@@ -380,8 +473,6 @@ struct VerifierPairDistance : public TextureFeature::Verifier
             case 1: d = a-b; multiply(d,d,d,1,CV_32F);
             case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
         }
-        if (scale > 0)
-            resize(d, d, Size(), scale, 1); // desperate to save memory
         return d;
     }
 
@@ -418,8 +509,8 @@ struct VerifierPairDistance : public TextureFeature::Verifier
 //
 struct VerifierSVM : public VerifierPairDistance<int>
 {
-    VerifierSVM(int distFlag=2, float scale=0)
-        : VerifierPairDistance<int>(distFlag, scale)
+    VerifierSVM(int distFlag=2)
+        : VerifierPairDistance<int>(distFlag)
     {
         ml::SVM::Params param;
         param.kernelType = ml::SVM::LINEAR;
@@ -441,8 +532,8 @@ struct VerifierSVM : public VerifierPairDistance<int>
 //
 struct VerifierEM : public VerifierPairDistance<int>
 {
-    VerifierEM(int distFlag=2, float scale=0)
-        : VerifierPairDistance<int>(distFlag,scale)
+    VerifierEM(int distFlag=2)
+        : VerifierPairDistance<int>(distFlag)
     {}
 
     virtual int train(const Mat &features, const Mat &labels)
@@ -463,7 +554,7 @@ struct VerifierEM : public VerifierPairDistance<int>
         param.termCrit.epsilon = 1e-6;
 
         model = ml::EM::train(distances,noArray(),noArray(),noArray(),param);
-        return 1;
+        return model->isTrained();
     }
 
     virtual bool same(const Mat &a, const Mat &b) const
@@ -482,8 +573,8 @@ struct VerifierEM : public VerifierPairDistance<int>
 //
 struct VerifierBoost : public VerifierPairDistance<int>
 {
-    VerifierBoost(int distFlag=2, float scale=0)
-        : VerifierPairDistance<int>(distFlag, scale)
+    VerifierBoost(int distFlag=2)
+        : VerifierPairDistance<int>(distFlag)
     {
         ml::Boost::Params param;
         param.boostType = ml::Boost::DISCRETE;
@@ -496,8 +587,8 @@ struct VerifierBoost : public VerifierPairDistance<int>
 
 struct VerifierLR : public VerifierPairDistance<float>
 {
-    VerifierLR(int distFlag=2, float scale=0)
-        : VerifierPairDistance<float>(distFlag,scale)
+    VerifierLR(int distFlag=2)
+        : VerifierPairDistance<float>(distFlag)
     {
         ml::LogisticRegression::Params params;
         params.alpha = 0.005;
@@ -509,6 +600,44 @@ struct VerifierLR : public VerifierPairDistance<float>
         model = ml::LogisticRegression::create(params);
     }
 };
+
+
+struct VerifierKmeans : public TextureFeature::Verifier
+{
+    Mat centers;
+
+    Mat distance(const Mat &a, const Mat &b) const
+    {
+        Mat d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
+        return d;
+    }
+
+    virtual int train(const Mat &features, const Mat &labels)
+    {
+        Mat trainData = tofloat(features.reshape(1, labels.rows));
+        Mat distances;
+        for (size_t i=0; i<labels.total()-1; i+=2)
+        {
+            int j = i+1;
+            distances.push_back(distance(trainData.row(i), trainData.row(j)));
+        }
+        Mat best;
+        kmeans(distances,2,best,TermCriteria(),3,KMEANS_PP_CENTERS,centers);
+        return 1;
+    }
+
+    virtual bool same(const Mat &a, const Mat &b) const
+    {
+        Mat d = distance(tofloat(a),tofloat(b));
+        double d0 = norm(d,centers.row(0));
+        double d1 = norm(d,centers.row(1));
+        //cerr << s << " ";
+        return d0 > d1;
+    }
+};
+
+
+
 
 } // namespace TextureFeatureImpl
 
@@ -537,6 +666,11 @@ cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree, double ga
 
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
 { return makePtr<TextureFeatureImpl::ClassifierSvmMulti>(); }
+cv::Ptr<TextureFeature::Classifier> createClassifierPCA(int n)
+{ return makePtr<TextureFeatureImpl::ClassifierPCA>(n); }
+cv::Ptr<TextureFeature::Classifier> createClassifierPCA_LDA(int n)
+{ return makePtr<TextureFeatureImpl::ClassifierPCA_LDA>(n); }
+
 
 
 
@@ -550,15 +684,18 @@ cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
 { return makePtr<TextureFeatureImpl::VerifierHist>(norm_flag); }
 
-cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc, float scale)
-{ return makePtr<TextureFeatureImpl::VerifierSVM>(distfunc,scale); }
+cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc)
+{ return makePtr<TextureFeatureImpl::VerifierSVM>(distfunc); }
 
-cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc, float scale)
-{ return makePtr<TextureFeatureImpl::VerifierEM>(distfunc,scale); }
+cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc)
+{ return makePtr<TextureFeatureImpl::VerifierEM>(distfunc); }
 
-cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc, float scale)
-{ return makePtr<TextureFeatureImpl::VerifierLR>(distfunc,scale); }
+cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc)
+{ return makePtr<TextureFeatureImpl::VerifierLR>(distfunc); }
 
-cv::Ptr<TextureFeature::Verifier> createVerifierBoost(int distfunc, float scale)
-{ return makePtr<TextureFeatureImpl::VerifierBoost>(distfunc,scale); }
+cv::Ptr<TextureFeature::Verifier> createVerifierBoost(int distfunc)
+{ return makePtr<TextureFeatureImpl::VerifierBoost>(distfunc); }
+
+cv::Ptr<TextureFeature::Verifier> createVerifierKmeans()
+{ return makePtr<TextureFeatureImpl::VerifierKmeans>(); }
 

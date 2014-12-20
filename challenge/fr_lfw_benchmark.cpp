@@ -101,9 +101,9 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
-            "{ ext e          |32  | extractor enum }"
+            "{ ext e          |0   | extractor enum }"
             "{ red r          |0   | reductor enum }"
-            "{ cls c          |6   | classifier enum }"
+            "{ cls c          |10  | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ flip f         |0   | add a flipped image }"
@@ -129,9 +129,9 @@ int main(int argc, const char *argv[])
     int64 t0 = getTickCount();
     Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,red,cls,pre,crp,flp);
 
-    // These vectors hold the images and corresponding labels.
-    vector<Mat> images;
-    vector<int> labels;
+    //// These vectors hold the images and corresponding labels.
+    //vector<Mat> images;
+    //vector<int> labels;
 
     // load dataset
     Ptr<FR_lfw> dataset = FR_lfw::create();
@@ -146,21 +146,23 @@ int main(int argc, const char *argv[])
 
             int currNum1 = getLabel(example->image1);
             Mat img = imread(path+example->image1, IMREAD_GRAYSCALE);
-            images.push_back(img);
-            labels.push_back(currNum1);
-
+            //images.push_back(img);
+            //labels.push_back(currNum1);
+            model->addTraining(img, currNum1);
             int currNum2 = getLabel(example->image2);
             img = imread(path+example->image2, IMREAD_GRAYSCALE);
-            images.push_back(img);
-            labels.push_back(currNum2);
+            //images.push_back(img);
+            //labels.push_back(currNum2);
+            model->addTraining(img, currNum2);
         }
 
         {
             PROFILEX("train");
-            model->train(images, labels);
+            //model->train(images, labels);
+            model->train();
         }
-        images.clear();
-        labels.clear();
+        //images.clear();
+        //labels.clear();
     }
 
 
@@ -170,8 +172,8 @@ int main(int argc, const char *argv[])
         PROFILEX("splits");
         if (trainMethod == "split") // train on the remaining 9 splits from pairs.txt
         {
-            images.clear();
-            labels.clear();
+            //images.clear();
+            //labels.clear();
             for (unsigned int j2=0; j2<numSplits; ++j2)
             {
                 if (j==j2) continue;
@@ -182,21 +184,24 @@ int main(int argc, const char *argv[])
                     FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
                     int currNum1 = getLabel(example->image1);
                     Mat img = imread(path+example->image1, IMREAD_GRAYSCALE);
-                    images.push_back(img);
-                    labels.push_back(currNum1);
+                    //images.push_back(img);
+                    //labels.push_back(currNum1);
+                    model->addTraining(img, currNum1);
 
                     int currNum2 = getLabel(example->image2);
                     img = imread(path+example->image2, IMREAD_GRAYSCALE);
-                    images.push_back(img);
-                    labels.push_back(currNum2);
+                    //images.push_back(img);
+                    //labels.push_back(currNum2);
+                    model->addTraining(img, currNum2);
                 }
             }
             {
                 PROFILEX("train");
-                model->train(images, labels);
+                //model->train(images, labels);
+                model->train();
             }
-            images.clear();
-            labels.clear();
+            //images.clear();
+            //labels.clear();
         }
 
         unsigned int incorrect = 0, correct = 0;
