@@ -129,7 +129,6 @@ cv::Ptr<TextureFeature::Classifier> createClassifierPCA_LDA(int n=0);
 //
 cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int flag=cv::NORM_L2);
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int flag=cv::HISTCMP_CHISQR);
-cv::Ptr<TextureFeature::Verifier> createVerifierFisher(int flag=cv::NORM_L2);
 cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc=2);
 cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc=2);
 cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc=2);
