@@ -47,7 +47,7 @@
 
 #include "MyFace.h"
 
-#if 1
+#if 0
  #include "profile.h"
 #else
  #define PROFILE ;
@@ -83,14 +83,14 @@ int getLabel(const string &imagePath)
 
 void printOptions()
 {
-    cerr << "extractors  :"<< endl;
-    for (size_t i=0; i<myface::EXT_MAX; ++i) cerr << "  " << myface::EXS[i] << "(" << i << ")" << endl;
-    cerr << endl << "reductors :" << endl;
-    for (size_t i=0; i<myface::RED_MAX; ++i)  cerr <<  "  " << myface::REDS[i] << "(" << i << ")" << endl;
-    cerr << endl << "classifiers :" << endl;
-    for (size_t i=0; i<myface::CL_MAX; ++i)  cerr <<  "  " << myface::CLS[i] << "(" << i << ")" << endl;
-    cerr << endl << "preproc :" << endl;
-    for (size_t i=0; i<myface::PRE_MAX; ++i)  cerr <<  "  " << myface::PPS[i] << "(" << i << ")" << endl;
+    cerr << "[extractors]  :"<< endl;
+    for (size_t i=0; i<myface::EXT_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",myface::EXS[i],i); }
+    cerr << endl << endl << "[reductors] :" << endl;
+    for (size_t i=0; i<myface::RED_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",myface::REDS[i],i); }
+    cerr << endl << endl << "[classifiers] :" << endl;
+    for (size_t i=0; i<myface::CL_MAX; ++i)  {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",myface::CLS[i],i);  }
+    cerr << endl << endl <<  "[preproc] :" << endl;
+    for (size_t i=0; i<myface::PRE_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",myface::PPS[i],i);  }
     cerr << endl;
 }
 

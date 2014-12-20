@@ -331,7 +331,7 @@ struct VerifierNearest : TextureFeature::Verifier
         return 1;
     }
 
-    virtual bool same( const Mat &a, const Mat &b ) const
+    virtual bool same(const Mat &a, const Mat &b) const
     {
         return (distance(a,b) < thresh);
     }
@@ -411,6 +411,7 @@ struct VerifierPairDistance : public TextureFeature::Verifier
         return  r > 0;
     }
 };
+
 
 //
 // binary (2 class) svm, same or not same based on distance

@@ -79,7 +79,9 @@ public:
             case RED_HELL:     red = createReductorHellinger(); break;
             case RED_WHAD:     red = createReductorWalshHadamard(6000); break;
             case RED_RP:       red = createReductorRandomProjection(6000); break;
-            case RED_DCT:      red = createReductorDct(6000); break;
+            case RED_DCT8:     red = createReductorDct(8000); break;
+            case RED_DCT12:    red = createReductorDct(12000); break;
+            case RED_DCT16:    red = createReductorDct(16000); break;
             default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
         }
         switch(clsfy)

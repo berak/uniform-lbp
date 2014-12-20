@@ -34,6 +34,7 @@ namespace TextureFeature
 };
 
 
+
 //
 // the pipeline is:
 //    extractor -> reductor -> classifier (or verifier)
@@ -42,8 +43,6 @@ namespace TextureFeature
 //      pixels  ->  pca     -> l2_norm
 // the lbph reco would be :
 //      lbp     ->  none    -> hist_chisqr
-// ofc. you can build your own, like pca-sift:
-//      sift    ->  pca64   -> l2_norm (or svm)
 //
 
 
@@ -115,10 +114,10 @@ cv::Ptr<TextureFeature::Extractor> createExtractorHighDimLbp();
 cv::Ptr<TextureFeature::Reductor> createReductorNone();
 cv::Ptr<TextureFeature::Reductor> createReductorPCA(int nc=0, bool whitening=false);
 cv::Ptr<TextureFeature::Reductor> createReductorPCA_LDA(int nc=0, bool whitening=false);
-cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int keep=0);
+cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int keep=0); // 0==all
+cv::Ptr<TextureFeature::Reductor> createReductorRandomProjection(int keep=0);
+cv::Ptr<TextureFeature::Reductor> createReductorDct(int keep=0);
 cv::Ptr<TextureFeature::Reductor> createReductorHellinger();
-cv::Ptr<TextureFeature::Reductor> createReductorRandomProjection(int k=0);
-cv::Ptr<TextureFeature::Reductor> createReductorDct(int k=0);
 
 
 //
@@ -127,7 +126,7 @@ cv::Ptr<TextureFeature::Reductor> createReductorDct(int k=0);
 cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=cv::NORM_L2);
 cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=cv::HISTCMP_CHISQR);
 cv::Ptr<TextureFeature::Classifier> createClassifierCosine();
-cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int n=1);                // TODO: needs a way to get to the k-1 others
+cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1);
 cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5);
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti();
 

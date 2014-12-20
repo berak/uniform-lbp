@@ -45,7 +45,7 @@ namespace myface
         EXT_Grad_P,
         EXT_GradMag,
         EXT_HDLBP,
-        EXT_MAX 
+        EXT_MAX
     };
     static const char *EXS[] = {
         "Pixels",
@@ -97,7 +97,9 @@ namespace myface
         RED_HELL,
         RED_WHAD,
         RED_RP,
-        RED_DCT,
+        RED_DCT8,
+        RED_DCT12,
+        RED_DCT16,
         RED_MAX
     };
     static const char *REDS[] = {
@@ -108,7 +110,9 @@ namespace myface
         "HELL",
         "WHAD",
         "RP",
-        "DCT",
+        "DCT8",
+        "DCT12",
+        "DCT16",
         0
     };
     enum CLA {

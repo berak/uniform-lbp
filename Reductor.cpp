@@ -112,7 +112,7 @@ struct ReductorPCA_LDA : public ReductorPCA
         Mat evecs;
         if (whitening)
             whiten(pca, evecs);
-        else 
+        else
             evecs = pca.eigenvectors;
 
         // step two, do lda on data projected to pca space:
@@ -130,7 +130,7 @@ struct ReductorPCA_LDA : public ReductorPCA
 struct ReductorWalshHadamard : public TextureFeature::Reductor
 {
     int keep;
-    
+
     ReductorWalshHadamard(int k=0) : keep(k) {}
 
     template<class T>
@@ -148,10 +148,10 @@ struct ReductorWalshHadamard : public TextureFeature::Reductor
             in  += lev;
         }
     }
-    virtual int train(const Mat &features, const Mat &labels) 
+    virtual int train(const Mat &features, const Mat &labels)
     {   return 0;  }
 
-    virtual int reduce(const Mat &src, Mat &dest) const  
+    virtual int reduce(const Mat &src, Mat &dest) const
     {
         Mat h; src.convertTo(h,CV_32F);
         Mat h2(h.size(), h.type());
@@ -164,49 +164,49 @@ struct ReductorWalshHadamard : public TextureFeature::Reductor
             dest = h2(Rect(0,0,std::min(keep,h2.cols-1),1));
         else
             dest = h2;
-        return 0; 
+        return 0;
     }
 };
 
 struct ReductorDct : public TextureFeature::Reductor
 {
     int keep;
-    
+
     ReductorDct(int k=0) : keep(k) {}
 
-    virtual int train(const Mat &features, const Mat &labels) 
+    virtual int train(const Mat &features, const Mat &labels)
     {   return 0;  }
 
-    virtual int reduce(const Mat &src, Mat &dest) const  
+    virtual int reduce(const Mat &src, Mat &dest) const
     {
         Mat h; src.convertTo(h,CV_32F);
         Mat h2(h.size(), h.type());
 
-        dft(h,h2); // solves pow2 issue
+        dft(h,h2); // dft instead of dct solves pow2 issue
 
         Mat h3 = (keep>0) ?
-                 h2(Rect(0,0,std::min(keep,h2.cols-1),1)) : 
+                 h2(Rect(0,0,std::min(keep,h2.cols-1),1)) :
                  h2;
         dft(h3,dest,DCT_INVERSE);
-        return 0; 
+        return 0;
     }
 };
 
 struct ReductorHellinger : public TextureFeature::Reductor
 {
-    virtual int train(const Mat &features, const Mat &labels) 
-    { 
-        return 0; 
+    virtual int train(const Mat &features, const Mat &labels)
+    {
+        return 0;
     }
 
-    virtual int reduce(const Mat &src, Mat &dest) const  
+    virtual int reduce(const Mat &src, Mat &dest) const
     {
         src.convertTo(dest, CV_32F);
         float eps = 1e-7f;
         dest /= sum(dest)[0] + eps; // L1
         sqrt(dest,dest);
         dest /= norm(dest) + eps; // L2
-        return 0; 
+        return 0;
     }
 };
 
@@ -221,8 +221,8 @@ struct ReductorRandomProjection : public TextureFeature::Reductor
         , rng(37183927)
     {}
 
-    virtual int train(const Mat &features, const Mat &labels) 
-    { 
+    virtual int train(const Mat &features, const Mat &labels)
+    {
         if (! proj.empty())
             return 0;
         proj = Mat(features.cols, K, CV_32F);
@@ -233,13 +233,13 @@ struct ReductorRandomProjection : public TextureFeature::Reductor
         {
             normalize(proj.col(i), proj.col(i));
         }
-        return 0; 
+        return 0;
     }
 
-    virtual int reduce(const Mat &src, Mat &dest) const  
+    virtual int reduce(const Mat &src, Mat &dest) const
     {
         dest = src * proj;
-        return 0; 
+        return 0;
     }
 };
 
