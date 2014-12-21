@@ -84,41 +84,42 @@ struct ReductorDct : public TextureFeature::Reductor
     }
 };
 
-//
-//struct ReductorRandomProjection : public TextureFeature::Reductor
-//{
-//    Mat proj;
-//    int K;
-//
-//    ReductorRandomProjection(int k) : K(k) {}
-//
-//    int setup(const Mat &feature) const
-//    {
-//        if (! proj.empty())
-//            return 0;
-//        proj = Mat(feature.cols, K, CV_32F);
-//
-//        theRNG().state = 37183927;
-//        randn(proj, Scalar(0.5), Scalar(0.5));
-//        //randu(proj, Scalar(0), Scalar(1));
-//
-//        for (int i=0; i<K; i++)
-//        {
-//            normalize(proj.col(i), proj.col(i));
-//        }
-//        return 0;
-//    }
-//
-//    virtual int reduce(const Mat &src, Mat &dest) const
-//    {
-//        setup(src);
-//
-//        Mat s; src.convertTo(s, CV_32F);
-//        dest = s * proj;
-//        return 0;
-//    }
-//};
-//
+
+struct ReductorRandomProjection : public TextureFeature::Reductor
+{
+    int K;
+
+    ReductorRandomProjection(int k) : K(k) {}
+
+    const Mat & setup(int N) const
+    {
+        static Mat proj; // else it can't be const ;(
+        if (! proj.empty())
+            return proj;
+
+        proj = Mat(N, K, CV_32F);
+
+        theRNG().state = 37183927;
+        randn(proj, Scalar(0.5), Scalar(0.5));
+        //randu(proj, Scalar(0), Scalar(1));
+
+        for (int i=0; i<K; i++)
+        {
+            normalize(proj.col(i), proj.col(i));
+        }
+        return proj;
+    }
+
+    virtual int reduce(const Mat &src, Mat &dest) const
+    {
+        const Mat &proj = setup(src.cols);
+
+        Mat s; src.convertTo(s, CV_32F);
+        dest = s * proj;
+        return 0;
+    }
+};
+
 
 
 //
@@ -152,8 +153,8 @@ cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int keep)
 cv::Ptr<TextureFeature::Reductor> createReductorHellinger()
 {    return makePtr<TextureFeatureImpl::ReductorHellinger>(); }
 
-//cv::Ptr<TextureFeature::Reductor> createReductorRandomProjection(int k)
-//{    return makePtr<TextureFeatureImpl::ReductorRandomProjection>(k); }
+cv::Ptr<TextureFeature::Reductor> createReductorRandomProjection(int k)
+{    return makePtr<TextureFeatureImpl::ReductorRandomProjection>(k); }
 
 cv::Ptr<TextureFeature::Reductor> createReductorDct(int k)
 {    return makePtr<TextureFeatureImpl::ReductorDct>(k); }

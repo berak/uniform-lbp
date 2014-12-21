@@ -161,8 +161,6 @@ int main(int argc, const char *argv[])
             //model->train(images, labels);
             model->train();
         }
-        //images.clear();
-        //labels.clear();
     }
 
 
@@ -172,8 +170,6 @@ int main(int argc, const char *argv[])
         PROFILEX("splits");
         if (trainMethod == "split") // train on the remaining 9 splits from pairs.txt
         {
-            //images.clear();
-            //labels.clear();
             for (unsigned int j2=0; j2<numSplits; ++j2)
             {
                 if (j==j2) continue;
@@ -200,8 +196,6 @@ int main(int argc, const char *argv[])
                 //model->train(images, labels);
                 model->train();
             }
-            //images.clear();
-            //labels.clear();
         }
 
         unsigned int incorrect = 0, correct = 0;

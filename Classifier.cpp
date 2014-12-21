@@ -666,8 +666,10 @@ cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree, double ga
 
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
 { return makePtr<TextureFeatureImpl::ClassifierSvmMulti>(); }
+
 cv::Ptr<TextureFeature::Classifier> createClassifierPCA(int n)
 { return makePtr<TextureFeatureImpl::ClassifierPCA>(n); }
+
 cv::Ptr<TextureFeature::Classifier> createClassifierPCA_LDA(int n)
 { return makePtr<TextureFeatureImpl::ClassifierPCA_LDA>(n); }
 

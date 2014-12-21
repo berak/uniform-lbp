@@ -636,6 +636,32 @@ static void gftt32(vector<KeyPoint> &kp)
 //    kp.push_back(KeyPoint(10.6673,10.6673,21.4973,0,0.000119884,2,3));
 //}
 
+static void kp_manual(vector<KeyPoint> &kp)
+{
+    kp.push_back(KeyPoint(10,31,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(13,37,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(82,31,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(78,37,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(55,27,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(58,35,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(7,21,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(20,19,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(30,19,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(83,21,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(70,17,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(59,18,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(38,61,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(53,61,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(60,53,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(32,54,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(27,77,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(63,77,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(38,45,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(54,45,3,-1,0,0,-1));
+}
+
 
 struct GfttGrid
 {
@@ -667,7 +693,7 @@ struct GfttGrid
 // layered base for lbph,
 //  * calc features on the whole image,
 //  * calculate the hist on a set of rectangles
-//    (which could come from a grid, or a Rects based model).
+//    (which could come from a grid, or a Rects, or a keypoint based model).
 //
 template <typename Feature, typename Grid>
 struct GenericExtractor : public TextureFeature::Extractor
@@ -898,32 +924,43 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
     }
 };
 
+
+//
+// "Review and Implementation of High-Dimensional Local Binary Patterns 
+//    and Its Application to Face Recognition"
+//    Bor-Chun Chen, Chu-Song Chen, Winston Hsu 
+//
 struct HighDimLbp : public TextureFeature::Extractor
 {
-    FeatureCsLbp lbp;
+    //FeatureGrad lbp;
+    //FeatureMTS lbp;
+    FeatureFPLbp lbp;
+    //FeatureCsLbp lbp;
     //FeatureLbp lbp;
 
+    //HighDimLbp() : lbp(16) {}
     virtual int extract(const Mat &img, Mat &features) const
     {
         bool uni=false;
         //bool uni=true;
-        int gr=8;
+        int gr=8; // 10 used in paper
         vector<KeyPoint> kp;
-        gftt32(kp);
+        //gftt32(kp);
+        kp_manual(kp);
 
         Mat histo;
         //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
-        float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f};
-        //int offsets[16][2] = {       -1,-1,  -1, 0,
-        //                              0,-1,   0, 0, 
-        //                     -2,-2,  -2,-1,  -2, 0,  -2, 1,
-        //                     -1,-2,                  -1, 1,
-        //                      0,-2,                   0, 1,
-        //                      1,-2,   1,-1,   1, 0,   1, 1,
-        //};
-        double offsets[9][2] = { -1.5,-1.5,   -1.5,-0.5,  -1.5, 0.5,
-                                 -0.5,-1.5,   -0.5,-0.5,  -0.5, 0.5,
-                                  1.5,-1.5,    1.5,-0.5,   1.5, 0.5 };
+        float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
+        int offsets[16][2] = {       -1,-1,  -1, 0,
+                                      0,-1,   0, 0, 
+                             -2,-2,  -2,-1,  -2, 0,  -2, 1,
+                             -1,-2,                  -1, 1,
+                              0,-2,                   0, 1,
+                              1,-2,   1,-1,   1, 0,   1, 1,
+        };
+        //double offsets[9][2] = { -1.5,-1.5,   -1.5,-0.5,  -1.5, 0.5,
+        //                         -0.5,-1.5,   -0.5,-0.5,  -0.5, 0.5,
+        //                          1.5,-1.5,    1.5,-0.5,   1.5, 0.5 };
         for (int i=0; i<5; i++)
         {
             float s = scale[i];
@@ -934,9 +971,8 @@ struct HighDimLbp : public TextureFeature::Extractor
 
             Rect bounds(0,0,int(90*s),int(90*s));
             for (size_t k=0; k<kp.size(); k++)
-            //for (size_t k=0; k<20; k++)
             {
-                for (int o=0; o<9; o++)
+                for (int o=0; o<16; o++)
                 {
                     Rect part(int(kp[k].pt.x*s)+offsets[o][0]*gr, int(kp[k].pt.y)+offsets[o][1]*gr, gr, gr);
                     part &= bounds;
