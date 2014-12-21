@@ -116,7 +116,7 @@ public:
 
         features.push_back(fr);
         labels.push_back(label);
-        cerr <<fr.cols << " i_" << labels.rows << "\r";
+        //cerr <<fr.cols << " i_" << labels.rows << "\r";
         return labels.rows;
     }
     virtual bool train()
@@ -131,41 +131,41 @@ public:
     }
 
 
-    // Trains a FaceVerifier.
-    virtual void train(InputArrayOfArrays src, InputArray _labels)
-    {
-        Mat_<int> labels1 = _labels.getMat();
-        Mat labels;
+    //// Trains a FaceVerifier.
+    //virtual void train(InputArrayOfArrays src, InputArray _labels)
+    //{
+    //    Mat_<int> labels1 = _labels.getMat();
+    //    Mat labels;
 
-        vector<Mat> images;
-        src.getMatVector(images);
-        int nfeatbytes=0;
-        Mat features;
-        for (size_t i=0; i<images.size(); i++)
-        {
-            Mat img = pre.process(images[i]);
+    //    vector<Mat> images;
+    //    src.getMatVector(images);
+    //    int nfeatbytes=0;
+    //    Mat features;
+    //    for (size_t i=0; i<images.size(); i++)
+    //    {
+    //        Mat img = pre.process(images[i]);
 
-            Mat feat1;
-            nfeatbytes = ext->extract(img, feat1);
+    //        Mat feat1;
+    //        nfeatbytes = ext->extract(img, feat1);
 
-            Mat fr = feat1.reshape(1,1);
-            if (! red.empty())
-                red->reduce(fr,fr);
+    //        Mat fr = feat1.reshape(1,1);
+    //        if (! red.empty())
+    //            red->reduce(fr,fr);
 
-            features.push_back(fr);
+    //        features.push_back(fr);
 
-            labels.push_back(labels1(i));
+    //        labels.push_back(labels1(i));
 
-            images[i].release();
-            cerr << i << "/" << images.size() << "\r";
-        }
-        images.clear();
-        cerr << "." << features.cols;
-        int ok = cls->train(features, labels.reshape(1,features.rows));
-        cerr << ".\r";
-        CV_Assert(ok);
-        // cerr << "trained " << nfeatbytes << " bytes." << '\r';
-    }
+    //        images[i].release();
+    //        cerr << i << "/" << images.size() << "\r";
+    //    }
+    //    images.clear();
+    //    cerr << "." << features.cols;
+    //    int ok = cls->train(features, labels.reshape(1,features.rows));
+    //    cerr << ".\r";
+    //    CV_Assert(ok);
+    //    // cerr << "trained " << nfeatbytes << " bytes." << '\r';
+    //}
 
 
     virtual int same(const Mat & a, const Mat &b) const
