@@ -6,7 +6,7 @@ but meanwhile it morphed into a testbed for comparing preprocessing/extraction/c
 it all builds on top of opencv30 .
 
      the pipeline is:
-        extractor -> reductor -> classifier (or verifier)
+        (preprocessing) -> extractor -> reductor -> classifier (or verifier)
 
 
 

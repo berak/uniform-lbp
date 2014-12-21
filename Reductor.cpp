@@ -1,9 +1,5 @@
-#include <set>
-using namespace std;
 
 #include <opencv2/imgproc.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/ml.hpp>
 using namespace cv;
 
 #include "TextureFeature.h"
@@ -94,7 +90,7 @@ struct ReductorRandomProjection : public TextureFeature::Reductor
     const Mat & setup(int N) const
     {
         static Mat proj; // else it can't be const ;(
-        if (! proj.empty())
+        if (proj.rows==N && proj.cols==K)
             return proj;
 
         proj = Mat(N, K, CV_32F);
