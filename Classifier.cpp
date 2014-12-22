@@ -370,8 +370,13 @@ struct ClassifierPCA_LDA : public ClassifierPCA
 };
 
 
-
-
+//------->8-----------------------------------------------------------------------
+//
+// while for the identification task, we train a classifier on image features,
+// the verification task needs to train a metric model for pairwise distance.
+// related, but quite different.
+//
+//------->8-----------------------------------------------------------------------
 
 
 

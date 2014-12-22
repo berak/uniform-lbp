@@ -76,12 +76,9 @@ public:
         switch(redu)
         {
             case RED_NONE:     break; //red = createReductorNone(); break;
-            //case RED_PCA:      red = createReductorPCA(); break;
-            //case RED_PCA_6k:   red = createReductorPCA(6000); break;
-            //case RED_PCA_LDA:  red = createReductorPCA_LDA(); break;
             case RED_HELL:     red = createReductorHellinger(); break;
             case RED_WHAD:     red = createReductorWalshHadamard(8000); break;
-            //case RED_RP:       red = createReductorRandomProjection(8000); break;
+            case RED_RP:       red = createReductorRandomProjection(8000); break;
             case RED_DCT8:     red = createReductorDct(8000); break;
             case RED_DCT12:    red = createReductorDct(12000); break;
             case RED_DCT16:    red = createReductorDct(16000); break;

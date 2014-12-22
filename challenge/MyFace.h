@@ -91,12 +91,9 @@ namespace myface
     };
     enum RED {
         RED_NONE,
-        //RED_PCA,
-        //RED_PCA_6k,
-        //RED_PCA_LDA,
         RED_HELL,
         RED_WHAD,
-        //RED_RP,
+        RED_RP,
         RED_DCT8,
         RED_DCT12,
         RED_DCT16,
@@ -105,12 +102,9 @@ namespace myface
     };
     static const char *REDS[] = {
         "none",
-        //"PCA",
-        //"PCA_6k",
-        //"PCA_LDA",
         "HELL",
         "WHAD",
-        //"RP",
+        "RP",
         "DCT8",
         "DCT12",
         "DCT16",
