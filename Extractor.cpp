@@ -12,6 +12,8 @@ using namespace cv;
 
 #include "TextureFeature.h"
 
+#include "flandmark_detector.h"
+
 
 namespace TextureFeatureImpl
 {
@@ -865,6 +867,12 @@ struct HighDimLbp : public TextureFeature::Extractor
     FeatureFPLbp lbp;
     //FeatureCsLbp lbp;
     //FeatureLbp lbp;
+    FLANDMARK_Model * model;
+
+    HighDimLbp()
+    {
+        model = flandmark_init("flandmark_model.dat");
+    }
 
     //HighDimLbp() : lbp(16) {}
     virtual int extract(const Mat &img, Mat &features) const
@@ -872,9 +880,15 @@ struct HighDimLbp : public TextureFeature::Extractor
         bool uni=false;
         //bool uni=true;
         int gr=8; // 10 used in paper
-        vector<KeyPoint> kp;
-        //gftt32(kp);
-        kp_manual(kp);
+
+        int npoints = this->model->data.options.M;
+        int bbox[4] = { 80,80, 80+90, 80+90 };
+        vector<Point2d> landmarks(2 * npoints);
+        flandmark_detect(img, bbox, this->model, (double*)(&landmarks[0]),0);
+
+        //vector<KeyPoint> kp;
+        ////gftt32(kp);
+        //kp_manual(kp);
 
         Mat histo;
         //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
@@ -898,11 +912,11 @@ struct HighDimLbp : public TextureFeature::Extractor
             int histSize = lbp(imgs,f1);
 
             Rect bounds(0,0,int(90*s),int(90*s));
-            for (size_t k=0; k<kp.size(); k++)
+            for (size_t k=0; k<landmarks.size(); k++)
             {
                 for (int o=0; o<16; o++)
                 {
-                    Rect part(int(kp[k].pt.x*s)+offsets[o][0]*gr, int(kp[k].pt.y)+offsets[o][1]*gr, gr, gr);
+                    Rect part(int(landmarks[k].x*s + offsets[o][0]*gr), int(landmarks[k].y + offsets[o][1]*gr), gr, gr);
                     part &= bounds;
                     hist_patch(f1(part), histo, histSize, uni);
                 }

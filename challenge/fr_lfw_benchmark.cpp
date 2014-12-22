@@ -101,11 +101,11 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
-            "{ ext e          |0   | extractor enum }"
+            "{ ext e          |38  | extractor enum }"
             "{ red r          |0   | reductor enum }"
-            "{ cls c          |10  | classifier enum }"
+            "{ cls c          |6   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
-            "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
+            "{ crop C         |0   | cut outer 80 pixels to to 90x90 }"
             "{ flip f         |0   | add a flipped image }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 

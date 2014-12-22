@@ -113,7 +113,7 @@ public:
 
         features.push_back(fr);
         labels.push_back(label);
-        //cerr <<fr.cols << " i_" << labels.rows << "\r";
+        cerr <<fr.cols << " i_" << labels.rows << "\r";
         return labels.rows;
     }
     virtual bool train()
