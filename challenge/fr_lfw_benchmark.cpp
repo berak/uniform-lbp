@@ -105,7 +105,7 @@ int main(int argc, const char *argv[])
             "{ red r          |0   | reductor enum }"
             "{ cls c          |6   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
-            "{ crop C         |0   | cut outer 80 pixels to to 90x90 }"
+            "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ flip f         |0   | add a flipped image }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
