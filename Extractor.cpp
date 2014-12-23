@@ -1,16 +1,24 @@
+#include "opencv2/opencv.hpp"
+#include "opencv2/core/core_c.h"
+#include "opencv2/core/utility.hpp"
+#include "opencv2/xfeatures2d.hpp"
+
+
+using namespace cv;
+
+#include "TextureFeature.h"
+
+
+#ifdef HAVE_DLIB
+ #include <dlib/image_processing.h>
+ #include <dlib/opencv/cv_image.h>
+#endif
+
 #include <vector>
 using std::vector;
 #include <iostream>
 using std::cerr;
 using std::endl;
-
-#include <opencv2/imgproc.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/features2d.hpp>
-#include <opencv2/xfeatures2d.hpp>
-using namespace cv;
-
-#include "TextureFeature.h"
 
 
 namespace TextureFeatureImpl
@@ -44,18 +52,25 @@ struct ExtractorPixels : public TextureFeature::Extractor
 //
 struct FeatureGrad
 {
-    int nbins;
-    FeatureGrad(int nbins=45) : nbins(nbins) {}
+    int nsec,nrad;
+    FeatureGrad(int nsec=45, int nrad=8) : nsec(nsec), nrad(nrad) {}
 
     int operator() (const Mat &I, Mat &fI) const
     {
-        Mat s1, s2, s3(I.size(), CV_32F);
+        Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
         Sobel(I, s1, CV_32F, 1, 0);
         Sobel(I, s2, CV_32F, 0, 1);
         fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
-        fI = s3 / (360/nbins);
+        fI = s3 / (360/nsec);
         fI.convertTo(fI,CV_8U);
-        return nbins;
+
+        //magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total());
+        //normalize(s3,s4,nrad);
+        //s4.convertTo(s5,CV_8U);
+        //s5 *= nsec;
+        //fI += s5;
+        //return nrad*nsec;
+        return nsec;
     }
 };
 
@@ -241,6 +256,32 @@ struct FeatureMTS
     }
 };
 
+// left half
+struct FeatureMTS2
+{
+    int operator () (const Mat &I, Mat &fI) const
+    {
+        Mat_<uchar> img(I);
+        Mat_<uchar> fea(I.size(), 0);
+        const int m=1;
+        for (int r=m; r<img.rows-m; r++)
+        {
+            for (int c=m; c<img.cols-m; c++)
+            {
+                uchar v = 0;
+                uchar cen = img(r,c);
+                v |= (img(r+1,c  ) > cen) << 0;
+                v |= (img(r+1,c-1) > cen) << 1;
+                v |= (img(r  ,c-1) > cen) << 2;
+                v |= (img(r-1,c-1) > cen) << 3;
+                fea(r,c) = v;
+            }
+        }
+        fI = fea;
+        return 16;
+    }
+};
+
 
 //
 // Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
@@ -271,6 +312,34 @@ struct FeatureTPLbp
         }
         features = fI;
         return 256;
+    }
+};
+
+struct FeatureTPLbp2
+{
+    int operator () (const Mat &img, Mat &features) const
+    {
+        Mat_<uchar> I(img);
+        Mat_<uchar> fI(I.size(), 0);
+        const int border=2;
+        for (int r=border; r<I.rows-border; r++)
+        {
+            for (int c=border; c<I.cols-border; c++)
+            {
+                uchar v = 0;
+                v |= ((I(r,c) - I(r  ,c-2)) > (I(r,c) - I(r-2,c  ))) * 1;
+                v |= ((I(r,c) - I(r-1,c-1)) > (I(r,c) - I(r-1,c+1))) * 2;
+                v |= ((I(r,c) - I(r-2,c  )) > (I(r,c) - I(r  ,c+2))) * 4;
+                v |= ((I(r,c) - I(r-1,c+1)) > (I(r,c) - I(r+1,c+1))) * 8;
+                v |= ((I(r,c) - I(r  ,c+2)) > (I(r,c) - I(r+1,c  ))) * 1;
+                v |= ((I(r,c) - I(r+1,c+1)) > (I(r,c) - I(r+1,c-1))) * 2;
+                v |= ((I(r,c) - I(r+1,c  )) > (I(r,c) - I(r  ,c-2))) * 4;
+                v |= ((I(r,c) - I(r+1,c-1)) > (I(r,c) - I(r-1,c-1))) * 8;
+                fI(r,c) = v;
+            }
+        }
+        features = fI;
+        return 16;
     }
 };
 
@@ -565,28 +634,48 @@ static void gftt32(vector<KeyPoint> &kp)
 
 static void kp_manual(vector<KeyPoint> &kp)
 {
-    kp.push_back(KeyPoint(10,31,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(13,37,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(82,31,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(78,37,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(55,27,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(58,35,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(7,21,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(20,19,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(30,19,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(83,21,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(70,17,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(59,18,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(38,61,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(53,61,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(60,53,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(32,54,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(27,77,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(63,77,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(38,45,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(54,45,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(10,31,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(13,37,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(82,31,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(78,37,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(55,27,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(58,35,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(7,21,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(20,19,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(30,19,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(83,21,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(70,17,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(59,18,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(38,61,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(53,61,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(60,53,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(32,54,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(27,77,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(63,77,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(38,45,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(54,45,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(5,25,3));
+    kp.push_back(KeyPoint(83,23,3));
+    kp.push_back(KeyPoint(20,19,3));
+    kp.push_back(KeyPoint(68,17,3));
+    kp.push_back(KeyPoint(37,23,3));
+    kp.push_back(KeyPoint(52,22,3));
+    kp.push_back(KeyPoint(15,34,3));
+    kp.push_back(KeyPoint(74,33,3));
+    kp.push_back(KeyPoint(32,35,3));
+    kp.push_back(KeyPoint(57,34,3));
+    kp.push_back(KeyPoint(27,31,3));
+    kp.push_back(KeyPoint(63,30,3));
+    kp.push_back(KeyPoint(36,62,3));
+    kp.push_back(KeyPoint(54,62,3));
+    kp.push_back(KeyPoint(46,74,3));
+    kp.push_back(KeyPoint(46,64,3));
+    kp.push_back(KeyPoint(28,77,3));
+    kp.push_back(KeyPoint(64,77,3));
+    kp.push_back(KeyPoint(46,80,3));
+    kp.push_back(KeyPoint(45,32,3));
 }
 
 
@@ -599,6 +688,8 @@ struct GfttGrid
     {
         vector<KeyPoint> kp;
         gftt64(kp);
+        //gftt96(kp);
+        //kp_manual(kp);
 
         histo.release();
         Rect bounds(0,0,90,90);
@@ -854,53 +945,77 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 //    and Its Application to Face Recognition"
 //    Bor-Chun Chen, Chu-Song Chen, Winston Hsu 
 //
+
+#ifdef HAVE_DLIB
 struct HighDimLbp : public TextureFeature::Extractor
 {
     //FeatureGrad lbp;
     //FeatureMTS lbp;
-    FeatureFPLbp lbp;
+    //FeatureMTS2 lbp2;
+    //FeatureFPLbp lbp;
+    FeatureTPLbp2 lbp;
     //FeatureCsLbp lbp;
     //FeatureLbp lbp;
 
-    //HighDimLbp() : lbp(16) {}
+    dlib::shape_predictor sp;
+
+    HighDimLbp() 
+    {
+        dlib::deserialize("D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat") >> sp;
+    }
     virtual int extract(const Mat &img, Mat &features) const
     {
         bool uni=false;
         //bool uni=true;
         int gr=8; // 10 used in paper
-        vector<KeyPoint> kp;
-        //gftt32(kp);
-        kp_manual(kp);
+        //Mat img;
+        //resize(I,img,I.size()*2);
+        int W = img.cols;
+        //vector<KeyPoint> kp;
+        ////gftt32(kp);
+        //kp_manual(kp);
+
+        dlib::rectangle rec(0,0,W,W);
+        dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(img), rec);
+
+        //int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 58,56, 0};
+        int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
+        vector<Point2d> kp;
+        for(int k=0; (k<40) && (idx[k]>0); k++)
+            kp.push_back(Point2d(shape.part(idx[k]).x(), shape.part(idx[k]).y()));
 
         Mat histo;
         //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
         float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
-        int offsets[16][2] = {       -1,-1,  -1, 0,
-                                      0,-1,   0, 0, 
-                             -2,-2,  -2,-1,  -2, 0,  -2, 1,
-                             -1,-2,                  -1, 1,
-                              0,-2,                   0, 1,
-                              1,-2,   1,-1,   1, 0,   1, 1,
+        float offsets[16][2] = { 
+            -1.5,-1.5 -0.5,-1.5, 0.5,-1.5, 1.5,-1.5,
+            -1.5,-0.5 -0.5,-0.5, 0.5,-0.5, 1.5,-0.5,
+            -1.5, 0.5 -0.5, 0.5, 0.5, 0.5, 1.5, 0.5,
+            -1.5, 1.5 -0.5, 1.5, 0.5, 1.5, 1.5, 1.5
         };
-        //double offsets[9][2] = { -1.5,-1.5,   -1.5,-0.5,  -1.5, 0.5,
-        //                         -0.5,-1.5,   -0.5,-0.5,  -0.5, 0.5,
-        //                          1.5,-1.5,    1.5,-0.5,   1.5, 0.5 };
+        //double offsets[9][2] = { -1.0,-1.0,   -1.0,-0.0,  -1.0, 0.0,
+        //                         -0.0,-1.0,   -0.0,-0.0,  -0.0, 0.0,
+        //                          1.0,-1.0,    1.0,-0.0,   1.0, 0.0 };
         for (int i=0; i<5; i++)
         {
             float s = scale[i];
 
-            Mat f1,imgs;
+            Mat f1,f2,imgs;
             resize(img,imgs,Size(),s,s);
             int histSize = lbp(imgs,f1);
+            //lbp2(imgs,f2);
 
-            Rect bounds(0,0,int(90*s),int(90*s));
             for (size_t k=0; k<kp.size(); k++)
             {
+                Point2f pt(kp[k]);
+
                 for (int o=0; o<16; o++)
-                {
-                    Rect part(int(kp[k].pt.x*s)+offsets[o][0]*gr, int(kp[k].pt.y)+offsets[o][1]*gr, gr, gr);
-                    part &= bounds;
-                    hist_patch(f1(part), histo, histSize, uni);
+                {   
+                    Mat patch;
+                    getRectSubPix(f1, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
+                    hist_patch(patch, histo, histSize, uni);
+                    //getRectSubPix(f2, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
+                    //hist_patch(patch, histo, histSize, uni);
                 }
             }
         }
@@ -909,7 +1024,68 @@ struct HighDimLbp : public TextureFeature::Extractor
         return features.total() * features.elemSize();
     }
 };
+#else
+struct HighDimLbp : public TextureFeature::Extractor
+{
+    //FeatureGrad lbp;
+    //FeatureMTS lbp;
+    //FeatureMTS2 lbp2;
+    //FeatureFPLbp lbp;
+    FeatureTPLbp2 lbp;
+    //FeatureCsLbp lbp;
+    //FeatureLbp lbp;
 
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        bool uni=false;
+        //bool uni=true;
+        int gr=8; // 10 used in paper
+        int W = img.cols;
+        vector<KeyPoint> kp;
+        ////gftt32(kp);
+        kp_manual(kp);
+
+        Mat histo;
+        //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
+        float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
+        float offsets[16][2] = { 
+            -1.5,-1.5 -0.5,-1.5, 0.5,-1.5, 1.5,-1.5,
+            -1.5,-0.5 -0.5,-0.5, 0.5,-0.5, 1.5,-0.5,
+            -1.5, 0.5 -0.5, 0.5, 0.5, 0.5, 1.5, 0.5,
+            -1.5, 1.5 -0.5, 1.5, 0.5, 1.5, 1.5, 1.5
+        };
+        //double offsets[9][2] = { -1.0,-1.0,   -1.0,-0.0,  -1.0, 0.0,
+        //                         -0.0,-1.0,   -0.0,-0.0,  -0.0, 0.0,
+        //                          1.0,-1.0,    1.0,-0.0,   1.0, 0.0 };
+        for (int i=0; i<5; i++)
+        {
+            float s = scale[i];
+
+            Mat f1,f2,imgs;
+            resize(img,imgs,Size(),s,s);
+            int histSize = lbp(imgs,f1);
+            //lbp2(imgs,f2);
+
+            for (size_t k=0; k<kp.size(); k++)
+            {
+                Point2f pt(kp[k].pt);
+
+                for (int o=0; o<16; o++)
+                {   
+                    Mat patch;
+                    getRectSubPix(f1, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
+                    hist_patch(patch, histo, histSize, uni);
+                    //getRectSubPix(f2, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
+                    //hist_patch(patch, histo, histSize, uni);
+                }
+            }
+        }
+
+        features = histo.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
+#endif
 
 
 } // namespace TextureFeatureImpl
@@ -954,6 +1130,8 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPyramidTpLbp()
 {   return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttTpLbp()
 {   return makePtr< GenericExtractor<FeatureTPLbp,GfttGrid> >(FeatureTPLbp(), GfttGrid()); }
+cv::Ptr<TextureFeature::Extractor> createExtractorGfttTpLbp2()
+{   return makePtr< GenericExtractor<FeatureTPLbp2,GfttGrid> >(FeatureTPLbp2(), GfttGrid()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx, int gy, int over)
 {   return makePtr< GenericExtractor<FeatureTPLbp,OverlapGridHist> >(FeatureTPLbp(), OverlapGridHist(gx, gy, over)); }
 

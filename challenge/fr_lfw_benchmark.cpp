@@ -101,8 +101,8 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
-            "{ ext e          |38  | extractor enum }"
-            "{ red r          |0   | reductor enum }"
+            "{ ext e          |34  | extractor enum }"
+            "{ red r          |1   | reductor enum }"
             "{ cls c          |6   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"

@@ -67,6 +67,7 @@ cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx=8, int gy=8);
 cv::Ptr<TextureFeature::Extractor> createExtractorElasticTpLbp();
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidTpLbp();
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttTpLbp();
+cv::Ptr<TextureFeature::Extractor> createExtractorGfttTpLbp2();
 cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx=8,int gy=8,int over=5);
 // reverse lbp circle
 cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx=8, int gy=8);
