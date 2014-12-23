@@ -331,15 +331,15 @@ struct FeatureTPLbp2
                 v |= ((I(r,c) - I(r-1,c-1)) > (I(r,c) - I(r-1,c+1))) * 2;
                 v |= ((I(r,c) - I(r-2,c  )) > (I(r,c) - I(r  ,c+2))) * 4;
                 v |= ((I(r,c) - I(r-1,c+1)) > (I(r,c) - I(r+1,c+1))) * 8;
-                v |= ((I(r,c) - I(r  ,c+2)) > (I(r,c) - I(r+1,c  ))) * 1;
-                v |= ((I(r,c) - I(r+1,c+1)) > (I(r,c) - I(r+1,c-1))) * 2;
-                v |= ((I(r,c) - I(r+1,c  )) > (I(r,c) - I(r  ,c-2))) * 4;
-                v |= ((I(r,c) - I(r+1,c-1)) > (I(r,c) - I(r-1,c-1))) * 8;
+                v |= ((I(r,c) - I(r  ,c+2)) > (I(r,c) - I(r+1,c  ))) * 16;
+                //v |= ((I(r,c) - I(r+1,c+1)) > (I(r,c) - I(r+1,c-1))) * 2;
+                //v |= ((I(r,c) - I(r+1,c  )) > (I(r,c) - I(r  ,c-2))) * 4;
+                //v |= ((I(r,c) - I(r+1,c-1)) > (I(r,c) - I(r-1,c-1))) * 8;
                 fI(r,c) = v;
             }
         }
         features = fI;
-        return 16;
+        return 32;
     }
 };
 
@@ -1030,8 +1030,8 @@ struct HighDimLbp : public TextureFeature::Extractor
     //FeatureGrad lbp;
     //FeatureMTS lbp;
     //FeatureMTS2 lbp2;
-    //FeatureFPLbp lbp;
-    FeatureTPLbp2 lbp;
+    FeatureFPLbp lbp;
+    //FeatureTPLbp2 lbp;
     //FeatureCsLbp lbp;
     //FeatureLbp lbp;
 
