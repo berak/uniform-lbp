@@ -319,9 +319,9 @@ int main(int argc, const char *argv[])
         //case 41: runtest("orb_ham2",     createExtractorORBGrid(),        Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_HAMMING2),  images,labels,persons, fold); break;
         //case 42: runtest("orb_L1",       createExtractorORBGrid(),        Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_L1),        images,labels,persons, fold); break;
         case 41: runtest("sift_L2",      createExtractorSIFTGrid(),       Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
-        case 42: runtest("sift_svm",     createExtractorSIFTGrid(),      Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),        images,labels,persons, fold); break;
+        case 42: runtest("sift_svm",     createExtractorSIFTGrid(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),        images,labels,persons, fold); break;
         case 44: runtest("sift20_dct_svm",createExtractorSIFTGrid(20),    createReductorDct(8000),           createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 45: runtest("sift_gftt_svm",createExtractorSIFTGftt(),       createReductorDct(8000),           createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 45: runtest("sift_gftt_svm",createExtractorSIFTGftt(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 46: runtest("grad_svm",     createExtractorGrad(),           Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 47: runtest("grad_gftt_svm",createExtractorGfttGrad(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 48: runtest("gradmag_svm",  createExtractorGfttGradMag(),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;

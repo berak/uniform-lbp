@@ -4,10 +4,9 @@
 #include "opencv2/xfeatures2d.hpp"
 
 
-using namespace cv;
 
-#include "TextureFeature.h"
 
+//#define HAVE_DLIB 
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
@@ -20,6 +19,8 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
+#include "TextureFeature.h"
+using namespace cv;
 
 namespace TextureFeatureImpl
 {
@@ -634,49 +635,76 @@ static void gftt32(vector<KeyPoint> &kp)
 
 static void kp_manual(vector<KeyPoint> &kp)
 {
-    //kp.push_back(KeyPoint(10,31,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(13,37,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(82,31,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(78,37,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(55,27,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(58,35,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(7,21,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(20,19,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(30,19,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(83,21,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(70,17,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(59,18,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(38,61,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(53,61,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(60,53,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(32,54,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(27,77,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(63,77,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(38,45,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(54,45,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(5,25,3));
-    kp.push_back(KeyPoint(83,23,3));
-    kp.push_back(KeyPoint(20,19,3));
-    kp.push_back(KeyPoint(68,17,3));
-    kp.push_back(KeyPoint(37,23,3));
-    kp.push_back(KeyPoint(52,22,3));
-    kp.push_back(KeyPoint(15,34,3));
-    kp.push_back(KeyPoint(74,33,3));
-    kp.push_back(KeyPoint(32,35,3));
-    kp.push_back(KeyPoint(57,34,3));
-    kp.push_back(KeyPoint(27,31,3));
-    kp.push_back(KeyPoint(63,30,3));
-    kp.push_back(KeyPoint(36,62,3));
-    kp.push_back(KeyPoint(54,62,3));
-    kp.push_back(KeyPoint(46,74,3));
-    kp.push_back(KeyPoint(46,64,3));
-    kp.push_back(KeyPoint(28,77,3));
-    kp.push_back(KeyPoint(64,77,3));
-    kp.push_back(KeyPoint(46,80,3));
-    kp.push_back(KeyPoint(45,32,3));
+    kp.push_back(KeyPoint(10,31,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(13,37,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(82,31,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(78,37,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(55,27,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(58,35,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(7,21,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(20,19,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(30,19,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(83,21,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(70,17,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(59,18,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(38,61,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(53,61,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(60,53,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(32,54,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(27,77,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(63,77,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(38,45,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(54,45,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(5,25,3));
+    //kp.push_back(KeyPoint(83,23,3));
+    //kp.push_back(KeyPoint(20,19,3));
+    //kp.push_back(KeyPoint(68,17,3));
+    //kp.push_back(KeyPoint(37,23,3));
+    //kp.push_back(KeyPoint(52,22,3));
+    //kp.push_back(KeyPoint(15,34,3));
+    //kp.push_back(KeyPoint(74,33,3));
+    //kp.push_back(KeyPoint(32,35,3));
+    //kp.push_back(KeyPoint(57,34,3));
+    //kp.push_back(KeyPoint(27,31,3));
+    //kp.push_back(KeyPoint(63,30,3));
+    //kp.push_back(KeyPoint(36,62,3));
+    //kp.push_back(KeyPoint(54,62,3));
+    //kp.push_back(KeyPoint(46,74,3));
+    //kp.push_back(KeyPoint(46,64,3));
+    //kp.push_back(KeyPoint(28,77,3));
+    //kp.push_back(KeyPoint(64,77,3));
+    //kp.push_back(KeyPoint(46,80,3));
+    //kp.push_back(KeyPoint(45,32,3));
 }
+
+
+#ifdef HAVE_DLIB
+
+struct LandMarkDlib
+{
+    dlib::shape_predictor sp;
+
+    LandMarkDlib()
+    {
+        dlib::deserialize("D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat") >> sp;
+    }
+
+    int extract(const Mat &img, vector<KeyPoint> &kp) const
+    {
+        int W = img.cols;
+        dlib::rectangle rec(0,0,W,W);
+        dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(img), rec);
+
+        int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
+        for(int k=0; (k<40) && (idx[k]>0); k++)
+            kp.push_back(KeyPoint(shape.part(idx[k]).x(), shape.part(idx[k]).y(), 8));
+
+        return (int)kp.size();
+    }
+};
+#endif
 
 
 struct GfttGrid
@@ -922,6 +950,9 @@ typedef ExtractorGridFeature2d<xfeatures2d::BriefDescriptorExtractor> ExtractorB
 struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 {
     Ptr<Feature2D> f2d;
+#ifdef HAVE_DLIB
+    LandMarkDlib land;
+#endif
 
     ExtractorGfttFeature2d(Ptr<Feature2D> f)
         : f2d(f)
@@ -930,7 +961,25 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
     virtual int extract(const Mat &img, Mat &features) const
     {
         vector<KeyPoint> kp;
-        gftt96(kp);
+#ifdef HAVE_DLIB
+        land.extract(img,kp);
+#else
+        kp_manual(kp);
+#endif
+        size_t s = kp.size();
+        float w=5;
+        for (size_t i=0; i<s; i++)
+        {
+            Point2f p(kp[i].pt);
+            kp.push_back(KeyPoint(p.x,p.y-w,w*2));
+            kp.push_back(KeyPoint(p.x,p.y+w,w*2));
+            kp.push_back(KeyPoint(p.x-w,p.y,w*2));
+            kp.push_back(KeyPoint(p.x+w,p.y,w*2));
+            //kp.push_back(KeyPoint(p.x-w,p.y-w/2,w*2));
+            //kp.push_back(KeyPoint(p.x-w,p.y+w/2,w*2));
+            //kp.push_back(KeyPoint(p.x+w,p.y-w/2,w*2));
+            //kp.push_back(KeyPoint(p.x+w,p.y+w/2,w*2));
+        }
         f2d->compute(img, kp, features);
         // resize(features,features,Size(),0.5,1.0);                  // not good.
         // features = features(Rect(64,0,64,features.rows)).clone();  // amazing.
@@ -946,104 +995,24 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 //    Bor-Chun Chen, Chu-Song Chen, Winston Hsu 
 //
 
-#ifdef HAVE_DLIB
+
 struct HighDimLbp : public TextureFeature::Extractor
 {
-    //FeatureGrad lbp;
-    //FeatureMTS lbp;
-    //FeatureMTS2 lbp2;
-    //FeatureFPLbp lbp;
-    FeatureTPLbp2 lbp;
-    //FeatureCsLbp lbp;
-    //FeatureLbp lbp;
-
-    dlib::shape_predictor sp;
-
-    HighDimLbp() 
-    {
-        dlib::deserialize("D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat") >> sp;
-    }
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        bool uni=false;
-        //bool uni=true;
-        int gr=8; // 10 used in paper
-        //Mat img;
-        //resize(I,img,I.size()*2);
-        int W = img.cols;
-        //vector<KeyPoint> kp;
-        ////gftt32(kp);
-        //kp_manual(kp);
-
-        dlib::rectangle rec(0,0,W,W);
-        dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(img), rec);
-
-        //int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 58,56, 0};
-        int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
-        vector<Point2d> kp;
-        for(int k=0; (k<40) && (idx[k]>0); k++)
-            kp.push_back(Point2d(shape.part(idx[k]).x(), shape.part(idx[k]).y()));
-
-        Mat histo;
-        //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
-        float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
-        float offsets[16][2] = { 
-            -1.5,-1.5 -0.5,-1.5, 0.5,-1.5, 1.5,-1.5,
-            -1.5,-0.5 -0.5,-0.5, 0.5,-0.5, 1.5,-0.5,
-            -1.5, 0.5 -0.5, 0.5, 0.5, 0.5, 1.5, 0.5,
-            -1.5, 1.5 -0.5, 1.5, 0.5, 1.5, 1.5, 1.5
-        };
-        //double offsets[9][2] = { -1.0,-1.0,   -1.0,-0.0,  -1.0, 0.0,
-        //                         -0.0,-1.0,   -0.0,-0.0,  -0.0, 0.0,
-        //                          1.0,-1.0,    1.0,-0.0,   1.0, 0.0 };
-        for (int i=0; i<5; i++)
-        {
-            float s = scale[i];
-
-            Mat f1,f2,imgs;
-            resize(img,imgs,Size(),s,s);
-            int histSize = lbp(imgs,f1);
-            //lbp2(imgs,f2);
-
-            for (size_t k=0; k<kp.size(); k++)
-            {
-                Point2f pt(kp[k]);
-
-                for (int o=0; o<16; o++)
-                {   
-                    Mat patch;
-                    getRectSubPix(f1, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
-                    hist_patch(patch, histo, histSize, uni);
-                    //getRectSubPix(f2, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
-                    //hist_patch(patch, histo, histSize, uni);
-                }
-            }
-        }
-
-        features = histo.reshape(1,1);
-        return features.total() * features.elemSize();
-    }
-};
-#else
-struct HighDimLbp : public TextureFeature::Extractor
-{
-    //FeatureGrad lbp;
-    //FeatureMTS lbp;
-    //FeatureMTS2 lbp2;
     FeatureFPLbp lbp;
-    //FeatureTPLbp2 lbp;
-    //FeatureCsLbp lbp;
-    //FeatureLbp lbp;
+#ifdef HAVE_DLIB
+    LandMarkDlib land;
+#endif
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-        bool uni=false;
-        //bool uni=true;
         int gr=8; // 10 used in paper
-        int W = img.cols;
+
         vector<KeyPoint> kp;
-        ////gftt32(kp);
+#ifdef HAVE_DLIB
+        land.extract(img,kp);
+#else // use pickled points from mean img (one size fits all)
         kp_manual(kp);
+#endif
 
         Mat histo;
         //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
@@ -1064,19 +1033,15 @@ struct HighDimLbp : public TextureFeature::Extractor
             Mat f1,f2,imgs;
             resize(img,imgs,Size(),s,s);
             int histSize = lbp(imgs,f1);
-            //lbp2(imgs,f2);
 
             for (size_t k=0; k<kp.size(); k++)
             {
                 Point2f pt(kp[k].pt);
-
                 for (int o=0; o<16; o++)
                 {   
                     Mat patch;
                     getRectSubPix(f1, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
-                    hist_patch(patch, histo, histSize, uni);
-                    //getRectSubPix(f2, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
-                    //hist_patch(patch, histo, histSize, uni);
+                    hist_patch(patch, histo, histSize, false);
                 }
             }
         }
@@ -1085,7 +1050,6 @@ struct HighDimLbp : public TextureFeature::Extractor
         return features.total() * features.elemSize();
     }
 };
-#endif
 
 
 } // namespace TextureFeatureImpl
