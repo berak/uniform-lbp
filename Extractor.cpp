@@ -5,8 +5,14 @@
 
 
 
-
-//#define HAVE_DLIB 
+//
+// using regular grids for feature extraction on faces clearly sucks.
+// one of the attempts tried here instead is, to use assorted landmark points
+// from asmlib, flandmark or such instead.
+// dlib's implementation seems to rule here, let's try to use it,
+// fall back to a precalculated 'one-size-fits-all' manner(based on the mean lfw image), if not present:
+//
+#define HAVE_DLIB 
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
@@ -378,7 +384,21 @@ struct FeatureFPLbp
 
 
 
-static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256, bool uni=false)
+static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
+{
+    Mat_<float> h(1, histSize, 0.0f);
+    for (int i=0; i<fI.rows; i++)
+    {
+        for (int j=0; j<fI.cols; j++)
+        {
+            int v = int(fI(i,j));
+            h( v ) += 1.0f;
+        }
+    }
+    histo.push_back(h.reshape(1,1));
+}
+
+static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
 {
     static int uniform[256] = 
     {   // the well known original uniform2 pattern
@@ -394,16 +414,13 @@ static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256, bool
         58,58,58,50,51,52,58,53,54,55,56,57 
     };
 
-    Mat_<float> h(1, (uni ? 59 : histSize), 0.0f);
+    Mat_<float> h(1, 59, 0.0f);
     for (int i=0; i<fI.rows; i++)
     {
         for (int j=0; j<fI.cols; j++)
         {
             int v = int(fI(i,j));
-            if (uni)
-                h( uniform[v] ) += 1.0f;
-            else
-                h( v ) += 1.0f;
+            h( uniform[v] ) += 1.0f;
         }
     }
     histo.push_back(h.reshape(1,1));
@@ -461,77 +478,6 @@ struct PyramidGrid
         for (int i=0; i<4; i++)
         {
             hist_level(feature,histo,levels[i],levels[i],histSize);
-        }
-        normalize(histo.reshape(1,1),histo);
-    }
-};
-
-
-struct OverlapGridHist : public GriddedHist
-{
-    int over,over2;
-
-    OverlapGridHist(int gridx=8, int gridy=8, int over=0)
-        : GriddedHist(gridx, gridy)
-        , over(over)
-        , over2(over*2)
-    { }
-
-    void hist(const Mat &feature, Mat &histo, int histSize=256) const
-    {
-        histo.release();
-        int sw = (feature.cols - over2)/GRIDX;
-        int sh = (feature.rows - over2)/GRIDY;
-        for (int r=over; r<feature.rows-sh; r+=sh)
-        {
-            for (int c=over; c<feature.cols-sw; c+=sw)
-            {
-                Rect patch(c-over, r-over, sw+over2, sh+over2);
-                hist_patch(feature(patch), histo, histSize);
-            }
-        }
-        normalize(histo.reshape(1,1),histo);
-    }
-};
-
-
-
-//
-// hardcoded to funneled, 90x90 images.
-//
-//   the (offline) train thing uses a majority vote over rects,
-//   the current impl concatenated histograms (the majority scheme seems to play nicer)
-//
-struct ElasticParts
-{
-    void hist(const Mat &feature, Mat &histo, int histSize=256) const
-    {
-        const int nparts = 64;
-        Rect parts[nparts] =
-        {
-            Rect(15,23,48, 5), // 0.701167 // 1.504 // gen5
-            Rect(24, 0,22,11),            Rect(24,23,55, 4),            Rect(56,21,34, 7),            Rect(24, 9,25,10),
-            Rect(25,23,52, 4),            Rect( 0,52,60, 4),            Rect(40,27,35, 7),            Rect(36,59,31, 8),
-            Rect( 5,24,38, 6),            Rect( 5, 0,21,11),            Rect( 4, 2,24,10),            Rect( 1,51,36, 6),
-            Rect(25,29,18,13),            Rect(10, 1,26, 9),            Rect(50,27,25,10),            Rect(42,17,17,14),
-            Rect( 6,26,30, 8),            Rect(34, 6,13,19),            Rect(65, 1,24,10),            Rect(20,24,37, 6),
-            Rect(22,22,41, 6),            Rect(60,22,30, 7),            Rect(53,21,37, 6),            Rect(32,19,13,19),
-            Rect(45,17,29, 8),            Rect(30,23,55, 4),            Rect(52,17,30, 8),            Rect(21,27,44, 5),
-            Rect(39,27,38, 6),            Rect(53,12,28, 8),            Rect(22,29,21,11),            Rect(16, 6,35, 7),
-            Rect(31,20,11,22),            Rect(14,24,55, 4),            Rect(37,15,13,19),            Rect(30,61,38, 6),
-            Rect(76,11,14,17),            Rect(38,13,25,10),            Rect(26,30,17,14),            Rect(25,30,20,12),
-            Rect( 1, 6,17,14),            Rect( 5, 8,22,11),            Rect(56,11,24,10),            Rect(69,14,20,12),
-            Rect(41,20,16,15),            Rect(22,22,43, 5),            Rect(64,58,16,15),            Rect(70,42,13,19),
-            Rect(39,14,15,16),            Rect(25,60,30, 8),            Rect(10,64,23,10),            Rect(26, 1,17,14),
-            Rect(46,77,20,12),            Rect(56, 8,15,16),            Rect(66,55,19,13),            Rect( 8,64,28, 8),
-            Rect(70,53,20,12),            Rect(62, 7,12,20),            Rect( 2,24,56, 4),            Rect(25,48,25,10),
-            Rect(44,27,34, 7),            Rect(58,21,31, 8),            Rect(49,80,16,10)
-        };
-
-        histo.release();
-        for (size_t k=0; k<nparts; k++)
-        {
-            hist_patch(feature(parts[k]), histo, histSize);
         }
         normalize(histo.reshape(1,1),histo);
     }
@@ -599,107 +545,86 @@ static void gftt96(vector<KeyPoint> &kp)
 
 static void gftt32(vector<KeyPoint> &kp)
 {
-    kp.push_back(KeyPoint(14,33,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(29,77,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(55,60,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(63,76,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(76,32,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(35,60,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(69,21,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(45,30,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(27,31,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(64,26,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(21,22,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(25,27,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(69,31,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(54,81,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(62,30,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(20,32,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(52,33,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(37,32,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(38,81,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(36,82,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(32,31,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(78,17,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(59,24,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(30,24,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(11,18,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(13,17,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(56,30,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(73,15,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(19,15,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(57,53,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(33,54,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(34,52,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(14,33,3,-1,0,0,-1));    kp.push_back(KeyPoint(29,77,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(55,60,3,-1,0,0,-1));    kp.push_back(KeyPoint(63,76,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(76,32,3,-1,0,0,-1));    kp.push_back(KeyPoint(35,60,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(69,21,3,-1,0,0,-1));    kp.push_back(KeyPoint(45,30,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(27,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(64,26,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(21,22,3,-1,0,0,-1));    kp.push_back(KeyPoint(25,27,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(69,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(54,81,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(62,30,3,-1,0,0,-1));    kp.push_back(KeyPoint(20,32,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(52,33,3,-1,0,0,-1));    kp.push_back(KeyPoint(37,32,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(38,81,3,-1,0,0,-1));    kp.push_back(KeyPoint(36,82,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(32,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(78,17,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(59,24,3,-1,0,0,-1));    kp.push_back(KeyPoint(30,24,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(11,18,3,-1,0,0,-1));    kp.push_back(KeyPoint(13,17,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(56,30,3,-1,0,0,-1));    kp.push_back(KeyPoint(73,15,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(19,15,3,-1,0,0,-1));    kp.push_back(KeyPoint(57,53,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(33,54,3,-1,0,0,-1));    kp.push_back(KeyPoint(34,52,3,-1,0,0,-1));
 }
 
 static void kp_manual(vector<KeyPoint> &kp)
 {
-    kp.push_back(KeyPoint(10,31,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(13,37,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(82,31,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(78,37,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(55,27,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(58,35,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(7,21,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(20,19,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(30,19,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(83,21,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(70,17,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(59,18,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(38,61,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(53,61,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(60,53,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(32,54,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(27,77,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(63,77,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(38,45,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(54,45,3,-1,0,0,-1));
-    //kp.push_back(KeyPoint(5,25,3));
-    //kp.push_back(KeyPoint(83,23,3));
-    //kp.push_back(KeyPoint(20,19,3));
-    //kp.push_back(KeyPoint(68,17,3));
-    //kp.push_back(KeyPoint(37,23,3));
-    //kp.push_back(KeyPoint(52,22,3));
-    //kp.push_back(KeyPoint(15,34,3));
-    //kp.push_back(KeyPoint(74,33,3));
-    //kp.push_back(KeyPoint(32,35,3));
-    //kp.push_back(KeyPoint(57,34,3));
-    //kp.push_back(KeyPoint(27,31,3));
-    //kp.push_back(KeyPoint(63,30,3));
-    //kp.push_back(KeyPoint(36,62,3));
-    //kp.push_back(KeyPoint(54,62,3));
-    //kp.push_back(KeyPoint(46,74,3));
-    //kp.push_back(KeyPoint(46,64,3));
-    //kp.push_back(KeyPoint(28,77,3));
-    //kp.push_back(KeyPoint(64,77,3));
-    //kp.push_back(KeyPoint(46,80,3));
-    //kp.push_back(KeyPoint(45,32,3));
+    kp.push_back(KeyPoint(10,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(13,37,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(82,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(78,37,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(55,27,3,-1,0,0,-1));    kp.push_back(KeyPoint(58,35,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));    kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(7,21,3,-1,0,0,-1));     kp.push_back(KeyPoint(20,19,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(30,19,3,-1,0,0,-1));    kp.push_back(KeyPoint(83,21,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(70,17,3,-1,0,0,-1));    kp.push_back(KeyPoint(59,18,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(38,61,3,-1,0,0,-1));    kp.push_back(KeyPoint(53,61,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(60,53,3,-1,0,0,-1));    kp.push_back(KeyPoint(32,54,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(27,77,3,-1,0,0,-1));    kp.push_back(KeyPoint(63,77,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(38,45,3,-1,0,0,-1));    kp.push_back(KeyPoint(54,45,3,-1,0,0,-1));
+
+    //kp.push_back(KeyPoint(5,25,3));     kp.push_back(KeyPoint(83,23,3));
+    //kp.push_back(KeyPoint(20,19,3));    kp.push_back(KeyPoint(68,17,3));
+    //kp.push_back(KeyPoint(37,23,3));    kp.push_back(KeyPoint(52,22,3));
+    //kp.push_back(KeyPoint(15,34,3));    kp.push_back(KeyPoint(74,33,3));
+    //kp.push_back(KeyPoint(32,35,3));    kp.push_back(KeyPoint(57,34,3));
+    //kp.push_back(KeyPoint(27,31,3));    kp.push_back(KeyPoint(63,30,3));
+    //kp.push_back(KeyPoint(36,62,3));    kp.push_back(KeyPoint(54,62,3));
+    //kp.push_back(KeyPoint(46,74,3));    kp.push_back(KeyPoint(46,64,3));
+    //kp.push_back(KeyPoint(28,77,3));    kp.push_back(KeyPoint(64,77,3));
+    //kp.push_back(KeyPoint(46,80,3));    kp.push_back(KeyPoint(45,32,3));
 }
 
 
 #ifdef HAVE_DLIB
-
+//
+// 20 assorted keypoints extracted from the 68 dlib facial landmarks, based on the
+//    Kazemi_One_Millisecond_Face_2014_CVPR_paper.pdf
+//
 struct LandMarkDlib
 {
     dlib::shape_predictor sp;
 
     LandMarkDlib()
-    {
+    {   // lol, it's only 95mb.
         dlib::deserialize("D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat") >> sp;
     }
 
     int extract(const Mat &img, vector<KeyPoint> &kp) const
     {
-        int W = img.cols;
-        dlib::rectangle rec(0,0,W,W);
+        dlib::rectangle rec(0,0,img.cols,img.rows);
         dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(img), rec);
 
-        int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
+        //int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
+        int idx[] = {18,25, 20,24, 21,22, 27,29, 31,35, 38,43, 51, 0};
         for(int k=0; (k<40) && (idx[k]>0); k++)
             kp.push_back(KeyPoint(shape.part(idx[k]).x(), shape.part(idx[k]).y(), 8));
+        dlib::point p1 = shape.part(31) + (shape.part(39) - shape.part(31)) * 0.5; // left of nose
+        dlib::point p2 = shape.part(35) + (shape.part(42) - shape.part(35)) * 0.5;
+        dlib::point p3 = shape.part(36) + (shape.part(39) - shape.part(36)) * 0.5; // left eye center
+        dlib::point p4 = shape.part(42) + (shape.part(45) - shape.part(42)) * 0.5; // right eye center
+        dlib::point p5 = shape.part(31) + (shape.part(48) - shape.part(31)) * 0.5; // betw.mouth&nose
+        dlib::point p6 = shape.part(35) + (shape.part(54) - shape.part(35)) * 0.5; // betw.mouth&nose
+        kp.push_back(KeyPoint(p1.x(), p1.y(), 8));
+        kp.push_back(KeyPoint(p2.x(), p2.y(), 8));
+        kp.push_back(KeyPoint(p3.x(), p3.y(), 8));
+        kp.push_back(KeyPoint(p4.x(), p4.y(), 8));
+        kp.push_back(KeyPoint(p5.x(), p5.y(), 8));
+        kp.push_back(KeyPoint(p6.x(), p6.y(), 8));
 
         return (int)kp.size();
     }
@@ -983,11 +908,11 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
         f2d->compute(img, kp, features);
         // resize(features,features,Size(),0.5,1.0);                  // not good.
         // features = features(Rect(64,0,64,features.rows)).clone();  // amazing.
-        features = features.reshape(1,1);
+        //features = features.reshape(1,1);
+        normalize(features.reshape(1,1), features);
         return features.total() * features.elemSize();
     }
 };
-
 
 //
 // "Review and Implementation of High-Dimensional Local Binary Patterns 
@@ -1041,12 +966,12 @@ struct HighDimLbp : public TextureFeature::Extractor
                 {   
                     Mat patch;
                     getRectSubPix(f1, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
-                    hist_patch(patch, histo, histSize, false);
+                    hist_patch(patch, histo, histSize);
                 }
             }
         }
-
-        features = histo.reshape(1,1);
+        normalize(histo.reshape(1,1), features);
+        //features = histo.reshape(1,1);
         return features.total() * features.elemSize();
     }
 };
@@ -1068,66 +993,42 @@ cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw, int resh)
 
 cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gx, int gy)
 {   return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(gx, gy)); }
-cv::Ptr<TextureFeature::Extractor> createExtractorElasticLbp()
-{   return makePtr< GenericExtractor<FeatureLbp,ElasticParts> >(FeatureLbp(), ElasticParts()); }
-cv::Ptr<TextureFeature::Extractor> createExtractorOverlapLbp(int gx, int gy, int over)
-{   return makePtr< GenericExtractor<FeatureLbp,OverlapGridHist> >(FeatureLbp(), OverlapGridHist(gx, gy, over)); }
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidLbp()
 {   return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid()); }
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx, int gy)
 {   return makePtr< GenericExtractor<FeatureFPLbp,GriddedHist> >(FeatureFPLbp(), GriddedHist(gx, gy)); }
-cv::Ptr<TextureFeature::Extractor> createExtractorElasticFpLbp()
-{   return makePtr< GenericExtractor<FeatureFPLbp,ElasticParts> >(FeatureFPLbp(), ElasticParts()); }
-cv::Ptr<TextureFeature::Extractor> createExtractorOverlapFpLbp(int gx, int gy, int over)
-{   return makePtr< GenericExtractor<FeatureFPLbp,OverlapGridHist> >(FeatureFPLbp(), OverlapGridHist(gx, gy, over)); }
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidFpLbp()
 {   return makePtr< GenericExtractor<FeatureFPLbp,PyramidGrid> >(FeatureFPLbp(), PyramidGrid()); }
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx, int gy)
 {   return makePtr< GenericExtractor<FeatureTPLbp,GriddedHist> >(FeatureTPLbp(), GriddedHist(gx, gy)); }
-cv::Ptr<TextureFeature::Extractor> createExtractorElasticTpLbp()
-{   return makePtr< GenericExtractor<FeatureTPLbp,ElasticParts> >(FeatureTPLbp(), ElasticParts()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidTpLbp()
 {   return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttTpLbp()
 {   return makePtr< GenericExtractor<FeatureTPLbp,GfttGrid> >(FeatureTPLbp(), GfttGrid()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttTpLbp2()
 {   return makePtr< GenericExtractor<FeatureTPLbp2,GfttGrid> >(FeatureTPLbp2(), GfttGrid()); }
-cv::Ptr<TextureFeature::Extractor> createExtractorOverlapTpLbp(int gx, int gy, int over)
-{   return makePtr< GenericExtractor<FeatureTPLbp,OverlapGridHist> >(FeatureTPLbp(), OverlapGridHist(gx, gy, over)); }
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx, int gy)
 {   return makePtr< GenericExtractor<FeatureMTS,GriddedHist> >(FeatureMTS(), GriddedHist(gx, gy)); }
-cv::Ptr<TextureFeature::Extractor> createExtractorElasticMTS()
-{   return makePtr< GenericExtractor<FeatureMTS,ElasticParts> >(FeatureMTS(), ElasticParts()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidMTS()
 {   return makePtr< GenericExtractor<FeatureMTS,PyramidGrid> >(FeatureMTS(), PyramidGrid()); }
-cv::Ptr<TextureFeature::Extractor> createExtractorOverlapMTS(int gx, int gy, int over)
-{   return makePtr< GenericExtractor<FeatureMTS,OverlapGridHist> >(FeatureMTS(), OverlapGridHist(gx, gy, over)); }
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx, int gy)
 {   return makePtr< GenericExtractor<FeatureBGC1,GriddedHist> >(FeatureBGC1(), GriddedHist(gx, gy)); }
-cv::Ptr<TextureFeature::Extractor> createExtractorElasticBGC1()
-{   return makePtr< GenericExtractor<FeatureBGC1,ElasticParts> >(FeatureBGC1(), ElasticParts()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidBGC1()
 {   return makePtr< GenericExtractor<FeatureBGC1,PyramidGrid> >(FeatureBGC1(), PyramidGrid()); }
-cv::Ptr<TextureFeature::Extractor> createExtractorOverlapBGC1(int gx, int gy, int over)
-{   return makePtr< GenericExtractor<FeatureBGC1,OverlapGridHist> >(FeatureBGC1(), OverlapGridHist(gx, gy, over)); }
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorCombined(int gx, int gy)
 {   return makePtr< CombinedExtractor<GriddedHist> >(GriddedHist(gx, gy)); }
-cv::Ptr<TextureFeature::Extractor> createExtractorElasticCombined()
-{   return makePtr< CombinedExtractor<ElasticParts> >(ElasticParts()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidCombined()
 {   return makePtr< CombinedExtractor<PyramidGrid> >(PyramidGrid()); }
-cv::Ptr<TextureFeature::Extractor> createExtractorOverlapCombined(int gx, int gy, int over)
-{   return makePtr< CombinedExtractor<OverlapGridHist> >(OverlapGridHist(gx, gy, over)); }
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttCombined()
 {   return makePtr< CombinedExtractor<GfttGrid> >(GfttGrid()); }
 
@@ -1135,8 +1036,6 @@ cv::Ptr<TextureFeature::Extractor> createExtractorGfttCombined()
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx, int gy, int kernel_siz)
 {   return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist(gx, gy), kernel_siz); }
-cv::Ptr<TextureFeature::Extractor> createExtractorElasticGaborLbp(int kernel_siz)
-{   return makePtr< ExtractorGabor<ElasticParts> >(ElasticParts(), kernel_siz); }
 
 
 cv::Ptr<TextureFeature::Extractor> createExtractorDct()
@@ -1153,8 +1052,6 @@ cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGftt()
 
 cv::Ptr<TextureFeature::Extractor> createExtractorGrad()
 {   return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist()); }
-cv::Ptr<TextureFeature::Extractor> createExtractorElasticGrad()
-{   return makePtr< GenericExtractor<FeatureGrad,ElasticParts> >(FeatureGrad(),ElasticParts()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorGfttGrad()
 {   return makePtr< GenericExtractor<FeatureGrad,GfttGrid> >(FeatureGrad(),GfttGrid()); }
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidGrad()
