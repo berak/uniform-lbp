@@ -22,7 +22,7 @@ void feature_img(const Mat & I, Mat &fI)
 
 struct Part
 {
-    enum { num_scales=3, num_samples=3 };
+    enum { num_scales=4, num_samples=5 };
     static const float scale[];
 
     Mat f[num_samples][num_scales];
@@ -143,7 +143,7 @@ struct Part
 };
 //const float Part::scale[] = {.25f, .5f, 1.0f}; 
 //const float Part::scale[] = {2.f, 5.f, 8.f}; 
-const float Part::scale[] = {0.5f, 1.0f, 1.5f}; 
+const float Part::scale[] = {0.5f, 1.7f, 2.5f, 5.0f}; 
 //const float Part::scale[] = {5.f, 10.f, 15.f}; 
 
 
