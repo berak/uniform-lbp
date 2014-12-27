@@ -54,7 +54,6 @@ namespace TextureFeature
 cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw=0, int resh=0);
 // lbp variants
 cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gridx=8, int gridy=8);
-cv::Ptr<TextureFeature::Extractor> createExtractorElasticLbp();
 cv::Ptr<TextureFeature::Extractor> createExtractorPyramidLbp();
 // four-patch lbp variants
 cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx=8, int gy=8);

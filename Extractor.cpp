@@ -12,7 +12,7 @@
 // dlib's implementation seems to rule here, let's try to use it,
 // fall back to a precalculated 'one-size-fits-all' manner(based on the mean lfw image), if not present:
 //
-#define HAVE_DLIB 
+//#define HAVE_DLIB 
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
@@ -26,6 +26,8 @@ using std::cerr;
 using std::endl;
 
 #include "TextureFeature.h"
+#include "ElasticParts.h"
+
 using namespace cv;
 
 namespace TextureFeatureImpl
@@ -609,22 +611,22 @@ struct LandMarkDlib
         dlib::rectangle rec(0,0,img.cols,img.rows);
         dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(img), rec);
 
-        //int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
-        int idx[] = {18,25, 20,24, 21,22, 27,29, 31,35, 38,43, 51, 0};
+        int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
+        //int idx[] = {18,25, 20,24, 21,22, 27,29, 31,35, 38,43, 51, 0};
         for(int k=0; (k<40) && (idx[k]>0); k++)
             kp.push_back(KeyPoint(shape.part(idx[k]).x(), shape.part(idx[k]).y(), 8));
-        dlib::point p1 = shape.part(31) + (shape.part(39) - shape.part(31)) * 0.5; // left of nose
-        dlib::point p2 = shape.part(35) + (shape.part(42) - shape.part(35)) * 0.5;
-        dlib::point p3 = shape.part(36) + (shape.part(39) - shape.part(36)) * 0.5; // left eye center
-        dlib::point p4 = shape.part(42) + (shape.part(45) - shape.part(42)) * 0.5; // right eye center
-        dlib::point p5 = shape.part(31) + (shape.part(48) - shape.part(31)) * 0.5; // betw.mouth&nose
-        dlib::point p6 = shape.part(35) + (shape.part(54) - shape.part(35)) * 0.5; // betw.mouth&nose
-        kp.push_back(KeyPoint(p1.x(), p1.y(), 8));
-        kp.push_back(KeyPoint(p2.x(), p2.y(), 8));
-        kp.push_back(KeyPoint(p3.x(), p3.y(), 8));
-        kp.push_back(KeyPoint(p4.x(), p4.y(), 8));
-        kp.push_back(KeyPoint(p5.x(), p5.y(), 8));
-        kp.push_back(KeyPoint(p6.x(), p6.y(), 8));
+        //dlib::point p1 = shape.part(31) + (shape.part(39) - shape.part(31)) * 0.5; // left of nose
+        //dlib::point p2 = shape.part(35) + (shape.part(42) - shape.part(35)) * 0.5;
+        //dlib::point p3 = shape.part(36) + (shape.part(39) - shape.part(36)) * 0.5; // left eye center
+        //dlib::point p4 = shape.part(42) + (shape.part(45) - shape.part(42)) * 0.5; // right eye center
+        //dlib::point p5 = shape.part(31) + (shape.part(48) - shape.part(31)) * 0.5; // betw.mouth&nose
+        //dlib::point p6 = shape.part(35) + (shape.part(54) - shape.part(35)) * 0.5; // betw.mouth&nose
+        //kp.push_back(KeyPoint(p1.x(), p1.y(), 8));
+        //kp.push_back(KeyPoint(p2.x(), p2.y(), 8));
+        //kp.push_back(KeyPoint(p3.x(), p3.y(), 8));
+        //kp.push_back(KeyPoint(p4.x(), p4.y(), 8));
+        //kp.push_back(KeyPoint(p5.x(), p5.y(), 8));
+        //kp.push_back(KeyPoint(p6.x(), p6.y(), 8));
 
         return (int)kp.size();
     }
@@ -877,11 +879,16 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
     Ptr<Feature2D> f2d;
 #ifdef HAVE_DLIB
     LandMarkDlib land;
+#else
+    Ptr<ElasticParts> elastic;
 #endif
 
     ExtractorGfttFeature2d(Ptr<Feature2D> f)
         : f2d(f)
-    {}
+        , elastic(ElasticParts::create())
+    {
+        elastic->read("../parts.xml.gz");
+    }
 
     virtual int extract(const Mat &img, Mat &features) const
     {
@@ -889,7 +896,8 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 #ifdef HAVE_DLIB
         land.extract(img,kp);
 #else
-        kp_manual(kp);
+        elastic->getPoints(img, kp);
+        //kp_manual(kp);
 #endif
         size_t s = kp.size();
         float w=5;
@@ -924,37 +932,68 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 struct HighDimLbp : public TextureFeature::Extractor
 {
     FeatureFPLbp lbp;
+
 #ifdef HAVE_DLIB
     LandMarkDlib land;
+#else
+    Ptr<ElasticParts> elastic;
 #endif
+
+    HighDimLbp()
+        : elastic(ElasticParts::create())
+    {
+        elastic->read("../parts.xml.gz");
+    }
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-        int gr=8; // 10 used in paper
-
+        int gr=10; // 10 used in paper
         vector<KeyPoint> kp;
 #ifdef HAVE_DLIB
         land.extract(img,kp);
-#else // use pickled points from mean img (one size fits all)
-        kp_manual(kp);
+#else
+        elastic->getPoints(img, kp);
+        //kp_manual(kp);
 #endif
+
 
         Mat histo;
         //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
         float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
-        float offsets[16][2] = { 
+        double offsets_4[] = { 
+            -0.5,-0.5, 0.5,-0.5,
+            -0.5, 0.5, 0.5, 0.5,
+        };
+        double offsets_9[] = {
+            -1.0,-1.0,   -1.0,-0.0,  -1.0, 0.0,
+            -0.0,-1.0,   -0.0,-0.0,  -0.0, 0.0,
+             1.0,-1.0,    1.0,-0.0,   1.0, 0.0
+        };
+        double offsets_16[] = {
             -1.5,-1.5, -0.5,-1.5, 0.5,-1.5, 1.5,-1.5,
             -1.5,-0.5, -0.5,-0.5, 0.5,-0.5, 1.5,-0.5,
             -1.5, 0.5, -0.5, 0.5, 0.5, 0.5, 1.5, 0.5,
             -1.5, 1.5, -0.5, 1.5, 0.5, 1.5, 1.5, 1.5
         };
-        //double offsets[9][2] = { -1.0,-1.0,   -1.0,-0.0,  -1.0, 0.0,
-        //                         -0.0,-1.0,   -0.0,-0.0,  -0.0, 0.0,
-        //                          1.0,-1.0,    1.0,-0.0,   1.0, 0.0 };
+        double *off_table[] = {
+            offsets_4,
+            offsets_9,
+            offsets_16,
+            offsets_16,
+            offsets_16
+        };
+        int off_size[] = {
+            4,9,16,16,16
+        };
+        int grs[] = {
+            4,8,8,10,10
+        };
         for (int i=0; i<5; i++)
         {
             float s = scale[i];
-
+            int noff = 16;//off_size[i];
+            double *off = offsets_16;//off_table[i];
+            //gr = grs[i];
             Mat f1,f2,imgs;
             resize(img,imgs,Size(),s,s);
             int histSize = lbp(imgs,f1);
@@ -962,10 +1001,10 @@ struct HighDimLbp : public TextureFeature::Extractor
             for (size_t k=0; k<kp.size(); k++)
             {
                 Point2f pt(kp[k].pt);
-                for (int o=0; o<16; o++)
+                for (int o=0; o<noff; o++)
                 {   
                     Mat patch;
-                    getRectSubPix(f1, Size(gr,gr), Point2f(pt.x*s + offsets[o][0]*gr, pt.y*s + offsets[o][1]*gr), patch);
+                    getRectSubPix(f1, Size(gr,gr), Point2f(pt.x*s + off[o*2]*gr, pt.y*s + off[o*2+1]*gr), patch);
                     hist_patch(patch, histo, histSize);
                 }
             }
