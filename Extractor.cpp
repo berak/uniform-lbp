@@ -887,9 +887,11 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 
     ExtractorGfttFeature2d(Ptr<Feature2D> f)
         : f2d(f)
-        , elastic(ElasticParts::create())
     {
+#ifndef HAVE_DLIB
+        elastic = ElasticParts::create();
         elastic->read("../parts.xml.gz");
+#endif
     }
 
     virtual int extract(const Mat &img, Mat &features) const

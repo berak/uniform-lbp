@@ -3,51 +3,21 @@
 
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/utility.hpp"
-
-//~ #include <iostream>
-//~ #include <fstream>
-//~ #include <cstdio>
-//~ #include <string>
-//~ #include <vector>
-//~ #include <map>
-//~ #include <set>
-
-using namespace std;
 using namespace cv;
-//~ using namespace cv::datasets;
 
-
-//void feature_img(const Mat & img, Mat &fI)
-//{   
-//    Mat_<uchar> I(img);
-//    Mat_<float> his=Mat_<float>::zeros(1,16);
-//    const int m=2;
-//    for (int r=m; r<img.rows-m; r++)
-//    {
-//        for (int c=m; c<img.cols-m; c++)
-//        {
-//            uchar v = 0;
-//            uchar cen = I(r,c);
-//            v |= ((I(r  ,c+1) - I(r+2,c+2)) > (I(r  ,c-1) - I(r-2,c-2))) * 1;
-//            v |= ((I(r+1,c+1) - I(r+2,c  )) > (I(r-1,c-1) - I(r-2,c  ))) * 2;
-//            v |= ((I(r+1,c  ) - I(r+2,c-2)) > (I(r-1,c  ) - I(r-2,c+2))) * 4;
-//            v |= ((I(r+1,c-1) - I(r  ,c-2)) > (I(r-1,c+1) - I(r  ,c+2))) * 8;
-//            his(v) ++;
-//        }
-//    }
-//    fI = his;
-//}
+#include <vector>
+using std::vector;
 
 void feature_img(const Mat & I, Mat &fI)
 {
-//    fI=I;
-    int nsec=180;
-    Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
-    Sobel(I, s1, CV_32F, 1, 0);
-    Sobel(I, s2, CV_32F, 0, 1);
-    fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
-    fI = s3 / (360/nsec);
-    fI.convertTo(fI,CV_8U);
+    fI=I;
+    //int nsec=180;
+    //Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
+    //Sobel(I, s1, CV_32F, 1, 0);
+    //Sobel(I, s2, CV_32F, 0, 1);
+    //fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+    //fI = s3 / (360/nsec);
+    //fI.convertTo(fI,CV_8U);
 }
 
 struct Part
@@ -142,13 +112,9 @@ struct Part
     }
     double distance(const Mat &a, const Mat &b) const
     {
-        //return compareHist(a,b,HISTCMP_BHATTACHARYYA);
         return norm(a,b);
     }
-    //void walk_init() 
-    //{
-    //    np=p;
-    //}
+
     double walk(const Mat &img, int level, float step, Point2f &np) const
     {
         double mDist=DBL_MAX;
@@ -177,7 +143,8 @@ struct Part
 };
 //const float Part::scale[] = {.25f, .5f, 1.0f}; 
 //const float Part::scale[] = {2.f, 5.f, 8.f}; 
-const float Part::scale[] = {5.f, 10.f, 15.f}; 
+const float Part::scale[] = {0.5f, 1.0f, 1.5f}; 
+//const float Part::scale[] = {5.f, 10.f, 15.f}; 
 
 
 
@@ -207,7 +174,7 @@ struct ElasticPartsImpl : public ElasticParts
         for (size_t i=0; i<parts.size(); i++)
             parts[i].means();
     }
-    double walk(const Mat &img, float step, vector<KeyPoint> &kp) const
+    double walk(const Mat &img, vector<KeyPoint> &kp, float step) const
     {
         for (size_t p=0; p<parts.size(); p++)
             kp.push_back(KeyPoint(parts[p].p,8));
@@ -266,7 +233,7 @@ struct ElasticPartsImpl : public ElasticParts
     {
         Mat f;
         feature_img(img, f);
-        walk(f,8,kp);
+        walk(f,kp,Part::scale[2]);
     }
 };
 
