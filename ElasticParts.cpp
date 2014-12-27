@@ -10,7 +10,12 @@ using std::vector;
 
 void feature_img(const Mat & I, Mat &fI)
 {
-    fI=I;
+    Mat d;
+    I.convertTo(d,CV_32F);
+    dft(d,d);
+    fI = d(Rect(1,1,I.cols/2,I.rows/2));
+    dft(fI,fI,DCT_INVERSE);
+    fI.convertTo(fI,CV_8U);
     //int nsec=180;
     //Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
     //Sobel(I, s1, CV_32F, 1, 0);
@@ -22,7 +27,7 @@ void feature_img(const Mat & I, Mat &fI)
 
 struct Part
 {
-    enum { num_scales=4, num_samples=5 };
+    enum { num_scales=3, num_samples=5 };
     static const float scale[];
 
     Mat f[num_samples][num_scales];
@@ -142,8 +147,8 @@ struct Part
     }
 };
 //const float Part::scale[] = {.25f, .5f, 1.0f}; 
-//const float Part::scale[] = {2.f, 5.f, 8.f}; 
-const float Part::scale[] = {0.5f, 1.7f, 2.5f, 5.0f}; 
+const float Part::scale[] = {2.f, 5.f, 8.f}; 
+//const float Part::scale[] = {0.5f, 1.7f, 2.5f, 5.0f}; 
 //const float Part::scale[] = {5.f, 10.f, 15.f}; 
 
 

@@ -896,7 +896,7 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-        PROFILE;
+        PROFILEX("extract");
 
         vector<KeyPoint> kp;
 #ifdef HAVE_DLIB
