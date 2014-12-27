@@ -957,7 +957,7 @@ struct HighDimLbp : public TextureFeature::Extractor
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-        PROFILE;
+        PROFILEX("extract");
         int gr=10; // 10 used in paper
         vector<KeyPoint> kp;
 #ifdef HAVE_DLIB

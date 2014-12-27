@@ -11,7 +11,7 @@ using std::vector;
 void feature_img(const Mat & I, Mat &fI)
 {
     Mat d;
-    I.convertTo(d,CV_32F);
+    I.convertTo(d,CV_32F, 1.0/255);
     dft(d,d);
     fI = d(Rect(1,1,I.cols/2,I.rows/2));
     dft(fI,fI,DCT_INVERSE);
@@ -27,15 +27,19 @@ void feature_img(const Mat & I, Mat &fI)
 
 struct Part
 {
-    enum { num_scales=3, num_samples=5 };
+    enum 
+    { 
+        num_scales=3,
+        num_samples=5 
+    };
     static const float scale[];
 
     Mat f[num_samples][num_scales];
-
-    vector<Mat> samples;
-
     Point2f p;
     Size size;
+
+    vector<Mat> samples; // only used for training
+
     Rect rect(Point2f _p) 
     { 
         return Rect(int(_p.x-size.width/2), int(_p.y-size.height/2), size.width, size.height); 
