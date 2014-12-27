@@ -7,20 +7,20 @@
 
 struct ElasticParts
 {
-	// io:
+    // io:
     virtual bool read(const cv::String &fn) = 0;
     virtual bool write(const cv::String &fn) = 0;
 
-	// find best points to sample:
+    // find best points to sample:
     virtual void getPoints(const cv::Mat & img, std::vector<cv::KeyPoint> &kp) const = 0;
 
-	// training:
+    // training:
     virtual void addPart(cv::Point2f p, int w, int h) = 0;
     virtual void sample(const cv::Mat &img) = 0;
     virtual void means() = 0;
 
-	// make an instance:
-	static cv::Ptr<ElasticParts> create();
+    // make an instance:
+    static cv::Ptr<ElasticParts> create();
 };
 
 

@@ -27,6 +27,7 @@ using std::endl;
 
 #include "TextureFeature.h"
 #include "ElasticParts.h"
+#include "Profile.h"
 
 using namespace cv;
 
@@ -892,11 +893,15 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 
     virtual int extract(const Mat &img, Mat &features) const
     {
+        PROFILE;
+
         vector<KeyPoint> kp;
 #ifdef HAVE_DLIB
         land.extract(img,kp);
 #else
+        { PROFILEX("elastic")
         elastic->getPoints(img, kp);
+        }
         //kp_manual(kp);
 #endif
         size_t s = kp.size();
@@ -940,19 +945,25 @@ struct HighDimLbp : public TextureFeature::Extractor
 #endif
 
     HighDimLbp()
-        : elastic(ElasticParts::create())
     {
+#ifdef HAVE_DLIB
+        elastic = ElasticParts::create();
         elastic->read("../parts.xml.gz");
+#endif
     }
 
     virtual int extract(const Mat &img, Mat &features) const
     {
+        PROFILE;
         int gr=10; // 10 used in paper
         vector<KeyPoint> kp;
 #ifdef HAVE_DLIB
         land.extract(img,kp);
 #else
-        elastic->getPoints(img, kp);
+        { 
+            PROFILEX("elastic");
+            elastic->getPoints(img, kp);
+        }
         //kp_manual(kp);
 #endif
 
