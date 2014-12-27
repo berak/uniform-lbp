@@ -48,7 +48,7 @@
 #include "MyFace.h"
 
 #if 0
- #include "profile.h"
+ #include "../profile.h"
 #else
  #define PROFILE ;
  #define PROFILEX(s) ;
