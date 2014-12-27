@@ -972,22 +972,22 @@ struct HighDimLbp : public TextureFeature::Extractor
         Mat histo;
         //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
         float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
-        double offsets_4[] = { 
-            -0.5,-0.5, 0.5,-0.5,
-            -0.5, 0.5, 0.5, 0.5,
+        float offsets_4[] = { 
+            -0.5f,-0.5f, 0.5f,-0.5f,
+            -0.5f, 0.5f, 0.5f, 0.5f,
         };
-        double offsets_9[] = {
-            -1.0,-1.0,   -1.0,-0.0,  -1.0, 0.0,
-            -0.0,-1.0,   -0.0,-0.0,  -0.0, 0.0,
-             1.0,-1.0,    1.0,-0.0,   1.0, 0.0
+        float offsets_9[] = {
+            -1.0f,-1.0f,   -1.0f,-0.0f,  -1.0f, 0.0f,
+            -0.0f,-1.0f,   -0.0f,-0.0f,  -0.0f, 0.0f,
+             1.0f,-1.0f,    1.0f,-0.0f,   1.0f, 0.0f
         };
-        double offsets_16[] = {
-            -1.5,-1.5, -0.5,-1.5, 0.5,-1.5, 1.5,-1.5,
-            -1.5,-0.5, -0.5,-0.5, 0.5,-0.5, 1.5,-0.5,
-            -1.5, 0.5, -0.5, 0.5, 0.5, 0.5, 1.5, 0.5,
-            -1.5, 1.5, -0.5, 1.5, 0.5, 1.5, 1.5, 1.5
+        float offsets_16[] = {
+            -1.5f,-1.5f, -0.5f,-1.5f, 0.5f,-1.5f, 1.5f,-1.5f,
+            -1.5f,-0.5f, -0.5f,-0.5f, 0.5f,-0.5f, 1.5f,-0.5f,
+            -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
+            -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
         };
-        double *off_table[] = {
+        float *off_table[] = {
             offsets_4,
             offsets_9,
             offsets_16,
@@ -1004,7 +1004,7 @@ struct HighDimLbp : public TextureFeature::Extractor
         {
             float s = scale[i];
             int noff = 16;//off_size[i];
-            double *off = offsets_16;//off_table[i];
+            float *off = offsets_16;//off_table[i];
             //gr = grs[i];
             Mat f1,f2,imgs;
             resize(img,imgs,Size(),s,s);

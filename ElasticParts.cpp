@@ -97,7 +97,7 @@ struct Part
         fs << "]";
         fs << "}";
     }
-    void read(FileNode &fn)
+    void read(const FileNode &fn) 
     {
         fn["p"] >> p;
         fn["s"] >> size;
