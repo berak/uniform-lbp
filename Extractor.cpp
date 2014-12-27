@@ -947,7 +947,7 @@ struct HighDimLbp : public TextureFeature::Extractor
 
     HighDimLbp()
     {
-#ifdef HAVE_DLIB
+#ifndef HAVE_DLIB
         elastic = ElasticParts::create();
         elastic->read("../parts.xml.gz");
 #endif
