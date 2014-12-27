@@ -16,6 +16,7 @@ void feature_img(const Mat & I, Mat &fI)
     fI = d(Rect(1,1,I.cols/2,I.rows/2));
     dft(fI,fI,DCT_INVERSE);
     fI.convertTo(fI,CV_8U);
+
     //int nsec=180;
     //Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
     //Sobel(I, s1, CV_32F, 1, 0);
@@ -128,8 +129,10 @@ struct Part
     {
         double mDist=DBL_MAX;
         Point2f best(np);
-        float off[] = {0,0, -step,0, step,0, 0,-step, 0,step};
-        for (int i=0; i<5; i++)
+        //float off[] = {0,0, -step,0, step,0, 0,-step, 0,step};
+
+        float off[] = {0,0, -step,-step, 0,-step, step,-step, step,0, step,step, 0,step, -step,step, -step,0};
+        for (int i=0; i<9; i++)
         {
             Point2f rs = Point2f(np.x*scale[level] + off[i*2], np.y*scale[level] + off[i*2+1]);
             Mat patch;
