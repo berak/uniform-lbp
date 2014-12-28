@@ -43,15 +43,15 @@ void feature_img(const Mat_<uchar> &I, Mat &fI)
     //dft(fI,fI,DCT_INVERSE);
     //fI.convertTo(fI,CV_8U);
 
-    //Laplacian(I,fI,CV_32F,3,5);
+    Laplacian(I,fI,CV_32F,3);
     //fI.convertTo(fI, CV_8U);
 
-    int nsec=90;
-    Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
-    Sobel(I, s1, CV_32F, 1, 0);
-    Sobel(I, s2, CV_32F, 0, 1);
-    fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
-    fI = s3 ;/// (360/nsec);
+    //int nsec=90;
+    //Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
+    //Sobel(I, s1, CV_32F, 1, 0);
+    //Sobel(I, s2, CV_32F, 0, 1);
+    //fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+    //fI = s3 ;/// (360/nsec);
     ////fI.convertTo(fI,CV_8U);
 }
 
