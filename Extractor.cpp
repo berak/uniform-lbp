@@ -890,19 +890,19 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
     {
 #ifndef HAVE_DLIB
         elastic = ElasticParts::create();
-        elastic->read("../parts.xml.gz");
+        elastic->read("parts.xml.gz");
 #endif
     }
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-        PROFILEX("extract");
+       // PROFILEX("extract");
 
         vector<KeyPoint> kp;
 #ifdef HAVE_DLIB
         land.extract(img,kp);
 #else
-        { PROFILEX("elastic")
+        {// PROFILEX("elastic")
         elastic->getPoints(img, kp);
         }
         //kp_manual(kp);
@@ -951,20 +951,20 @@ struct HighDimLbp : public TextureFeature::Extractor
     {
 #ifndef HAVE_DLIB
         elastic = ElasticParts::create();
-        elastic->read("../parts.xml.gz");
+        elastic->read("parts.xml.gz");
 #endif
     }
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-        PROFILEX("extract");
+        //PROFILEX("extract");
         int gr=10; // 10 used in paper
         vector<KeyPoint> kp;
 #ifdef HAVE_DLIB
         land.extract(img,kp);
 #else
         { 
-            PROFILEX("elastic");
+            //PROFILEX("elastic");
             elastic->getPoints(img, kp);
         }
         //kp_manual(kp);

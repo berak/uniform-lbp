@@ -8,7 +8,7 @@
 struct ElasticParts
 {
     // io:
-    virtual bool read(const cv::String &fn) = 0;
+    virtual bool read (const cv::String &fn) = 0;
     virtual bool write(const cv::String &fn) = 0;
 
     // find best points to sample:
@@ -16,6 +16,7 @@ struct ElasticParts
 
     // training:
     virtual void addPart(cv::Point2f p, int w, int h) = 0;
+    virtual void setPoint(int i, const cv::Point2f &p) = 0;
     virtual void sample(const cv::Mat &img) = 0;
     virtual void means() = 0;
 
