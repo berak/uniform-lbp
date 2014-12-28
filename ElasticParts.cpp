@@ -14,7 +14,7 @@ using std::endl;
 
 void feature_img(const Mat_<uchar> &I, Mat &fI)
 {
-    //fI=I;
+    I.convertTo(fI, CV_32F);
 
     //Mat_<float> his=Mat_<float>::zeros(1,16*4);
     //const int m=2;
@@ -43,7 +43,7 @@ void feature_img(const Mat_<uchar> &I, Mat &fI)
     //dft(fI,fI,DCT_INVERSE);
     //fI.convertTo(fI,CV_8U);
 
-    Laplacian(I,fI,CV_32F,3);
+    //Laplacian(I,fI,CV_32F,3);
     //fI.convertTo(fI, CV_8U);
 
     //int nsec=90;
@@ -123,6 +123,8 @@ struct Part
         Mat labels,centers,big;
         for (size_t p=0; p<samples.size(); p++)
             big.push_back(samples[p].reshape(1,1));
+        if (big.type() != CV_32F)
+            big.convertTo(big, CV_32F);
 
         kmeans(big,num_samples,labels,TermCriteria(),3,KMEANS_PP_CENTERS,centers);
 
@@ -253,14 +255,6 @@ struct ElasticPartsImpl : public ElasticParts
         //}
         return 1;
     }
-    //void draw(Mat &draw)
-    //{
-    //    for (size_t p=0; p<parts.size(); p++)
-    //    {
-    //        rectangle(draw, parts[p].rect(parts[p].p), Scalar(200,0,0));
-    //        rectangle(draw, parts[p].rect(parts[p].np), Scalar(0,200,0));
-    //    }
-    //}
 
     virtual bool write(const String &fn)
     {
