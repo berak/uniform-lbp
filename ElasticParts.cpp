@@ -14,8 +14,8 @@ using std::endl;
 
 void feature_img(const Mat_<uchar> &I, Mat &fI)
 {
-    // equalizeHist(I,fI);
-    //fI.convertTo(fI, CV_32F);
+    equalizeHist(I,fI);
+    fI.convertTo(fI, CV_32F);
 
     //Mat_<float> his=Mat_<float>::zeros(1,16*4);
     //const int m=2;
@@ -48,11 +48,11 @@ void feature_img(const Mat_<uchar> &I, Mat &fI)
     //fI.convertTo(fI, CV_8U);
 
     //int nsec=90;
-    Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
-    Sobel(I, s1, CV_32F, 1, 0);
-    Sobel(I, s2, CV_32F, 0, 1);
-    fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
-    fI = s3 ;/// (360/nsec);
+    //Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
+    //Sobel(I, s1, CV_32F, 1, 0);
+    //Sobel(I, s2, CV_32F, 0, 1);
+    //fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+    //fI = s3 ;/// (360/nsec);
     ////fI.convertTo(fI,CV_8U);
 }
 
