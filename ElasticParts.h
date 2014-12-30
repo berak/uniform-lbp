@@ -17,7 +17,7 @@ struct ElasticParts
 
     // train:
     //  add initial points & size
-    virtual void addPart(cv::Point2f p, int w, int h) = 0;
+    virtual void addPart(cv::Point2f p) = 0;
     //  update (e.g. from dlib's facial landmarks)
     virtual void setPoint(int i, const cv::Point2f &p) = 0;
     //  take samples at given position
