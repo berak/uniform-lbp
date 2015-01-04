@@ -127,7 +127,7 @@ public:
 
         // unfortunately, some classifiers do not return a proper distance value.
         float conf = 1.0f - result(1);
-        return format("%s : %2.3f%", persons[id].c_str(), conf);
+        return format("%s : %2.3f", persons[id].c_str(), conf);
     }
 };
 
@@ -158,7 +158,7 @@ int main(int argc, const char *argv[])
     namedWindow("reco");
 
     // read haarcascade
-	cv::CascadeClassifier cascade;
+    cv::CascadeClassifier cascade;
     bool clod = cascade.load(cascade_path);
     cerr << "cascade: " << clod  << endl;;
 
@@ -174,10 +174,10 @@ int main(int argc, const char *argv[])
     reco.train(imgpath);
 
     vector<Mat> images;
-    int state = NEUTRAL;
     String caption = "";
     int showCaption = 0;
     int frameNo = 0;
+    int state = NEUTRAL;
     Scalar color;
     while(cap.isOpened() && clod)
     {
@@ -199,13 +199,13 @@ int main(int argc, const char *argv[])
             cvtColor(frame,gray,COLOR_RGB2GRAY);
 
             std::vector<cv::Rect> faces;
-    	    cascade.detectMultiScale( gray, faces, 1.2, 3,
-		        CASCADE_FIND_BIGGEST_OBJECT	| CASCADE_DO_ROUGH_SEARCH  ,
-    		    Size(40, 40),Size(300,300) );
+            cascade.detectMultiScale( gray, faces, 1.2, 3,
+                CASCADE_FIND_BIGGEST_OBJECT | CASCADE_DO_ROUGH_SEARCH  ,
+                Size(40, 40),Size(300,300) );
 
-	        if ( faces.size() )
-	        {
-		        Rect roi = faces[0];
+            if ( faces.size() )
+            {
+                Rect roi = faces[0];
                 if ( state == PREDICT )
                 {
                     caption = reco.predict(gray(roi));
@@ -231,9 +231,11 @@ int main(int argc, const char *argv[])
                     }
                 }
                 rectangle(frame, roi,color);
-	        }
+            }
         }
-        circle(frame, Point(10,10),6, color, -1, LINE_AA);
+        circle(frame, Point(10,10),6, color*0.6, -1, LINE_AA);
+        circle(frame, Point(10,10),5, color*0.8, -1, LINE_AA);
+        circle(frame, Point(10,10),3, color*1.2, -1, LINE_AA);
         imshow("reco",frame);
         int k = waitKey(30);
         if ( k==27 ) break;
