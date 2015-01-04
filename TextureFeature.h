@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 using cv::Mat;
+using cv::String;
 
 //
 // interfaces
@@ -19,13 +20,19 @@ namespace TextureFeature
         virtual int reduce(const Mat &src, Mat &dest) const = 0;
     };
 
-    struct Classifier // identification
+    struct Serialize // io
+    {
+        virtual bool save(const String &fn) const  { return false; }
+        virtual bool load(const String &fn)        { return false; }
+    };
+
+    struct Classifier : public Serialize // identification
     {
         virtual int train(const Mat &features, const Mat &labels) = 0;
         virtual int predict(const Mat &test, Mat &result) const = 0;
     };
 
-    struct Verifier   // same-notSame
+    struct Verifier : public Serialize    // same-notSame
     {
         virtual int train(const Mat &features, const Mat &labels) = 0;
         virtual bool same(const Mat &a, const Mat &b) const = 0;

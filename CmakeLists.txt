@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 2.8)
+
+
+set(LIBFILES Extractor.cpp Reductor.cpp Classifier.cpp Preprocessor.cpp ElasticParts.cpp)
+
+project( duel )
+find_package( OpenCV REQUIRED )
+include_directories(SYSTEM  ${OpenCV_INCLUDE_DIRS})
+add_executable( duel main.cpp ${LIBFILES})
+target_link_libraries( duel ${OpenCV_LIBS} )
+
+project( online )
+find_package( OpenCV REQUIRED )
+include_directories(SYSTEM  ${OpenCV_INCLUDE_DIRS})
+add_executable( online online.cpp ${LIBFILES})
+target_link_libraries( online ${OpenCV_LIBS} )
+
+project( challenge )
+find_package( OpenCV REQUIRED )
+include_directories(SYSTEM  ${OpenCV_INCLUDE_DIRS})
+add_executable( challenge challenge/fr_lfw_benchmark.cpp challenge/MyFace.cpp ${LIBFILES})
+target_link_libraries( challenge ${OpenCV_LIBS} )

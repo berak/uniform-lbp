@@ -14,8 +14,8 @@ using std::endl;
 
 void feature_img(const Mat_<uchar> &I, Mat &fI)
 {
-    equalizeHist(I,fI);
-    fI.convertTo(fI, CV_32F);
+    //equalizeHist(I,fI);
+    //fI.convertTo(fI, CV_32F);
 
     //Mat_<float> his=Mat_<float>::zeros(1,16*4);
     //const int m=2;
@@ -48,11 +48,11 @@ void feature_img(const Mat_<uchar> &I, Mat &fI)
     //fI.convertTo(fI, CV_8U);
 
     //int nsec=90;
-    //Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
-    //Sobel(I, s1, CV_32F, 1, 0);
-    //Sobel(I, s2, CV_32F, 0, 1);
-    //fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
-    //fI = s3 ;/// (360/nsec);
+    Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
+    Sobel(I, s1, CV_32F, 1, 0);
+    Sobel(I, s2, CV_32F, 0, 1);
+    fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+    fI = s3 ;/// (360/nsec);
     ////fI.convertTo(fI,CV_8U);
 }
 
@@ -69,7 +69,7 @@ struct Part
     };
 
     //Mat f[num_samples];
-    Mat f;
+    Mat f,fAll;
     Point2f p;
     Size size;
 
@@ -78,6 +78,11 @@ struct Part
    
     Part() {}
     Part(const Point2f &p) : p(p), size(w, h), num_samples(0) {}
+    Part(const Point2f &p, const Mat &img) 
+        : p(p), size(w, h), num_samples(0)
+    {
+        getRectSubPix(img, size, p, f);
+    }
 
     void write(FileStorage &fs)
     {
@@ -103,33 +108,6 @@ struct Part
         //    (*it) >> f[i];
         //    ++it;
         //}
-    }
-
-    void sample(const Mat &img)
-    {
-        Mat fI; 
-        getRectSubPix(img, size, p, fI);
-        if (f.empty())
-            f = Mat(size, CV_32F, Scalar(0));
-        accumulate(fI,f);
-        num_samples ++;
-        //samples.push_back(fI);
-        //f[0] = fI;
-    }
-
-    void means()
-    {
-        //Mat labels,centers,big;
-        //for (size_t p=0; p<samples.size(); p++)
-        //    big.push_back(samples[p].reshape(1,1));
-        //if (big.type() != CV_32F)
-        //    big.convertTo(big, CV_32F);
-
-        //kmeans(big,num_samples,labels,TermCriteria(),3,KMEANS_PP_CENTERS,centers);
-
-        //for(int i=0; i<num_samples; i++)
-        //    f[i] = centers.row(i).reshape(1,size.height).clone();
-        f /= num_samples;
     }
 
     double distance(const Mat &a, const Mat &b) const
@@ -164,6 +142,37 @@ struct Part
         np = best;
         return mDist;
     }
+    void sample(const Mat &img)
+    {
+        Point2f p2(p);
+        walk(img,p2);
+
+        Mat fI; 
+        getRectSubPix(img, size, p2, fI);
+        if (fAll.empty())
+            fAll = Mat(size, CV_32F, Scalar(0));
+        accumulate(fI,fAll);
+        num_samples ++;
+        //samples.push_back(fI);
+        //f[0] = fI;
+    }
+
+    void means()
+    {
+        //Mat labels,centers,big;
+        //for (size_t p=0; p<samples.size(); p++)
+        //    big.push_back(samples[p].reshape(1,1));
+        //if (big.type() != CV_32F)
+        //    big.convertTo(big, CV_32F);
+
+        //kmeans(big,num_samples,labels,TermCriteria(),3,KMEANS_PP_CENTERS,centers);
+
+        //for(int i=0; i<num_samples; i++)
+        //    f[i] = centers.row(i).reshape(1,size.height).clone();
+        f  = fAll / num_samples;
+        fAll.release();
+    }
+
 };
 
 
@@ -184,6 +193,14 @@ struct ElasticPartsImpl : public ElasticParts
     virtual void addPart(cv::Point2f p) 
     {
         parts.push_back(Part(p*Part::scale));
+    }
+    virtual void addParts(const vector<cv::Point2f> &kp, const Mat &img) 
+    {
+        Mat ims,fI;
+        resize(img,ims,Size(),Part::scale,Part::scale);
+        feature_img(ims,fI);
+        for (size_t i=0; i<kp.size(); i++)
+            parts.push_back(Part(kp[i]*Part::scale,fI));
     }
     virtual void setPoint(int i, const Point2f &p) 
     {

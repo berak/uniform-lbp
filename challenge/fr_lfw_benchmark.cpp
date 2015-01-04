@@ -41,8 +41,6 @@
 
 #include "opencv2/core.hpp"
 #include "opencv2/imgcodecs.hpp"
-
-#include "opencv2/face.hpp"
 #include "opencv2/datasets/fr_lfw.hpp"
 
 #include "MyFace.h"
