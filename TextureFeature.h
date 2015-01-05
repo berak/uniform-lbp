@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 using cv::Mat;
 using cv::String;
+using cv::FileStorage;
 
 //
 // interfaces
@@ -22,8 +23,8 @@ namespace TextureFeature
 
     struct Serialize // io
     {
-        virtual bool save(const String &fn) const  { return false; }
-        virtual bool load(const String &fn)        { return false; }
+        virtual bool save(FileStorage &fs) const  { return false; }
+        virtual bool load(const FileStorage &fs)  { return false; }
     };
 
     struct Classifier : public Serialize // identification

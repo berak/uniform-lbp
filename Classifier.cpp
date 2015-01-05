@@ -64,6 +64,20 @@ struct ClassifierNearest : public TextureFeature::Classifier
         labels = trainLabels;
         return 1;
     }
+
+    // Serialize
+    virtual bool save(FileStorage &fs) const  
+    {
+        fs << "labels" << labels;
+        fs << "features" << features;
+        return true; 
+    }
+    virtual bool load(const FileStorage &fs)
+    { 
+        fs["labels"] >> labels;
+        fs["features"] >> features;
+        return ! features.empty(); 
+    }
 };
 
 struct ClassifierNearestFloat : public ClassifierNearest
@@ -301,15 +315,6 @@ struct ClassifierPCA : public ClassifierNearestFloat
         if((num_components <= 0) || (num_components > trainData.rows))
             num_components = trainData.rows;
 
-        //FileStorage fsr(format("pca%d.yml",num_components),FileStorage::READ);
-        //if (fsr.isOpened())
-        //{
-        //    fsr["comp"] >> num_components;
-        //    fsr["mean"] >> mean;
-        //    fsr["evec"] >> eigenvectors;
-        //    return 1;
-        //}
-
         PCA pca(trainData, Mat(), cv::PCA::DATA_AS_ROW, num_components);
 
         transpose(pca.eigenvectors, eigenvectors);
@@ -318,16 +323,32 @@ struct ClassifierPCA : public ClassifierNearestFloat
         features.release();
         for (int i=0; i<trainData.rows; i++)
             features.push_back(project(trainData.row(i)));
-        //FileStorage fsw(format("pca%d.yml",num_components),FileStorage::WRITE);
-        //fsw << "comp" << num_components;
-        //fsw << "mean" << mean;
-        //fsw << "evec" << eigenvectors;
         return 1;
     }
 
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
         return ClassifierNearestFloat::predict(project(testFeature), results);
+    }
+
+    // Serialize
+    virtual bool save(FileStorage &fs) const  
+    {
+        fs << "labels" << labels;
+        fs << "features" << features;
+        fs << "mean" << mean;
+        fs << "eigenvectors" << eigenvectors;
+        fs << "num_components" << num_components;
+        return true; 
+    }
+    virtual bool load(const FileStorage &fs)
+    { 
+        fs["labels"] >> labels;
+        fs["features"] >> features;
+        fs["mean"] >> mean;
+        fs["eigenvectors"] >> eigenvectors;
+        fs["num_components"] >>num_components;
+        return ! features.empty(); 
     }
 };
 
