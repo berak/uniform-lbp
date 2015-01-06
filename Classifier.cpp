@@ -211,6 +211,20 @@ struct ClassifierSvm : public TextureFeature::Classifier
         svm->predict(tofloat(src), res);
         return res.rows;
     }
+
+    // Serialize
+    virtual bool save(FileStorage &fs) const  
+    {
+        if(!fs.isOpened()) return false;
+        svm->write(fs);
+        return true; 
+    }
+    virtual bool load(const FileStorage &fs)
+    { 
+        if(!fs.isOpened()) return false;
+        svm->read(fs.getFirstTopLevelNode());
+        return true; 
+    }
 };
 
 
@@ -539,7 +553,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
         : VerifierPairDistance<int>(distFlag)
     {
         ml::SVM::Params param;
-        param.kernelType = ml::SVM::LINEAR;
+        param.kernelType = ml::SVM::RBF; //ml::SVM::INTER; //ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;
         param.C = 1;
         param.nu = 0.5;

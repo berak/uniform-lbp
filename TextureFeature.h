@@ -33,7 +33,7 @@ namespace TextureFeature
         virtual int predict(const Mat &test, Mat &result) const = 0;
     };
 
-    struct Verifier : public Serialize    // same-notSame
+    struct Verifier : public Serialize   // same-notSame
     {
         virtual int train(const Mat &features, const Mat &labels) = 0;
         virtual bool same(const Mat &a, const Mat &b) const = 0;

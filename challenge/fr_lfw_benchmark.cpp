@@ -62,7 +62,7 @@
 using namespace std;
 using namespace cv;
 using namespace cv::datasets;
-using namespace cv::face;
+//using namespace cv::face;
 
 map<string, int> people;
 

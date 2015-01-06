@@ -12,7 +12,7 @@
 // dlib's implementation seems to rule here, let's try to use it,
 // fall back to a precalculated 'one-size-fits-all' manner(based on the mean lfw image), if not present:
 //
-//#define HAVE_DLIB 
+#define HAVE_DLIB 
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
@@ -974,34 +974,34 @@ struct HighDimLbp : public TextureFeature::Extractor
         Mat histo;
         //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
         float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
-        float offsets_4[] = { 
-            -0.5f,-0.5f, 0.5f,-0.5f,
-            -0.5f, 0.5f, 0.5f, 0.5f,
-        };
-        float offsets_9[] = {
-            -1.0f,-1.0f,   -1.0f,-0.0f,  -1.0f, 0.0f,
-            -0.0f,-1.0f,   -0.0f,-0.0f,  -0.0f, 0.0f,
-             1.0f,-1.0f,    1.0f,-0.0f,   1.0f, 0.0f
-        };
+        //float offsets_4[] = { 
+        //    -0.5f,-0.5f, 0.5f,-0.5f,
+        //    -0.5f, 0.5f, 0.5f, 0.5f,
+        //};
+        //float offsets_9[] = {
+        //    -1.0f,-1.0f,   -1.0f,-0.0f,  -1.0f, 0.0f,
+        //    -0.0f,-1.0f,   -0.0f,-0.0f,  -0.0f, 0.0f,
+        //     1.0f,-1.0f,    1.0f,-0.0f,   1.0f, 0.0f
+        //};
         float offsets_16[] = {
             -1.5f,-1.5f, -0.5f,-1.5f, 0.5f,-1.5f, 1.5f,-1.5f,
             -1.5f,-0.5f, -0.5f,-0.5f, 0.5f,-0.5f, 1.5f,-0.5f,
             -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
             -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
         };
-        float *off_table[] = {
-            offsets_4,
-            offsets_9,
-            offsets_16,
-            offsets_16,
-            offsets_16
-        };
-        int off_size[] = {
-            4,9,16,16,16
-        };
-        int grs[] = {
-            4,8,8,10,10
-        };
+        //float *off_table[] = {
+        //    offsets_4,
+        //    offsets_9,
+        //    offsets_16,
+        //    offsets_16,
+        //    offsets_16
+        //};
+        //int off_size[] = {
+        //    4,9,16,16,16
+        //};
+        //int grs[] = {
+        //    4,8,8,10,10
+        //};
         for (int i=0; i<5; i++)
         {
             float s = scale[i];

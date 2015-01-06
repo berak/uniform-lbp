@@ -62,8 +62,9 @@ public:
     FaceRec()
         : pre(3, 0, FIXED_FACE)
         , extractor(createExtractorFPLbp())
-        //, classifier(createClassifierHist(HISTCMP_HELLINGER))
-        , classifier(createClassifierPCA_LDA())
+        , classifier(createClassifierHist(HISTCMP_HELLINGER))
+        //, classifier(createClassifierPCA_LDA())
+        //, classifier(createClassifierSVM())
     {}
 
     int train(const String &imgdir)
@@ -81,6 +82,7 @@ public:
 
         for (size_t i=0; i<vec.size(); i++)
         {
+            // extract name from filepath:
             String v = vec[i];
             int r1 = v.find_last_of(SEP);
             String v2 = v.substr(0,r1);
@@ -92,15 +94,16 @@ public:
                 label++;
             }
             persons[label] = n;
+
+            // process img & add to trainset:
             Mat img=imread(vec[i],0);
-            img = pre.process(img);
 
             Mat feature;
-            extractor->extract(img,feature);
+            extractor->extract(pre.process(img), feature);
             features.push_back(feature.reshape(1,1));
             labels.push_back(label);
         }
-        return classifier->train(features,labels);
+        return classifier->train(features, labels);
     }
 
     String predict(const Mat & img)
@@ -120,7 +123,7 @@ public:
         if (id < 0)
             return "";
 
-        // unfortunately, some classifiers do not return a proper distance value.
+        // unfortunately, some classifiers(like SVM) do not return a distance value at all.
         float conf = 1.0f - result(1);
         return format("%s : %2.3f", persons[id].c_str(), conf);
     }
@@ -201,7 +204,10 @@ int main(int argc, const char *argv[])
 
     FaceRec reco;
     reco.train(imgpath);
-    //reco.load("pca.xml");
+
+    String save_model = "face.yml.gz";
+    // alternatively, load a serialized model.
+    //reco.load(save_model);
 
     vector<Mat> images;
     String caption = "";
@@ -220,6 +226,9 @@ int main(int argc, const char *argv[])
         if (frame.empty())
             break;
 
+        // if it gets too slow, try with half the size.
+        //pyrDown(frame,frame); 
+
         if (state == PREDICT || state == CAPTURE)
         {
             Mat gray;
@@ -233,15 +242,12 @@ int main(int argc, const char *argv[])
             if (faces.size() > 0)
             {
                 Rect roi = faces[0];
-                if (state == CAPTURE)
+                if ((state == CAPTURE) && (frameNo % 3 == 0))
                 {
-                    if (frameNo % 3 == 0)
-                    {
-                        Mat m;
-                        resize(gray(roi), m, Size(FIXED_FACE,FIXED_FACE));
-                        images.push_back(m);
-                        cerr << ".";
-                    }
+                    Mat m;
+                    resize(gray(roi), m, Size(FIXED_FACE,FIXED_FACE));
+                    images.push_back(m);
+                    cerr << ".";
                 }
                 if (state == PREDICT)
                 {
@@ -270,6 +276,7 @@ int main(int argc, const char *argv[])
         {
             if (state == CAPTURE && !images.empty())
             {
+                // query for a name, and write the images to that folder:
                 cerr << endl << "please enter a name(empty to abort) :" << endl;
                 char n[200];
                 gets(n);
@@ -280,7 +287,7 @@ int main(int argc, const char *argv[])
                     path += n;
                     String cmdline = "mkdir ";
                     cmdline += path;
-                    system(cmdline.c_str());
+                    system(cmdline.c_str()); // lame, but portable..
                     for (size_t i=0; i<images.size(); i++)
                     {
                         imwrite(format("%s/%6d.png", path.c_str(), theRNG().next()), images[i]);
@@ -296,7 +303,9 @@ int main(int argc, const char *argv[])
             state = CAPTURE;
         }
         if (k == 's')
-            reco.save("pca.xml");
+        {
+            cerr << "saved " << save_model << " : " << reco.save(save_model) << endl;
+        }
         frameNo++;
     }
     return 0;
