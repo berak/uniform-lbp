@@ -12,7 +12,7 @@
 // dlib's implementation seems to rule here, let's try to use it,
 // fall back to a precalculated 'one-size-fits-all' manner(based on the mean lfw image), if not present:
 //
-#define HAVE_DLIB 
+//#define HAVE_DLIB 
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
@@ -569,17 +569,29 @@ static void gftt32(vector<KeyPoint> &kp)
 
 static void kp_manual(vector<KeyPoint> &kp)
 {
-    kp.push_back(KeyPoint(10,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(13,37,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(82,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(78,37,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(55,27,3,-1,0,0,-1));    kp.push_back(KeyPoint(58,35,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));    kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(7,21,3,-1,0,0,-1));     kp.push_back(KeyPoint(20,19,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(30,19,3,-1,0,0,-1));    kp.push_back(KeyPoint(83,21,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(70,17,3,-1,0,0,-1));    kp.push_back(KeyPoint(59,18,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(38,61,3,-1,0,0,-1));    kp.push_back(KeyPoint(53,61,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(60,53,3,-1,0,0,-1));    kp.push_back(KeyPoint(32,54,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(27,77,3,-1,0,0,-1));    kp.push_back(KeyPoint(63,77,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(38,45,3,-1,0,0,-1));    kp.push_back(KeyPoint(54,45,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(10,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(13,37,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(82,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(78,37,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(55,27,3,-1,0,0,-1));    kp.push_back(KeyPoint(58,35,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));    kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(7,21,3,-1,0,0,-1));     kp.push_back(KeyPoint(20,19,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(30,19,3,-1,0,0,-1));    kp.push_back(KeyPoint(83,21,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(70,17,3,-1,0,0,-1));    kp.push_back(KeyPoint(59,18,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(38,61,3,-1,0,0,-1));    kp.push_back(KeyPoint(53,61,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(60,53,3,-1,0,0,-1));    kp.push_back(KeyPoint(32,54,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(27,77,3,-1,0,0,-1));    kp.push_back(KeyPoint(63,77,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(38,45,3,-1,0,0,-1));    kp.push_back(KeyPoint(54,45,3,-1,0,0,-1));
+
+    kp.push_back(KeyPoint(15,19,3,-1,0,0,-1));    kp.push_back(KeyPoint(75,19,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(29,20,3,-1,0,0,-1));    kp.push_back(KeyPoint(61,20,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(36,24,3,-1,0,0,-1));    kp.push_back(KeyPoint(54,24,3,-1,0,0,-1));
+    //kp.push_back(KeyPoint(35,27,3,-1,0,0,-1));    kp.push_back(KeyPoint(32,36,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(38,35,3,-1,0,0,-1));    kp.push_back(KeyPoint(52,35,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(30,39,3,-1,0,0,-1));    kp.push_back(KeyPoint(60,39,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(19,39,3,-1,0,0,-1));    kp.push_back(KeyPoint(71,39,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(8 ,38,3,-1,0,0,-1));    kp.push_back(KeyPoint(82,38,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(40,64,3,-1,0,0,-1));    kp.push_back(KeyPoint(50,64,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(31,75,3,-1,0,0,-1));    kp.push_back(KeyPoint(59,75,3,-1,0,0,-1));
+    kp.push_back(KeyPoint(27,81,3,-1,0,0,-1));    kp.push_back(KeyPoint(63,81,3,-1,0,0,-1));
 
     //kp.push_back(KeyPoint(5,25,3));     kp.push_back(KeyPoint(83,23,3));
     //kp.push_back(KeyPoint(20,19,3));    kp.push_back(KeyPoint(68,17,3));
@@ -950,8 +962,8 @@ struct HighDimLbp : public TextureFeature::Extractor
     HighDimLbp()
     {
 #ifndef HAVE_DLIB
-        elastic = ElasticParts::create();
-        elastic->read("parts.xml.gz");
+        //elastic = ElasticParts::create();
+        //elastic->read("parts.xml.gz");
 #endif
     }
 
@@ -965,9 +977,9 @@ struct HighDimLbp : public TextureFeature::Extractor
 #else
         { 
             //PROFILEX("elastic");
-            elastic->getPoints(img, kp);
+        //    elastic->getPoints(img, kp);
         }
-        //kp_manual(kp);
+        kp_manual(kp);
 #endif
 
 
