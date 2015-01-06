@@ -549,11 +549,11 @@ struct VerifierPairDistance : public TextureFeature::Verifier
 //
 struct VerifierSVM : public VerifierPairDistance<int>
 {
-    VerifierSVM(int distFlag=2)
+    VerifierSVM(int ktype=ml::SVM::LINEAR, int distFlag=2)
         : VerifierPairDistance<int>(distFlag)
     {
         ml::SVM::Params param;
-        param.kernelType = ml::SVM::INTER; //ml::SVM::LINEAR;
+        param.kernelType = ktype; //ml::SVM::INTER; //ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;
         param.C = 1;
         param.nu = 0.5;
@@ -727,8 +727,8 @@ cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
 cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
 { return makePtr<TextureFeatureImpl::VerifierHist>(norm_flag); }
 
-cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int distfunc)
-{ return makePtr<TextureFeatureImpl::VerifierSVM>(distfunc); }
+cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int ktype, int distfunc)
+{ return makePtr<TextureFeatureImpl::VerifierSVM>(ktype, distfunc); }
 
 cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc)
 { return makePtr<TextureFeatureImpl::VerifierEM>(distfunc); }
