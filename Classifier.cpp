@@ -553,7 +553,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
         : VerifierPairDistance<int>(distFlag)
     {
         ml::SVM::Params param;
-        param.kernelType = ml::SVM::INTER; //ml::SVM::LINEAR;
+        param.kernelType = ml::SVM::POLY; //ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;
         param.C = 1;
         param.nu = 0.5;
