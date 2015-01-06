@@ -553,7 +553,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
         : VerifierPairDistance<int>(distFlag)
     {
         ml::SVM::Params param;
-        param.kernelType = ml::SVM::RBF; //ml::SVM::INTER; //ml::SVM::LINEAR;
+        param.kernelType = ml::SVM::CHI2; //ml::SVM::INTER; //ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;
         param.C = 1;
         param.nu = 0.5;
@@ -561,7 +561,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
         param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
         param.termCrit.maxCount = 1000;
         param.termCrit.epsilon = 1e-6;
-
+        cerr << "SVM KERNEL: " << param.kernelType << endl;
         model = ml::SVM::create(param);
     }
 };
