@@ -894,15 +894,15 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 #ifdef HAVE_DLIB
     LandMarkDlib land;
 #else
-    Ptr<ElasticParts> elastic;
+   // Ptr<ElasticParts> elastic;
 #endif
 
     ExtractorGfttFeature2d(Ptr<Feature2D> f)
         : f2d(f)
     {
 #ifndef HAVE_DLIB
-        elastic = ElasticParts::create();
-        elastic->read("parts.xml.gz");
+     //   elastic = ElasticParts::create();
+     //   elastic->read("parts.xml.gz");
 #endif
     }
 
@@ -915,9 +915,9 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
         land.extract(img,kp);
 #else
         {// PROFILEX("elastic")
-        elastic->getPoints(img, kp);
+       // elastic->getPoints(img, kp);
         }
-        //kp_manual(kp);
+        kp_manual(kp);
 #endif
         size_t s = kp.size();
         float w=5;
