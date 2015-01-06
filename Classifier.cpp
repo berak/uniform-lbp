@@ -557,6 +557,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
         param.svmType = ml::SVM::NU_SVC;
         param.C = 1;
         param.nu = 0.5;
+        param.degree=0.5; // POLY
 
         param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
         param.termCrit.maxCount = 1000;
