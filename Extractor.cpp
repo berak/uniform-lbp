@@ -12,7 +12,7 @@
 // dlib's implementation seems to rule here, let's try to use it,
 // fall back to a precalculated 'one-size-fits-all' manner(based on the mean lfw image), if not present:
 //
-#define HAVE_DLIB 
+//#define HAVE_DLIB 
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
