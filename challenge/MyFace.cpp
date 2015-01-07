@@ -83,9 +83,11 @@ public:
             case CL_SVM_LIN:   cls = createVerifierSVM(cv::ml::SVM::LINEAR); break;
             case CL_SVM_RBF:   cls = createVerifierSVM(cv::ml::SVM::RBF); break;
             case CL_SVM_INT:   cls = createVerifierSVM(cv::ml::SVM::INTER); break;
+            case CL_SVM_INT2:  cls = createVerifierSVM(-6); break;
             case CL_SVM_HEL:   cls = createVerifierSVM(-1); break;
             case CL_SVM_COR:   cls = createVerifierSVM(-2); break;
             case CL_SVM_COS:   cls = createVerifierSVM(-3); break;
+            case CL_SVM_KLD:   cls = createVerifierSVM(-4); break;
             case CL_EM:        cls = createVerifierEM(); break;
             case CL_LR:        cls = createVerifierLR(); break;
             case CL_BOOST:     cls = createVerifierBoost(); break;

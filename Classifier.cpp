@@ -171,6 +171,16 @@ struct CustomKernel : public ml::SVM::Kernel
     int K;
     CustomKernel(int k) : K(k) {}
 
+    void calc_int2(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        Mat S(1,var_count,CV_32F,(void*)0);
+        Mat A(1,var_count,CV_32F,(void*)another);
+        for(int j=0; j<vcount; j++)
+        {
+            S.data = (uchar*)(&vecs[j*var_count]);            
+            results[j] = (float)(sum(cv::min(S,A))[0]);
+        }
+    }
     void calc_hellinger(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         Mat R(1, vcount, CV_32F, results);
@@ -229,6 +239,50 @@ struct CustomKernel : public ml::SVM::Kernel
             results[j] = (float)(s12 / sqrt(s11 * s22));
         }
     }
+    void calc_kl_div(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        for(int j=0; j<vcount; j++)
+        {
+            double s = 0;
+            const float* sample = &vecs[j*var_count];
+            for(int k=0; k<var_count; k++)
+            {
+                double b = sample[k];
+                double a = another[k];
+                if( fabs(a) <= DBL_EPSILON ) {
+                    continue;
+                }
+                if(  fabs(b) <= DBL_EPSILON ) {
+                    b = 1e-10;
+                }
+                //s += a * std::log( a / b );
+                s -= a * std::log(b);
+                s += a * std::log(a);
+            }
+            results[j] = (float)(s);
+        }
+    }
+    void calc_bhattacharyya(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        for(int j=0; j<vcount; j++)
+        {
+            double s = 0, s1 = 0, s2 = 0;
+            const float* sample = &vecs[j*var_count];
+            for(int k=0; k<var_count; k++)
+            {
+                double a = sample[k];
+                double b = another[k];
+
+                s  += std::sqrt(a*b);
+                s1 += a;
+                s2 += b;
+            }
+            s1 *= s2;
+            s1 = fabs(s1) > FLT_EPSILON ? 1./std::sqrt(s1) : 1.;
+            results[j] = (float)std::sqrt(std::max(1. - s*s1, 0.));
+        }
+    }
+
     void calc(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         switch(K)
@@ -236,6 +290,9 @@ struct CustomKernel : public ml::SVM::Kernel
         case -1: calc_hellinger(vcount, var_count, vecs, another, results); break;
         case -2: calc_correl(vcount, var_count, vecs, another, results); break;
         case -3: calc_cosine(vcount, var_count, vecs, another, results); break;
+        case -4: calc_kl_div(vcount, var_count, vecs, another, results); break;
+        case -5: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
+        case -6: calc_int2(vcount, var_count, vecs, another, results); break;
         default: cerr << "sorry, dave" << endl; exit(0);
         }
     }
@@ -263,13 +320,10 @@ struct ClassifierSvm : public TextureFeature::Classifier
     ClassifierSvm(int ktype=ml::SVM::POLY, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
     //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
     {
-        switch (ktype)
+        if (ktype<0)
         {
-            case -1:
-            case -2:
-            case -3: 
-                krnl = CustomKernel::create(ktype);    
-                ktype=-1; break;
+            krnl = CustomKernel::create(ktype);    
+            ktype=-1;
         }
         param.kernelType = ktype; //ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
         param.svmType = ml::SVM::NU_SVC; // NU_SVC
@@ -654,13 +708,10 @@ struct VerifierSVM : public VerifierPairDistance<int>
         : VerifierPairDistance<int>(distFlag)
     {
         ml::SVM::Params param;
-        switch (ktype)
+        if (ktype<0)
         {
-            case -1:
-            case -2:
-            case -3: 
-                krnl = CustomKernel::create(ktype);    
-                ktype=-1; break;
+            krnl = CustomKernel::create(ktype);    
+            ktype=-1;
         }
         param.kernelType = ktype; //ml::SVM::INTER; //ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;

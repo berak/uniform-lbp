@@ -279,7 +279,7 @@ int main(int argc, const char *argv[])
         {
         default: continue;
         //case 1:  runtest("pixels_L2",    createExtractorPixels(120,120),  Ptr<TextureFeature::Reductor>(),   createClassifierNearest(),               images,labels,persons, fold); break;
-        case 2:  runtest("pixels_svm",   createExtractorPixels(60,60),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-1),                   images,labels,persons, fold); break;
+        case 2:  runtest("pixels_svm",   createExtractorPixels(60,60),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-6),                   images,labels,persons, fold); break;
         //case 3:  runtest("pixels_cosine",createExtractorPixels(120,120),  Ptr<TextureFeature::Reductor>(),   createClassifierCosine(),                images,labels,persons, fold); break;
         case 5:  runtest("lbp_L2",       createExtractorLbp(),            Ptr<TextureFeature::Reductor>(),   createClassifierNearest(),               images,labels,persons, fold); break;
         case 6:  runtest("lbp_svm",      createExtractorLbp(),            Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
