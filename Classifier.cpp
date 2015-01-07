@@ -198,18 +198,33 @@ struct HellingerKernel : public ml::SVM::Kernel
     }
 };
 
-struct IntersectKernel : public ml::SVM::Kernel
+struct CorrelKernel : public ml::SVM::Kernel
 {
     void calc( int vcount, int var_count, const float* vecs,
                     const float* another, float* results )
     {
-        Mat V(1,var_count,CV_32F,(void*)0);
-        Mat A(1,var_count,CV_32F,(void*)another);
-        for(int j=0; j<vcount; j++)
+        double s1 = 0, s2 = 0, s11 = 0, s12 = 0, s22 = 0;
+
+        //double gamma = -1;
+        int j, k;
+        for( j = 0; j < vcount; j++ )
         {
-            V.data = (uchar*)(&vecs[j*var_count]);
-            Mat S = cv::min(V,A);
-            results[j] = (float)(cv::sum(S)[0]);
+            const float* sample = &vecs[j*var_count];
+            double chi2 = 0;
+            for(k = 0 ; k < var_count; k++ )
+            {
+                double a = sample[k];
+                double b = another[k];
+                s12 += a*b;
+                s1 += a;
+                s11 += a*a;
+                s2 += b;
+                s22 += b*b;
+            }
+            double scale = 1./var_count;
+            double num = s12 - s1*s2*scale;
+            double denom2 = (s11 - s1*s1*scale)*(s22 - s2*s2*scale);
+            results[j] = (float)(std::abs(denom2) > DBL_EPSILON ? num/std::sqrt(denom2) : 1.);
         }
     }
     int getType(void) const
@@ -630,7 +645,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
         if (ktype == -2)
         {
             ktype = -1;
-            krnl = IntersectKernel::create();
+            krnl = CorrelKernel::create();
         }
         param.kernelType = ktype; //ml::SVM::INTER; //ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;
