@@ -54,6 +54,7 @@ class FaceRec
     Preprocessor pre;
 
     Ptr<TextureFeature::Extractor>  extractor;
+    Ptr<TextureFeature::Reductor>   reductor;
     Ptr<TextureFeature::Classifier> classifier;
 
     map<int,String> persons;
@@ -61,9 +62,11 @@ class FaceRec
 public:
     FaceRec()
         : pre(3, 0, FIXED_FACE)
-        , extractor(createExtractorFPLbp())
-        , classifier(createClassifierHist(HISTCMP_HELLINGER))
-        //, classifier(createClassifierPCA_LDA())
+        // just swap parts here, it's intended for that..
+        , extractor(createExtractorPyramidBGC1())
+        , reductor(createReductorDct(8000))
+        //, classifier(createClassifierHist(HISTCMP_HELLINGER))
+        , classifier(createClassifierPCA_LDA())
         //, classifier(createClassifierSVM())
     {}
 
@@ -100,7 +103,9 @@ public:
 
             Mat feature;
             extractor->extract(pre.process(img), feature);
-            features.push_back(feature.reshape(1,1));
+            if (!reductor.empty())
+                reductor->reduce(feature.reshape(1,1), feature);
+            features.push_back(feature);
             labels.push_back(label);
         }
         return classifier->train(features, labels);
@@ -116,6 +121,8 @@ public:
 
         Mat feature;
         extractor->extract(pre.process(im2), feature);
+        if (!reductor.empty())
+            reductor->reduce(feature, feature);
 
         Mat_<float> result;
         classifier->predict(feature, result);
@@ -123,7 +130,8 @@ public:
         if (id < 0)
             return "";
 
-        // unfortunately, some classifiers(like SVM) do not return a distance value at all.
+        // unfortunately, some classifiers(like SVM) do not return a distance value at all,
+        // others do not return a [0..1] value, it might need a different heuristic here.
         float conf = 1.0f - result(1);
         return format("%s : %2.3f", persons[id].c_str(), conf);
     }
@@ -191,7 +199,6 @@ int main(int argc, const char *argv[])
 
     namedWindow("reco");
 
-    // read haarcascade
     cv::CascadeClassifier cascade;
     bool clod = cascade.load(cascade_path);
     cerr << "cascade: " << clod  << endl;;

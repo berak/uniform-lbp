@@ -166,6 +166,62 @@ static int unique(const Mat &labels, set<int> &classes)
     return classes.size();
 }
 
+struct HellingerKernel : public ml::SVM::Kernel
+{
+    void calc( int vcount, int var_count, const float* vecs,
+                    const float* another, float* results )
+    {
+        Mat R( 1, vcount, CV_32F, results );
+        double gamma = -1;
+        Mat S(1,var_count,CV_32F,(void*)0);
+        Mat S2(1,var_count,CV_32F);
+
+        Mat A(1,var_count,CV_32F,(void*)another);
+        Mat A2(1,var_count,CV_32F);
+        cv::sqrt(A,A2);
+
+        for(int j=0; j<vcount; j++)
+        {
+            S.data = (uchar*)(&vecs[j*var_count]);
+            cv::sqrt(S,S2);
+            Mat H=S2-A2;
+            results[j] = (float)(gamma*sum(H.mul(H))[0]);
+        }
+    }
+    int getType(void) const
+    {
+        return 7;
+    }
+    static Ptr<ml::SVM::Kernel> create()
+    {
+        return makePtr<HellingerKernel>();
+    }
+};
+
+struct IntersectKernel : public ml::SVM::Kernel
+{
+    void calc( int vcount, int var_count, const float* vecs,
+                    const float* another, float* results )
+    {
+        Mat V(1,var_count,CV_32F,(void*)0);
+        Mat A(1,var_count,CV_32F,(void*)another);
+        for(int j=0; j<vcount; j++)
+        {
+            V.data = (uchar*)(&vecs[j*var_count]);
+            Mat S = cv::min(V,A);
+            results[j] = (float)(cv::sum(S)[0]);
+        }
+    }
+    int getType(void) const
+    {
+        return 8;
+    }
+    static Ptr<ml::SVM::Kernel> create()
+    {
+        return makePtr<HellingerKernel>();
+    }
+};
+
 
 //
 // single svm, multi class.
@@ -173,13 +229,14 @@ static int unique(const Mat &labels, set<int> &classes)
 struct ClassifierSvm : public TextureFeature::Classifier
 {
     Ptr<ml::SVM> svm;
+    Ptr<ml::SVM::Kernel> krnl;
     ml::SVM::Params param;
 
 
-    ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
+    ClassifierSvm(int ktype=ml::SVM::POLY, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
     //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
     {
-        param.kernelType = ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
+        param.kernelType = ktype; //ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
         param.svmType = ml::SVM::NU_SVC; // NU_SVC
         param.degree = degree; // for poly
         param.gamma = gamma; // for poly / rbf / sigmoid
@@ -192,7 +249,12 @@ struct ClassifierSvm : public TextureFeature::Classifier
         param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
         param.termCrit.maxCount = 1000;
         param.termCrit.epsilon = 1e-6;
-        svm = ml::SVM::create(param);
+
+        if (ktype == -1)
+        {
+            krnl = HellingerKernel::create();
+        }
+        svm = ml::SVM::create(param,krnl);
     }
 
     virtual int train(const Mat &src, const Mat &labels)
@@ -307,7 +369,9 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
 };
 
 
-
+//
+// 'Eigenfaces'
+//
 struct ClassifierPCA : public ClassifierNearestFloat
 {
     Mat eigenvectors;
@@ -367,7 +431,9 @@ struct ClassifierPCA : public ClassifierNearestFloat
 };
 
 
-
+//
+// 'Fisherfaces'
+//
 struct ClassifierPCA_LDA : public ClassifierPCA
 {
     ClassifierPCA_LDA(int num_components=0)
@@ -472,7 +538,9 @@ struct VerifierNearest : TextureFeature::Verifier
     }
 };
 
-
+//
+// similar to the classification task - just change the distance func.
+//
 struct VerifierHist : VerifierNearest
 {
     VerifierHist(int f=HISTCMP_CHISQR)
@@ -549,10 +617,21 @@ struct VerifierPairDistance : public TextureFeature::Verifier
 //
 struct VerifierSVM : public VerifierPairDistance<int>
 {
+    Ptr<ml::SVM::Kernel> krnl;
+
     VerifierSVM(int ktype=ml::SVM::LINEAR, int distFlag=2)
         : VerifierPairDistance<int>(distFlag)
     {
         ml::SVM::Params param;
+        if (ktype == -1)
+        {
+            krnl = HellingerKernel::create();
+        }
+        if (ktype == -2)
+        {
+            ktype = -1;
+            krnl = IntersectKernel::create();
+        }
         param.kernelType = ktype; //ml::SVM::INTER; //ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;
         param.C = 1;
@@ -562,8 +641,9 @@ struct VerifierSVM : public VerifierPairDistance<int>
         param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
         param.termCrit.maxCount = 1000;
         param.termCrit.epsilon = 1e-6;
-        cerr << "SVM KERNEL: " << param.kernelType << endl;
-        model = ml::SVM::create(param);
+        //cerr << "SVM KERNEL: " << param.kernelType << endl;
+
+        model = ml::SVM::create(param,krnl);
     }
 };
 
@@ -702,8 +782,8 @@ cv::Ptr<TextureFeature::Classifier> createClassifierCosine()
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k)
 { return makePtr<TextureFeatureImpl::ClassifierKNN>(k); }
 
-cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree, double gamma, double coef0, double C, double nu, double p)
-{ return makePtr<TextureFeatureImpl::ClassifierSvm>(degree, gamma, coef0, C, nu, p); }
+cv::Ptr<TextureFeature::Classifier> createClassifierSVM(int ktype, double degree, double gamma, double coef0, double C, double nu, double p)
+{ return makePtr<TextureFeatureImpl::ClassifierSvm>(ktype, degree, gamma, coef0, C, nu, p); }
 
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
 { return makePtr<TextureFeatureImpl::ClassifierSvmMulti>(); }

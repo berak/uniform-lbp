@@ -114,7 +114,7 @@ cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag=cv::NO
 cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag=cv::HISTCMP_CHISQR);
 cv::Ptr<TextureFeature::Classifier> createClassifierCosine();
 cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k=1);
-cv::Ptr<TextureFeature::Classifier> createClassifierSVM(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5);
+cv::Ptr<TextureFeature::Classifier> createClassifierSVM(int ktype=cv::ml::SVM::POLY, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5);
 cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti();
 cv::Ptr<TextureFeature::Classifier> createClassifierPCA(int n=0);
 cv::Ptr<TextureFeature::Classifier> createClassifierPCA_LDA(int n=0);

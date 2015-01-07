@@ -239,7 +239,7 @@ int main(int argc, const char *argv[])
     size_t fold = 4;
     if (argc>2) fold = atoi(argv[2]);
 
-    int rec = 50;
+    int rec = 2;
     if (argc>3) rec = atoi(argv[3]);
 
     int preproc = 0; 
@@ -279,7 +279,7 @@ int main(int argc, const char *argv[])
         {
         default: continue;
         //case 1:  runtest("pixels_L2",    createExtractorPixels(120,120),  Ptr<TextureFeature::Reductor>(),   createClassifierNearest(),               images,labels,persons, fold); break;
-        case 2:  runtest("pixels_svm",   createExtractorPixels(60,60),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 2:  runtest("pixels_svm",   createExtractorPixels(60,60),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-1),                   images,labels,persons, fold); break;
         //case 3:  runtest("pixels_cosine",createExtractorPixels(120,120),  Ptr<TextureFeature::Reductor>(),   createClassifierCosine(),                images,labels,persons, fold); break;
         case 5:  runtest("lbp_L2",       createExtractorLbp(),            Ptr<TextureFeature::Reductor>(),   createClassifierNearest(),               images,labels,persons, fold); break;
         case 6:  runtest("lbp_svm",      createExtractorLbp(),            Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
@@ -287,7 +287,7 @@ int main(int argc, const char *argv[])
         //case 8:  runtest("lbp_o_svm",    createExtractorOverlapLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 9:  runtest("lbp_e_svm",    createExtractorElasticLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 10: runtest("lbp_p_whd_svm",    createExtractorPyramidLbp(), createReductorWalshHadamard(12000),    createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 11: runtest("fplbp_svm",    createExtractorFPLbp(),          Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 11: runtest("fplbp_svm",    createExtractorFPLbp(),          Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-1),                   images,labels,persons, fold); break;
         case 12: runtest("fplbp_hell",   createExtractorFPLbp(),          Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
         //case 13: runtest("fplbp_o_svm",  createExtractorOverlapFpLbp(),   Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 14: runtest("fplbp_e_svm",  createExtractorElasticFpLbp(),   Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
@@ -322,15 +322,15 @@ int main(int argc, const char *argv[])
         case 41: runtest("sift_L2",      createExtractorSIFTGrid(),       Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
         case 42: runtest("sift_svm",     createExtractorSIFTGrid(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 44: runtest("sift20_dct_svm",createExtractorSIFTGrid(20),    createReductorDct(8000),           createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 45: runtest("sift_gftt_svm",createExtractorSIFTGftt(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 45: runtest("sift_kpm_svm",createExtractorSIFTGftt(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 46: runtest("grad_svm",     createExtractorGrad(),           Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
         case 47: runtest("grad_gftt_svm",createExtractorGfttGrad(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 48: runtest("gradmag_svm",  createExtractorGfttGradMag(),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 48: runtest("gradmag_svm",  createExtractorGfttGradMag(),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-1),                   images,labels,persons, fold); break;
         case 49: runtest("eigen",        createExtractorPixels(),         Ptr<TextureFeature::Reductor>(),   createClassifierPCA(),                   images,labels,persons, fold); break;
         case 50: runtest("fisher",       createExtractorPixels(),         Ptr<TextureFeature::Reductor>(),   createClassifierPCA_LDA(),               images,labels,persons, fold); break;
         //case 51: runtest("orb_had_svm",  createExtractorORBGrid(),        createReductorWalshHadamard(),     createClassifierSVM(),                   images,labels,persons, fold); break;
         //case 52: runtest("orb_hell_svm", createExtractorORBGrid(),        createReductorHellinger(),         createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 55: runtest("hdlbp_svm",    createExtractorHighDimLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
+        case 55: runtest("hdlbp_svm",    createExtractorHighDimLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-1),                   images,labels,persons, fold); break;
         case 56: runtest("hdlbp_whad_svm",createExtractorHighDimLbp(),     createReductorWalshHadamard(12000), createClassifierSVM(),                 images,labels,persons, fold); break;
         case 57: runtest("hdlbp_hel_svm",createExtractorHighDimLbp(),     createReductorHellinger(),         createClassifierSVM(),                   images,labels,persons, fold); break;
         case 58: runtest("lbp_fisher",   createExtractorLbp(),            Ptr<TextureFeature::Reductor>(),   createClassifierPCA_LDA(),               images,labels,persons, fold); break;

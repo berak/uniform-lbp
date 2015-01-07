@@ -75,7 +75,7 @@ struct ReductorDct : public TextureFeature::Reductor
                  h2(Rect(0,0,std::min(keep, h2.cols-1),1)) :
                  h2;
 
-        dft(h3, dest, DCT_INVERSE);
+        dft(h3, dest, DCT_INVERSE | DFT_SCALE);
         return 0;
     }
 };
@@ -127,9 +127,9 @@ struct ReductorHellinger : public TextureFeature::Reductor
     {
         src.convertTo(dest, CV_32F);
         float eps = 1e-7f;
-        dest /= sum(dest)[0] + eps; // L1
+        dest /= (sum(dest)[0] + eps); // L1
         sqrt(dest,dest);
-        dest /= norm(dest) + eps; // L2
+        dest /= (norm(dest) + eps); // L2
         return 0;
     }
 };
