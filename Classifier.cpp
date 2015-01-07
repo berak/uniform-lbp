@@ -166,12 +166,14 @@ static int unique(const Mat &labels, set<int> &classes)
     return classes.size();
 }
 
-struct HellingerKernel : public ml::SVM::Kernel
+struct CustomKernel : public ml::SVM::Kernel
 {
-    void calc( int vcount, int var_count, const float* vecs,
-                    const float* another, float* results )
+    int K;
+    CustomKernel(int k) : K(k) {}
+
+    void calc_hellinger(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
-        Mat R( 1, vcount, CV_32F, results );
+        Mat R(1, vcount, CV_32F, results);
         double gamma = -1;
         Mat S(1,var_count,CV_32F,(void*)0);
         Mat S2(1,var_count,CV_32F);
@@ -188,30 +190,13 @@ struct HellingerKernel : public ml::SVM::Kernel
             results[j] = (float)(gamma*sum(H.mul(H))[0]);
         }
     }
-    int getType(void) const
+    void calc_correl(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
-        return 7;
-    }
-    static Ptr<ml::SVM::Kernel> create()
-    {
-        return makePtr<HellingerKernel>();
-    }
-};
-
-struct CorrelKernel : public ml::SVM::Kernel
-{
-    void calc( int vcount, int var_count, const float* vecs,
-                    const float* another, float* results )
-    {
-        double s1 = 0, s2 = 0, s11 = 0, s12 = 0, s22 = 0;
-
-        //double gamma = -1;
-        int j, k;
-        for( j = 0; j < vcount; j++ )
+        for(int j=0; j<vcount; j++)
         {
+            double s1 = 0, s2 = 0, s11 = 0, s12 = 0, s22 = 0;
             const float* sample = &vecs[j*var_count];
-            double chi2 = 0;
-            for(k = 0 ; k < var_count; k++ )
+            for(int k=0; k<var_count; k++)
             {
                 double a = sample[k];
                 double b = another[k];
@@ -227,13 +212,40 @@ struct CorrelKernel : public ml::SVM::Kernel
             results[j] = (float)(std::abs(denom2) > DBL_EPSILON ? num/std::sqrt(denom2) : 1.);
         }
     }
+    void calc_cosine(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        for(int j=0; j<vcount; j++)
+        {
+            double s11 = 0, s12 = 0, s22 = 0;
+            const float* sample = &vecs[j*var_count];
+            for(int k=0; k<var_count; k++)
+            {
+                double a = sample[k];
+                double b = another[k];
+                s12 += a*b;
+                s11 += a*a;
+                s22 += b*b;
+            }
+            results[j] = (float)(s12 / sqrt(s11 * s22));
+        }
+    }
+    void calc(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        switch(K)
+        {
+        case -1: calc_hellinger(vcount, var_count, vecs, another, results); break;
+        case -2: calc_correl(vcount, var_count, vecs, another, results); break;
+        case -3: calc_cosine(vcount, var_count, vecs, another, results); break;
+        default: cerr << "sorry, dave" << endl; exit(0);
+        }
+    }
     int getType(void) const
     {
-        return 8;
+        return 7; 
     }
-    static Ptr<ml::SVM::Kernel> create()
-    {
-        return makePtr<HellingerKernel>();
+    static Ptr<ml::SVM::Kernel> create(int k)
+    { 
+        return makePtr<CustomKernel>(k);
     }
 };
 
@@ -251,6 +263,14 @@ struct ClassifierSvm : public TextureFeature::Classifier
     ClassifierSvm(int ktype=ml::SVM::POLY, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
     //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
     {
+        switch (ktype)
+        {
+            case -1:
+            case -2:
+            case -3: 
+                krnl = CustomKernel::create(ktype);    
+                ktype=-1; break;
+        }
         param.kernelType = ktype; //ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
         param.svmType = ml::SVM::NU_SVC; // NU_SVC
         param.degree = degree; // for poly
@@ -265,10 +285,6 @@ struct ClassifierSvm : public TextureFeature::Classifier
         param.termCrit.maxCount = 1000;
         param.termCrit.epsilon = 1e-6;
 
-        if (ktype == -1)
-        {
-            krnl = HellingerKernel::create();
-        }
         svm = ml::SVM::create(param,krnl);
     }
 
@@ -638,14 +654,13 @@ struct VerifierSVM : public VerifierPairDistance<int>
         : VerifierPairDistance<int>(distFlag)
     {
         ml::SVM::Params param;
-        if (ktype == -1)
+        switch (ktype)
         {
-            krnl = HellingerKernel::create();
-        }
-        if (ktype == -2)
-        {
-            ktype = -1;
-            krnl = CorrelKernel::create();
+            case -1:
+            case -2:
+            case -3: 
+                krnl = CustomKernel::create(ktype);    
+                ktype=-1; break;
         }
         param.kernelType = ktype; //ml::SVM::INTER; //ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;
