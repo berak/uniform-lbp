@@ -172,6 +172,7 @@ struct CustomKernel : public ml::SVM::Kernel
     int K;
     CustomKernel(int k) : K(k) {}
 
+    // no, it's not faster.
     void calc_int2(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         Mat V(1,var_count,CV_32F,(void*)0);
@@ -266,16 +267,14 @@ struct CustomKernel : public ml::SVM::Kernel
         {
             double s = 0, d = 0;
             const float* sample = &vecs[j*var_count];
-            for(int k=1; k<var_count-1; k++)
+            for(int k=0; k<var_count-1; k++)
             {
-                double a0 = sample[k-1];
                 double a1 = sample[k];
                 double a2 = sample[k+1];
-                double b0 = another[k-1];
                 double b1 = another[k];
                 double b2 = another[k+1];
 
-                s += sqrt((a0+a1+a1+a2) * (b0+b1+b1+b2));
+                s += sqrt((a1+a2) * (b1+b2));
             }
             results[j] = (float)(s);
         }
@@ -845,7 +844,7 @@ namespace TextureFeature
 using namespace TextureFeatureImpl;
 
 Ptr<Classifier> createClassifier(int clsfy)
-{ 
+{
     switch(clsfy)
     {
         case CL_NORM_L2:   return makePtr<ClassifierNearest>(NORM_L2); break;
@@ -869,12 +868,12 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
-    return Ptr<Classifier>(); 
+    return Ptr<Classifier>();
 }
 
 
 Ptr<Verifier> createVerifier(int clsfy)
-{ 
+{
     switch(clsfy)
     {
         case CL_NORM_L2:   return makePtr<VerifierNearest>(NORM_L2); break;
@@ -893,7 +892,7 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
-    return Ptr<Verifier>(); 
+    return Ptr<Verifier>();
 }
 
 

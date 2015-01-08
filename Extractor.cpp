@@ -6,11 +6,11 @@
 
 
 //
-// use dlib's implementation for facial landmarks, 
-// if not present, fall back to a precalculated 
+// use dlib's implementation for facial landmarks,
+// if not present, fall back to a precalculated
 // 'one-size-fits-all' set of points(based on the mean lfw image)
 //
-//#define HAVE_DLIB 
+//#define HAVE_DLIB
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
@@ -403,7 +403,7 @@ static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
 
 static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
 {
-    static int uniform[256] = 
+    static int uniform[256] =
     {   // the well known original uniform2 pattern
         0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
         14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
@@ -414,7 +414,7 @@ static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo, int histSize=2
         58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
         58,35,36,37,58,38,58,58,58,39,58,58,58,58,58,58,58,40,58,58,58,58,58,58,58,58,58,
         58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
-        58,58,58,50,51,52,58,53,54,55,56,57 
+        58,58,58,50,51,52,58,53,54,55,56,57
     };
 
     Mat_<float> h(1, 59, 0.0f);
@@ -918,9 +918,9 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 };
 
 //
-// "Review and Implementation of High-Dimensional Local Binary Patterns 
+// "Review and Implementation of High-Dimensional Local Binary Patterns
 //    and Its Application to Face Recognition"
-//    Bor-Chun Chen, Chu-Song Chen, Winston Hsu 
+//    Bor-Chun Chen, Chu-Song Chen, Winston Hsu
 //
 
 
@@ -950,7 +950,7 @@ struct HighDimLbp : public TextureFeature::Extractor
 #ifdef HAVE_DLIB
         land.extract(img,kp);
 #else
-        { 
+        {
             //PROFILEX("elastic");
         //    elastic->getPoints(img, kp);
         }
@@ -961,7 +961,7 @@ struct HighDimLbp : public TextureFeature::Extractor
         Mat histo;
         //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
         float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
-        //float offsets_4[] = { 
+        //float offsets_4[] = {
         //    -0.5f,-0.5f, 0.5f,-0.5f,
         //    -0.5f, 0.5f, 0.5f, 0.5f,
         //};
@@ -1003,7 +1003,7 @@ struct HighDimLbp : public TextureFeature::Extractor
             {
                 Point2f pt(kp[k].pt);
                 for (int o=0; o<noff; o++)
-                {   
+                {
                     Mat patch;
                     getRectSubPix(f1, Size(gr,gr), Point2f(pt.x*s + off[o*2]*gr, pt.y*s + off[o*2+1]*gr), patch);
                     hist_patch(patch, histo, histSize);
