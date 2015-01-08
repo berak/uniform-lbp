@@ -256,7 +256,8 @@ struct CustomKernel : public ml::SVM::Kernel
         if (var_count>=64000) 
             throw(Exception(-211,"var_cout out of bounds","calc_hellinger","Classifier.cpp",__LINE__));
 
-        __declspec(align(16)) float z[64000];
+        //__declspec(align(16)) float z[64000];
+        float z[64000];
         __m128* ptr_out= (__m128*)z;                                                                                                                                                                                      
         __m128* ptr_in = (__m128*)another;                                                                                                                                                                                      
 
@@ -298,7 +299,13 @@ struct CustomKernel : public ml::SVM::Kernel
                 float b = z[k];
                 sum += (a - b) * (a - b);
             }
-            results[j] = (-(sum + s.m128_f32[0] + s.m128_f32[1] + s.m128_f32[2] + s.m128_f32[3]));
+            union {
+                __m128 m;
+                float f[4];
+            } x;
+            x.m = s;
+            results[j] = (-(sum + x.f[0] + x.f[1] + x.f[2] + x.f[3]));
+            //results[j] = (-(sum + s.m128_f32[0] + s.m128_f32[1] + s.m128_f32[2] + s.m128_f32[3]));
         }
     }
 
