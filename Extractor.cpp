@@ -325,34 +325,6 @@ struct FeatureTPLbp
     }
 };
 
-struct FeatureTPLbp2
-{
-    int operator () (const Mat &img, Mat &features) const
-    {
-        Mat_<uchar> I(img);
-        Mat_<uchar> fI(I.size(), 0);
-        const int border=2;
-        for (int r=border; r<I.rows-border; r++)
-        {
-            for (int c=border; c<I.cols-border; c++)
-            {
-                uchar v = 0;
-                v |= ((I(r,c) - I(r  ,c-2)) > (I(r,c) - I(r-2,c  ))) * 1;
-                v |= ((I(r,c) - I(r-1,c-1)) > (I(r,c) - I(r-1,c+1))) * 2;
-                //v |= ((I(r,c) - I(r-2,c  )) > (I(r,c) - I(r  ,c+2))) * 4;
-                //v |= ((I(r,c) - I(r-1,c+1)) > (I(r,c) - I(r+1,c+1))) * 8;
-                //v |= ((I(r,c) - I(r  ,c+2)) > (I(r,c) - I(r+1,c  ))) * 4;
-                //v |= ((I(r,c) - I(r+1,c+1)) > (I(r,c) - I(r+1,c-1))) * 2;
-                v |= ((I(r,c) - I(r+1,c  )) > (I(r,c) - I(r  ,c-2))) * 4;
-                v |= ((I(r,c) - I(r+1,c-1)) > (I(r,c) - I(r-1,c-1))) * 8;
-                fI(r,c) = v;
-            }
-        }
-        features = fI;
-        return 16;
-    }
-};
-
 
 
 //

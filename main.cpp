@@ -233,7 +233,7 @@ double runtest(int ext, int red, int cls, const vector<Mat> &images, const vecto
     {
         cerr << name << " crashed.." << endl;
     }
-    
+    return 1;   
 }
 
 void printOptions()
@@ -323,8 +323,10 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
             TextureFeature::EXT_Lbp,    TextureFeature::RED_WHAD, TextureFeature::CL_SVM_HEL,
             TextureFeature::EXT_Lbp,    TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_MTS_P,  TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_MTS_P,  TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_COMB_G, TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_FPLBP_P, TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_FPLBP_P, TextureFeature::RED_HELL, TextureFeature::CL_SVM_INT,
             -1,-1,-1
         };
         for (int i=0; tests[i]>-1; i+=3)
