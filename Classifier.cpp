@@ -173,14 +173,43 @@ struct CustomKernel : public ml::SVM::Kernel
     CustomKernel(int k) : K(k) {}
 
     // no, it's not faster.
-    void calc_int2(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    void calc_int_sse(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
-        Mat V(1,var_count,CV_32F,(void*)0);
-        Mat A(1,var_count,CV_32F,(void*)another);
+        //Mat V(1,var_count,CV_32F,(void*)0);
+        //Mat A(1,var_count,CV_32F,(void*)another);
+        //for(int j=0; j<vcount; j++)
+        //{
+        //    V.data = (uchar*)(&vecs[j*var_count]);
+        //    results[j] = (float)(sum(cv::min(V,A))[0]);
+        //}
         for(int j=0; j<vcount; j++)
         {
-            V.data = (uchar*)(&vecs[j*var_count]);
-            results[j] = (float)(sum(cv::min(V,A))[0]);
+            int k=0;
+            int reminder = var_count % 4;
+            int nb_iters = var_count / 4;                                                                                                                                                                                         
+            const float* sample = (&vecs[j*var_count]);
+            __m128 c,s = _mm_set_ps1(0);
+            __m128* ptr_a = (__m128*)sample;                                                                                                                                                                                      
+            __m128* ptr_b = (__m128*)another;                                                                                                                                                                                      
+            for(; k<nb_iters; k++, ptr_a++, ptr_b++)
+            {
+                c = _mm_min_ps(*ptr_a, *ptr_b);
+                s = _mm_add_ps(s, c);
+            }
+            float sum = 0;
+            while ( reminder-- )
+            {
+                float a = sample[k];
+                float b = another[k];
+                sum += std::min(a,b);
+            }
+            union {
+                __m128 m;
+                float f[4];
+            } x;
+            x.m = s;
+            results[j] = (sum + x.f[0] + x.f[1] + x.f[2] + x.f[3]);
+            //results[j] = (-(sum + s.m128_f32[0] + s.m128_f32[1] + s.m128_f32[2] + s.m128_f32[3]));
         }
     }
     void calc_hellinger0(int vcount, int var_count, const float* vecs, const float* another, float* results)
@@ -205,11 +234,12 @@ struct CustomKernel : public ml::SVM::Kernel
     {
         if (var_count>=64000) 
             throw(Exception(-211,"var_cout out of bounds","calc_hellinger","Classifier.cpp",__LINE__));
+
         double z[64000];
         int k=0;
         for(; k<var_count-4; k+=4)
         {
-            z[k] = sqrt(another[k]);
+            z[k]   = sqrt(another[k]);
             z[k+1] = sqrt(another[k+1]);
             z[k+2] = sqrt(another[k+2]);
             z[k+3] = sqrt(another[k+3]);
@@ -221,13 +251,13 @@ struct CustomKernel : public ml::SVM::Kernel
 
         for(int j=0; j<vcount; j++)
         {
-            double s = 0;
+            double a,b, s = 0;
             const float* sample = &vecs[j*var_count];
             int k=0;
             for(; k<var_count-4; k+=4)
             {
-                double a = sqrt(sample[k]);
-                double b = z[k];
+                a = sqrt(sample[k]);
+                b = z[k];
                 s += (a - b) * (a - b);
 
                 a = sqrt(sample[k+1]);
@@ -256,7 +286,6 @@ struct CustomKernel : public ml::SVM::Kernel
         if (var_count>=64000) 
             throw(Exception(-211,"var_cout out of bounds","calc_hellinger","Classifier.cpp",__LINE__));
 
-        //__declspec(align(16)) float z[64000];
         float z[64000];
         __m128* ptr_out= (__m128*)z;                                                                                                                                                                                      
         __m128* ptr_in = (__m128*)another;                                                                                                                                                                                      
@@ -280,18 +309,16 @@ struct CustomKernel : public ml::SVM::Kernel
             int reminder = var_count % 4;
             int nb_iters = var_count / 4;                                                                                                                                                                                         
             const float* sample = (&vecs[j*var_count]);
-            __m128 a,b,c,d,s = _mm_set_ps1(0);
+            __m128 a,b,c,s = _mm_set_ps1(0);
             __m128* ptr_a = (__m128*)sample;                                                                                                                                                                                      
             __m128* ptr_b = (__m128*)z;                                                                                                                                                                                      
             for(; k<nb_iters; k++, ptr_a++, ptr_b++)
             {
                 a = _mm_sqrt_ps(*ptr_a);
-                //b = _mm_sqrt_ps(*ptr_b);
-                c = _mm_sub_ps(a, *ptr_b);
-                d = _mm_mul_ps(c, c);
-                s = _mm_add_ps(s, d);
+                b = _mm_sub_ps(a, *ptr_b);
+                c = _mm_mul_ps(b, b);
+                s = _mm_add_ps(s, c);
             }
-            //cerr << s.m128_f32[0] << endl;
             float sum = 0;
             while ( reminder-- )
             {
@@ -413,7 +440,7 @@ struct CustomKernel : public ml::SVM::Kernel
         case -2: calc_correl(vcount, var_count, vecs, another, results); break;
         case -3: calc_cosine(vcount, var_count, vecs, another, results); break;
         case -4: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
-        case -5: calc_int2(vcount, var_count, vecs, another, results); break;
+        case -5: calc_int_sse(vcount, var_count, vecs, another, results); break;
         case -6: calc_low(vcount, var_count, vecs, another, results); break;
         default: cerr << "sorry, dave" << endl; exit(0);
         }
