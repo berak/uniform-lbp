@@ -30,70 +30,73 @@ public:
         : pre(preproc,crop)
         , doFlip(flip)
     {
-        switch(extract)
-        {
-            case EXT_Pixels:   ext = createExtractorPixels(); break;
-            case EXT_Lbp:      ext = createExtractorLbp(); break;
-            case EXT_LBP_P:    ext = createExtractorPyramidLbp(); break;
-            case EXT_TPLbp:    ext = createExtractorTPLbp(); break;
-            case EXT_TPLBP_P:  ext = createExtractorPyramidTpLbp(); break;
-            case EXT_TPLBP_G:  ext = createExtractorGfttTpLbp(); break;
-            case EXT_TPLbp2_G: ext = createExtractorGfttTpLbp2(); break;
-            case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
-            case EXT_FPLBP_P:  ext = createExtractorPyramidFpLbp(); break;
-            case EXT_MTS:      ext = createExtractorMTS(); break;
-            case EXT_MTS_P:    ext = createExtractorPyramidMTS(); break;
-            case EXT_BGC1:     ext = createExtractorBGC1(); break;
-            case EXT_BGC1_P:   ext = createExtractorPyramidBGC1(); break;
-            case EXT_COMB:     ext = createExtractorCombined(); break;
-            case EXT_COMB_P:   ext = createExtractorPyramidCombined(); break;
-            case EXT_COMB_G:   ext = createExtractorGfttCombined(); break;
-            case EXT_Gabor:    ext = createExtractorGaborLbp(); break;
-            case EXT_Dct:      ext = createExtractorDct(); break;
-            case EXT_Orb:      ext = createExtractorORBGrid(15); break;
-            case EXT_Sift:     ext = createExtractorSIFTGrid(20); break;
-            case EXT_Sift_G:   ext = createExtractorSIFTGftt(); break;
-            case EXT_Grad:     ext = createExtractorGrad(); break;
-            case EXT_Grad_G:   ext = createExtractorGfttGrad(); break;
-            case EXT_Grad_P:   ext = createExtractorPyramidGrad(); break;
-            case EXT_GradMag:  ext = createExtractorGfttGradMag(); break;
-            case EXT_HDLBP:    ext = createExtractorHighDimLbp(); break;
-            default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
-        }
-        switch(redu)
-        {
-            case RED_NONE:     break; //red = createReductorNone(); break;
-            case RED_HELL:     red = createReductorHellinger(); break;
-            case RED_WHAD:     red = createReductorWalshHadamard(8000); break;
-            case RED_RP:       red = createReductorRandomProjection(8000); break;
-            case RED_DCT8:     red = createReductorDct(8000); break;
-            case RED_DCT12:    red = createReductorDct(12000); break;
-            case RED_DCT16:    red = createReductorDct(16000); break;
-            case RED_DCT24:    red = createReductorDct(24000); break;
-            default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
-        }
-        switch(clsfy)
-        {
-            case CL_NORM_L2:   cls = createVerifierNearest(NORM_L2); break;
-            case CL_NORM_L2SQR:cls = createVerifierNearest(NORM_L2SQR); break;
-            case CL_NORM_L1:   cls = createVerifierNearest(NORM_L1); break;
-            case CL_NORM_HAM:  cls = createVerifierNearest(NORM_HAMMING2); break;
-            case CL_HIST_HELL: cls = createVerifierHist(HISTCMP_HELLINGER); break;
-            case CL_HIST_CHI:  cls = createVerifierHist(HISTCMP_CHISQR); break;
-            case CL_SVM_LIN:   cls = createVerifierSVM(cv::ml::SVM::LINEAR); break;
-            case CL_SVM_RBF:   cls = createVerifierSVM(cv::ml::SVM::RBF); break;
-            case CL_SVM_INT:   cls = createVerifierSVM(cv::ml::SVM::INTER); break;
-            case CL_SVM_INT2:  cls = createVerifierSVM(-5); break;
-            case CL_SVM_HEL:   cls = createVerifierSVM(-1); break;
-            case CL_SVM_COR:   cls = createVerifierSVM(-2); break;
-            case CL_SVM_COS:   cls = createVerifierSVM(-3); break;
-            case CL_SVM_L2:    cls = createVerifierSVM(-6); break;
-            case CL_EM:        cls = createVerifierEM(); break;
-            case CL_LR:        cls = createVerifierLR(); break;
-            case CL_BOOST:     cls = createVerifierBoost(); break;
-            case CL_KMEANS:    cls = createVerifierKmeans(); break;
-            default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
-        }
+        ext = TextureFeature::createExtractor(extract);
+        red = TextureFeature::createReductor(redu);
+        cls = TextureFeature::createVerifier(clsfy);
+        //switch(extract)
+        //{
+        //    case EXT_Pixels:   ext = createExtractorPixels(); break;
+        //    case EXT_Lbp:      ext = createExtractorLbp(); break;
+        //    case EXT_LBP_P:    ext = createExtractorPyramidLbp(); break;
+        //    case EXT_TPLbp:    ext = createExtractorTPLbp(); break;
+        //    case EXT_TPLBP_P:  ext = createExtractorPyramidTpLbp(); break;
+        //    case EXT_TPLBP_G:  ext = createExtractorGfttTpLbp(); break;
+        //    case EXT_TPLbp2_G: ext = createExtractorGfttTpLbp2(); break;
+        //    case EXT_FPLbp:    ext = createExtractorFPLbp(); break;
+        //    case EXT_FPLBP_P:  ext = createExtractorPyramidFpLbp(); break;
+        //    case EXT_MTS:      ext = createExtractorMTS(); break;
+        //    case EXT_MTS_P:    ext = createExtractorPyramidMTS(); break;
+        //    case EXT_BGC1:     ext = createExtractorBGC1(); break;
+        //    case EXT_BGC1_P:   ext = createExtractorPyramidBGC1(); break;
+        //    case EXT_COMB:     ext = createExtractorCombined(); break;
+        //    case EXT_COMB_P:   ext = createExtractorPyramidCombined(); break;
+        //    case EXT_COMB_G:   ext = createExtractorGfttCombined(); break;
+        //    case EXT_Gabor:    ext = createExtractorGaborLbp(); break;
+        //    case EXT_Dct:      ext = createExtractorDct(); break;
+        //    case EXT_Orb:      ext = createExtractorORBGrid(15); break;
+        //    case EXT_Sift:     ext = createExtractorSIFTGrid(20); break;
+        //    case EXT_Sift_G:   ext = createExtractorSIFTGftt(); break;
+        //    case EXT_Grad:     ext = createExtractorGrad(); break;
+        //    case EXT_Grad_G:   ext = createExtractorGfttGrad(); break;
+        //    case EXT_Grad_P:   ext = createExtractorPyramidGrad(); break;
+        //    case EXT_GradMag:  ext = createExtractorGfttGradMag(); break;
+        //    case EXT_HDLBP:    ext = createExtractorHighDimLbp(); break;
+        //    default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
+        //}
+        //switch(redu)
+        //{
+        //    case RED_NONE:     break; //red = createReductorNone(); break;
+        //    case RED_HELL:     red = createReductorHellinger(); break;
+        //    case RED_WHAD:     red = createReductorWalshHadamard(8000); break;
+        //    case RED_RP:       red = createReductorRandomProjection(8000); break;
+        //    case RED_DCT8:     red = createReductorDct(8000); break;
+        //    case RED_DCT12:    red = createReductorDct(12000); break;
+        //    case RED_DCT16:    red = createReductorDct(16000); break;
+        //    case RED_DCT24:    red = createReductorDct(24000); break;
+        //    default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
+        //}
+        //switch(clsfy)
+        //{
+        //    case CL_NORM_L2:   cls = createVerifierNearest(NORM_L2); break;
+        //    case CL_NORM_L2SQR:cls = createVerifierNearest(NORM_L2SQR); break;
+        //    case CL_NORM_L1:   cls = createVerifierNearest(NORM_L1); break;
+        //    case CL_NORM_HAM:  cls = createVerifierNearest(NORM_HAMMING2); break;
+        //    case CL_HIST_HELL: cls = createVerifierHist(HISTCMP_HELLINGER); break;
+        //    case CL_HIST_CHI:  cls = createVerifierHist(HISTCMP_CHISQR); break;
+        //    case CL_SVM_LIN:   cls = createVerifierSVM(cv::ml::SVM::LINEAR); break;
+        //    case CL_SVM_RBF:   cls = createVerifierSVM(cv::ml::SVM::RBF); break;
+        //    case CL_SVM_INT:   cls = createVerifierSVM(cv::ml::SVM::INTER); break;
+        //    case CL_SVM_INT2:  cls = createVerifierSVM(-5); break;
+        //    case CL_SVM_HEL:   cls = createVerifierSVM(-1); break;
+        //    case CL_SVM_COR:   cls = createVerifierSVM(-2); break;
+        //    case CL_SVM_COS:   cls = createVerifierSVM(-3); break;
+        //    case CL_SVM_LOW:   cls = createVerifierSVM(-6); break;
+        //    case CL_EM:        cls = createVerifierEM(); break;
+        //    case CL_LR:        cls = createVerifierLR(); break;
+        //    case CL_BOOST:     cls = createVerifierBoost(); break;
+        //    case CL_KMEANS:    cls = createVerifierKmeans(); break;
+        //    default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
+        //}
     }
 
     virtual int addTraining(const Mat & img, int label) 

@@ -5,19 +5,20 @@ using namespace cv;
 #include "TextureFeature.h"
 
 
+using namespace TextureFeature;
 
 namespace TextureFeatureImpl
 {
 
 
-struct ReductorNone : public TextureFeature::Reductor
+struct ReductorNone : public Reductor
 {
     virtual int reduce(const Mat &src, Mat &dest) const  { dest=src; return 0; }
 };
 
 
 
-struct ReductorWalshHadamard : public TextureFeature::Reductor
+struct ReductorWalshHadamard : public Reductor
 {
     int keep;
 
@@ -58,7 +59,7 @@ struct ReductorWalshHadamard : public TextureFeature::Reductor
 
 
 
-struct ReductorDct : public TextureFeature::Reductor
+struct ReductorDct : public Reductor
 {
     int keep;
 
@@ -81,7 +82,7 @@ struct ReductorDct : public TextureFeature::Reductor
 };
 
 
-struct ReductorRandomProjection : public TextureFeature::Reductor
+struct ReductorRandomProjection : public Reductor
 {
     int K;
 
@@ -121,7 +122,7 @@ struct ReductorRandomProjection : public TextureFeature::Reductor
 //
 // hellinger kernel (no reduction)
 //
-struct ReductorHellinger : public TextureFeature::Reductor
+struct ReductorHellinger : public Reductor
 {
     virtual int reduce(const Mat &src, Mat &dest) const
     {
@@ -138,19 +139,44 @@ struct ReductorHellinger : public TextureFeature::Reductor
 } // TextureFeatureImpl
 
 
+namespace TextureFeature
+{
+using namespace TextureFeatureImpl;
 
 
-cv::Ptr<TextureFeature::Reductor> createReductorNone()
-{    return makePtr<TextureFeatureImpl::ReductorNone>(); }
+Ptr<Reductor> createReductor(int redu)
+{
+    switch(redu)
+    {
+        case RED_NONE:     break; //red = createReductorNone(); break;
+        case RED_HELL:     return makePtr<ReductorHellinger>(); break;
+        case RED_WHAD:     return makePtr<ReductorWalshHadamard>(8000); break;
+        case RED_RP:       return makePtr<ReductorRandomProjection>(8000); break;
+        case RED_DCT8:     return makePtr<ReductorDct>(8000); break;
+        case RED_DCT12:    return makePtr<ReductorDct>(12000); break;
+        case RED_DCT16:    return makePtr<ReductorDct>(16000); break;
+        case RED_DCT24:    return makePtr<ReductorDct>(24000); break;
+//        default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
+    }
+    return Ptr<Reductor>();
+}
 
-cv::Ptr<TextureFeature::Reductor> createReductorWalshHadamard(int keep)
-{    return makePtr<TextureFeatureImpl::ReductorWalshHadamard>(keep); }
+} // TextureFeatureImpl
 
-cv::Ptr<TextureFeature::Reductor> createReductorHellinger()
-{    return makePtr<TextureFeatureImpl::ReductorHellinger>(); }
 
-cv::Ptr<TextureFeature::Reductor> createReductorRandomProjection(int k)
-{    return makePtr<TextureFeatureImpl::ReductorRandomProjection>(k); }
 
-cv::Ptr<TextureFeature::Reductor> createReductorDct(int k)
-{    return makePtr<TextureFeatureImpl::ReductorDct>(k); }
+//
+//cv::Ptr<Reductor> createReductorNone()
+//{    return makePtr<TextureFeatureImpl::ReductorNone>(); }
+//
+//cv::Ptr<Reductor> createReductorWalshHadamard(int keep)
+//{    return makePtr<TextureFeatureImpl::ReductorWalshHadamard>(keep); }
+//
+//cv::Ptr<Reductor> createReductorHellinger()
+//{    return makePtr<TextureFeatureImpl::ReductorHellinger>(); }
+//
+//cv::Ptr<Reductor> createReductorRandomProjection(int k)
+//{    return makePtr<TextureFeatureImpl::ReductorRandomProjection>(k); }
+//
+//cv::Ptr<Reductor> createReductorDct(int k)
+//{    return makePtr<TextureFeatureImpl::ReductorDct>(k); }

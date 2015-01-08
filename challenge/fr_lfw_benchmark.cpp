@@ -43,7 +43,8 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/datasets/fr_lfw.hpp"
 
-#include "MyFace.h"
+#include "../TextureFeature.h"
+#include "../Preprocessor.h"
 
 #if 0
  #include "../Profile.h"
@@ -82,15 +83,78 @@ int getLabel(const string &imagePath)
 void printOptions()
 {
     cerr << "[extractors]  :"<< endl;
-    for (size_t i=0; i<myface::EXT_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",myface::EXS[i],i); }
+    for (size_t i=0; i<TextureFeature::EXT_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::EXS[i],i); }
     cerr << endl << endl << "[reductors] :" << endl;
-    for (size_t i=0; i<myface::RED_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",myface::REDS[i],i); }
+    for (size_t i=0; i<TextureFeature::RED_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::REDS[i],i); }
     cerr << endl << endl << "[classifiers] :" << endl;
-    for (size_t i=0; i<myface::CL_MAX; ++i)  {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",myface::CLS[i],i);  }
-    cerr << endl << endl <<  "[preproc] :" << endl;
-    for (size_t i=0; i<myface::PRE_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",myface::PPS[i],i);  }
+    for (size_t i=0; i<TextureFeature::CL_MAX; ++i)  {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::CLS[i],i);  }
+    //cerr << endl << endl <<  "[preproc] :" << endl;
+    //for (size_t i=0; i<TextureFeature::PRE_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::PPS[i],i);  }
     cerr << endl;
 }
+
+
+
+class MyFace 
+{
+    Ptr<TextureFeature::Extractor> ext;
+    Ptr<TextureFeature::Reductor>  red;
+    Ptr<TextureFeature::Verifier>  cls;
+    Preprocessor pre;
+    bool doFlip;
+
+    Mat labels;
+    Mat features;
+
+public:
+
+    MyFace(int extract=0, int redu=0, int clsfy=0, int preproc=0, int crop=0, bool flip=false)
+        : pre(preproc,crop)
+        , doFlip(flip)
+    {
+        ext = TextureFeature::createExtractor(extract);
+        red = TextureFeature::createReductor(redu);
+        cls = TextureFeature::createVerifier(clsfy);
+    }
+
+    virtual int addTraining(const Mat & img, int label) 
+    {
+        Mat feat1;
+        ext->extract(pre.process(img), feat1);
+
+        Mat fr = feat1.reshape(1,1);
+        if (! red.empty())
+            red->reduce(fr,fr);
+
+        features.push_back(fr);
+        labels.push_back(label);
+        cerr <<fr.cols << " i_" << labels.rows << "\r";
+        return labels.rows;
+    }
+    virtual bool train()
+    {
+        cerr << "." << features.cols << "     ";
+        int ok = cls->train(features, labels.reshape(1,features.rows));
+        cerr << ".\r";
+        CV_Assert(ok);
+        features.release();
+        labels.release();
+        return ok!=0;
+    }
+
+    virtual int same(const Mat & a, const Mat &b) const
+    {
+        Mat feat1, feat2;
+        ext->extract(pre.process(a), feat1);
+        ext->extract(pre.process(b), feat2);
+        if (! red.empty())
+        {
+            red->reduce(feat1,feat1);
+            red->reduce(feat2,feat2);
+        }
+        return cls->same(feat1,feat2);
+    }
+};
 
 
 int main(int argc, const char *argv[])
@@ -99,7 +163,7 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |    | show this message }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
-            "{ ext e          |35  | extractor enum }"
+            "{ ext e          |25  | extractor enum }"
             "{ red r          |1   | reductor enum }"
             "{ cls c          |6   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
@@ -122,14 +186,11 @@ int main(int argc, const char *argv[])
     int crp = parser.get<int>("crop");
     bool flp = parser.get<bool>("flip");
     string trainMethod(parser.get<string>("train"));
-    cout << myface::EXS[ext] << " " << myface::REDS[red] << " " << myface::CLS[cls] << " " << myface::PPS[pre] << " " << crp << " " << flp << " " << trainMethod << '\r';
+    cout << TextureFeature::EXS[ext] << " " << TextureFeature::REDS[red] << " " << TextureFeature::CLS[cls] << " " << crp << " " << flp << " " << trainMethod << '\r';
 
     int64 t0 = getTickCount();
-    Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,red,cls,pre,crp,flp);
-
-    //// These vectors hold the images and corresponding labels.
-    //vector<Mat> images;
-    //vector<int> labels;
+    //Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,red,cls,pre,crp,flp);
+    Ptr<MyFace> model = makePtr<MyFace>(ext,red,cls,pre,crp,flp);
 
     // load dataset
     Ptr<FR_lfw> dataset = FR_lfw::create();
@@ -144,19 +205,15 @@ int main(int argc, const char *argv[])
 
             int currNum1 = getLabel(example->image1);
             Mat img = imread(path+example->image1, IMREAD_GRAYSCALE);
-            //images.push_back(img);
-            //labels.push_back(currNum1);
             model->addTraining(img, currNum1);
+
             int currNum2 = getLabel(example->image2);
             img = imread(path+example->image2, IMREAD_GRAYSCALE);
-            //images.push_back(img);
-            //labels.push_back(currNum2);
             model->addTraining(img, currNum2);
         }
 
         {
             PROFILEX("train");
-            //model->train(images, labels);
             model->train();
         }
     }
@@ -178,20 +235,15 @@ int main(int argc, const char *argv[])
                     FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
                     int currNum1 = getLabel(example->image1);
                     Mat img = imread(path+example->image1, IMREAD_GRAYSCALE);
-                    //images.push_back(img);
-                    //labels.push_back(currNum1);
                     model->addTraining(img, currNum1);
 
                     int currNum2 = getLabel(example->image2);
                     img = imread(path+example->image2, IMREAD_GRAYSCALE);
-                    //images.push_back(img);
-                    //labels.push_back(currNum2);
                     model->addTraining(img, currNum2);
                 }
             }
             {
                 PROFILEX("train");
-                //model->train(images, labels);
                 model->train();
             }
         }
@@ -232,10 +284,10 @@ int main(int argc, const char *argv[])
     double se = sigma/sqrt(double(p.size()));
 
     int64 t1 = getTickCount();
-    cerr << format("%-8s",myface::EXS[ext])  << " ";
-    cerr << format("%-7s",myface::REDS[red]) << " ";
-    cerr << format("%-9s",myface::CLS[cls])  << " ";
-    cerr << format("%-8s",myface::PPS[pre])  << " ";
+    cerr << format("%-8s",TextureFeature::EXS[ext])  << " ";
+    cerr << format("%-7s",TextureFeature::REDS[red]) << " ";
+    cerr << format("%-9s",TextureFeature::CLS[cls])  << " ";
+    //cerr << format("%-8s",TextureFeature::PPS[pre])  << " ";
     cerr << format("%-6s",trainMethod.c_str()) << "\t";
     //cerr << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
     cerr << format("%9.4f %9.4f %9.4f", mu, se, ((t1-t0)/getTickFrequency())) << endl;

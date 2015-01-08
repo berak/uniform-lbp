@@ -63,11 +63,9 @@ public:
     FaceRec()
         : pre(3, 0, FIXED_FACE)
         // just swap parts here, it's intended for that..
-        , extractor(createExtractorPyramidBGC1())
-        , reductor(createReductorDct(8000))
-        //, classifier(createClassifierHist(HISTCMP_HELLINGER))
-        , classifier(createClassifierPCA_LDA())
-        //, classifier(createClassifierSVM())
+        , extractor(TextureFeature::createExtractor(TextureFeature::EXT_BGC1_P))
+        , reductor(TextureFeature::createReductor(TextureFeature::RED_DCT8))
+        , classifier(TextureFeature::createClassifier(TextureFeature::CL_PCA_LDA))
     {}
 
     int train(const String &imgdir)

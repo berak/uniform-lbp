@@ -9,6 +9,7 @@ using namespace cv;
 #include "TextureFeature.h"
 
 
+using namespace TextureFeature;
 
 namespace TextureFeatureImpl
 {
@@ -259,20 +260,22 @@ struct CustomKernel : public ml::SVM::Kernel
             results[j] = (float)std::sqrt(std::max(1. - s*s1, 0.));
         }
     }
-    void calc_l2(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    void calc_low(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         for(int j=0; j<vcount; j++)
         {
             double s = 0, d = 0;
             const float* sample = &vecs[j*var_count];
-            for(int k=0; k<var_count-1; k++)
+            for(int k=1; k<var_count-1; k++)
             {
+                double a0 = sample[k-1];
                 double a1 = sample[k];
-                double b1 = another[k];
                 double a2 = sample[k+1];
+                double b0 = another[k-1];
+                double b1 = another[k];
                 double b2 = another[k+1];
 
-                s += sqrt((a1+a2) * (b1+b2));
+                s += sqrt((a0+a1+a1+a2) * (b0+b1+b1+b2));
             }
             results[j] = (float)(s);
         }
@@ -287,7 +290,7 @@ struct CustomKernel : public ml::SVM::Kernel
         case -3: calc_cosine(vcount, var_count, vecs, another, results); break;
         case -4: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
         case -5: calc_int2(vcount, var_count, vecs, another, results); break;
-        case -6: calc_l2(vcount, var_count, vecs, another, results); break;
+        case -6: calc_low(vcount, var_count, vecs, another, results); break;
         default: cerr << "sorry, dave" << endl; exit(0);
         }
     }
@@ -305,14 +308,14 @@ struct CustomKernel : public ml::SVM::Kernel
 //
 // single svm, multi class.
 //
-struct ClassifierSvm : public TextureFeature::Classifier
+struct ClassifierSVM : public TextureFeature::Classifier
 {
     Ptr<ml::SVM> svm;
     Ptr<ml::SVM::Kernel> krnl;
     ml::SVM::Params param;
 
 
-    ClassifierSvm(int ktype=ml::SVM::POLY, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
+    ClassifierSVM(int ktype=ml::SVM::POLY, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
     //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
     {
         if (ktype<0)
@@ -834,9 +837,67 @@ struct VerifierKmeans : public TextureFeature::Verifier
 };
 
 
+} // TextureFeatureImpl
 
 
-} // namespace TextureFeatureImpl
+namespace TextureFeature
+{
+using namespace TextureFeatureImpl;
+
+Ptr<Classifier> createClassifier(int clsfy)
+{ 
+    switch(clsfy)
+    {
+        case CL_NORM_L2:   return makePtr<ClassifierNearest>(NORM_L2); break;
+        case CL_NORM_L2SQR:return makePtr<ClassifierNearest>(NORM_L2SQR); break;
+        case CL_NORM_L1:   return makePtr<ClassifierNearest>(NORM_L1); break;
+        case CL_NORM_HAM:  return makePtr<ClassifierHist>(NORM_HAMMING2); break;
+        case CL_HIST_HELL: return makePtr<ClassifierHist>(HISTCMP_HELLINGER); break;
+        case CL_HIST_CHI:  return makePtr<ClassifierHist>(HISTCMP_CHISQR); break;
+        case CL_COSINE:    return makePtr<ClassifierCosine>(); break;
+        case CL_SVM_LIN:   return makePtr<ClassifierSVM>(cv::ml::SVM::LINEAR); break;
+        case CL_SVM_RBF:   return makePtr<ClassifierSVM>(cv::ml::SVM::RBF); break;
+        case CL_SVM_POL:   return makePtr<ClassifierSVM>(cv::ml::SVM::POLY); break;
+        case CL_SVM_INT:   return makePtr<ClassifierSVM>(cv::ml::SVM::INTER); break;
+        case CL_SVM_INT2:  return makePtr<ClassifierSVM>(-5); break;
+        case CL_SVM_HEL:   return makePtr<ClassifierSVM>(-1); break;
+        case CL_SVM_COR:   return makePtr<ClassifierSVM>(-2); break;
+        case CL_SVM_COS:   return makePtr<ClassifierSVM>(-3); break;
+        case CL_SVM_LOW:   return makePtr<ClassifierSVM>(-6); break;
+        case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
+        case CL_PCA:       return makePtr<ClassifierPCA>(); break;
+        case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
+        default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
+    }
+    return Ptr<Classifier>(); 
+}
+
+
+Ptr<Verifier> createVerifier(int clsfy)
+{ 
+    switch(clsfy)
+    {
+        case CL_NORM_L2:   return makePtr<VerifierNearest>(NORM_L2); break;
+        case CL_NORM_L2SQR:return makePtr<VerifierNearest>(NORM_L2SQR); break;
+        case CL_NORM_L1:   return makePtr<VerifierNearest>(NORM_L1); break;
+        case CL_NORM_HAM:  return makePtr<VerifierHist>(NORM_HAMMING2); break;
+        case CL_HIST_HELL: return makePtr<VerifierHist>(HISTCMP_HELLINGER); break;
+        case CL_HIST_CHI:  return makePtr<VerifierHist>(HISTCMP_CHISQR); break;
+        case CL_SVM_LIN:   return makePtr<VerifierSVM>(cv::ml::SVM::LINEAR); break;
+        case CL_SVM_RBF:   return makePtr<VerifierSVM>(cv::ml::SVM::RBF); break;
+        case CL_SVM_INT:   return makePtr<VerifierSVM>(cv::ml::SVM::INTER); break;
+        case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
+        case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
+        case CL_SVM_COR:   return makePtr<VerifierSVM>(-2); break;
+        case CL_SVM_COS:   return makePtr<VerifierSVM>(-3); break;
+        case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
+        default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
+    }
+    return Ptr<Verifier>(); 
+}
+
+
+} // namespace TextureFeature
 
 
 //
@@ -845,56 +906,56 @@ struct VerifierKmeans : public TextureFeature::Verifier
 // (identification)
 //
 //
-
-cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag)
-{ return makePtr<TextureFeatureImpl::ClassifierNearest>(norm_flag); }
-
-cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag)
-{ return makePtr<TextureFeatureImpl::ClassifierHist>(flag); }
-
-cv::Ptr<TextureFeature::Classifier> createClassifierCosine()
-{ return makePtr<TextureFeatureImpl::ClassifierCosine>(); }
-
-cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k)
-{ return makePtr<TextureFeatureImpl::ClassifierKNN>(k); }
-
-cv::Ptr<TextureFeature::Classifier> createClassifierSVM(int ktype, double degree, double gamma, double coef0, double C, double nu, double p)
-{ return makePtr<TextureFeatureImpl::ClassifierSvm>(ktype, degree, gamma, coef0, C, nu, p); }
-
-cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
-{ return makePtr<TextureFeatureImpl::ClassifierSvmMulti>(); }
-
-cv::Ptr<TextureFeature::Classifier> createClassifierPCA(int n)
-{ return makePtr<TextureFeatureImpl::ClassifierPCA>(n); }
-
-cv::Ptr<TextureFeature::Classifier> createClassifierPCA_LDA(int n)
-{ return makePtr<TextureFeatureImpl::ClassifierPCA_LDA>(n); }
-
-
-
-
 //
-// (verification)
+//cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag)
+//{ return makePtr<TextureFeatureImpl::ClassifierNearest>(norm_flag); }
 //
-
-cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
-{ return makePtr<TextureFeatureImpl::VerifierNearest>(norm_flag); }
-
-cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
-{ return makePtr<TextureFeatureImpl::VerifierHist>(norm_flag); }
-
-cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int ktype, int distfunc)
-{ return makePtr<TextureFeatureImpl::VerifierSVM>(ktype, distfunc); }
-
-cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc)
-{ return makePtr<TextureFeatureImpl::VerifierEM>(distfunc); }
-
-cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc)
-{ return makePtr<TextureFeatureImpl::VerifierLR>(distfunc); }
-
-cv::Ptr<TextureFeature::Verifier> createVerifierBoost(int distfunc)
-{ return makePtr<TextureFeatureImpl::VerifierBoost>(distfunc); }
-
-cv::Ptr<TextureFeature::Verifier> createVerifierKmeans()
-{ return makePtr<TextureFeatureImpl::VerifierKmeans>(); }
-
+//cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag)
+//{ return makePtr<TextureFeatureImpl::ClassifierHist>(flag); }
+//
+//cv::Ptr<TextureFeature::Classifier> createClassifierCosine()
+//{ return makePtr<TextureFeatureImpl::ClassifierCosine>(); }
+//
+//cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k)
+//{ return makePtr<TextureFeatureImpl::ClassifierKNN>(k); }
+//
+//cv::Ptr<TextureFeature::Classifier> createClassifierSVM(int ktype, double degree, double gamma, double coef0, double C, double nu, double p)
+//{ return makePtr<TextureFeatureImpl::ClassifierSvm>(ktype, degree, gamma, coef0, C, nu, p); }
+//
+//cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
+//{ return makePtr<TextureFeatureImpl::ClassifierSvmMulti>(); }
+//
+//cv::Ptr<TextureFeature::Classifier> createClassifierPCA(int n)
+//{ return makePtr<TextureFeatureImpl::ClassifierPCA>(n); }
+//
+//cv::Ptr<TextureFeature::Classifier> createClassifierPCA_LDA(int n)
+//{ return makePtr<TextureFeatureImpl::ClassifierPCA_LDA>(n); }
+//
+//
+//
+//
+////
+//// (verification)
+////
+//
+//cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
+//{ return makePtr<TextureFeatureImpl::VerifierNearest>(norm_flag); }
+//
+//cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
+//{ return makePtr<TextureFeatureImpl::VerifierHist>(norm_flag); }
+//
+//cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int ktype, int distfunc)
+//{ return makePtr<TextureFeatureImpl::VerifierSVM>(ktype, distfunc); }
+//
+//cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc)
+//{ return makePtr<TextureFeatureImpl::VerifierEM>(distfunc); }
+//
+//cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc)
+//{ return makePtr<TextureFeatureImpl::VerifierLR>(distfunc); }
+//
+//cv::Ptr<TextureFeature::Verifier> createVerifierBoost(int distfunc)
+//{ return makePtr<TextureFeatureImpl::VerifierBoost>(distfunc); }
+//
+//cv::Ptr<TextureFeature::Verifier> createVerifierKmeans()
+//{ return makePtr<TextureFeatureImpl::VerifierKmeans>(); }
+//

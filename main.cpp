@@ -203,7 +203,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
         double all = sum(confusion)[0];
         double neg = all - sum(confusion.diag())[0];
         double err = double(neg)/all;
-        cout << format("%-13s %-2d %6d %6d %6d %8.3f",name.c_str(),(f+1), fsiz, int(all-neg), int(neg), (1.0-err)) << '\r';
+        cout << format("%-23s %-2d %6d %6d %6d %8.3f",name.c_str(),(f+1), fsiz, int(all-neg), int(neg), (1.0-err)) << '\r';
     }
 
 
@@ -213,11 +213,33 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
     double err = double(neg)/all;
     int64 t1=getTickCount() - t0;
     double t(t1/getTickFrequency());
-    cout << format("%-16s %6d %6d %6d %8.3f %8.3f",name.c_str(), fsiz, int(all-neg), int(neg), (1.0-err), t) << endl;
+    cout << format("%-26s %6d %6d %6d %8.3f %8.3f",name.c_str(), fsiz, int(all-neg), int(neg), (1.0-err), t) << endl;
     if (debug) cout << "confusion" << endl << confusion(Range(0,min(20,confusion.rows)), Range(0,min(20,confusion.cols))) << endl;
     return err;
 }
 
+double runtest(int ext, int red, int cls, const vector<Mat> &images, const vector<int> &labels, const vector<vector<int>> &persons, size_t fold=10)
+{
+    string name = format( "%s.%s.%s", TextureFeature::EXS[ext], TextureFeature::REDS[red], TextureFeature::CLS[cls]); 
+    return runtest(name,  
+        TextureFeature::createExtractor(ext),  
+        TextureFeature::createReductor(red),
+        TextureFeature::createClassifier(cls),
+        images,labels,persons, fold); 
+}
+
+void printOptions()
+{
+    cerr << "[extractors]  :"<< endl;
+    for (size_t i=0; i<TextureFeature::EXT_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::EXS[i],i); }
+    cerr << endl << endl << "[reductors] :" << endl;
+    for (size_t i=0; i<TextureFeature::RED_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::REDS[i],i); }
+    cerr << endl << endl << "[classifiers] :" << endl;
+    for (size_t i=0; i<TextureFeature::CL_MAX; ++i)  {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::CLS[i],i);  }
+    //cerr << endl << endl <<  "[preproc] :" << endl;
+    //for (size_t i=0; i<TextureFeature::PRE_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::PPS[i],i);  }
+    cerr << endl;
+}
 
 //
 //
@@ -231,110 +253,76 @@ int main(int argc, const char *argv[])
     vector<Mat> images;
     Mat labels;
 
-    std::string db_path("senthil.txt");
-    //std::string db_path("att.txt");
-    //std::string db_path("yale.txt");
-    if (argc>1) db_path = argv[1];
 
-    size_t fold = 4;
-    if (argc>2) fold = atoi(argv[2]);
+    const char *keys =
+            "{ help h usage ? |           | show this message }"
+            "{ opts o         |           | show extractor / reducer/ classifier options }"
+            "{ path p         |senthil.txt| path to dataset  }"
+            "{ fold f         |10         | folds for crossvalidation }"
+            "{ ext e          |0          | extractor enum }"
+            "{ red r          |0          | reductor enum }"
+            "{ cls c          |0          | classifier enum }"
+            "{ all a          |false      | test all }"
+            "{ pre P          |0          | preprocessing }"
+            "{ crop C         |0          | crop outer pixels }";
+ 
+    CommandLineParser parser(argc, argv, keys);
+    string path(parser.get<string>("path"));
+    if (parser.has("help") || path=="true")
+    {
+        parser.printMessage();
+        return -1;
+    }
+    if (parser.has("opts"))
+    {
+        printOptions();
+        return -1;
+    }
+    int all = parser.has("all");
+    int ext = parser.get<int>("ext");
+    int red = parser.get<int>("red");
+    int cls = parser.get<int>("cls");
+    int pre = parser.get<int>("pre");
+    int crp = parser.get<int>("crop");
+    int fold = parser.get<int>("fold");
 
-    int rec = 2;
-    if (argc>3) rec = atoi(argv[3]);
+    std::string db_path = parser.get<String>("path");
 
-    int preproc = 0; 
-    if (argc>4) preproc = atoi(argv[4]);
-
-    if (argc>5) debug = atoi(argv[5])!=0;
-
-
-    extractDB(db_path, images, labels, preproc, 0, 500, 90);
+    extractDB(db_path, images, labels, pre, crp, 500, 90);
 
     // per person id lookup
     vector<vector<int>> persons;
     setupPersons( labels, persons );
-    fold = std::min(fold,images.size()/persons.size());
+    fold = std::min(fold,int(images.size()/persons.size()));
 
     // some diagnostics:
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
     char *pp[] = { "no preproc","eqhist","clahe","retina","tan-triggs","crop",0 };
-    if (rec == 0)
-        cout << "--------------------------------------------------------------" << endl;
-    cout << format("%-19s",dbs.c_str()) << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[preproc] << endl;
-    if ( rec==0 )
+    if (all)
+        cout << "-------------------------------------------------------------------" << endl;
+    cout << format("%-26s",dbs.c_str()) << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[pre] << endl;
+    if (all)
     {
-        cout << "--------------------------------------------------------------" << endl;
-        cout << "[method]       [f_bytes]  [hit]  [miss]  [acc]   [time]  " << endl;
+        cout << "-------------------------------------------------------------------" << endl;
+        cout << "[method]                 [f_bytes]  [hit]  [miss]  [acc]   [time]  " << endl;
     }
 
-    // loop through all tests for rec==0, do one test else.
-    int n=64; // it's gettin a *bit* crowded ;)
-    if (rec > 0)
+    if ( ! all )
     {
-        n = rec+1;
+        runtest(ext,red,cls,images,labels,persons, fold);
     }
-    for (; rec<n; rec++)
+    else
     {
-        switch(rec)
-        {
-        default: continue;
-        //case 1:  runtest("pixels_L2",    createExtractorPixels(120,120),  Ptr<TextureFeature::Reductor>(),   createClassifierNearest(),               images,labels,persons, fold); break;
-        case 2:  runtest("pixels_svm",   createExtractorPixels(60,60),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-6),                   images,labels,persons, fold); break;
-        //case 3:  runtest("pixels_cosine",createExtractorPixels(120,120),  Ptr<TextureFeature::Reductor>(),   createClassifierCosine(),                images,labels,persons, fold); break;
-        case 5:  runtest("lbp_L2",       createExtractorLbp(),            Ptr<TextureFeature::Reductor>(),   createClassifierNearest(),               images,labels,persons, fold); break;
-        case 6:  runtest("lbp_svm",      createExtractorLbp(),            Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 7:  runtest("lbp_hell",     createExtractorLbp(),            Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        //case 8:  runtest("lbp_o_svm",    createExtractorOverlapLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 9:  runtest("lbp_e_svm",    createExtractorElasticLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 10: runtest("lbp_p_whd_svm",    createExtractorPyramidLbp(), createReductorWalshHadamard(12000),    createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 11: runtest("fplbp_svm",    createExtractorFPLbp(),          Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-1),                   images,labels,persons, fold); break;
-        case 12: runtest("fplbp_hell",   createExtractorFPLbp(),          Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        //case 13: runtest("fplbp_o_svm",  createExtractorOverlapFpLbp(),   Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 14: runtest("fplbp_e_svm",  createExtractorElasticFpLbp(),   Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 15: runtest("fplbp_p_svm",  createExtractorPyramidFpLbp(),   Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 16: runtest("tplbp_hell",   createExtractorTPLbp(),          Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        case 17: runtest("tplbp_svm",    createExtractorTPLbp(),          Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 18: runtest("tplbp_o_svm",  createExtractorOverlapTpLbp(),   Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 19: runtest("tplbp_e_svm",  createExtractorElasticTpLbp(),   Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 20: runtest("tplbp_p_svm",  createExtractorPyramidTpLbp(),   Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 21: runtest("mts_svm",      createExtractorMTS(),            Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 22: runtest("mts_hell",     createExtractorMTS(),            Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        //case 24: runtest("mts_e_hell",   createExtractorElasticMTS(),     Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        //case 25: runtest("mts_e_svm",    createExtractorElasticMTS(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 26: runtest("mts_o_svm",    createExtractorOverlapMTS(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 27: runtest("mts_p_svm",    createExtractorPyramidMTS(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 28: runtest("bgc1_hell",    createExtractorBGC1(),           Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        case 29: runtest("bgc1_svm",     createExtractorBGC1(),           Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                    images,labels,persons, fold); break;
-        //case 30: runtest("bgc1_e_svm",   createExtractorElasticBGC1(),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 31: runtest("bgc1_o_svm",   createExtractorOverlapBGC1(),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 31: runtest("bgc1_p_svm",   createExtractorPyramidBGC1(),    createReductorDct(8000),           createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 32: runtest("bgc1_p_fisher",createExtractorPyramidBGC1(),    createReductorDct(8000),           createClassifierPCA_LDA(),               images,labels,persons, fold); break;
-        case 33: runtest("comb_hell",    createExtractorCombined(),       Ptr<TextureFeature::Reductor>(),   createClassifierHist(HISTCMP_HELLINGER), images,labels,persons, fold); break;
-        case 34: runtest("comb_svm",     createExtractorCombined(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 35: runtest("comb_e_svm",   createExtractorElasticCombined(),Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 36: runtest("comb_o_svm",   createExtractorOverlapCombined(),Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 37: runtest("comb_p_svm",   createExtractorPyramidCombined(),Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 38: runtest("gabor_svm",    createExtractorGaborLbp(),       createReductorDct(8000),           createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 39: runtest("dct_cosine",   createExtractorDct(),            Ptr<TextureFeature::Reductor>(),   createClassifierCosine(),                images,labels,persons, fold); break;
-        case 40: runtest("dct_svm",      createExtractorDct(),            Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 41: runtest("orb_ham2",     createExtractorORBGrid(),        Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_HAMMING2),  images,labels,persons, fold); break;
-        //case 42: runtest("orb_L1",       createExtractorORBGrid(),        Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_L1),        images,labels,persons, fold); break;
-        case 41: runtest("sift_L2",      createExtractorSIFTGrid(),       Ptr<TextureFeature::Reductor>(),   createClassifierNearest(NORM_L2),        images,labels,persons, fold); break;
-        case 42: runtest("sift_svm",     createExtractorSIFTGrid(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 44: runtest("sift20_dct_svm",createExtractorSIFTGrid(20),    createReductorDct(8000),           createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 45: runtest("sift_kpm_svm",createExtractorSIFTGftt(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 46: runtest("grad_svm",     createExtractorGrad(),           Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 47: runtest("grad_gftt_svm",createExtractorGfttGrad(),       Ptr<TextureFeature::Reductor>(),   createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 48: runtest("gradmag_svm",  createExtractorGfttGradMag(),    Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-1),                   images,labels,persons, fold); break;
-        case 49: runtest("eigen",        createExtractorPixels(),         Ptr<TextureFeature::Reductor>(),   createClassifierPCA(),                   images,labels,persons, fold); break;
-        case 50: runtest("fisher",       createExtractorPixels(),         Ptr<TextureFeature::Reductor>(),   createClassifierPCA_LDA(),               images,labels,persons, fold); break;
-        //case 51: runtest("orb_had_svm",  createExtractorORBGrid(),        createReductorWalshHadamard(),     createClassifierSVM(),                   images,labels,persons, fold); break;
-        //case 52: runtest("orb_hell_svm", createExtractorORBGrid(),        createReductorHellinger(),         createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 55: runtest("hdlbp_svm",    createExtractorHighDimLbp(),     Ptr<TextureFeature::Reductor>(),   createClassifierSVM(-1),                   images,labels,persons, fold); break;
-        case 56: runtest("hdlbp_whad_svm",createExtractorHighDimLbp(),     createReductorWalshHadamard(12000), createClassifierSVM(),                 images,labels,persons, fold); break;
-        case 57: runtest("hdlbp_hel_svm",createExtractorHighDimLbp(),     createReductorHellinger(),         createClassifierSVM(),                   images,labels,persons, fold); break;
-        case 58: runtest("lbp_fisher",   createExtractorLbp(),            Ptr<TextureFeature::Reductor>(),   createClassifierPCA_LDA(),               images,labels,persons, fold); break;
-        }                                                          
+        int tests[] = {
+            TextureFeature::EXT_Pixels, TextureFeature::RED_NONE, TextureFeature::CL_NORM_L2,
+            TextureFeature::EXT_Pixels, TextureFeature::RED_NONE, TextureFeature::CL_COSINE,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_HIST_HELL,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_INT,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_LIN,
+            -1,-1,-1
+        };
+        for (int i=0; tests[i]>-1; i+=3)
+            runtest(tests[i],tests[i+1],tests[i+2],images,labels,persons, fold);
     }
     return 0;
 }
