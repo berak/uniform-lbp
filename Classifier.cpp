@@ -899,9 +899,9 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_NORM_HAM:  return makePtr<VerifierHist>(NORM_HAMMING2); break;
         case CL_HIST_HELL: return makePtr<VerifierHist>(HISTCMP_HELLINGER); break;
         case CL_HIST_CHI:  return makePtr<VerifierHist>(HISTCMP_CHISQR); break;
-        case CL_SVM_LIN:   return makePtr<VerifierSVM>(cv::ml::SVM::LINEAR); break;
-        case CL_SVM_RBF:   return makePtr<VerifierSVM>(cv::ml::SVM::RBF); break;
-        case CL_SVM_INT:   return makePtr<VerifierSVM>(cv::ml::SVM::INTER); break;
+        case CL_SVM_LIN:   return makePtr<VerifierSVM>(0); break; //LINEAR)
+        case CL_SVM_RBF:   return makePtr<VerifierSVM>(2); break; // RBF
+        case CL_SVM_INT:   return makePtr<VerifierSVM>(5); break; // cv::ml::SVM::INTER
         case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
         case CL_SVM_COR:   return makePtr<VerifierSVM>(-2); break;
