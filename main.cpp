@@ -229,12 +229,13 @@ double runtest(int ext, int red, int cls, const vector<Mat> &images, const vecto
             TextureFeature::createClassifier(cls),
             images,labels,persons, fold); 
     }
-    catch(...) 
+    catch(Exception &e) 
     {
-        cerr << name << " crashed.." << endl;
+        cerr << name << " crashed..(" << e.what() << ")" << endl;
     }
     return 1;   
 }
+
 
 void printOptions()
 {
@@ -262,9 +263,9 @@ int main(int argc, const char *argv[])
             "{ opts o         |           | show extractor / reducer/ classifier options }"
             "{ path p         |senthil.txt| path to dataset  }"
             "{ fold f         |10         | folds for crossvalidation }"
-            "{ ext e          |0          | extractor enum }"
+            "{ ext e          |1          | extractor enum }"
             "{ red r          |0          | reductor enum }"
-            "{ cls c          |0          | classifier enum }"
+            "{ cls c          |12          | classifier enum }"
             "{ all a          |false      | test all }"
             "{ pre P          |0          | preprocessing }"
             "{ crop C         |0          | crop outer pixels }";
@@ -318,15 +319,22 @@ int main(int argc, const char *argv[])
     {
         int tests[] = {
             TextureFeature::EXT_Pixels, TextureFeature::RED_NONE, TextureFeature::CL_NORM_L2,
+            TextureFeature::EXT_Pixels, TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
             TextureFeature::EXT_Dct,    TextureFeature::RED_NONE, TextureFeature::CL_COSINE,
+            TextureFeature::EXT_Dct,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
             TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_HIST_HELL,
             TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
-            TextureFeature::EXT_Lbp,    TextureFeature::RED_WHAD, TextureFeature::CL_SVM_HEL,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_HEL,
             TextureFeature::EXT_Lbp,    TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_MTS_P,  TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_COMB_G, TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_FPLBP_P, TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_FPLBP_P, TextureFeature::RED_HELL, TextureFeature::CL_SVM_INT,
+            TextureFeature::EXT_BGC1_P,  TextureFeature::RED_WHAD, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_HDLBP,  TextureFeature::RED_HELL, TextureFeature::CL_SVM_INT,
+            TextureFeature::EXT_HDLBP,  TextureFeature::RED_WHAD, TextureFeature::CL_PCA_LDA,
+
+
             -1,-1,-1
         };
         for (int i=0; tests[i]>-1; i+=3)
