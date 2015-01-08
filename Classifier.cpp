@@ -267,13 +267,30 @@ struct CustomKernel : public ml::SVM::Kernel
         {
             double s = 0, d = 0;
             const float* sample = &vecs[j*var_count];
-            for(int k=0; k<var_count-1; k++)
+            int k=0;
+            for(; k<var_count-5; k+=4)
+            {
+                double a1 = sample[k];
+                double a2 = sample[k+1];
+                double a3 = sample[k+2];
+                double a4 = sample[k+3];
+                double a5 = sample[k+4];
+                double b1 = another[k];
+                double b2 = another[k+1];
+                double b3 = another[k+2];
+                double b4 = another[k+3];
+                double b5 = another[k+4];
+                s += sqrt((a1+a2) * (b1+b2));
+                s += sqrt((a2+a3) * (b2+b3));
+                s += sqrt((a3+a4) * (b3+b4));
+                s += sqrt((a4+a5) * (b4+b5));
+            }
+            for(; k<var_count-1; k++)
             {
                 double a1 = sample[k];
                 double a2 = sample[k+1];
                 double b1 = another[k];
                 double b2 = another[k+1];
-
                 s += sqrt((a1+a2) * (b1+b2));
             }
             results[j] = (float)(s);
@@ -898,63 +915,3 @@ Ptr<Verifier> createVerifier(int clsfy)
 
 } // namespace TextureFeature
 
-
-//
-// 'factory' functions (aka public api)
-//
-// (identification)
-//
-//
-//
-//cv::Ptr<TextureFeature::Classifier> createClassifierNearest(int norm_flag)
-//{ return makePtr<TextureFeatureImpl::ClassifierNearest>(norm_flag); }
-//
-//cv::Ptr<TextureFeature::Classifier> createClassifierHist(int flag)
-//{ return makePtr<TextureFeatureImpl::ClassifierHist>(flag); }
-//
-//cv::Ptr<TextureFeature::Classifier> createClassifierCosine()
-//{ return makePtr<TextureFeatureImpl::ClassifierCosine>(); }
-//
-//cv::Ptr<TextureFeature::Classifier> createClassifierKNN(int k)
-//{ return makePtr<TextureFeatureImpl::ClassifierKNN>(k); }
-//
-//cv::Ptr<TextureFeature::Classifier> createClassifierSVM(int ktype, double degree, double gamma, double coef0, double C, double nu, double p)
-//{ return makePtr<TextureFeatureImpl::ClassifierSvm>(ktype, degree, gamma, coef0, C, nu, p); }
-//
-//cv::Ptr<TextureFeature::Classifier> createClassifierSVMMulti()
-//{ return makePtr<TextureFeatureImpl::ClassifierSvmMulti>(); }
-//
-//cv::Ptr<TextureFeature::Classifier> createClassifierPCA(int n)
-//{ return makePtr<TextureFeatureImpl::ClassifierPCA>(n); }
-//
-//cv::Ptr<TextureFeature::Classifier> createClassifierPCA_LDA(int n)
-//{ return makePtr<TextureFeatureImpl::ClassifierPCA_LDA>(n); }
-//
-//
-//
-//
-////
-//// (verification)
-////
-//
-//cv::Ptr<TextureFeature::Verifier> createVerifierNearest(int norm_flag)
-//{ return makePtr<TextureFeatureImpl::VerifierNearest>(norm_flag); }
-//
-//cv::Ptr<TextureFeature::Verifier> createVerifierHist(int norm_flag)
-//{ return makePtr<TextureFeatureImpl::VerifierHist>(norm_flag); }
-//
-//cv::Ptr<TextureFeature::Verifier> createVerifierSVM(int ktype, int distfunc)
-//{ return makePtr<TextureFeatureImpl::VerifierSVM>(ktype, distfunc); }
-//
-//cv::Ptr<TextureFeature::Verifier> createVerifierEM(int distfunc)
-//{ return makePtr<TextureFeatureImpl::VerifierEM>(distfunc); }
-//
-//cv::Ptr<TextureFeature::Verifier> createVerifierLR(int distfunc)
-//{ return makePtr<TextureFeatureImpl::VerifierLR>(distfunc); }
-//
-//cv::Ptr<TextureFeature::Verifier> createVerifierBoost(int distfunc)
-//{ return makePtr<TextureFeatureImpl::VerifierBoost>(distfunc); }
-//
-//cv::Ptr<TextureFeature::Verifier> createVerifierKmeans()
-//{ return makePtr<TextureFeatureImpl::VerifierKmeans>(); }
-//

@@ -221,11 +221,19 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
 double runtest(int ext, int red, int cls, const vector<Mat> &images, const vector<int> &labels, const vector<vector<int>> &persons, size_t fold=10)
 {
     string name = format( "%s.%s.%s", TextureFeature::EXS[ext], TextureFeature::REDS[red], TextureFeature::CLS[cls]); 
-    return runtest(name,  
-        TextureFeature::createExtractor(ext),  
-        TextureFeature::createReductor(red),
-        TextureFeature::createClassifier(cls),
-        images,labels,persons, fold); 
+    try
+    {
+        runtest(name,  
+            TextureFeature::createExtractor(ext),  
+            TextureFeature::createReductor(red),
+            TextureFeature::createClassifier(cls),
+            images,labels,persons, fold); 
+    }
+    catch(...) 
+    {
+        cerr << name << " crashed.." << endl;
+    }
+    
 }
 
 void printOptions()
@@ -241,13 +249,8 @@ void printOptions()
     cerr << endl;
 }
 
-//
-//
-// face att.txt 5     5             1        0
-// face db      fold  reco    preprocessing  debug
-//
-// special: reco==0 will run *all* recognizers available on a given db
-//
+
+
 int main(int argc, const char *argv[])
 {
     vector<Mat> images;
@@ -315,14 +318,17 @@ int main(int argc, const char *argv[])
     {
         int tests[] = {
             TextureFeature::EXT_Pixels, TextureFeature::RED_NONE, TextureFeature::CL_NORM_L2,
-            TextureFeature::EXT_Pixels, TextureFeature::RED_NONE, TextureFeature::CL_COSINE,
+            TextureFeature::EXT_Dct,    TextureFeature::RED_NONE, TextureFeature::CL_COSINE,
             TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_HIST_HELL,
-            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_INT,
-            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_LIN,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_WHAD, TextureFeature::CL_SVM_HEL,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_MTS_P,  TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_COMB_G, TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
             -1,-1,-1
         };
         for (int i=0; tests[i]>-1; i+=3)
-            runtest(tests[i],tests[i+1],tests[i+2],images,labels,persons, fold);
+            runtest(tests[i], tests[i+1], tests[i+2], images, labels, persons, fold);
     }
     return 0;
 }

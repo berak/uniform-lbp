@@ -163,20 +163,3 @@ Ptr<Reductor> createReductor(int redu)
 
 } // TextureFeatureImpl
 
-
-
-//
-//cv::Ptr<Reductor> createReductorNone()
-//{    return makePtr<TextureFeatureImpl::ReductorNone>(); }
-//
-//cv::Ptr<Reductor> createReductorWalshHadamard(int keep)
-//{    return makePtr<TextureFeatureImpl::ReductorWalshHadamard>(keep); }
-//
-//cv::Ptr<Reductor> createReductorHellinger()
-//{    return makePtr<TextureFeatureImpl::ReductorHellinger>(); }
-//
-//cv::Ptr<Reductor> createReductorRandomProjection(int k)
-//{    return makePtr<TextureFeatureImpl::ReductorRandomProjection>(k); }
-//
-//cv::Ptr<Reductor> createReductorDct(int k)
-//{    return makePtr<TextureFeatureImpl::ReductorDct>(k); }
