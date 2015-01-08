@@ -6,13 +6,11 @@
 
 
 //
-// using regular grids for feature extraction on faces clearly sucks.
-// one of the attempts tried here instead is, to use assorted landmark points
-// from asmlib, flandmark or such instead.
-// dlib's implementation seems to rule here, let's try to use it,
-// fall back to a precalculated 'one-size-fits-all' manner(based on the mean lfw image), if not present:
+// use dlib's implementation for facial landmarks, 
+// if not present, fall back to a precalculated 
+// 'one-size-fits-all' set of points(based on the mean lfw image)
 //
-//#define HAVE_DLIB 
+#define HAVE_DLIB 
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
@@ -28,7 +26,7 @@ using std::endl;
 
 #include "TextureFeature.h"
 #include "ElasticParts.h"
-#include "Profile.h"
+//#include "Profile.h"
 
 using namespace cv;
 

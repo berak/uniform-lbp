@@ -66,17 +66,17 @@ struct ClassifierNearest : public TextureFeature::Classifier
     }
 
     // Serialize
-    virtual bool save(FileStorage &fs) const  
+    virtual bool save(FileStorage &fs) const
     {
         fs << "labels" << labels;
         fs << "features" << features;
-        return true; 
+        return true;
     }
     virtual bool load(const FileStorage &fs)
-    { 
+    {
         fs["labels"] >> labels;
         fs["features"] >> features;
-        return ! features.empty(); 
+        return ! features.empty();
     }
 };
 
@@ -173,20 +173,20 @@ struct CustomKernel : public ml::SVM::Kernel
 
     void calc_int2(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
-        Mat S(1,var_count,CV_32F,(void*)0);
+        Mat V(1,var_count,CV_32F,(void*)0);
         Mat A(1,var_count,CV_32F,(void*)another);
         for(int j=0; j<vcount; j++)
         {
-            S.data = (uchar*)(&vecs[j*var_count]);            
-            results[j] = (float)(sum(cv::min(S,A))[0]);
+            V.data = (uchar*)(&vecs[j*var_count]);
+            results[j] = (float)(sum(cv::min(V,A))[0]);
         }
     }
     void calc_hellinger(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         Mat R(1, vcount, CV_32F, results);
         double gamma = -1;
-        Mat S(1,var_count,CV_32F,(void*)0);
-        Mat S2(1,var_count,CV_32F);
+        Mat V(1,var_count,CV_32F,(void*)0);
+        Mat V2(1,var_count,CV_32F);
 
         Mat A(1,var_count,CV_32F,(void*)another);
         Mat A2(1,var_count,CV_32F);
@@ -194,9 +194,9 @@ struct CustomKernel : public ml::SVM::Kernel
 
         for(int j=0; j<vcount; j++)
         {
-            S.data = (uchar*)(&vecs[j*var_count]);
-            cv::sqrt(S,S2);
-            Mat H=S2-A2;
+            V.data = (uchar*)(&vecs[j*var_count]);
+            cv::sqrt(V,V2);
+            Mat H=V2-A2;
             results[j] = (float)(gamma*sum(H.mul(H))[0]);
         }
     }
@@ -239,29 +239,6 @@ struct CustomKernel : public ml::SVM::Kernel
             results[j] = (float)(s12 / sqrt(s11 * s22));
         }
     }
-    void calc_kl_div(int vcount, int var_count, const float* vecs, const float* another, float* results)
-    {
-        for(int j=0; j<vcount; j++)
-        {
-            double s = 0;
-            const float* sample = &vecs[j*var_count];
-            for(int k=0; k<var_count; k++)
-            {
-                double b = sample[k];
-                double a = another[k];
-                if( fabs(a) <= DBL_EPSILON ) {
-                    continue;
-                }
-                if(  fabs(b) <= DBL_EPSILON ) {
-                    b = 1e-10;
-                }
-                //s += a * std::log( a / b );
-                s -= a * std::log(b);
-                s += a * std::log(a);
-            }
-            results[j] = (float)(s);
-        }
-    }
     void calc_bhattacharyya(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         for(int j=0; j<vcount; j++)
@@ -282,6 +259,24 @@ struct CustomKernel : public ml::SVM::Kernel
             results[j] = (float)std::sqrt(std::max(1. - s*s1, 0.));
         }
     }
+    void calc_l2(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        for(int j=0; j<vcount; j++)
+        {
+            double s = 0, d = 0;
+            const float* sample = &vecs[j*var_count];
+            for(int k=0; k<var_count-1; k++)
+            {
+                double a1 = sample[k];
+                double b1 = another[k];
+                double a2 = sample[k+1];
+                double b2 = another[k+1];
+
+                s += sqrt((a1+a2) * (b1+b2));
+            }
+            results[j] = (float)(s);
+        }
+    }
 
     void calc(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
@@ -290,18 +285,18 @@ struct CustomKernel : public ml::SVM::Kernel
         case -1: calc_hellinger(vcount, var_count, vecs, another, results); break;
         case -2: calc_correl(vcount, var_count, vecs, another, results); break;
         case -3: calc_cosine(vcount, var_count, vecs, another, results); break;
-        case -4: calc_kl_div(vcount, var_count, vecs, another, results); break;
-        case -5: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
-        case -6: calc_int2(vcount, var_count, vecs, another, results); break;
+        case -4: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
+        case -5: calc_int2(vcount, var_count, vecs, another, results); break;
+        case -6: calc_l2(vcount, var_count, vecs, another, results); break;
         default: cerr << "sorry, dave" << endl; exit(0);
         }
     }
     int getType(void) const
     {
-        return 7; 
+        return 7;
     }
     static Ptr<ml::SVM::Kernel> create(int k)
-    { 
+    {
         return makePtr<CustomKernel>(k);
     }
 };
@@ -322,7 +317,7 @@ struct ClassifierSvm : public TextureFeature::Classifier
     {
         if (ktype<0)
         {
-            krnl = CustomKernel::create(ktype);    
+            krnl = CustomKernel::create(ktype);
             ktype=-1;
         }
         param.kernelType = ktype; //ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
@@ -360,17 +355,17 @@ struct ClassifierSvm : public TextureFeature::Classifier
     }
 
     // Serialize
-    virtual bool save(FileStorage &fs) const  
+    virtual bool save(FileStorage &fs) const
     {
         if(!fs.isOpened()) return false;
         svm->write(fs);
-        return true; 
+        return true;
     }
     virtual bool load(const FileStorage &fs)
-    { 
+    {
         if(!fs.isOpened()) return false;
         svm->read(fs.getFirstTopLevelNode());
-        return true; 
+        return true;
     }
 };
 
@@ -495,23 +490,23 @@ struct ClassifierPCA : public ClassifierNearestFloat
     }
 
     // Serialize
-    virtual bool save(FileStorage &fs) const  
+    virtual bool save(FileStorage &fs) const
     {
         fs << "labels" << labels;
         fs << "features" << features;
         fs << "mean" << mean;
         fs << "eigenvectors" << eigenvectors;
         fs << "num_components" << num_components;
-        return true; 
+        return true;
     }
     virtual bool load(const FileStorage &fs)
-    { 
+    {
         fs["labels"] >> labels;
         fs["features"] >> features;
         fs["mean"] >> mean;
         fs["eigenvectors"] >> eigenvectors;
         fs["num_components"] >>num_components;
-        return ! features.empty(); 
+        return ! features.empty();
     }
 };
 
@@ -710,7 +705,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
         ml::SVM::Params param;
         if (ktype<0)
         {
-            krnl = CustomKernel::create(ktype);    
+            krnl = CustomKernel::create(ktype);
             ktype=-1;
         }
         param.kernelType = ktype; //ml::SVM::INTER; //ml::SVM::LINEAR;
