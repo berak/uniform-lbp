@@ -10,7 +10,7 @@
 // if not present, fall back to a precalculated 
 // 'one-size-fits-all' set of points(based on the mean lfw image)
 //
-#define HAVE_DLIB 
+//#define HAVE_DLIB 
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
