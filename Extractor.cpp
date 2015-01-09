@@ -1,7 +1,7 @@
-#include "opencv2/opencv.hpp"
 #include "opencv2/core/core_c.h"
 #include "opencv2/core/utility.hpp"
 #include "opencv2/xfeatures2d.hpp"
+#include "opencv2/opencv.hpp"
 
 
 
@@ -258,32 +258,6 @@ struct FeatureMTS
                 v |= (img(r-1,c+1) > cen) << 1;
                 v |= (img(r  ,c+1) > cen) << 2;
                 v |= (img(r+1,c+1) > cen) << 3;
-                fea(r,c) = v;
-            }
-        }
-        fI = fea;
-        return 16;
-    }
-};
-
-// left half
-struct FeatureMTS2
-{
-    int operator () (const Mat &I, Mat &fI) const
-    {
-        Mat_<uchar> img(I);
-        Mat_<uchar> fea(I.size(), 0);
-        const int m=1;
-        for (int r=m; r<img.rows-m; r++)
-        {
-            for (int c=m; c<img.cols-m; c++)
-            {
-                uchar v = 0;
-                uchar cen = img(r,c);
-                v |= (img(r+1,c  ) > cen) << 0;
-                v |= (img(r+1,c-1) > cen) << 1;
-                v |= (img(r  ,c-1) > cen) << 2;
-                v |= (img(r-1,c-1) > cen) << 3;
                 fea(r,c) = v;
             }
         }
@@ -994,7 +968,6 @@ namespace TextureFeature
 {
 using namespace TextureFeatureImpl;
 
-// the factory, one big fluke..
 Ptr<Extractor> createExtractor(int extract)
 {
     switch(int(extract))
@@ -1017,7 +990,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_Gabor:    return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist()); break;
         case EXT_Dct:      return makePtr< ExtractorDct >(); break;
         case EXT_Orb:      return makePtr< ExtractorORBGrid >();  break;
-        case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(); break;
+        case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(20); break;
         case EXT_Sift_G:   return makePtr< ExtractorGfttFeature2d >(xfeatures2d::SIFT::create()); break;
         case EXT_Grad:     return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist());  break;
         case EXT_Grad_G:   return makePtr< GenericExtractor<FeatureGrad,GfttGrid> >(FeatureGrad(),GfttGrid()); break;
@@ -1030,89 +1003,3 @@ Ptr<Extractor> createExtractor(int extract)
 }
 
 } // namespace TextureFeatureImpl
-
-
-
-//
-// 'factory' functions (aka public api)
-//
-//using namespace TextureFeatureImpl;
-
-
-//cv::Ptr<TextureFeature::Extractor> createExtractorPixels(int resw, int resh)
-//{   return makePtr< ExtractorPixels >(resw, resh); }
-//
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorLbp(int gx, int gy)
-//{   return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(gx, gy)); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorPyramidLbp()
-//{   return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid()); }
-//
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorFPLbp(int gx, int gy)
-//{   return makePtr< GenericExtractor<FeatureFPLbp,GriddedHist> >(FeatureFPLbp(), GriddedHist(gx, gy)); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorPyramidFpLbp()
-//{   return makePtr< GenericExtractor<FeatureFPLbp,PyramidGrid> >(FeatureFPLbp(), PyramidGrid()); }
-//
-
-//cv::Ptr<TextureFeature::Extractor> createExtractorTPLbp(int gx, int gy)
-//{   return makePtr< GenericExtractor<FeatureTPLbp,GriddedHist> >(FeatureTPLbp(), GriddedHist(gx, gy)); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorPyramidTpLbp()
-//{   return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid()); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorGfttTpLbp()
-//{   return makePtr< GenericExtractor<FeatureTPLbp,GfttGrid> >(FeatureTPLbp(), GfttGrid()); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorGfttTpLbp2()
-//{   return makePtr< GenericExtractor<FeatureTPLbp2,GfttGrid> >(FeatureTPLbp2(), GfttGrid()); }
-
-
-//cv::Ptr<TextureFeature::Extractor> createExtractorMTS(int gx, int gy)
-//{   return makePtr< GenericExtractor<FeatureMTS,GriddedHist> >(FeatureMTS(), GriddedHist(gx, gy)); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorPyramidMTS()
-//{   return makePtr< GenericExtractor<FeatureMTS,PyramidGrid> >(FeatureMTS(), PyramidGrid()); }
-//
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorBGC1(int gx, int gy)
-//{   return makePtr< GenericExtractor<FeatureBGC1,GriddedHist> >(FeatureBGC1(), GriddedHist(gx, gy)); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorPyramidBGC1()
-//{   return makePtr< GenericExtractor<FeatureBGC1,PyramidGrid> >(FeatureBGC1(), PyramidGrid()); }
-//
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorCombined(int gx, int gy)
-//{   return makePtr< CombinedExtractor<GriddedHist> >(GriddedHist(gx, gy)); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorPyramidCombined()
-//{   return makePtr< CombinedExtractor<PyramidGrid> >(PyramidGrid()); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorGfttCombined()
-//{   return makePtr< CombinedExtractor<GfttGrid> >(GfttGrid()); }
-//
-//
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorGaborLbp(int gx, int gy, int kernel_siz)
-//{   return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist(gx, gy), kernel_siz); }
-//
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorDct()
-//{   return makePtr< ExtractorDct >(); }
-//
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorORBGrid(int g)
-//{   return makePtr< ExtractorORBGrid >(g); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGrid(int g)
-//{   return makePtr< ExtractorSIFTGrid >(g); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorSIFTGftt()
-//{   return makePtr< ExtractorGfttFeature2d >(xfeatures2d::SIFT::create()); }
-//
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorGrad()
-//{   return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist()); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorGfttGrad()
-//{   return makePtr< GenericExtractor<FeatureGrad,GfttGrid> >(FeatureGrad(),GfttGrid()); }
-//cv::Ptr<TextureFeature::Extractor> createExtractorPyramidGrad()
-//{   return makePtr< GenericExtractor<FeatureGrad,PyramidGrid> >(FeatureGrad(),PyramidGrid()); }
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorGfttGradMag()
-//{   return makePtr< GradMagExtractor<GfttGrid> >(GfttGrid()); }
-//
-//cv::Ptr<TextureFeature::Extractor> createExtractorHighDimLbp()
-//{   return makePtr< HighDimLbp >(); }
-//
-//

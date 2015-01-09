@@ -1,6 +1,8 @@
 #include <set>
 using namespace std;
 
+//#define HAVE_SSE
+
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/ml.hpp>
@@ -167,30 +169,25 @@ static int unique(const Mat &labels, set<int> &classes)
     return classes.size();
 }
 
+
+
 struct CustomKernel : public ml::SVM::Kernel
 {
     int K;
     CustomKernel(int k) : K(k) {}
 
-    // no, it's not faster.
-    void calc_int_sse(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    void calc_intersect(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
-        //Mat V(1,var_count,CV_32F,(void*)0);
-        //Mat A(1,var_count,CV_32F,(void*)another);
-        //for(int j=0; j<vcount; j++)
-        //{
-        //    V.data = (uchar*)(&vecs[j*var_count]);
-        //    results[j] = (float)(sum(cv::min(V,A))[0]);
-        //}
+#ifdef HAVE_SSE
         for(int j=0; j<vcount; j++)
         {
             int k=0;
             int reminder = var_count % 4;
-            int nb_iters = var_count / 4;                                                                                                                                                                                         
+            int nb_iters = var_count / 4;
             const float* sample = (&vecs[j*var_count]);
             __m128 c,s = _mm_set_ps1(0);
-            __m128* ptr_a = (__m128*)sample;                                                                                                                                                                                      
-            __m128* ptr_b = (__m128*)another;                                                                                                                                                                                      
+            __m128* ptr_a = (__m128*)sample;
+            __m128* ptr_b = (__m128*)another;
             for(; k<nb_iters; k++, ptr_a++, ptr_b++)
             {
                 c = _mm_min_ps(*ptr_a, *ptr_b);
@@ -203,115 +200,67 @@ struct CustomKernel : public ml::SVM::Kernel
                 float b = another[k];
                 sum += std::min(a,b);
             }
-            union {
-                __m128 m;
-                float f[4];
-            } x;
+            union { __m128 m; float f[4]; } x;
             x.m = s;
             results[j] = (sum + x.f[0] + x.f[1] + x.f[2] + x.f[3]);
-            //results[j] = (-(sum + s.m128_f32[0] + s.m128_f32[1] + s.m128_f32[2] + s.m128_f32[3]));
         }
-    }
-    void calc_hellinger0(int vcount, int var_count, const float* vecs, const float* another, float* results)
-    {
-        double gamma = -1;
+#else
         Mat V(1,var_count,CV_32F,(void*)0);
-        Mat V2(1,var_count,CV_32F);
-
         Mat A(1,var_count,CV_32F,(void*)another);
-        Mat A2(1,var_count,CV_32F);
-        cv::sqrt(A,A2);
-
         for(int j=0; j<vcount; j++)
         {
             V.data = (uchar*)(&vecs[j*var_count]);
-            cv::sqrt(V,V2);
-            Mat H=V2-A2;
-            results[j] = (float)(gamma*sum(H.mul(H))[0]);
+            results[j] = (float)(sum(cv::min(V,A))[0]);
         }
+#endif
     }
-    void calc_hellinger1(int vcount, int var_count, const float* vecs, const float* another, float* results)
-    {
-        if (var_count>=64000) 
-            throw(Exception(-211,"var_cout out of bounds","calc_hellinger","Classifier.cpp",__LINE__));
+    //void calc_hellinger0(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    //{
+    //    double gamma = -1;
+    //    Mat V(1,var_count,CV_32F,(void*)0);
+    //    Mat V2(1,var_count,CV_32F);
 
+    //    Mat A(1,var_count,CV_32F,(void*)another);
+    //    Mat A2(1,var_count,CV_32F);
+    //    cv::sqrt(A,A2);
+
+    //    for(int j=0; j<vcount; j++)
+    //    {
+    //        V.data = (uchar*)(&vecs[j*var_count]);
+    //        cv::sqrt(V,V2);
+    //        Mat H=V2-A2;
+    //        results[j] = (float)(gamma*sum(H.mul(H))[0]);
+    //    }
+    //}
+    void calc_hellinger(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        CV_Assert (var_count<64000);
         double z[64000];
-        int k=0;
-        for(; k<var_count-4; k+=4)
-        {
-            z[k]   = sqrt(another[k]);
-            z[k+1] = sqrt(another[k+1]);
-            z[k+2] = sqrt(another[k+2]);
-            z[k+3] = sqrt(another[k+3]);
-        }
-        for(; k<var_count; k++)
-        {
-            z[k] = sqrt(another[k]);
-        }
-
-        for(int j=0; j<vcount; j++)
-        {
-            double a,b, s = 0;
-            const float* sample = &vecs[j*var_count];
-            int k=0;
-            for(; k<var_count-4; k+=4)
-            {
-                a = sqrt(sample[k]);
-                b = z[k];
-                s += (a - b) * (a - b);
-
-                a = sqrt(sample[k+1]);
-                b = z[k+1];
-                s += (a - b) * (a - b);
-                
-                a = sqrt(sample[k+2]);
-                b = z[k+2];
-                s += (a - b) * (a - b);
-                
-                a = sqrt(sample[k+3]);
-                b = z[k+3];
-                s += (a - b) * (a - b);
-            }
-            for(; k<var_count; k++)
-            {
-                double a = sqrt(sample[k]);
-                double b = z[k];
-                s += (a - b) * (a - b);
-            }
-            results[j] = (float)(-s);
-        }
-    }
-    void calc_hellinger_sse(int vcount, int var_count, const float* vecs, const float* another, float* results)
-    {
-        if (var_count>=64000) 
-            throw(Exception(-211,"var_cout out of bounds","calc_hellinger","Classifier.cpp",__LINE__));
-
-        float z[64000];
-        __m128* ptr_out= (__m128*)z;                                                                                                                                                                                      
-        __m128* ptr_in = (__m128*)another;                                                                                                                                                                                      
+#ifdef HAVE_SSE
+        __m128* ptr_out= (__m128*)z;
+        __m128* ptr_in = (__m128*)another;
 
         int k=0;
         int reminder = var_count % 4;
-        int nb_iters = var_count / 4;                                                                                                                                                                                         
+        int nb_iters = var_count / 4;
         for(; k<nb_iters; k++, ptr_in++, ptr_out++)
         {
-            *ptr_out = _mm_sqrt_ps(*ptr_in);                                                                                                                                                                          
+            *ptr_out = _mm_sqrt_ps(*ptr_in);
         }
         while ( reminder-- )
         {
             z[k] = sqrt(another[k]);
             k++;
         }
-
         for(int j=0; j<vcount; j++)
         {
             int k=0;
             int reminder = var_count % 4;
-            int nb_iters = var_count / 4;                                                                                                                                                                                         
+            int nb_iters = var_count / 4;
             const float* sample = (&vecs[j*var_count]);
             __m128 a,b,c,s = _mm_set_ps1(0);
-            __m128* ptr_a = (__m128*)sample;                                                                                                                                                                                      
-            __m128* ptr_b = (__m128*)z;                                                                                                                                                                                      
+            __m128* ptr_a = (__m128*)sample;
+            __m128* ptr_b = (__m128*)z;
             for(; k<nb_iters; k++, ptr_a++, ptr_b++)
             {
                 a = _mm_sqrt_ps(*ptr_a);
@@ -326,95 +275,53 @@ struct CustomKernel : public ml::SVM::Kernel
                 float b = z[k];
                 sum += (a - b) * (a - b);
             }
-            union {
-                __m128 m;
-                float f[4];
-            } x;
+            union { __m128 m; float f[4]; } x;
             x.m = s;
             results[j] = (-(sum + x.f[0] + x.f[1] + x.f[2] + x.f[3]));
             //results[j] = (-(sum + s.m128_f32[0] + s.m128_f32[1] + s.m128_f32[2] + s.m128_f32[3]));
         }
-    }
+#else
+        int k=0;
+        for(; k<var_count-4; k+=4)
+        {
+            z[k]   = sqrt(another[k]);
+            z[k+1] = sqrt(another[k+1]);
+            z[k+2] = sqrt(another[k+2]);
+            z[k+3] = sqrt(another[k+3]);
+        }
+        for(; k<var_count; k++)
+            z[k] = sqrt(another[k]);
 
-
-    void calc_correl(int vcount, int var_count, const float* vecs, const float* another, float* results)
-    {
         for(int j=0; j<vcount; j++)
         {
-            double s1 = 0, s2 = 0, s11 = 0, s12 = 0, s22 = 0;
+            double a,b, s = 0;
             const float* sample = &vecs[j*var_count];
-            for(int k=0; k<var_count; k++)
+            int k=0;
+            for(; k<var_count-4; k+=4)
             {
-                double a = sample[k];
-                double b = another[k];
-                s12 += a*b;
-                s1 += a;
-                s11 += a*a;
-                s2 += b;
-                s22 += b*b;
+                a = sqrt(sample[k]);     b = z[k];    s += (a - b) * (a - b);
+                a = sqrt(sample[k+1]);   b = z[k+1];  s += (a - b) * (a - b);
+                a = sqrt(sample[k+2]);   b = z[k+2];  s += (a - b) * (a - b);
+                a = sqrt(sample[k+3]);   b = z[k+3];  s += (a - b) * (a - b);
             }
-            double scale = 1./var_count;
-            double num = s12 - s1*s2*scale;
-            double denom2 = (s11 - s1*s1*scale)*(s22 - s2*s2*scale);
-            results[j] = (float)(std::abs(denom2) > DBL_EPSILON ? num/std::sqrt(denom2) : 1.);
+            for(; k<var_count; k++)
+                a = sqrt(sample[k]);     b = z[k];    s += (a - b) * (a - b);
+            results[j] = (float)(-s);
         }
+#endif
     }
-    void calc_cosine(int vcount, int var_count, const float* vecs, const float* another, float* results)
-    {
-        for(int j=0; j<vcount; j++)
-        {
-            double s11 = 0, s12 = 0, s22 = 0;
-            const float* sample = &vecs[j*var_count];
-            for(int k=0; k<var_count; k++)
-            {
-                double a = sample[k];
-                double b = another[k];
-                s12 += a*b;
-                s11 += a*a;
-                s22 += b*b;
-            }
-            results[j] = (float)(s12 / sqrt(s11 * s22));
-        }
-    }
-    void calc_bhattacharyya(int vcount, int var_count, const float* vecs, const float* another, float* results)
-    {
-        for(int j=0; j<vcount; j++)
-        {
-            double s = 0, s1 = 0, s2 = 0;
-            const float* sample = &vecs[j*var_count];
-            for(int k=0; k<var_count; k++)
-            {
-                double a = sample[k];
-                double b = another[k];
-
-                s  += std::sqrt(a*b);
-                s1 += a;
-                s2 += b;
-            }
-            s1 *= s2;
-            s1 = fabs(s1) > FLT_EPSILON ? 1./std::sqrt(s1) : 1.;
-            results[j] = (float)std::sqrt(std::max(1. - s*s1, 0.));
-        }
-    }
-    void calc_low(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    void calc_lowpass(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         for(int j=0; j<vcount; j++)
         {
             double s = 0, d = 0;
+            double a1,a2,a3,a4,a5,b1,b2,b3,b4,b5;
             const float* sample = &vecs[j*var_count];
             int k=0;
             for(; k<var_count-5; k+=4)
             {
-                double a1 = sample[k];
-                double a2 = sample[k+1];
-                double a3 = sample[k+2];
-                double a4 = sample[k+3];
-                double a5 = sample[k+4];
-                double b1 = another[k];
-                double b2 = another[k+1];
-                double b3 = another[k+2];
-                double b4 = another[k+3];
-                double b5 = another[k+4];
+                a1 = sample[k];  a2 = sample[k+1];   a3 = sample[k+2];   a4 = sample[k+3];    a5 = sample[k+4];
+                b1 = another[k]; b2 = another[k+1];  b3 = another[k+2];  b4 = another[k+3];   b5 = another[k+4];
                 s += sqrt((a1+a2) * (b1+b2));
                 s += sqrt((a2+a3) * (b2+b3));
                 s += sqrt((a3+a4) * (b3+b4));
@@ -422,10 +329,8 @@ struct CustomKernel : public ml::SVM::Kernel
             }
             for(; k<var_count-1; k++)
             {
-                double a1 = sample[k];
-                double a2 = sample[k+1];
-                double b1 = another[k];
-                double b2 = another[k+1];
+                a1 = sample[k];    a2 = sample[k+1];
+                b1 = another[k];   b2 = another[k+1];
                 s += sqrt((a1+a2) * (b1+b2));
             }
             results[j] = (float)(s);
@@ -436,12 +341,12 @@ struct CustomKernel : public ml::SVM::Kernel
     {
         switch(K)
         {
-        case -1: calc_hellinger_sse(vcount, var_count, vecs, another, results); break;
-        case -2: calc_correl(vcount, var_count, vecs, another, results); break;
-        case -3: calc_cosine(vcount, var_count, vecs, another, results); break;
-        case -4: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
-        case -5: calc_int_sse(vcount, var_count, vecs, another, results); break;
-        case -6: calc_low(vcount, var_count, vecs, another, results); break;
+        case -1: calc_hellinger(vcount, var_count, vecs, another, results); break;
+        //case -2: calc_correl(vcount, var_count, vecs, another, results); break;
+        //case -3: calc_cosine(vcount, var_count, vecs, another, results); break;
+        //case -4: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
+        case -5: calc_intersect(vcount, var_count, vecs, another, results); break;
+        case -6: calc_lowpass(vcount, var_count, vecs, another, results); break;
         default: cerr << "sorry, dave" << endl; exit(0);
         }
     }
@@ -1012,8 +917,6 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_INT:   return makePtr<ClassifierSVM>(int(cv::ml::SVM::INTER)); break;
         case CL_SVM_INT2:  return makePtr<ClassifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<ClassifierSVM>(-1); break;
-        case CL_SVM_COR:   return makePtr<ClassifierSVM>(-2); break;
-        case CL_SVM_COS:   return makePtr<ClassifierSVM>(-3); break;
         case CL_SVM_LOW:   return makePtr<ClassifierSVM>(-6); break;
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
@@ -1039,8 +942,6 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_INT:   return makePtr<VerifierSVM>(int(cv::ml::SVM::INTER)); break;
         case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
-        case CL_SVM_COR:   return makePtr<VerifierSVM>(-2); break;
-        case CL_SVM_COS:   return makePtr<VerifierSVM>(-3); break;
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
     }

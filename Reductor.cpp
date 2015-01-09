@@ -11,13 +11,6 @@ namespace TextureFeatureImpl
 {
 
 
-struct ReductorNone : public Reductor
-{
-    virtual int reduce(const Mat &src, Mat &dest) const  { dest=src; return 0; }
-};
-
-
-
 struct ReductorWalshHadamard : public Reductor
 {
     int keep;
@@ -70,13 +63,13 @@ struct ReductorDct : public Reductor
         Mat h; src.convertTo(h, CV_32F);
         Mat h2(h.size(), h.type());
 
-        dft(h,h2); // dft instead of dct solves pow2 issue
+        dft(h,h2, DFT_ROWS); // dft instead of dct solves pow2 issue
 
         Mat h3 = (keep>0) ?
                  h2(Rect(0,0,std::min(keep, h2.cols-1),1)) :
                  h2;
 
-        dft(h3, dest, DCT_INVERSE | DFT_SCALE);
+        dft(h3, dest, DCT_INVERSE | DFT_SCALE | DFT_ROWS);
         return 0;
     }
 };

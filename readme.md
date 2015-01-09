@@ -8,7 +8,12 @@ it all builds on top of opencv30 .
      the pipeline is:
         (preprocessing) -> extractor -> reductor -> classifier (or verifier)
 
+-----------------------------------------------------
 
+3 projects in here:
+* online.cpp : realtime webcam app with online training
+* duel.cpp : shootout of different pipeline combinations
+* fr_lfw_benchmark.cpp: the opencv lfw benchmark (from contrib/datasets)
 
 ------------------------------------------------------
 

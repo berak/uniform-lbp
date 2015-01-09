@@ -259,16 +259,16 @@ int main(int argc, const char *argv[])
 
 
     const char *keys =
-            "{ help h usage ? |           | show this message }"
-            "{ opts o         |           | show extractor / reducer/ classifier options }"
-            "{ path p         |senthil.txt| path to dataset  }"
-            "{ fold f         |10         | folds for crossvalidation }"
-            "{ ext e          |1          | extractor enum }"
-            "{ red r          |0          | reductor enum }"
-            "{ cls c          |12          | classifier enum }"
-            "{ all a          |false      | test all }"
-            "{ pre P          |0          | preprocessing }"
-            "{ crop C         |0          | crop outer pixels }";
+            "{ help h usage ? |      | show this message }"
+            "{ opts o         |      | show extractor / reducer/ classifier options }"
+            "{ path p         |data/senthil.txt| path to dataset  }"
+            "{ fold f         |10    | folds for crossvalidation }"
+            "{ ext e          |1     | extractor enum }"
+            "{ red r          |0     | reductor enum }"
+            "{ cls c          |12    | classifier enum }"
+            "{ all a          |false | test all }"
+            "{ pre P          |0     | preprocessing }"
+            "{ crop C         |0     | crop outer pixels }";
  
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
@@ -318,21 +318,27 @@ int main(int argc, const char *argv[])
     else
     {
         int tests[] = {
-            TextureFeature::EXT_Pixels, TextureFeature::RED_NONE, TextureFeature::CL_NORM_L2,
-            TextureFeature::EXT_Pixels, TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
-            TextureFeature::EXT_Dct,    TextureFeature::RED_NONE, TextureFeature::CL_COSINE,
-            TextureFeature::EXT_Dct,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
-            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_HIST_HELL,
-            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
-            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE, TextureFeature::CL_SVM_HEL,
-            TextureFeature::EXT_Lbp,    TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_MTS_P,  TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_COMB_G, TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_Pixels, TextureFeature::RED_NONE,  TextureFeature::CL_NORM_L2,
+            TextureFeature::EXT_Pixels, TextureFeature::RED_NONE,  TextureFeature::CL_SVM_POL,
+            TextureFeature::EXT_Pixels, TextureFeature::RED_NONE,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_Dct,    TextureFeature::RED_NONE,  TextureFeature::CL_COSINE,
+            TextureFeature::EXT_Dct,    TextureFeature::RED_NONE,  TextureFeature::CL_SVM_POL,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE,  TextureFeature::CL_HIST_HELL,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE,  TextureFeature::CL_SVM_POL,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_NONE,  TextureFeature::CL_SVM_HEL,
+            TextureFeature::EXT_Lbp,    TextureFeature::RED_DCT8,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_LBP_P,  TextureFeature::RED_DCT8,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_MTS_P,  TextureFeature::RED_NONE,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_MTS,    TextureFeature::RED_NONE,  TextureFeature::CL_SVM_INT2,
+            TextureFeature::EXT_COMB_G, TextureFeature::RED_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_FPLBP_P, TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_FPLBP_P, TextureFeature::RED_HELL, TextureFeature::CL_SVM_INT,
             TextureFeature::EXT_BGC1_P,  TextureFeature::RED_WHAD, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_HDLBP,  TextureFeature::RED_HELL, TextureFeature::CL_SVM_INT,
-            TextureFeature::EXT_HDLBP,  TextureFeature::RED_WHAD, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_HDLBP,  TextureFeature::RED_HELL,  TextureFeature::CL_SVM_INT,
+            TextureFeature::EXT_HDLBP,  TextureFeature::RED_WHAD,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_Sift,   TextureFeature::RED_DCT12, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_Sift,   TextureFeature::RED_DCT8,  TextureFeature::CL_SVM_HEL,
+            TextureFeature::EXT_Sift,   TextureFeature::RED_HELL,  TextureFeature::CL_SVM_INT2,
 
 
             -1,-1,-1

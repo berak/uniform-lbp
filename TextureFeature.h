@@ -6,6 +6,7 @@ using cv::Mat;
 using cv::String;
 using cv::FileStorage;
 
+
 //
 // interfaces
 //
@@ -146,8 +147,6 @@ namespace TextureFeature
         CL_SVM_INT,
         CL_SVM_INT2,
         CL_SVM_HEL,
-        CL_SVM_COR,
-        CL_SVM_COS,
         CL_SVM_LOW,
         CL_SVM_MULTI,
         CL_PCA,
@@ -168,8 +167,6 @@ namespace TextureFeature
         "SVM_INT",
         "SVM_INT2",
         "SVM_HEL",
-        "SVM_COR",
-        "SVM_COS",
         "SVM_LOW",
         "SVM_MULTI",
         "PCA",
