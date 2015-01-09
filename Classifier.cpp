@@ -219,11 +219,9 @@ struct CustomKernel : public ml::SVM::Kernel
     //    double gamma = -1;
     //    Mat V(1,var_count,CV_32F,(void*)0);
     //    Mat V2(1,var_count,CV_32F);
-
     //    Mat A(1,var_count,CV_32F,(void*)another);
     //    Mat A2(1,var_count,CV_32F);
     //    cv::sqrt(A,A2);
-
     //    for(int j=0; j<vcount; j++)
     //    {
     //        V.data = (uchar*)(&vecs[j*var_count]);
@@ -235,7 +233,7 @@ struct CustomKernel : public ml::SVM::Kernel
     void calc_hellinger(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         CV_Assert (var_count<64000);
-        double z[64000];
+        float z[64000];
 #ifdef HAVE_SSE
         __m128* ptr_out= (__m128*)z;
         __m128* ptr_in = (__m128*)another;
