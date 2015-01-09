@@ -823,7 +823,7 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
     {
 #ifndef HAVE_DLIB
      //   elastic = ElasticParts::create();
-     //   elastic->read("parts.xml.gz");
+     //   elastic->read("data/parts.xml.gz");
 #endif
     }
 
@@ -884,7 +884,7 @@ struct HighDimLbp : public TextureFeature::Extractor
     {
 #ifndef HAVE_DLIB
         //elastic = ElasticParts::create();
-        //elastic->read("parts.xml.gz");
+        //elastic->read("data/parts.xml.gz");
 #endif
     }
 
