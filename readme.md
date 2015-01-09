@@ -12,8 +12,8 @@ it all builds on top of opencv30 .
 
 3 projects in here:
 * online.cpp : realtime webcam app with online training
-* duel.cpp : shootout of different pipeline combinations
-* fr_lfw_benchmark.cpp: the opencv lfw benchmark (from contrib/datasets)
+* duel.cpp : shootout of different (identification) pipeline combinations
+* fr_lfw_benchmark.cpp: the opencv (verification) lfw benchmark (from contrib/datasets)
 
 ------------------------------------------------------
 

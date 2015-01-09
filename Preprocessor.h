@@ -10,6 +10,7 @@ class Preprocessor
     int preproc, precrop;
     Ptr<CLAHE> clahe;
     Ptr<bioinspired::Retina> retina;
+    int fixed_size;
 
 public:
 

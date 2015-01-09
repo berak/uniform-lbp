@@ -67,6 +67,7 @@ static Mat tan_triggs_preprocessing(InputArray src, float alpha=0.1, float tau=1
 Preprocessor::Preprocessor(int mode, int crop, int retsize)
     : preproc(mode)
     , precrop(crop)
+    , fixed_size(retsize)
     , clahe(createCLAHE(50))
     , retina(bioinspired::createRetina(Size(retsize,retsize)))
 {
@@ -81,17 +82,22 @@ Preprocessor::Preprocessor(int mode, int crop, int retsize)
 Mat Preprocessor::process(const Mat &imgin)  const
 {
     Mat imgcropped(imgin, Rect(precrop, precrop, imgin.cols-2*precrop, imgin.rows-2*precrop));
+    Mat imgt;
+    Size sz(fixed_size,fixed_size);
+    if (imgcropped.size() != sz)
+        resize(imgcropped, imgt, sz);
+    else
+        imgt = imgcropped;
 
     Mat imgout;
     switch(preproc)
     {
         default:
-        case 0: imgout = precrop>0 ? imgcropped.clone() : imgcropped; break;
-        case 1: equalizeHist(imgcropped,imgout); break;
-        case 2: clahe->apply(imgcropped,imgout); break;
-        case 3: retina->run(imgcropped); retina->getParvo(imgout); break;
-        case 4: cv::normalize(tan_triggs_preprocessing(imgcropped), imgout, 0, 255, NORM_MINMAX, CV_8UC1); break;
-        case 5: resize(imgcropped,imgout,Size(32,32)); break;
+        case 0: imgout = precrop>0 ? imgt.clone() : imgcropped; break;
+        case 1: equalizeHist(imgt,imgout); break;
+        case 2: clahe->apply(imgt,imgout); break;
+        case 3: retina->run(imgt); retina->getParvo(imgout); break;
+        case 4: cv::normalize(tan_triggs_preprocessing(imgt), imgout, 0, 255, NORM_MINMAX, CV_8UC1); break;
     }
     return imgout;
 }
