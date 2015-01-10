@@ -93,7 +93,7 @@ Mat Preprocessor::process(const Mat &imgin)  const
     switch(preproc)
     {
         default:
-        case 0: imgout = precrop>0 ? imgt.clone() : imgcropped; break;
+        case 0: imgout = precrop>0 ? imgt.clone() : imgt; break;
         case 1: equalizeHist(imgt,imgout); break;
         case 2: clahe->apply(imgt,imgout); break;
         case 3: retina->run(imgt); retina->getParvo(imgout); break;
@@ -104,6 +104,6 @@ Mat Preprocessor::process(const Mat &imgin)  const
 
 const char * Preprocessor::pps() const
 {
-    static const char *PPS[] = { "none","eqhist","clahe","retina","tan-triggs","crop",0 };
+    static const char *PPS[] = { "none","eqhist","clahe","retina","tan-triggs",0 };
     return PPS[preproc];
 }

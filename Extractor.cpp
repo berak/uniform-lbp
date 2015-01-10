@@ -437,7 +437,7 @@ struct PyramidGrid
 //
 // 64 hardcoded, precalculated gftt keypoints from the 90x90 cropped mean lfw2 img
 //
-static void gftt64(vector<KeyPoint> &kp)
+static void gftt64(const Mat &img, vector<KeyPoint> &kp)
 {
     kp.push_back(KeyPoint(14, 33, 3));        kp.push_back(KeyPoint(29, 77, 3));        kp.push_back(KeyPoint(55, 60, 3));
     kp.push_back(KeyPoint(63, 76, 3));        kp.push_back(KeyPoint(76, 32, 3));        kp.push_back(KeyPoint(35, 60, 3));
@@ -461,6 +461,16 @@ static void gftt64(vector<KeyPoint> &kp)
     kp.push_back(KeyPoint(50, 62, 3));        kp.push_back(KeyPoint(11, 43, 3));        kp.push_back(KeyPoint(45, 55, 3));
     kp.push_back(KeyPoint(45, 56, 3));        kp.push_back(KeyPoint(79, 43, 3));        kp.push_back(KeyPoint(74, 88, 3));
     kp.push_back(KeyPoint(41, 62, 3));
+    if (img.size() != Size(90,90))
+    {
+        float scale_x=float(img.cols)/90;
+        float scale_y=float(img.rows)/90;
+        for (size_t i=0; i<kp.size(); i++)
+        {
+            kp[i].pt.x *= scale_x;
+            kp[i].pt.y *= scale_y;
+        }
+    }
 }
 
 static void gftt96(vector<KeyPoint> &kp)
@@ -512,7 +522,7 @@ static void gftt32(vector<KeyPoint> &kp)
     kp.push_back(KeyPoint(33,54,3,-1,0,0,-1));    kp.push_back(KeyPoint(34,52,3,-1,0,0,-1));
 }
 
-static void kp_manual(vector<KeyPoint> &kp)
+static void kp_manual(const Mat &img, vector<KeyPoint> &kp)
 {
     kp.push_back(KeyPoint(15,19,3,-1,0,0,-1));    kp.push_back(KeyPoint(75,19,3,-1,0,0,-1));
     kp.push_back(KeyPoint(29,20,3,-1,0,0,-1));    kp.push_back(KeyPoint(61,20,3,-1,0,0,-1));
@@ -524,6 +534,16 @@ static void kp_manual(vector<KeyPoint> &kp)
     kp.push_back(KeyPoint(40,64,3,-1,0,0,-1));    kp.push_back(KeyPoint(50,64,3,-1,0,0,-1));
     kp.push_back(KeyPoint(31,75,3,-1,0,0,-1));    kp.push_back(KeyPoint(59,75,3,-1,0,0,-1));
     kp.push_back(KeyPoint(27,81,3,-1,0,0,-1));    kp.push_back(KeyPoint(63,81,3,-1,0,0,-1));
+    if (img.size() != Size(90,90))
+    {
+        float scale_x=float(img.cols)/90;
+        float scale_y=float(img.rows)/90;
+        for (size_t i=0; i<kp.size(); i++)
+        {
+            kp[i].pt.x *= scale_x;
+            kp[i].pt.y *= scale_y;
+        }
+    }
 }
 
 
@@ -577,7 +597,7 @@ struct GfttGrid
     void hist(const Mat &feature, Mat &histo, int histSize=256) const
     {
         vector<KeyPoint> kp;
-        gftt64(kp);
+        gftt64(feature,kp);
         //gftt96(kp);
         //kp_manual(kp);
 
@@ -838,7 +858,7 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
         {// PROFILEX("elastic")
        // elastic->getPoints(img, kp);
         }
-        kp_manual(kp);
+        kp_manual(img,kp);
 #endif
         size_t s = kp.size();
         float w=5;
@@ -900,7 +920,7 @@ struct HighDimLbp : public TextureFeature::Extractor
             //PROFILEX("elastic");
         //    elastic->getPoints(img, kp);
         }
-        kp_manual(kp);
+        kp_manual(img, kp);
 #endif
 
 
@@ -996,6 +1016,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_Grad_G:   return makePtr< GenericExtractor<FeatureGrad,GfttGrid> >(FeatureGrad(),GfttGrid()); break;
         case EXT_Grad_P:   return makePtr< GenericExtractor<FeatureGrad,PyramidGrid> >(FeatureGrad(),PyramidGrid()); break;
         case EXT_GradMag:  return makePtr< GradMagExtractor<GfttGrid> >(GfttGrid()); break;
+        case EXT_GradMag_P:  return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }

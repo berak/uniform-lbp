@@ -31,7 +31,7 @@ double ct(int64 t)
 
 
 //
-// read a 'path <blank> label' list
+// read a 'path <blank> label' list (csv without commas or such)
 //
 int readtxt(const char *fname, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim)
 {
@@ -208,19 +208,26 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
     double err = double(neg)/all;
     int64 t1=getTickCount() - t0;
     double t(t1/getTickFrequency());
-    cout << format("%-26s %6d %6d %6d %8.3f %8.3f",name.c_str(), fsiz, int(all-neg), int(neg), (1.0-err), t) << endl;
+    cout << format("%-28s %6d %6d %6d %8.3f %8.3f",name.c_str(), fsiz, int(all-neg), int(neg), (1.0-err), t) << endl;
     if (debug) cout << "confusion" << endl << confusion(Range(0,min(20,confusion.rows)), Range(0,min(20,confusion.cols))) << endl;
     return err;
 }
 
 double runtest(int ext, int red, int cls, const vector<Mat> &images, const vector<int> &labels, const vector<vector<int>> &persons, size_t fold=10)
 {
-    string name = format( "%s.%s.%s", TextureFeature::EXS[ext], TextureFeature::REDS[red], TextureFeature::CLS[cls]); 
-    return runtest(name,  
-        TextureFeature::createExtractor(ext),  
-        TextureFeature::createReductor(red),
-        TextureFeature::createClassifier(cls),
-        images,labels,persons, fold); 
+    string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::REDS[red], TextureFeature::CLS[cls]); 
+    try {
+        runtest(name,  
+            TextureFeature::createExtractor(ext),  
+            TextureFeature::createReductor(red),
+            TextureFeature::createClassifier(cls),
+            images,labels,persons, fold); 
+    } 
+    catch(...)
+    {
+        cerr << name << " failed!" << endl;
+    }
+    return 0.7;
 }
 
 
@@ -248,11 +255,11 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |      | show this message }"
             "{ opts o         |      | show extractor / reducer/ classifier options }"
-            "{ path p         |data/yale.txt| path to dataset  }"
+            "{ path p         |data/att.txt| path to dataset  }"
             "{ fold f         |10    | folds for crossvalidation }"
-            "{ ext e          |1     | extractor enum }"
+            "{ ext e          |17     | extractor enum }"
             "{ red r          |0     | reductor enum }"
-            "{ cls c          |1     | classifier enum }"
+            "{ cls c          |6     | classifier enum }"
             "{ all a          |false | test all }"
             "{ pre P          |0     | preprocessing }"
             "{ crop C         |0     | crop outer pixels }";
@@ -291,11 +298,11 @@ int main(int argc, const char *argv[])
     char *pp[] = { "no preproc","eqhist","clahe","retina","tan-triggs","crop",0 };
     if (all)
         cout << "-------------------------------------------------------------------" << endl;
-    cout << format("%-26s",dbs.c_str()) << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[pre] << endl;
+    cout << format("%-24s",dbs.c_str()) << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[pre] << endl;
     if (all)
     {
         cout << "-------------------------------------------------------------------" << endl;
-        cout << "[method]                 [f_bytes]  [hit]  [miss]  [acc]   [time]  " << endl;
+        cout << "[extract] [redu]  [class]   [f_bytes]  [hit]  [miss]  [acc]   [time]  " << endl;
     }
 
     if ( ! all )
@@ -319,23 +326,28 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_MTS_P,  TextureFeature::RED_NONE,  TextureFeature::CL_SVM_POL,
             TextureFeature::EXT_MTS,    TextureFeature::RED_HELL,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_COMB_G, TextureFeature::RED_NONE,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_COMB_P, TextureFeature::RED_WHAD,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_COMB_G, TextureFeature::RED_HELL,  TextureFeature::CL_SVM_INT2,
+            TextureFeature::EXT_COMB_P, TextureFeature::RED_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_COMB_P, TextureFeature::RED_NONE,  TextureFeature::CL_SVM_POL,
+            TextureFeature::EXT_COMB_P, TextureFeature::RED_HELL,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_TPLBP_P, TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_TPLBP_G, TextureFeature::RED_HELL, TextureFeature::CL_SVM_INT2,
-            TextureFeature::EXT_FPLBP_P, TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_FPLBP_P, TextureFeature::RED_DCT8, TextureFeature::CL_SVM_POL,
+            TextureFeature::EXT_FPLBP_P, TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_FPLBP_P, TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
             TextureFeature::EXT_FPLBP_P, TextureFeature::RED_HELL, TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_FPLBP_P, TextureFeature::RED_HELL, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_BGC1_P,  TextureFeature::RED_WHAD, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_HDLBP,  TextureFeature::RED_HELL,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_HDLBP,  TextureFeature::RED_WHAD,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_Sift,   TextureFeature::RED_DCT8,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_Sift,   TextureFeature::RED_DCT12, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_Sift,   TextureFeature::RED_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_Sift,   TextureFeature::RED_NONE,  TextureFeature::CL_SVM_HEL,
             TextureFeature::EXT_Sift,   TextureFeature::RED_HELL,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_Sift_G, TextureFeature::RED_DCT8,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_Grad_P, TextureFeature::RED_NONE,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_Grad_P, TextureFeature::RED_NONE,  TextureFeature::CL_SVM_HEL,
             TextureFeature::EXT_GradMag,TextureFeature::RED_WHAD,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_GradMag_P,TextureFeature::RED_WHAD,  TextureFeature::CL_PCA_LDA,
 
             -1,-1,-1
         };

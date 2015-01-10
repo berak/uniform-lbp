@@ -162,6 +162,7 @@ int main(int argc, const char *argv[])
     PROFILE;
     const char *keys =
             "{ help h usage ? |    | show this message }"
+            "{ opts o         |    | show extractor / reduce / verifier options }"
             "{ path p         |true| path to dataset (lfw2 folder) }"
             "{ ext e          |25  | extractor enum }"
             "{ red r          |1   | reductor enum }"
@@ -176,6 +177,10 @@ int main(int argc, const char *argv[])
     if (parser.has("help") || path=="true")
     {
         parser.printMessage();
+        return -1;
+    }
+    if (parser.has("opts"))
+    {
         printOptions();
         return -1;
     }

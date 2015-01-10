@@ -79,6 +79,7 @@ namespace TextureFeature
         EXT_Grad_G,
         EXT_Grad_P,
         EXT_GradMag,
+        EXT_GradMag_P,
         EXT_HDLBP,
         EXT_MAX
     };
@@ -108,6 +109,7 @@ namespace TextureFeature
         "Grad_G",
         "Grad_P",
         "GradMag",
+        "GradMagP",
         "HDLBP",
         0
     };
@@ -151,6 +153,7 @@ namespace TextureFeature
         CL_SVM_MULTI,
         CL_PCA,
         CL_PCA_LDA,
+        CL_FISH_SVM,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -171,6 +174,7 @@ namespace TextureFeature
         "SVM_MULTI",
         "PCA",
         "PCA_LDA",
+        "FISH_SVM",
         0
     };
 

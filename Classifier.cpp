@@ -103,10 +103,11 @@ struct ClassifierNearestFloat : public ClassifierNearest
 //
 // just swap the comparison
 //   the flag enums are overlapping, so i like to have this in a different class
+//   HISTCMP_CHISQR is default as in opencv's lbph facereco, though HELLINGER deinitely works better.
 //
 struct ClassifierHist : public ClassifierNearestFloat
 {
-    ClassifierHist(int flag=HISTCMP_CHISQR)
+    ClassifierHist(int flag=HISTCMP_CHISQR) 
         : ClassifierNearestFloat(flag)
     {}
 
@@ -162,6 +163,8 @@ struct ClassifierKNN : public TextureFeature::Classifier
     }
 };
 
+
+
 static int unique(const Mat &labels, set<int> &classes)
 {
     for (size_t i=0; i<labels.total(); ++i)
@@ -170,7 +173,9 @@ static int unique(const Mat &labels, set<int> &classes)
 }
 
 
-
+//
+// curently needs a hack in svm.cpp
+//
 struct CustomKernel : public ml::SVM::Kernel
 {
     int K;
@@ -245,7 +250,7 @@ struct CustomKernel : public ml::SVM::Kernel
         {
             *ptr_out = _mm_sqrt_ps(*ptr_in);
         }
-        while ( reminder-- )
+        while ( reminder-- ) // hmm, do we really need this ?
         {
             z[k] = sqrt(another[k]);
             k++;
@@ -597,6 +602,45 @@ struct ClassifierPCA_LDA : public ClassifierPCA
     }
 };
 
+struct ClassifierFisherSVM : public ClassifierSVM
+{
+    ClassifierPCA_LDA pca;
+
+    ClassifierFisherSVM()
+        : ClassifierSVM(ml::SVM::INTER)
+    {}
+    virtual int train(const Mat &features, const Mat &labels)
+    {
+        Mat trainData = tofloat(features.reshape(1, labels.rows));
+        pca.train(trainData, labels);
+        svm->clear();
+        bool ok = svm->train(ml::TrainData::create(pca.features, ml::ROW_SAMPLE, labels));
+        //svm->save("fish.xml");
+        return ok;
+    }
+
+    virtual int predict(const Mat &src, Mat &res) const
+    {
+        Mat pa = pca.project(tofloat(src));
+        svm->predict(pa, res);
+        return res.rows;
+    }
+
+    // Serialize
+    virtual bool save(FileStorage &fs) const
+    {
+        ClassifierSVM::save(fs);
+        pca.save(fs);
+        return true;
+    }
+    virtual bool load(const FileStorage &fs)
+    {
+        ClassifierSVM::load(fs);
+        pca.load(fs);
+        return true;
+    }
+};
+
 
 //------->8-----------------------------------------------------------------------
 //
@@ -699,7 +743,7 @@ struct VerifierPairDistance : public TextureFeature::Verifier
         : dist_flag(df)
     {}
 
-    Mat distance(const Mat &a, const Mat &b) const
+    Mat distance_mat(const Mat &a, const Mat &b) const
     {
         Mat d;
         switch(dist_flag)
@@ -711,20 +755,28 @@ struct VerifierPairDistance : public TextureFeature::Verifier
         return d;
     }
 
-    virtual int train(const Mat &features, const Mat &labels)
+    void train_pre(const Mat &features, const Mat &labels, Mat &distances, Mat &binlabels)
     {
         Mat trainData = tofloat(features.reshape(1, labels.rows));
 
-        Mat distances;
-        Mat binlabels;
         for (size_t i=0; i<labels.total()-1; i+=2)
         {
             int j = i+1;
-            distances.push_back(distance(trainData.row(i), trainData.row(j)));
+            distances.push_back(distance_mat(trainData.row(i), trainData.row(j)));
 
             LabelType l = (labels.at<int>(i) == labels.at<int>(j)) ? LabelType(1) : LabelType(-1);
             binlabels.push_back(l);
         }
+    }
+
+    virtual int train(const Mat &features, const Mat &labels)
+    {
+        Mat trainData = tofloat(features.reshape(1, labels.rows));
+        
+        Mat distances, binlabels;
+        train_pre(trainData, labels, distances, binlabels);
+        trainData.release();
+
         model->clear();
         return model->train(ml::TrainData::create(distances, ml::ROW_SAMPLE, binlabels));
     }
@@ -732,7 +784,7 @@ struct VerifierPairDistance : public TextureFeature::Verifier
     virtual bool same(const Mat &a, const Mat &b) const
     {
         Mat res;
-        model->predict(distance(tofloat(a), tofloat(b)), res);
+        model->predict(distance_mat(tofloat(a), tofloat(b)), res);
         LabelType r = res.at<LabelType>(0);
         return  r > 0;
     }
@@ -770,6 +822,29 @@ struct VerifierSVM : public VerifierPairDistance<int>
     }
 };
 
+struct VerifierFisherSVM : public VerifierSVM, ClassifierPCA_LDA
+{
+    virtual int train(const Mat &features, const Mat &labels)
+    {
+        Mat trainData = tofloat(features.reshape(1, labels.rows));
+        Mat distances, binlabels;
+        train_pre(trainData, labels, distances, binlabels);
+        trainData.release();
+
+        ClassifierPCA_LDA::train(distances, binlabels);
+        distances.release();
+        model->clear();
+        return model->train(ml::TrainData::create(ClassifierPCA_LDA::features, ml::ROW_SAMPLE, binlabels));
+    }
+
+    virtual bool same(const Mat &a, const Mat &b) const
+    {
+        Mat pa = ClassifierPCA_LDA::project(a);
+        Mat pb = ClassifierPCA_LDA::project(b);
+        return  VerifierSVM::same(pa, pb);
+    }
+};
+
 
 //
 // the only restricted / unsupervised case!
@@ -787,7 +862,7 @@ struct VerifierEM : public VerifierPairDistance<int>
         for (size_t i=0; i<labels.total()-1; i+=2)
         {
             int j = i+1;
-            distances.push_back(distance(trainData.row(i), trainData.row(j)));
+            distances.push_back(distance_mat(trainData.row(i), trainData.row(j)));
         }
 
         ml::EM::Params param;
@@ -805,7 +880,7 @@ struct VerifierEM : public VerifierPairDistance<int>
     {
         Mat fa = tofloat(a);
         Mat fb = tofloat(b);
-        float s = model->predict(distance(fa, fb));
+        float s = model->predict(distance_mat(fa, fb));
         //cerr << s << " ";
         return s>=1;
     }
@@ -850,7 +925,7 @@ struct VerifierKmeans : public TextureFeature::Verifier
 {
     Mat centers;
 
-    Mat distance(const Mat &a, const Mat &b) const
+    Mat distance_mat(const Mat &a, const Mat &b) const
     {
         Mat d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
         return d;
@@ -863,7 +938,7 @@ struct VerifierKmeans : public TextureFeature::Verifier
         for (size_t i=0; i<labels.total()-1; i+=2)
         {
             int j = i+1;
-            distances.push_back(distance(trainData.row(i), trainData.row(j)));
+            distances.push_back(distance_mat(trainData.row(i), trainData.row(j)));
         }
         Mat best;
         kmeans(distances,2,best,TermCriteria(),3,KMEANS_PP_CENTERS,centers);
@@ -872,7 +947,7 @@ struct VerifierKmeans : public TextureFeature::Verifier
 
     virtual bool same(const Mat &a, const Mat &b) const
     {
-        Mat d = distance(tofloat(a),tofloat(b));
+        Mat d = distance_mat(tofloat(a),tofloat(b));
         double d0 = norm(d,centers.row(0));
         double d1 = norm(d,centers.row(1));
         //cerr << s << " ";
@@ -909,6 +984,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
+        case CL_FISH_SVM:  return makePtr<ClassifierFisherSVM>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();
@@ -931,6 +1007,7 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
+        case CL_FISH_SVM:  return makePtr<VerifierFisherSVM>(); break;
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Verifier>();
