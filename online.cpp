@@ -60,12 +60,11 @@ class FaceRec
     map<int,String> persons;
 
 public:
-    FaceRec()
+    FaceRec(int ext, int red, int cls)
         : pre(3, 0, FIXED_FACE)
-        // just swap parts here, it's intended for that..
-        , extractor(TextureFeature::createExtractor(TextureFeature::EXT_BGC1_P))
-        , reductor(TextureFeature::createReductor(TextureFeature::RED_DCT8))
-        , classifier(TextureFeature::createClassifier(TextureFeature::CL_PCA_LDA))
+        , extractor(TextureFeature::createExtractor(ext))
+        , reductor(TextureFeature::createReductor(red))
+        , classifier(TextureFeature::createClassifier(cls))
     {}
 
     int train(const String &imgdir)
@@ -207,7 +206,10 @@ int main(int argc, const char *argv[])
     else cap.open(cp);
     cerr << "capture(" << cp << ") : " << cap.isOpened() << endl;
 
-    FaceRec reco;
+    // feel free to swap parts here, it's intended for that..
+    FaceRec reco(TextureFeature::EXT_BGC1_P,
+                 TextureFeature::RED_DCT8,
+                 TextureFeature::CL_PCA_LDA);
     reco.train(imgpath);
 
     String save_model = "face.yml.gz";

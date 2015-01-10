@@ -29,6 +29,40 @@ double ct(int64 t)
     return double(t) / cv::getTickFrequency();
 }
 
+#ifdef _WIN32
+ const char SEP = '\\';
+#else
+ const char SEP = '/';
+#endif
+
+int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim)
+{
+    vector<String> vec;
+    glob(dirpath,vec,true);
+    if ( vec.empty())
+        return 0;
+
+    int label=-1;
+    String last_n="";
+    for (size_t i=0; i<std::min(vec.size(),maxim); i++)
+    {
+        // extract name from filepath:
+        String v = vec[i];
+        int r1 = v.find_last_of(SEP);
+        String v2 = v.substr(0,r1);
+        int r2 = v2.find_last_of(SEP);
+        String n = v2.substr(r2+1);
+        if (n!=last_n)
+        {
+            last_n=n;
+            label++;
+        }
+        names.push_back(v);
+        labels.push_back(label);
+    }
+    return label;
+}
+
 
 //
 // read a 'path <blank> label' list (csv without commas or such)
@@ -78,12 +112,17 @@ void setupPersons(const vector<int> &labels, vector<vector<int>> &persons)
     }
 }
 
-int extractDB(const string &txtfile, vector<Mat> &images, Mat &labels, int preproc, int precrop, int maxim, int fixed_size)
+int extractDB(const string &path, vector<Mat> &images, Mat &labels, int preproc, int precrop, int maxim, int fixed_size)
 {
     // read face db
     vector<string> vec;
     vector<int> vlabels;
-    int nsubjects = 1 + readtxt(txtfile.c_str(), vec, vlabels, maxim);
+    int nsubjects =0;
+    int nt = path.find_last_of(".txt") ;
+    if (nt > 0)
+        nsubjects = 1 + readtxt(path.c_str(), vec, vlabels, maxim);
+    else
+        nsubjects = 1 + readdir(path, vec, vlabels, maxim);
 
     Preprocessor pre(preproc,precrop,fixed_size);
 
@@ -173,9 +212,9 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
         Mat testFeatures,  testLabels;
 
         fsiz = crossfoldData(ext,red,trainFeatures,trainLabels,testFeatures,testLabels,images,labels,persons,f,fold);
-        trainFeatures = trainFeatures.reshape(1,trainLabels.rows);
+        trainFeatures = trainFeatures.reshape(1, trainLabels.rows);
 
-        cls->train(trainFeatures,trainLabels);
+        cls->train(trainFeatures, trainLabels);
 
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
         for (int i=0; i<testFeatures.rows; i++)
@@ -198,7 +237,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
         double all = sum(confusion)[0];
         double neg = all - sum(confusion.diag())[0];
         double err = double(neg)/all;
-        cout << format("%-23s %-2d %6d %6d %6d %8.3f",name.c_str(),(f+1), fsiz, int(all-neg), int(neg), (1.0-err)) << '\r';
+        cout << format("%-23s %-2d %6d %6d %6d %8.3f",name.c_str(), (f+1), fsiz, int(all-neg), int(neg), (1.0-err)) << '\r';
     }
 
 
@@ -227,7 +266,7 @@ double runtest(int ext, int red, int cls, const vector<Mat> &images, const vecto
     //{
     //    cerr << name << " failed!" << endl;
     //}
-    return 0.7;
+    return 0;
 }
 
 
@@ -254,12 +293,12 @@ int main(int argc, const char *argv[])
 
     const char *keys =
             "{ help h usage ? |      | show this message }"
-            "{ opts o         |      | show extractor / reducer/ classifier options }"
-            "{ path p         |data/att.txt| path to dataset  }"
+            "{ opts o         |      | show extractor / reductor / classifier options }"
+            "{ path p         |data/att.txt| path to dataset (txtfile or directory with 1 subfolder per person)}"
             "{ fold f         |10    | folds for crossvalidation }"
-            "{ ext e          |25     | extractor enum }"
-            "{ red r          |4    | reductor enum }"
-            "{ cls c          |12     | classifier enum }"
+            "{ ext e          |25    | extractor  enum }"
+            "{ red r          |4     | reductor   enum }"
+            "{ cls c          |12    | classifier enum }"
             "{ all a          |false | test all }"
             "{ pre P          |0     | preprocessing }"
             "{ crop C         |0     | crop outer pixels }";
@@ -302,7 +341,7 @@ int main(int argc, const char *argv[])
     if (all)
     {
         cout << "-------------------------------------------------------------------" << endl;
-        cout << "[extract] [redu]  [class]   [f_bytes]  [hit]  [miss]  [acc]   [time]  " << endl;
+        cout << "[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]" << endl;
     }
 
     if ( ! all )
