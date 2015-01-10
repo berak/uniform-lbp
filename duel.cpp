@@ -337,7 +337,7 @@ int main(int argc, const char *argv[])
     extractDB(db_path, images, labels, pre, crp, 500, 90);
 
     // per person id lookup
-    vector<vector<int>> persons;
+    vector< vector<int> > persons;
     setupPersons( labels, persons );
     fold = std::min(fold,int(images.size()/persons.size()));
 
