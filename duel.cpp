@@ -216,17 +216,17 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
 double runtest(int ext, int red, int cls, const vector<Mat> &images, const vector<int> &labels, const vector<vector<int>> &persons, size_t fold=10)
 {
     string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::REDS[red], TextureFeature::CLS[cls]); 
-    try {
+   // try {
         runtest(name,  
             TextureFeature::createExtractor(ext),  
             TextureFeature::createReductor(red),
             TextureFeature::createClassifier(cls),
             images,labels,persons, fold); 
-    } 
-    catch(...)
-    {
-        cerr << name << " failed!" << endl;
-    }
+    //} 
+    //catch(...)
+    //{
+    //    cerr << name << " failed!" << endl;
+    //}
     return 0.7;
 }
 
@@ -257,9 +257,9 @@ int main(int argc, const char *argv[])
             "{ opts o         |      | show extractor / reducer/ classifier options }"
             "{ path p         |data/att.txt| path to dataset  }"
             "{ fold f         |10    | folds for crossvalidation }"
-            "{ ext e          |17     | extractor enum }"
-            "{ red r          |0     | reductor enum }"
-            "{ cls c          |6     | classifier enum }"
+            "{ ext e          |25     | extractor enum }"
+            "{ red r          |4    | reductor enum }"
+            "{ cls c          |12     | classifier enum }"
             "{ all a          |false | test all }"
             "{ pre P          |0     | preprocessing }"
             "{ crop C         |0     | crop outer pixels }";
@@ -332,6 +332,7 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_COMB_P, TextureFeature::RED_HELL,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_TPLBP_P, TextureFeature::RED_DCT8, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_TPLBP_G, TextureFeature::RED_HELL, TextureFeature::CL_SVM_INT2,
+            TextureFeature::EXT_FPLbp,   TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_FPLBP_P, TextureFeature::RED_NONE, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_FPLBP_P, TextureFeature::RED_NONE, TextureFeature::CL_SVM_POL,
             TextureFeature::EXT_FPLBP_P, TextureFeature::RED_HELL, TextureFeature::CL_SVM_INT2,
@@ -346,8 +347,10 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_Sift_G, TextureFeature::RED_DCT8,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_Grad_P, TextureFeature::RED_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_Grad_P, TextureFeature::RED_NONE,  TextureFeature::CL_SVM_HEL,
-            TextureFeature::EXT_GradMag,TextureFeature::RED_WHAD,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_GradMag,TextureFeature::RED_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_GradMag_P,TextureFeature::RED_WHAD,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_GradMag_P,TextureFeature::RED_NONE,  TextureFeature::CL_SVM_HEL,
+            TextureFeature::EXT_GradMag_P,TextureFeature::RED_DCT8,  TextureFeature::CL_SVM_INT2,
 
             -1,-1,-1
         };

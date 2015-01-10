@@ -80,7 +80,7 @@ struct FeatureGrad
         //s5 *= nsec;
         //fI += s5;
         //return nrad*nsec;
-        return nsec;
+        return nsec+1;
     }
 };
 
@@ -711,7 +711,7 @@ struct GradMagExtractor : public TextureFeature::Extractor
 
         magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s4.ptr<float>(0), I.total());
         normalize(s4,fmag);
-        fmag.convertTo(fmag,CV_8U,nbins+1);
+        fmag.convertTo(fmag,CV_8U,nbins);
         Mat fm;
         grid.hist(fmag,fm,nbins+1);
         features.push_back(fm.reshape(1,1));
