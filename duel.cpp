@@ -35,16 +35,16 @@ double ct(int64 t)
  const char SEP = '/';
 #endif
 
-int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim)
+int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim, int minim=10)
 {
     vector<String> vec;
     glob(dirpath,vec,true);
     if ( vec.empty())
         return 0;
-
+    int nimgs=0;
     int label=-1;
     String last_n="";
-    for (size_t i=0; i<std::min(vec.size(),maxim); i++)
+    for (size_t i=0; i<vec.size(); i++)
     {
         // extract name from filepath:
         String v = vec[i];
@@ -52,13 +52,22 @@ int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &l
         String v2 = v.substr(0,r1);
         int r2 = v2.find_last_of(SEP);
         String n = v2.substr(r2+1);
-        if (n!=last_n)
+        if (n != last_n || nimgs >= minim)
         {
-            last_n=n;
-            label++;
+            if (nimgs < minim) // roll back
+            {
+                labels.resize(labels.size()-nimgs);
+                names.resize(names.size()-nimgs);
+                if (label >= 0) label --;
+            }
+            nimgs = 0;
+            last_n = n;
+            label ++;
+            if (labels.size()>=maxim) break;
         }
         names.push_back(v);
         labels.push_back(label);
+        nimgs ++;
     }
     return label;
 }
@@ -294,11 +303,11 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |      | show this message }"
             "{ opts o         |      | show extractor / reductor / classifier options }"
-            "{ path p         |data/att.txt| path to dataset (txtfile or directory with 1 subfolder per person)}"
+            "{ path p         |lfw-deepfunneled| path to dataset (txtfile or directory with 1 subfolder per person)}"
             "{ fold f         |10    | folds for crossvalidation }"
-            "{ ext e          |25    | extractor  enum }"
-            "{ red r          |4     | reductor   enum }"
-            "{ cls c          |12    | classifier enum }"
+            "{ ext e          |0     | extractor  enum }"
+            "{ red r          |0     | reductor   enum }"
+            "{ cls c          |0     | classifier enum }"
             "{ all a          |false | test all }"
             "{ pre P          |0     | preprocessing }"
             "{ crop C         |0     | crop outer pixels }";
