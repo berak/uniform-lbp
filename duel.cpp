@@ -103,7 +103,7 @@ int readtxt(const char *fname, std::vector<std::string> &names, std::vector<int>
 // imglists per person.
 //  no really, you can't just draw a random probability set from a set of multiple classes and call it a day ...
 //
-void setupPersons(const vector<int> &labels, vector<vector<int>> &persons)
+void setupPersons(const vector<int> &labels, vector< vector<int> > &persons)
 {
     // find out which index belongs to which person
     //
@@ -159,9 +159,9 @@ int crossfoldData(Ptr<Extractor> ext,
                   Mat & trainLabels,
                   Mat & testFeatures,
                   Mat & testLabels,
-                  const vector<Mat> &images,
-                  const vector<int> &labels,
-                  const vector<vector<int>> &persons,
+                  const vector< Mat > &images,
+                  const vector< int > &labels,
+                  const vector< vector<int> > &persons,
                   size_t f, size_t fold)
 {
     int fsiz=0;
@@ -204,7 +204,7 @@ int crossfoldData(Ptr<Extractor> ext,
 }
 
 
-double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifier> cls, const vector<Mat> &images, const vector<int> &labels, const vector<vector<int>> &persons, size_t fold=10)
+double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifier> cls, const vector<Mat> &images, const vector<int> &labels, const vector< vector<int> > &persons, size_t fold=10)
 {
     //
     // for each fold, take alternating n/fold items for test, the others for training
@@ -261,7 +261,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
     return err;
 }
 
-double runtest(int ext, int red, int cls, const vector<Mat> &images, const vector<int> &labels, const vector<vector<int>> &persons, size_t fold=10)
+double runtest(int ext, int red, int cls, const vector<Mat> &images, const vector<int> &labels, const vector< vector<int> > &persons, size_t fold=10)
 {
     string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::REDS[red], TextureFeature::CLS[cls]); 
    // try {
