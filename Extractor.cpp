@@ -605,7 +605,7 @@ struct GfttGrid
         //kp_manual(kp);
 
         histo.release();
-        Rect bounds(Point,feature.size());
+        Rect bounds(Point(),feature.size());
         for (size_t k=0; k<kp.size(); k++)
         {
             Rect part(int(kp[k].pt.x)-gr, int(kp[k].pt.y)-gr, gr*2, gr*2);
