@@ -49,7 +49,7 @@ double ct(int64 t)
 // 
 // you can pass like 'images/*.png', too!
 //
-int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim, int minim=10)
+int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim, int minim=5)
 {
     vector<String> vec;
     glob(dirpath,vec,true);

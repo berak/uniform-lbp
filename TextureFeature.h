@@ -147,13 +147,13 @@ namespace TextureFeature
         CL_SVM_POL,
         CL_SVM_RBF,
         CL_SVM_INT,
-        CL_SVM_INT2,
-        CL_SVM_HEL,
-        CL_SVM_LOW,
+        CL_SVM_INT2, // custom 
+        CL_SVM_HEL,  // custom
+        CL_SVM_LOW,  // custom
         CL_SVM_MULTI,
         CL_PCA,
         CL_PCA_LDA,
-        CL_FISH_SVM,
+        //CL_FISH_SVM,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -174,7 +174,7 @@ namespace TextureFeature
         "SVM_MULTI",
         "PCA",
         "PCA_LDA",
-        "FISH_SVM",
+        //"FISH_SVM",
         0
     };
 
