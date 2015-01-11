@@ -35,12 +35,27 @@ double ct(int64 t)
  const char SEP = '/';
 #endif
 
+//
+// imgfolder
+//  + pers1
+//   + img1
+//   + img2
+//   + img3
+//  + pers2
+//   + img1
+//   + img2
+//   + img3
+// ...
+// 
+// you can pass like 'images/*.png', too!
+//
 int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim, int minim=10)
 {
     vector<String> vec;
     glob(dirpath,vec,true);
     if ( vec.empty())
         return 0;
+
     int nimgs=0;
     int label=-1;
     String last_n="";
@@ -303,7 +318,7 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |      | show this message }"
             "{ opts o         |      | show extractor / reductor / classifier options }"
-            "{ path p         |lfw-deepfunneled| path to dataset (txtfile or directory with 1 subfolder per person)}"
+            "{ path p         |data/att.txt| path to dataset (txtfile or directory with 1 subfolder per person)}"
             "{ fold f         |10    | folds for crossvalidation }"
             "{ ext e          |0     | extractor  enum }"
             "{ red r          |0     | reductor   enum }"

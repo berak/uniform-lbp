@@ -136,34 +136,6 @@ struct ClassifierCosine : public ClassifierNearest
 
 
 
-struct ClassifierKNN : public TextureFeature::Classifier
-{
-    Ptr<ml::KNearest> knn;
-    int K;
-
-    ClassifierKNN(int k=1)
-        : knn(ml::KNearest::create())
-        , K(k)
-    {}
-
-    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
-    {
-        Mat resp;
-        knn->findNearest(testFeature, K, results, resp, Mat());
-        //  std::cerr << "resp " << resp << std::endl;
-        //for ( int k=0; k<resp.cols; k++ )
-        //    results.push_back(resp.at<float>(k));
-        return results.rows;
-    }
-    virtual int train(const cv::Mat &trainFeatures, const cv::Mat &trainLabels)
-    {
-        knn->clear();
-        knn->train(trainFeatures, ml::ROW_SAMPLE, trainLabels);
-        return 1;
-    }
-};
-
-
 
 static int unique(const Mat &labels, set<int> &classes)
 {
@@ -183,31 +155,23 @@ struct CustomKernel : public ml::SVM::Kernel
 
     void calc_intersect(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
+        CV_Assert (var_count%4==0);
 #ifdef HAVE_SSE
         for(int j=0; j<vcount; j++)
         {
             int k=0;
-            int reminder = var_count % 4;
-            int nb_iters = var_count / 4;
             const float* sample = (&vecs[j*var_count]);
             __m128 c,s = _mm_set_ps1(0);
             __m128* ptr_a = (__m128*)sample;
             __m128* ptr_b = (__m128*)another;
-            for(; k<nb_iters; k++, ptr_a++, ptr_b++)
+            for(; k<var_count; k+=4, ptr_a++, ptr_b++)
             {
                 c = _mm_min_ps(*ptr_a, *ptr_b);
                 s = _mm_add_ps(s, c);
             }
-            float sum = 0;
-            while ( reminder-- )
-            {
-                float a = sample[k];
-                float b = another[k];
-                sum += std::min(a,b);
-            }
             union { __m128 m; float f[4]; } x;
             x.m = s;
-            results[j] = (sum + x.f[0] + x.f[1] + x.f[2] + x.f[3]);
+            results[j] = (x.f[0] + x.f[1] + x.f[2] + x.f[3]);
         }
 #else
         Mat V(1,var_count,CV_32F,(void*)0);
@@ -219,100 +183,61 @@ struct CustomKernel : public ml::SVM::Kernel
         }
 #endif
     }
-    //void calc_hellinger0(int vcount, int var_count, const float* vecs, const float* another, float* results)
-    //{
-    //    double gamma = -1;
-    //    Mat V(1,var_count,CV_32F,(void*)0);
-    //    Mat V2(1,var_count,CV_32F);
-    //    Mat A(1,var_count,CV_32F,(void*)another);
-    //    Mat A2(1,var_count,CV_32F);
-    //    cv::sqrt(A,A2);
-    //    for(int j=0; j<vcount; j++)
-    //    {
-    //        V.data = (uchar*)(&vecs[j*var_count]);
-    //        cv::sqrt(V,V2);
-    //        Mat H=V2-A2;
-    //        results[j] = (float)(gamma*sum(H.mul(H))[0]);
-    //    }
-    //}
+
     void calc_hellinger(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         CV_Assert (var_count<64000);
-        float z[64000];
+        CV_Assert (var_count%4==0);
+        float z[64000]; // there *must* be a better idea than this.
 #ifdef HAVE_SSE
         __m128* ptr_out= (__m128*)z;
         __m128* ptr_in = (__m128*)another;
-
-        int k=0;
-        int reminder = var_count % 4;
-        int nb_iters = var_count / 4;
-        for(; k<nb_iters; k++, ptr_in++, ptr_out++)
+        // cache sqrt(another[k])        
+        for(int k=0; k<var_count; k+=4, ptr_in++, ptr_out++)
         {
             *ptr_out = _mm_sqrt_ps(*ptr_in);
         }
-        while ( reminder-- ) // hmm, do we really need this ?
-        {
-            z[k] = sqrt(another[k]);
-            k++;
-        }
         for(int j=0; j<vcount; j++)
         {
-            int k=0;
-            int reminder = var_count % 4;
-            int nb_iters = var_count / 4;
-            const float* sample = (&vecs[j*var_count]);
             __m128 a,b,c,s = _mm_set_ps1(0);
-            __m128* ptr_a = (__m128*)sample;
+            __m128* ptr_a = (__m128*)(&vecs[j*var_count]);
             __m128* ptr_b = (__m128*)z;
-            for(; k<nb_iters; k++, ptr_a++, ptr_b++)
+            for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
             {
                 a = _mm_sqrt_ps(*ptr_a);
                 b = _mm_sub_ps(a, *ptr_b);
                 c = _mm_mul_ps(b, b);
                 s = _mm_add_ps(s, c);
             }
-            float sum = 0;
-            while ( reminder-- )
-            {
-                float a = sqrt(sample[k]);
-                float b = z[k];
-                sum += (a - b) * (a - b);
-            }
             union { __m128 m; float f[4]; } x;
             x.m = s;
-            results[j] = (-(sum + x.f[0] + x.f[1] + x.f[2] + x.f[3]));
-            //results[j] = (-(sum + s.m128_f32[0] + s.m128_f32[1] + s.m128_f32[2] + s.m128_f32[3]));
+            results[j] = (-(x.f[0] + x.f[1] + x.f[2] + x.f[3]));
         }
-#else
-        int k=0;
-        for(; k<var_count-4; k+=4)
+#else       
+        for(int k=0; k<var_count; k+=4)
         {
             z[k]   = sqrt(another[k]);
             z[k+1] = sqrt(another[k+1]);
             z[k+2] = sqrt(another[k+2]);
             z[k+3] = sqrt(another[k+3]);
         }
-        for(; k<var_count; k++)
-            z[k] = sqrt(another[k]);
 
         for(int j=0; j<vcount; j++)
         {
             double a,b, s = 0;
             const float* sample = &vecs[j*var_count];
-            int k=0;
-            for(; k<var_count-4; k+=4)
+            for(int k=0; k<var_count; k+=4)
             {
                 a = sqrt(sample[k]);     b = z[k];    s += (a - b) * (a - b);
                 a = sqrt(sample[k+1]);   b = z[k+1];  s += (a - b) * (a - b);
                 a = sqrt(sample[k+2]);   b = z[k+2];  s += (a - b) * (a - b);
                 a = sqrt(sample[k+3]);   b = z[k+3];  s += (a - b) * (a - b);
             }
-            for(; k<var_count; k++)
-                a = sqrt(sample[k]);     b = z[k];    s += (a - b) * (a - b);
             results[j] = (float)(-s);
         }
 #endif
     }
+
     void calc_lowpass(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         for(int j=0; j<vcount; j++)
@@ -845,115 +770,6 @@ struct VerifierFisherSVM : public VerifierSVM, ClassifierPCA_LDA
     }
 };
 
-
-//
-// the only restricted / unsupervised case!
-//
-struct VerifierEM : public VerifierPairDistance<int>
-{
-    VerifierEM(int distFlag=2)
-        : VerifierPairDistance<int>(distFlag)
-    {}
-
-    virtual int train(const Mat &features, const Mat &labels)
-    {
-        Mat trainData = tofloat(features.reshape(1, labels.rows));
-        Mat distances;
-        for (size_t i=0; i<labels.total()-1; i+=2)
-        {
-            int j = i+1;
-            distances.push_back(distance_mat(trainData.row(i), trainData.row(j)));
-        }
-
-        ml::EM::Params param;
-        param.nclusters = 2;
-        param.covMatType = ml::EM::COV_MAT_DIAGONAL;
-        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
-        param.termCrit.maxCount = 1000;
-        param.termCrit.epsilon = 1e-6;
-
-        model = ml::EM::train(distances,noArray(),noArray(),noArray(),param);
-        return model->isTrained();
-    }
-
-    virtual bool same(const Mat &a, const Mat &b) const
-    {
-        Mat fa = tofloat(a);
-        Mat fb = tofloat(b);
-        float s = model->predict(distance_mat(fa, fb));
-        //cerr << s << " ";
-        return s>=1;
-    }
-};
-
-
-//
-// crashes weirdly , atm.
-//
-struct VerifierBoost : public VerifierPairDistance<int>
-{
-    VerifierBoost(int distFlag=2)
-        : VerifierPairDistance<int>(distFlag)
-    {
-        ml::Boost::Params param;
-        param.boostType = ml::Boost::DISCRETE;
-        param.weightTrimRate = 0.6;
-        model = ml::Boost::create(param);
-    }
-};
-
-
-
-struct VerifierLR : public VerifierPairDistance<float>
-{
-    VerifierLR(int distFlag=2)
-        : VerifierPairDistance<float>(distFlag)
-    {
-        ml::LogisticRegression::Params params;
-        params.alpha = 0.005;
-        params.num_iters = 10000;
-        params.norm = ml::LogisticRegression::REG_L2;
-        params.regularized = 1;
-        //params.train_method = ml::LogisticRegression::MINI_BATCH;
-        //params.mini_batch_size = 10;
-        model = ml::LogisticRegression::create(params);
-    }
-};
-
-
-struct VerifierKmeans : public TextureFeature::Verifier
-{
-    Mat centers;
-
-    Mat distance_mat(const Mat &a, const Mat &b) const
-    {
-        Mat d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
-        return d;
-    }
-
-    virtual int train(const Mat &features, const Mat &labels)
-    {
-        Mat trainData = tofloat(features.reshape(1, labels.rows));
-        Mat distances;
-        for (size_t i=0; i<labels.total()-1; i+=2)
-        {
-            int j = i+1;
-            distances.push_back(distance_mat(trainData.row(i), trainData.row(j)));
-        }
-        Mat best;
-        kmeans(distances,2,best,TermCriteria(),3,KMEANS_PP_CENTERS,centers);
-        return 1;
-    }
-
-    virtual bool same(const Mat &a, const Mat &b) const
-    {
-        Mat d = distance_mat(tofloat(a),tofloat(b));
-        double d0 = norm(d,centers.row(0));
-        double d1 = norm(d,centers.row(1));
-        //cerr << s << " ";
-        return d0 > d1;
-    }
-};
 
 
 } // TextureFeatureImpl
