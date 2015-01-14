@@ -122,6 +122,7 @@ namespace TextureFeature
         RED_DCT12,
         RED_DCT16,
         RED_DCT24,
+        RED_PCA,
         RED_MAX
     };
     static const char *REDS[] = {
@@ -133,6 +134,7 @@ namespace TextureFeature
         "DCT12",
         "DCT16",
         "DCT24",
+        "PCA",
         0
     };
     enum CLA {

@@ -71,14 +71,14 @@ int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &l
         {
             if (nimgs < minim) // roll back
             {
-                labels.resize(labels.size()-nimgs);
-                names.resize(names.size()-nimgs);
+                labels.resize(labels.size() - nimgs);
+                names.resize(names.size() - nimgs);
                 if (label >= 0) label --;
             }
             nimgs = 0;
             last_n = n;
             label ++;
-            if (labels.size()>=maxim) break;
+            if (labels.size() >= maxim) break;
         }
         names.push_back(v);
         labels.push_back(label);

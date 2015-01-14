@@ -4,6 +4,8 @@ using namespace cv;
 
 #include "TextureFeature.h"
 
+#include <iostream>
+using namespace std;
 
 using namespace TextureFeature;
 
@@ -128,6 +130,31 @@ struct ReductorHellinger : public Reductor
     }
 };
 
+//
+// use a precalculated pca for reduction
+//
+struct ReductorPCA : public Reductor
+{
+    Mat mean, eigenvectors;
+    ReductorPCA()
+    {
+        int ncomps;
+        cerr << "..";
+        FileStorage fs("pca.hdlbp.yml.gz", FileStorage::READ);
+        fs["num_components"] >> ncomps;
+        fs["mean"] >> mean;
+        fs["eigenvectors"] >> eigenvectors;
+        fs.release();
+        cerr << "!!";
+    }
+    virtual int reduce(const Mat &src, Mat &dest) const
+    {
+        dest = src - mean;
+        dest = dest * eigenvectors;
+        return 0;
+    }
+};
+
 
 } // TextureFeatureImpl
 
@@ -149,6 +176,7 @@ Ptr<Reductor> createReductor(int redu)
         case RED_DCT12:    return makePtr<ReductorDct>(12000); break;
         case RED_DCT16:    return makePtr<ReductorDct>(16000); break;
         case RED_DCT24:    return makePtr<ReductorDct>(24000); break;
+        case RED_PCA:      return makePtr<ReductorPCA>(); break;
 //        default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Reductor>();

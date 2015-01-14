@@ -730,7 +730,7 @@ struct VerifierSVM : public VerifierPairDistance<int>
         if (ktype<0)
         {
             krnl = CustomKernel::create(ktype);
-            ktype=-1;
+            ktype=ml::SVM::CUSTOM;
         }
         param.kernelType = ktype; //ml::SVM::INTER; //ml::SVM::LINEAR;
         param.svmType = ml::SVM::NU_SVC;

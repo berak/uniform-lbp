@@ -123,6 +123,9 @@ public:
         ext->extract(pre.process(img), feat1);
 
         Mat fr = feat1.reshape(1,1);
+        if (fr.type() != CV_32F)
+            fr.convertTo(fr,CV_32F);
+
         if (! red.empty())
             red->reduce(fr,fr);
 
@@ -141,7 +144,17 @@ public:
         labels.release();
         return ok!=0;
     }
+    virtual bool train_pca(int ncomps)
+    {
+        PCA pca(features, Mat(), cv::PCA::DATA_AS_ROW, ncomps);
 
+        FileStorage fs("pca.hdlbp.yml.gz",FileStorage::WRITE);
+        fs << "num_components" << ncomps;
+        fs << "mean" << pca.mean.reshape(1,1);
+        fs << "eigenvectors" << pca.eigenvectors.t();
+        fs.release();
+        return true;
+    }
     virtual int same(const Mat & a, const Mat &b) const
     {
         Mat feat1, feat2;
@@ -163,10 +176,10 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |    | show this message }"
             "{ opts o         |    | show extractor / reduce / verifier options }"
-            "{ path p         |true| path to dataset (lfw2 folder) }"
-            "{ ext e          |25  | extractor enum }"
-            "{ red r          |1   | reductor enum }"
-            "{ cls c          |6   | classifier enum }"
+            "{ path p         |lfw-deepfunneled/| path to dataset (lfw2 folder) }"
+            "{ ext e          |7  | extractor enum }"
+            "{ red r          |0   | reductor enum }"
+            "{ cls c          |7   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ flip f         |0   | add a flipped image }"
@@ -204,7 +217,7 @@ int main(int argc, const char *argv[])
 
     if (trainMethod == "dev") // train on personsDevTrain.txt
     {
-        for (unsigned int i=0; i<dataset->getTrain().size(); ++i)
+        for (unsigned int i=0; i<dataset->getTrain().size(); i+=1)
         {
             FR_lfwObj *example = static_cast<FR_lfwObj *>(dataset->getTrain()[i].get());
 
@@ -219,9 +232,11 @@ int main(int argc, const char *argv[])
 
         {
             PROFILEX("train");
-            model->train();
+            //model->train();
+            model->train_pca(8000);
         }
     }
+return 1;
 
 
     vector<double> p;
