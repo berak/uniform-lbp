@@ -49,7 +49,7 @@ double ct(int64 t)
 // 
 // you can pass like 'images/*.png', too!
 //
-int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim, int minim=5)
+int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim, int minim=10)
 {
     vector<String> vec;
     glob(dirpath,vec,true);
@@ -279,17 +279,17 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Reductor> red, Ptr<Classifie
 double runtest(int ext, int red, int cls, const vector<Mat> &images, const vector<int> &labels, const vector< vector<int> > &persons, size_t fold=10)
 {
     string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::REDS[red], TextureFeature::CLS[cls]); 
-   // try {
+    try {
         runtest(name,  
             TextureFeature::createExtractor(ext),  
             TextureFeature::createReductor(red),
             TextureFeature::createClassifier(cls),
             images,labels,persons, fold); 
-    //} 
-    //catch(...)
-    //{
-    //    cerr << name << " failed!" << endl;
-    //}
+    } 
+    catch(...)
+    {
+        cerr << name << " failed!" << endl;
+    }
     return 0;
 }
 

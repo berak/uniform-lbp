@@ -527,44 +527,6 @@ struct ClassifierPCA_LDA : public ClassifierPCA
     }
 };
 
-//struct ClassifierFisherSVM : public ClassifierSVM
-//{
-//    ClassifierPCA_LDA pca;
-//
-//    ClassifierFisherSVM()
-//        : ClassifierSVM(ml::SVM::INTER)
-//    {}
-//    virtual int train(const Mat &features, const Mat &labels)
-//    {
-//        Mat trainData = tofloat(features.reshape(1, labels.rows));
-//        pca.train(trainData, labels);
-//        svm->clear();
-//        bool ok = svm->train(ml::TrainData::create(pca.features, ml::ROW_SAMPLE, labels));
-//        //svm->save("fish.xml");
-//        return ok;
-//    }
-//
-//    virtual int predict(const Mat &src, Mat &res) const
-//    {
-//        Mat pa = pca.project(tofloat(src));
-//        svm->predict(pa, res);
-//        return res.rows;
-//    }
-//
-//    // Serialize
-//    virtual bool save(FileStorage &fs) const
-//    {
-//        ClassifierSVM::save(fs);
-//        pca.save(fs);
-//        return true;
-//    }
-//    virtual bool load(const FileStorage &fs)
-//    {
-//        ClassifierSVM::load(fs);
-//        pca.load(fs);
-//        return true;
-//    }
-//};
 
 
 //------->8-----------------------------------------------------------------------
@@ -747,29 +709,6 @@ struct VerifierSVM : public VerifierPairDistance<int>
     }
 };
 
-//struct VerifierFisherSVM : public VerifierSVM, ClassifierPCA_LDA
-//{
-//    virtual int train(const Mat &features, const Mat &labels)
-//    {
-//        Mat trainData = tofloat(features.reshape(1, labels.rows));
-//        Mat distances, binlabels;
-//        train_pre(trainData, labels, distances, binlabels);
-//        trainData.release();
-//
-//        ClassifierPCA_LDA::train(distances, binlabels);
-//        distances.release();
-//        model->clear();
-//        return model->train(ml::TrainData::create(ClassifierPCA_LDA::features, ml::ROW_SAMPLE, binlabels));
-//    }
-//
-//    virtual bool same(const Mat &a, const Mat &b) const
-//    {
-//        Mat pa = ClassifierPCA_LDA::project(a);
-//        Mat pb = ClassifierPCA_LDA::project(b);
-//        return  VerifierSVM::same(pa, pb);
-//    }
-//};
-
 
 
 } // TextureFeatureImpl
@@ -800,7 +739,6 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
-        // case CL_FISH_SVM:  return makePtr<ClassifierFisherSVM>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();
@@ -823,7 +761,6 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
-        // case CL_FISH_SVM:  return makePtr<VerifierFisherSVM>(); break;
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Verifier>();

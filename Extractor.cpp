@@ -202,6 +202,37 @@ struct FeatureSquareLbp
     }
 };
 
+//
+// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
+// "Texture description through histograms of equivalent patterns"
+//
+//    basically, this is just 1/2 of the full lbp-circle (4bits / 16 bins only!)
+//
+struct FeatureMTS
+{
+    int operator () (const Mat &I, Mat &fI) const
+    {
+        Mat_<uchar> img(I);
+        Mat_<uchar> fea(I.size(), 0);
+        const int m=1;
+        for (int r=m; r<img.rows-m; r++)
+        {
+            for (int c=m; c<img.cols-m; c++)
+            {
+                uchar v = 0;
+                uchar cen = img(r,c);
+                v |= (img(r-1,c  ) > cen) << 0;
+                v |= (img(r-1,c+1) > cen) << 1;
+                v |= (img(r  ,c+1) > cen) << 2;
+                v |= (img(r+1,c+1) > cen) << 3;
+                fea(r,c) = v;
+            }
+        }
+        fI = fea;
+        return 16;
+    }
+};
+
 
 //
 // just run around in a circle (instead of comparing to the center) ..
@@ -234,37 +265,6 @@ struct FeatureBGC1
     }
 };
 
-
-//
-// Antonio Fernandez, Marcos X. Alvarez, Francesco Bianconi:
-// "Texture description through histograms of equivalent patterns"
-//
-//    basically, this is just 1/2 of the full lbp-circle (4bits / 16 bins only!)
-//
-struct FeatureMTS
-{
-    int operator () (const Mat &I, Mat &fI) const
-    {
-        Mat_<uchar> img(I);
-        Mat_<uchar> fea(I.size(), 0);
-        const int m=1;
-        for (int r=m; r<img.rows-m; r++)
-        {
-            for (int c=m; c<img.cols-m; c++)
-            {
-                uchar v = 0;
-                uchar cen = img(r,c);
-                v |= (img(r-1,c  ) > cen) << 0;
-                v |= (img(r-1,c+1) > cen) << 1;
-                v |= (img(r  ,c+1) > cen) << 2;
-                v |= (img(r+1,c+1) > cen) << 3;
-                fea(r,c) = v;
-            }
-        }
-        fI = fea;
-        return 16;
-    }
-};
 
 
 //

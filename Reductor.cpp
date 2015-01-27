@@ -65,10 +65,10 @@ struct ReductorDct : public Reductor
         Mat h; src.convertTo(h, CV_32F);
         Mat h2(h.size(), h.type());
 
-        dft(h,h2, DFT_ROWS); // dft instead of dct solves pow2 issue
+        dft(h, h2, DFT_ROWS); // dft instead of dct solves pow2 issue
 
         Mat h3 = (keep>0) ?
-                 h2(Rect(0,0,std::min(keep, h2.cols-1),1)) :
+                 h2(Rect(0, 0, std::min(keep, h2.cols-1), 1)) :
                  h2;
 
         dft(h3, dest, DCT_INVERSE | DFT_SCALE | DFT_ROWS);
@@ -130,30 +130,6 @@ struct ReductorHellinger : public Reductor
     }
 };
 
-//
-// use a precalculated pca for reduction
-//
-struct ReductorPCA : public Reductor
-{
-    Mat mean, eigenvectors;
-    ReductorPCA()
-    {
-        int ncomps;
-        cerr << "..";
-        FileStorage fs("pca.hdlbp.yml.gz", FileStorage::READ);
-        fs["num_components"] >> ncomps;
-        fs["mean"] >> mean;
-        fs["eigenvectors"] >> eigenvectors;
-        fs.release();
-        cerr << "!!";
-    }
-    virtual int reduce(const Mat &src, Mat &dest) const
-    {
-        dest = src - mean;
-        dest = dest * eigenvectors;
-        return 0;
-    }
-};
 
 
 } // TextureFeatureImpl
@@ -176,7 +152,6 @@ Ptr<Reductor> createReductor(int redu)
         case RED_DCT12:    return makePtr<ReductorDct>(12000); break;
         case RED_DCT16:    return makePtr<ReductorDct>(16000); break;
         case RED_DCT24:    return makePtr<ReductorDct>(24000); break;
-        case RED_PCA:      return makePtr<ReductorPCA>(); break;
 //        default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Reductor>();

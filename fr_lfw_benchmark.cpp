@@ -128,8 +128,12 @@ public:
 
         if (! red.empty())
             red->reduce(fr,fr);
-
-        features.push_back(fr);
+        if ( features.empty() )
+        {
+            features = Mat(4400, feat1.total(), CV_32F); // this will only work for dev mode !
+        }
+        //features.push_back(fr); // damn memory problems
+        feat1.copyTo(features.row(labels.rows));
         labels.push_back(label);
         cerr <<fr.cols << " i_" << labels.rows << "\r";
         return labels.rows;
@@ -137,8 +141,10 @@ public:
     virtual bool train()
     {
         cerr << "." << features.cols << "     ";
+        cerr << "start training." << endl;
         int ok = cls->train(features, labels.reshape(1,features.rows));
-        cerr << ".\r";
+        //cerr << ".\r";
+        cerr << "done training." << endl;
         CV_Assert(ok);
         features.release();
         labels.release();
@@ -146,13 +152,32 @@ public:
     }
     virtual bool train_pca(int ncomps)
     {
+        cerr << "pca in  " << features.size() << endl;
         PCA pca(features, Mat(), cv::PCA::DATA_AS_ROW, ncomps);
+        cerr << "pca out " << pca.eigenvectors.size() << endl;
+        cerr << "**";
+        FILE * f = fopen("pca.hdlbp.bin","wb");
+        int mr = pca.mean.rows;
+        fwrite(&mr, sizeof(int), 1, f);
+        int mc = pca.mean.cols;
+        fwrite(&mc, sizeof(int), 1, f);
+        fwrite(pca.mean.ptr<float>(), mc*mr, 1, f);
+        fflush(f);
+        cerr << "##";
 
-        FileStorage fs("pca.hdlbp.yml.gz",FileStorage::WRITE);
-        fs << "num_components" << ncomps;
-        fs << "mean" << pca.mean.reshape(1,1);
-        fs << "eigenvectors" << pca.eigenvectors.t();
-        fs.release();
+        // will have to transpose later !
+        int er = pca.eigenvectors.rows;
+        fwrite(&er, sizeof(int), 1, f);
+        int ec = pca.eigenvectors.cols;
+        fwrite(&ec, sizeof(int), 1, f);
+        fwrite(pca.eigenvectors.ptr<float>(), 1, ec*er, f);
+        fclose(f);
+        cerr << "!!";
+        //FileStorage fs("pca.hdlbp.yml.gz",FileStorage::WRITE);
+        //fs << "num_components" << ncomps;
+        //fs << "mean" << pca.mean;
+        //fs << "eigenvectors" << pca.eigenvectors.t();
+        //fs.release();
         return true;
     }
     virtual int same(const Mat & a, const Mat &b) const
@@ -177,11 +202,11 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ opts o         |    | show extractor / reduce / verifier options }"
             "{ path p         |lfw-deepfunneled/| path to dataset (lfw2 folder) }"
-            "{ ext e          |7  | extractor enum }"
+            "{ ext e          |26  | extractor enum }"
             "{ red r          |0   | reductor enum }"
-            "{ cls c          |7   | classifier enum }"
+            "{ cls c          |4   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
-            "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
+            "{ crop C         |115  | cut outer 80 pixels to to 90x90 }"
             "{ flip f         |0   | add a flipped image }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
@@ -232,11 +257,11 @@ int main(int argc, const char *argv[])
 
         {
             PROFILEX("train");
-            //model->train();
-            model->train_pca(8000);
+            model->train();
+            //model->train_pca(4000);
         }
     }
-return 1;
+    //return 1;
 
 
     vector<double> p;
