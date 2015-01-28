@@ -135,16 +135,15 @@ public:
         //features.push_back(fr); // damn memory problems
         feat1.copyTo(features.row(labels.rows));
         labels.push_back(label);
-        cerr <<fr.cols << " i_" << labels.rows << "\r";
+        cerr << fr.cols << " i_" << labels.rows << "\r";
         return labels.rows;
     }
     virtual bool train()
     {
         cerr << "." << features.cols << "     ";
-        cerr << "start training." << endl;
+        cerr << "start training." << '\r';
         int ok = cls->train(features, labels.reshape(1,features.rows));
-        //cerr << ".\r";
-        cerr << "done training." << endl;
+        cerr << "done training." << '\r';
         CV_Assert(ok);
         features.release();
         labels.release();

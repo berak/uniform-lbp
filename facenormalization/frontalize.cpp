@@ -8,7 +8,6 @@
 
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/utility.hpp"
-#include "opencv2/xfeatures2d.hpp"
 
 #include "opencv2/core/core_c.h" // shame, but needed for using dlib
 #include <dlib/image_processing.h>
@@ -23,41 +22,58 @@ using namespace std;
 
 #include "../Profile.h"
 
-const bool WRITE_IMAGES = 0;
 
 //
-//@brief  apply a one-size-fits-all 3d model transformation (POSIT style)
+//@brief  apply a one-size-fits-all 3d model transformation (POSIT style), also do 2d eye-alignment, if nessecary.
 //
 struct Frontalizer
+{
+    virtual Mat align2d(const Mat &test) const = 0;
+    virtual Mat project3d(const Mat &test) const = 0;
+
+    static Ptr<Frontalizer> create(const String &dlib_path, int crop, int symThreshold, double symBlend, bool write);
+};
+
+
+struct FrontalizerImpl : public Frontalizer
 {
     dlib::shape_predictor sp;
     vector<Point3d> pts3d;
     Mat mdl;
     Mat_<double> eyemask;
-    Mat_<uchar>  mask;
 
-    Frontalizer()
+    const int symThresh;
+    const int crop;
+    const bool WRITE_IMAGES;
+    const double symBlend;
+
+    FrontalizerImpl(const String &dlib_path, int crop, int symThreshold, double symBlend, bool write)
+        : crop(crop)
+        , symThresh(symThreshold)
+        , symBlend(symBlend)
+        , WRITE_IMAGES(write)
     {
-        dlib::deserialize("D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat") >> sp;
+        PROFILEX("Frontalizer")
 
-        // get 2d reference points from image
-        vector<Point2d> pts2d;
-        Mat meanI = imread("reference_320_320.png", 0);
-        getkp(meanI, pts2d, 80, 160);
+        dlib::deserialize(dlib_path) >> sp;
 
         // model is rotated 90° already, but still in col-major, right hand coords
         FileStorage fs("mdl.yml.gz", FileStorage::READ);
         fs["mdl"] >> mdl;
         fs["eyemask"] >> eyemask;
+        blur(eyemask,eyemask,Size(4,4));
 
-        // make depth masks
-        Mat ch[4];
-        split(mdl, ch);
-        Mat_<double> depth;
-        normalize(ch[1], depth, -100);
-        mask = depth > 0;
-        //imshow("head1", depth);
-        //imshow("mask", mask);
+        //// if you want to see the 3d model ..
+        //Mat ch[4];
+        //split(mdl, ch);
+        //Mat_<double> depth;
+        //normalize(ch[1], depth, -100);
+        ////imshow("head1", depth);
+
+        // get 2d reference points from image
+        vector<Point2d> pts2d;
+        Mat meanI = imread("reference_320_320.png", 0);
+        getkp(meanI, pts2d, Rect(80,80, 160,160));
 
         // get 3d reference points from model
         for(size_t k=0; k<pts2d.size(); k++)
@@ -71,9 +87,9 @@ struct Frontalizer
     //
     // mostly stolen from Roy Shilkrot's HeadPosePnP
     //
-    Mat pnp(const Size &s, vector<Point2d> &ip)
+    Mat pnp(const Size &s, vector<Point2d> &ip) const
     {
-        PROFILE
+        PROFILEX("pnp")
         // camMatrix based on img size
         int max_d = std::max(s.width,s.height);
 	    Mat camMatrix = (Mat_<double>(3,3) <<
@@ -84,7 +100,7 @@ struct Frontalizer
         // 2d -> 3d correspondence
         Mat rvec,tvec;
         solvePnP(pts3d, ip, camMatrix, Mat(1,4,CV_64F,0.0), rvec, tvec, false, SOLVEPNP_EPNP);
-
+        cerr << "rot " << rvec.t() << endl;
         // get 3d rot mat
 	    Mat rotM(3, 3, CV_64F);
 	    Rodrigues(rvec, rotM);
@@ -97,20 +113,12 @@ struct Frontalizer
         return camMatrix * rotMT.t();
     }
 
-    // expects grayscale img
-    void getkp(const Mat &I, vector<Point2d> &pts2d, int off=0, int siz=0)
+    //! expects grayscale img
+    void getkp(const Mat &I, vector<Point2d> &pts2d, const Rect &r) const
     {
-        PROFILE
-        dlib::rectangle rec(0, 0, I.cols, I.rows);
-        if (off)
-            rec = dlib::rectangle(off, off, off+siz, off+siz);
-
+        PROFILEX("getkp");
+        dlib::rectangle rec(r.x, r.y, r.x+r.width, r.y+r.height);
         dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(I), rec);
-
-        //int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
-        ////int idx[] = {18,25, 20,24, 21,22, 27,29, 31,35, 38,43, 51, 0};
-        //for(int k=0; (k<40) && (idx[k]>0); k++)
-        //    pts2d.push_back(Point2f(shape.part(idx[k]).x(), shape.part(idx[k]).y()));
 
         for(size_t k=0; k<shape.num_parts(); k++)
         {
@@ -131,33 +139,29 @@ struct Frontalizer
     //
     // thanks again, Haris. i wouldn't be anywhere without your mind here.
     //
-    Mat project(const Mat & test, int kpoff, int kpsiz)
+    Mat project3d(const Mat & test) const
     {
-        PROFILE
+        PROFILEX("project3d");
 
+        int mid = mdl.cols/2;
+        int midi = test.cols/2;
+        Rect R(mid-crop/2,mid-crop/2,crop,crop);
+        Rect Ri(midi-crop/2,midi-crop/2,crop,crop);
+        cerr  << test.size() << " " << mid << " " << midi << " " << R <<" " << Ri << endl;
+        if (crop == 0)
+        {
+            R = Ri = Rect(0,0,test.cols,test.rows);
+        }
         // get landmarks
         vector<Point2d> pts2d;
-        getkp(test, pts2d, kpoff, kpsiz);
+        getkp(test, pts2d, Ri);
         //cerr << "nose :" << pts2d[30].x << endl;
-        // pose mat for our landmarks
+
+        // get pose mat for our landmarks
         Mat KP = pnp(test.size(), pts2d);
 
-        //
-        //  " remap all points by defining 3d corresponding points for entire reference image
-        //    .. this is the trick. 
-        //    just go over their paper.. you will easily get it. need just 20 lines of opencv code... :) . 
-        //      But will require full effort for at least 3 days from this understanding... "
-        //
-        //      ( yea, right, .. (facepalm) )
-        //
-
-        int crop=110;
-        int mid = mdl.cols/2;
-        Rect R(mid-crop/2,mid-crop/2,crop,crop);
-
-        int offy = (mdl.rows-test.rows)/2;
-        int offx = (mdl.cols-test.cols)/2;
-        Mat_<uchar> test2(mdl.size(),0);
+        // project img to head, count occlusions
+        Mat_<uchar> test2(mdl.size(),127);
         Mat_<uchar> counts(mdl.size(),0);
 	    for (int i=R.y; i<R.y+R.height; i++)
         {
@@ -169,13 +173,12 @@ struct Frontalizer
 		        int y = int(p(1) / p(2));
                 if (y < 0 || y > test.rows - 1) continue;
                 if (x < 0 || x > test.cols - 1) continue;
+                // each point used more than once is occluded
+                counts(y, x) ++; 
                 // stare hard at the coord transformation ;)
                 test2(i, j) = test.at<uchar>(y, x);
-                counts(y, x) ++; // each point used more than once is occluded
 	        }
         }
-
-        //imshow("proj",test2&mask);
 
         // project the occlusion counts in the same way
         Mat_<uchar> counts1(mdl.size(),0);
@@ -192,22 +195,24 @@ struct Frontalizer
                 counts1(i, j) = counts(y, x);
 	        }
         }
+        blur(counts1, counts1, Size(9,9));
         counts1 -= eyemask;
-        blur(counts1 & mask, counts1, Size(9,9));
 
         // count occlusions in left & right half
         Rect left (0,  0,mid,counts1.rows);
         Rect right(mid,0,mid,counts1.rows);
         double sleft=sum(counts1(left))[0];
         double sright=sum(counts1(right))[0];
-        //cerr << sleft << "\t" << sright << "\t" << (sleft-sright) << "\t" << (sleft+sright) << endl;
+
+
         // fix occlusions with soft symmetry
+        Mat_<double> weights;
         Mat_<uchar> sym = test2.clone();
-        if (abs(sleft-sright)>8000)
+        if (abs(sleft-sright)>symThresh)
         {
             PROFILEX("proj_3");
+
             // make weights
-            Mat_<double> weights;
             counts1.convertTo(weights,CV_64F);
 
             Point p,P;
@@ -216,14 +221,12 @@ struct Frontalizer
 
             double *wp = weights.ptr<double>();
             for (size_t i=0; i<weights.total(); ++i)
-                wp[i] = (1.0 - 1.0 / exp(0.7+(wp[i]/M)));
+                wp[i] = (1.0 - 1.0 / exp(symBlend+(wp[i]/M)));
             // cerr << weights(Rect(mid,mid,6,6)) << endl;
-            if (! WRITE_IMAGES)
-                imshow("weights", weights);
 
             for (int i=R.y; i<R.y+R.height; i++)
             {
-                if (sleft-sright>8000) // left side needs fixing
+                if (sleft-sright>symThresh) // left side needs fixing
                 {                
                     for (int j=R.x; j<mid; j++)
                     {
@@ -231,7 +234,7 @@ struct Frontalizer
                         sym(i,j) = test2(i,j) * (1-weights(i,j)) + test2(i,k) * (weights(i,j));
                     }
                 }
-                if (sright-sleft>8000) // right side needs fixing
+                if (sright-sleft>symThresh) // right side needs fixing
                 {
                     for (int j=mid; j<R.x+R.width; j++)
                     {
@@ -242,47 +245,152 @@ struct Frontalizer
             }
         }
 
-        for (size_t i=0; i<pts2d.size(); i++)
-            circle(test, pts2d[i], 1, Scalar(0));
+        if (! WRITE_IMAGES)
+        {
+            cerr << sleft << "\t" << sright << "\t" << (sleft-sright) << "\t" << (sleft+sright) << "\t" << (abs(sleft-sright)>symThresh) << endl;
+            imshow("proj",test2);
+            if (abs(sleft-sright)>symThresh)
+                imshow("weights", weights);
+            Mat t = test.clone();
+            rectangle(t,Ri,Scalar(255));
+            for (size_t i=0; i<pts2d.size(); i++)
+                circle(t, pts2d[i], 1, Scalar(255));
+            imshow("test3",t);
+        }
 
         Mat gray;
         sym.convertTo(gray,CV_8U);
 
-        if (! WRITE_IMAGES)
-            imshow("sym", sym & mask);
-
         return sym(R);
     }
+
+    //
+    //! 2d eye-alignment
+    //
+    Mat align2d(const Mat &img) const
+    {
+        Mat test;
+        resize(img,test,Size(250,250),INTER_CUBIC);
+
+        // get landmarks
+        vector<Point2d> pts2d;
+        getkp(test, pts2d, Rect(0,0,test.cols,test.rows));
+        Point2d eye_l = (pts2d[37] + pts2d[38] + pts2d[40] + pts2d[41]) * 0.25; // left eye center
+        Point2d eye_r = (pts2d[43] + pts2d[44] + pts2d[46] + pts2d[47]) * 0.25; // right eye center
+
+        double eyeXdis = eye_r.x - eye_l.x;
+        double eyeYdis = eye_r.y - eye_l.y;
+        double angle  = atan(eyeYdis/eyeXdis);
+        double degree = angle*180/CV_PI;
+        double scale  = (double(test.cols)/eyeXdis) / (250.0/44.0); // scale to lfw eye distance
+
+        Mat res;
+        Point2f center(test.cols/2,test.rows/2);
+        Mat rot = getRotationMatrix2D(center,degree,scale);
+        warpAffine(test, res, rot, Size(),INTER_CUBIC,BORDER_CONSTANT,Scalar(127));
+
+        if (! WRITE_IMAGES)
+        {
+            Mat t = test.clone();
+            for (size_t i=0; i<pts2d.size(); i++)
+                circle(t, pts2d[i], 1, Scalar(255));
+            circle(t, eye_l, 3, Scalar(0));
+            circle(t, eye_r, 3, Scalar(0));
+            imshow("test2",t);
+        }
+        return res;
+    }
+
+    static Ptr<Frontalizer> create(const String &dlib_path, int crop, int symThreshold, double symBlend, bool write)
+    {
+        return makePtr<FrontalizerImpl>(dlib_path,crop,symThreshold,symBlend,write);
+    }
+
 };
 
 
+#define STANDALONE
+#ifdef STANDALONE
+
 int main(int argc, const char *argv[])
 {
-    Frontalizer front;
-    vector<String> str;
+    PROFILE;
+    const char *keys =
+            "{ help h usage ? |      | show this message }"
+            "{ write w        |false | (over)write images (else just show them) }"
+            "{ facedet f      |false | do a 2d face detection/crop(first) }"
+            "{ align2d a      |false | do a 2d eye alignment(first) }"
+            "{ project3d P    |true  | do 3d projection }"
+            "{ crop c         |110   | crop size }"
+            "{ sym s          |2500  | threshold for soft sym }"
+            "{ blend b        |0.7   | blend factor for soft sym }"
+            "{ path p         |../lfw-deepfunneled/*.jpg| path to data folder}"
+            "{ cascade C      |E:\\code\\opencv\\data\\haarcascades\\haarcascade_frontalface_alt.xml|\n     path to haarcascade}"
+            "{ dlibpath d     |D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat|\n     path to dlib landmarks model}";
+ 
+    ////glob("e:/MEDIA/faces/tv/*.png",str,true);
+    ////glob("e:/MEDIA/faces/fem/*.png",str,true);
+    ////glob("e:/MEDIA/faces/sheffield",str,true);
+    ////glob("img/*.jpg", str, true);
+    ////glob("../lfw-deepfunneled/*.jpg", str, true);
+//    string path("e:/MEDIA/faces/orl_faces/*.pgm");
+//    string path("e:/MEDIA/faces/faces94/male/*.jpg");
+//    string path("e:/MEDIA/faces/tv/*.png");
+//    string path("e:/MEDIA/faces/fem/*.png");
+
+    CommandLineParser parser(argc, argv, keys);
+    string path(parser.get<string>("path"));
+    if (parser.has("help") || path=="")
+    {
+        parser.printMessage();
+        return -1;
+    }
+    string dlib_path = parser.get<String>("dlibpath");
+    string casc_path = parser.get<String>("cascade");
+    int crop = parser.get<int>("crop");
+    int sym = parser.get<int>("sym");
+    double blend = parser.get<double>("blend");
+    bool write = parser.get<bool>("write");
+    bool facedet = parser.get<bool>("facedet");
+    bool align2d = parser.get<bool>("align2d");
+    bool project3d = parser.get<bool>("project3d");
+
+
+    FrontalizerImpl front(dlib_path,crop,sym,blend,write);
+    CascadeClassifier casc(casc_path);
     //
     // !!!
+    // if write is enabled,
     // please run this on a **copy** of your img folder,
     //  since this will just replace the images
     //  with the frontalized version !
     // !!!
     //
-    //glob("e:/MEDIA/faces/tv/*.png",str,true);
-    //glob("e:/MEDIA/faces/fem/*.png",str,true);
-    //glob("e:/MEDIA/faces/sheffield",str,true);
-    //glob("img/*.jpg", str, true);
-    //glob("../lfw3d_b/*.jpg", str, true);
-    glob("../lfw-deepfunneled/*.jpg", str, true);
+    namedWindow("orig", 0);
+    namedWindow("front", 0);
+
+    vector<String> str;
+    glob(path, str, true);
     for (size_t i=0; i<str.size(); i++)
     {
         cerr << str[i] << endl;
         Mat in = imread(str[i], 0);
-        Mat out = front.project(in, 80, 90); //lfw offsets
-        //Mat out = front.project(in, 0, 0); //sheff
-        if (! WRITE_IMAGES)
+        if (facedet && !casc.empty())
+        {
+            vector<Rect> rects;
+            casc.detectMultiScale(in,rects);
+            if (rects.size() > 0)
+                in = in(rects[0]);
+        }
+        if (align2d)
+            in = front.align2d(in); 
+        Mat out = in;
+        if (project3d)
+           out = front.project3d(in); 
+        if (! write)
         {
             imshow("orig", in);
-            imshow("rota", out);
+            imshow("front", out);
             if (waitKey() == 27) break;
         } 
         else
@@ -292,3 +400,5 @@ int main(int argc, const char *argv[])
     }
     return 0;
 }
+
+#endif // STANDALONE

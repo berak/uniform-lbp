@@ -146,7 +146,7 @@ static int unique(const Mat &labels, set<int> &classes)
 
 
 //
-// curently needs a hack in svm.cpp
+// curently needs a hack in svm.cpp to enable CUSTOM in setParam
 //
 struct CustomKernel : public ml::SVM::Kernel
 {
