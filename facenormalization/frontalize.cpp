@@ -1,11 +1,3 @@
-//
-// please see:
-//  "Effective Face Frontalization in Unconstrained Images"
-//      Tal Hassner, Shai Harel, Eran Paz1 , Roee Enbar
-//          The open University of Israel
-//
-
-
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/utility.hpp"
 
@@ -21,20 +13,15 @@ using namespace cv; // this has to go later than the dlib includes
 using namespace std;
 
 #include "../Profile.h"
+#include "Frontalizer.h"
 
 
 //
-//@brief  apply a one-size-fits-all 3d model transformation (POSIT style), also do 2d eye-alignment, if nessecary.
+// please see:
+//  "Effective Face Frontalization in Unconstrained Images"
+//      Tal Hassner, Shai Harel, Eran Paz1 , Roee Enbar
+//          The open University of Israel
 //
-struct Frontalizer
-{
-    virtual Mat align2d(const Mat &test) const = 0;
-    virtual Mat project3d(const Mat &test) const = 0;
-
-    static Ptr<Frontalizer> create(const String &dlib_path, int crop, int symThreshold, double symBlend, bool write);
-};
-
-
 struct FrontalizerImpl : public Frontalizer
 {
     dlib::shape_predictor sp;
@@ -64,11 +51,11 @@ struct FrontalizerImpl : public Frontalizer
         blur(eyemask,eyemask,Size(4,4));
 
         //// if you want to see the 3d model ..
-        //Mat ch[4];
+        //Mat ch[3];
         //split(mdl, ch);
         //Mat_<double> depth;
         //normalize(ch[1], depth, -100);
-        ////imshow("head1", depth);
+        //imshow("head1", depth);
 
         // get 2d reference points from image
         vector<Point2d> pts2d;
@@ -100,7 +87,7 @@ struct FrontalizerImpl : public Frontalizer
         // 2d -> 3d correspondence
         Mat rvec,tvec;
         solvePnP(pts3d, ip, camMatrix, Mat(1,4,CV_64F,0.0), rvec, tvec, false, SOLVEPNP_EPNP);
-        cerr << "rot " << rvec.t() << endl;
+        //cerr << "rot " << rvec.t() << endl;
         // get 3d rot mat
 	    Mat rotM(3, 3, CV_64F);
 	    Rodrigues(rvec, rotM);
@@ -147,11 +134,12 @@ struct FrontalizerImpl : public Frontalizer
         int midi = test.cols/2;
         Rect R(mid-crop/2,mid-crop/2,crop,crop);
         Rect Ri(midi-crop/2,midi-crop/2,crop,crop);
-        cerr  << test.size() << " " << mid << " " << midi << " " << R <<" " << Ri << endl;
+        //cerr  << test.size() << " " << mid << " " << midi << " " << R <<" " << Ri << endl;
         if (crop == 0)
         {
             R = Ri = Rect(0,0,test.cols,test.rows);
         }
+
         // get landmarks
         vector<Point2d> pts2d;
         getkp(test, pts2d, Ri);
@@ -174,7 +162,7 @@ struct FrontalizerImpl : public Frontalizer
                 if (y < 0 || y > test.rows - 1) continue;
                 if (x < 0 || x > test.cols - 1) continue;
                 // each point used more than once is occluded
-                counts(y, x) ++; 
+                counts(y, x) ++;
                 // stare hard at the coord transformation ;)
                 test2(i, j) = test.at<uchar>(y, x);
 	        }
@@ -227,7 +215,7 @@ struct FrontalizerImpl : public Frontalizer
             for (int i=R.y; i<R.y+R.height; i++)
             {
                 if (sleft-sright>symThresh) // left side needs fixing
-                {                
+                {
                     for (int j=R.x; j<mid; j++)
                     {
                         int k = mdl.cols-j-1;
@@ -309,30 +297,27 @@ struct FrontalizerImpl : public Frontalizer
 };
 
 
-#define STANDALONE
-#ifdef STANDALONE
+
+
+//#define FRONTALIZER_STANDALONE
+#ifdef FRONTALIZER_STANDALONE
 
 int main(int argc, const char *argv[])
 {
     PROFILE;
     const char *keys =
             "{ help h usage ? |      | show this message }"
-            "{ write w        |false | (over)write images (else just show them) }"
+            "{ write w        |true  | (over)write images (else just show them) }"
             "{ facedet f      |false | do a 2d face detection/crop(first) }"
             "{ align2d a      |false | do a 2d eye alignment(first) }"
             "{ project3d P    |true  | do 3d projection }"
             "{ crop c         |110   | crop size }"
-            "{ sym s          |2500  | threshold for soft sym }"
+            "{ sym s          |9000  | threshold for soft sym }"
             "{ blend b        |0.7   | blend factor for soft sym }"
-            "{ path p         |../lfw-deepfunneled/*.jpg| path to data folder}"
+            "{ path p         |../lfw3d_9000/*.jpg| path to data folder}"
             "{ cascade C      |E:\\code\\opencv\\data\\haarcascades\\haarcascade_frontalface_alt.xml|\n     path to haarcascade}"
             "{ dlibpath d     |D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat|\n     path to dlib landmarks model}";
- 
-    ////glob("e:/MEDIA/faces/tv/*.png",str,true);
-    ////glob("e:/MEDIA/faces/fem/*.png",str,true);
-    ////glob("e:/MEDIA/faces/sheffield",str,true);
-    ////glob("img/*.jpg", str, true);
-    ////glob("../lfw-deepfunneled/*.jpg", str, true);
+
 //    string path("e:/MEDIA/faces/orl_faces/*.pgm");
 //    string path("e:/MEDIA/faces/faces94/male/*.jpg");
 //    string path("e:/MEDIA/faces/tv/*.png");
@@ -366,8 +351,11 @@ int main(int argc, const char *argv[])
     //  with the frontalized version !
     // !!!
     //
-    namedWindow("orig", 0);
-    namedWindow("front", 0);
+    if (! write)
+    {
+        namedWindow("orig", 0);
+        namedWindow("front", 0);
+    }
 
     vector<String> str;
     glob(path, str, true);
@@ -382,17 +370,20 @@ int main(int argc, const char *argv[])
             if (rects.size() > 0)
                 in = in(rects[0]);
         }
+
         if (align2d)
-            in = front.align2d(in); 
+            in = front.align2d(in);
+
         Mat out = in;
         if (project3d)
-           out = front.project3d(in); 
+           out = front.project3d(in);
+
         if (! write)
         {
             imshow("orig", in);
             imshow("front", out);
             if (waitKey() == 27) break;
-        } 
+        }
         else
         {
             imwrite(str[i], out);
@@ -401,4 +392,4 @@ int main(int argc, const char *argv[])
     return 0;
 }
 
-#endif // STANDALONE
+#endif // FRONTALIZER_STANDALONE
