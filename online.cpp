@@ -19,8 +19,8 @@
 using namespace std;
 using namespace cv;
 
-#include "TextureFeature.h"
-#include "Preprocessor.h"
+#include "texturefeature.h"
+#include "preprocessor.h"
 
 #ifdef _WIN32
  const char SEP = '\\';

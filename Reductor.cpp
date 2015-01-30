@@ -2,7 +2,7 @@
 #include <opencv2/imgproc.hpp>
 using namespace cv;
 
-#include "TextureFeature.h"
+#include "texturefeature.h"
 
 #include <iostream>
 using namespace std;

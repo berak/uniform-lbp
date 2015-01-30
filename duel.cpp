@@ -13,8 +13,8 @@ using namespace cv;
 using namespace std;
 
 
-#include "TextureFeature.h"
-#include "Preprocessor.h"
+#include "texturefeature.h"
+#include "preprocessor.h"
 
 
 using TextureFeature::Extractor;

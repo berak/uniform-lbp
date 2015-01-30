@@ -24,8 +24,8 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#include "TextureFeature.h"
-#include "ElasticParts.h"
+#include "texturefeature.h"
+#include "elasticparts.h"
 //#include "Profile.h"
 
 using namespace cv;
@@ -906,8 +906,8 @@ struct HighDimLbp : public TextureFeature::Extractor
     HighDimLbp()
     {
 #ifndef HAVE_DLIB
-        //elastic = ElasticParts::create();
-        //elastic->read("data/parts.xml.gz");
+        elastic = ElasticParts::create();
+        elastic->read("data/parts.xml.gz");
 #endif
     }
 
@@ -921,9 +921,9 @@ struct HighDimLbp : public TextureFeature::Extractor
 #else
         {
             //PROFILEX("elastic");
-        //    elastic->getPoints(img, kp);
+            elastic->getPoints(img, kp);
         }
-        kp_manual(img, kp);
+        //kp_manual(img, kp);
 #endif
 
 

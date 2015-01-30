@@ -8,7 +8,7 @@ using namespace std;
 #include <opencv2/ml.hpp>
 using namespace cv;
 
-#include "TextureFeature.h"
+#include "texturefeature.h"
 
 
 using namespace TextureFeature;

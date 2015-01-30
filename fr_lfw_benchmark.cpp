@@ -43,11 +43,11 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/datasets/fr_lfw.hpp"
 
-#include "TextureFeature.h"
-#include "Preprocessor.h"
+#include "texturefeature.h"
+#include "preprocessor.h"
 
 #if 0
- #include "../Profile.h"
+ #include "../profile.h"
 #else
  #define PROFILE ;
  #define PROFILEX(s) ;
