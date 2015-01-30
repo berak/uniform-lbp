@@ -332,7 +332,7 @@ int main(int argc, const char *argv[])
 //            "{ path p         |e:/MEDIA/faces/orl_faces/*.pgm| path to data folder}"
 //            "{ path p         |e:/MEDIA/faces/faces94/male/*.jpg| path to data folder}"
 //            "{ path p         |lfw-deepfunneled/*.jpg| path to data folder}"
-            "{ cascade C      |E:\\code\\opencv\\data\\haarcascades\\haarcascade_frontalface_alt.xml|\n     path to haarcascade}"
+            "{ cascade C      |E:\\code\\opencv\\data\\haarcascades\\|\n     path to haarcascades folder}"
             "{ dlibpath d     |D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat|\n     path to dlib landmarks model}";
 
 
@@ -348,16 +348,17 @@ int main(int argc, const char *argv[])
     int crop = parser.get<int>("crop");
     int sym = parser.get<int>("sym");
     double blend = parser.get<double>("blend");
-    bool write = parser.has("write");
-    bool facedet = parser.has("facedet");
-    bool align2d = parser.has("align2d");
-    bool project3d = parser.has("project3d");
+    bool write = parser.get<bool>("write");
+    bool facedet = parser.get<bool>("facedet");
+    bool align2d = parser.get<bool>("align2d");
+    bool project3d = parser.get<bool>("project3d");
 
     dlib::shape_predictor sp;
     dlib::deserialize(dlib_path) >> sp;
 
     FrontalizerImpl front(sp,crop,sym,blend,!write);
-    CascadeClassifier casc(casc_path);
+    CascadeClassifier casc(casc_path + "haarcascade_frontalface_alt.xml");
+    CascadeClassifier cascp(casc_path + "haarcascade_profileface.xml");
     //
     // !!!
     // if write is enabled,
@@ -383,7 +384,28 @@ int main(int argc, const char *argv[])
             vector<Rect> rects;
             casc.detectMultiScale(in, rects, 1.3, 4);
             if (rects.size() > 0)
+            {
                 in = in(rects[0]);
+            }
+            else
+            {
+                cascp.detectMultiScale(in, rects, 1.3, 4);
+                if (rects.size() > 0)
+                {
+                    cerr << "profile_l" << endl;
+                    in = in(rects[0]);
+                }
+                else
+                {
+                    flip(in,in,1);
+                    cascp.detectMultiScale(in, rects, 1.3, 4);
+                    if (rects.size() > 0)
+                    {
+                        cerr << "profile_r" << endl;
+                        in = in(rects[0]);
+                    }
+                }
+            }
         }
 
         if (align2d)
