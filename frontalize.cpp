@@ -320,17 +320,18 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |      | show this message }"
             "{ write w        |false | (over)write images (else just show them) }"
-            "{ facedet f      |false | do a 2d face detection/crop(first) }"
-            "{ align2d a      |false | do a 2d eye alignment(first) }"
+            "{ facedet f      |true | do a 2d face detection/crop(first) }"
+            "{ align2d a      |true | do a 2d eye alignment(first) }"
             "{ project3d P    |true  | do 3d projection }"
             "{ crop c         |110   | crop size }"
             "{ sym s          |9000  | threshold for soft sym }"
             "{ blend b        |0.7   | blend factor for soft sym }"
+            "{ path p         |e:/MEDIA/faces/aberdeen/*.jpg| path to data folder}"
 //            "{ path p         |e:/MEDIA/faces/faces96/*.jpg| path to data folder}"
 //            "{ path p         |e:/MEDIA/faces/tv/*.png| path to data folder}"
 //            "{ path p         |e:/MEDIA/faces/orl_faces/*.pgm| path to data folder}"
 //            "{ path p         |e:/MEDIA/faces/faces94/male/*.jpg| path to data folder}"
-            "{ path p         |lfw-deepfunneled/*.jpg| path to data folder}"
+//            "{ path p         |lfw-deepfunneled/*.jpg| path to data folder}"
             "{ cascade C      |E:\\code\\opencv\\data\\haarcascades\\haarcascade_frontalface_alt.xml|\n     path to haarcascade}"
             "{ dlibpath d     |D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat|\n     path to dlib landmarks model}";
 
@@ -347,10 +348,10 @@ int main(int argc, const char *argv[])
     int crop = parser.get<int>("crop");
     int sym = parser.get<int>("sym");
     double blend = parser.get<double>("blend");
-    bool write = parser.get<bool>("write");
-    bool facedet = parser.get<bool>("facedet");
-    bool align2d = parser.get<bool>("align2d");
-    bool project3d = parser.get<bool>("project3d");
+    bool write = parser.has("write");
+    bool facedet = parser.has("facedet");
+    bool align2d = parser.has("align2d");
+    bool project3d = parser.has("project3d");
 
     dlib::shape_predictor sp;
     dlib::deserialize(dlib_path) >> sp;

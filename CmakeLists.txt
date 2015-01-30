@@ -16,6 +16,12 @@ include_directories(SYSTEM  ${OpenCV_INCLUDE_DIRS})
 add_executable( online online.cpp ${LIBFILES})
 target_link_libraries( online ${OpenCV_LIBS} )
 
+project( frontalize )
+find_package( OpenCV REQUIRED )
+include_directories(SYSTEM  ${OpenCV_INCLUDE_DIRS})
+add_executable( frontalize frontalize.cpp )
+target_link_libraries( frontalize ${OpenCV_LIBS} )
+
 project( challenge )
 find_package( OpenCV REQUIRED )
 include_directories(SYSTEM  ${OpenCV_INCLUDE_DIRS})

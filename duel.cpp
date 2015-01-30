@@ -49,13 +49,17 @@ double ct(int64 t)
 // 
 // you can pass like 'images/*.png', too!
 //
-int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim, int minim=10)
+int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim, int minp=10, int maxp=10)
 {
+
+    int r0 = dirpath.find_last_of(SEP)+1;
+
     vector<String> vec;
     glob(dirpath,vec,true);
     if ( vec.empty())
         return 0;
-
+    std::vector<std::string> tnames;
+    std::vector<int> tlabels;
     int nimgs=0;
     int label=-1;
     String last_n="";
@@ -63,27 +67,36 @@ int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &l
     {
         // extract name from filepath:
         String v = vec[i];
-        int r1 = v.find_last_of(SEP);
-        String v2 = v.substr(0,r1);
-        int r2 = v2.find_last_of(SEP);
-        String n = v2.substr(r2+1);
-        if (n != last_n || nimgs >= minim)
+        String v1 = v.substr(r0);
+        int r1 = v1.find_last_of(SEP);
+        String n = v1.substr(0,r1);
+        if (n != last_n)
         {
-            if (nimgs < minim) // roll back
+            if (nimgs < minp) // roll back
             {
-                labels.resize(labels.size() - nimgs);
-                names.resize(names.size() - nimgs);
+                tlabels.clear();
+                tnames.clear();
                 if (label >= 0) label --;
+            }
+            else
+            {
+                labels.insert(labels.end(),tlabels.begin(),(maxp==-1) ? tlabels.end() : tlabels.begin()+std::min(maxp,(int)tlabels.size()));
+                names.insert(names.end(),tnames.begin(),(maxp==-1) ? tnames.end() : tnames.begin()+std::min(maxp,(int)tlabels.size()));
+                tnames.clear();
+                tlabels.clear();
             }
             nimgs = 0;
             last_n = n;
             label ++;
             if (labels.size() >= maxim) break;
         }
-        names.push_back(v);
-        labels.push_back(label);
+        tnames.push_back(v);
+        tlabels.push_back(label);
         nimgs ++;
     }
+    //for ( int i=0; i<labels.size(); i++)
+    //    cerr << labels[i] << " " << names[i] << endl;
+
     return label;
 }
 
@@ -136,17 +149,17 @@ void setupPersons(const vector<int> &labels, vector< vector<int> > &persons)
     }
 }
 
-int extractDB(const string &path, vector<Mat> &images, Mat &labels, int preproc, int precrop, int maxim, int fixed_size)
+int extractDB(const string &path, vector<Mat> &images, Mat &labels, int preproc, int precrop, int maxim, int minp, int maxp, int fixed_size)
 {
     // read face db
     vector<string> vec;
     vector<int> vlabels;
     int nsubjects =0;
-    int nt = path.find_last_of(".txt") ;
+    int nt = path.find(".txt") ;
     if (nt > 0)
         nsubjects = 1 + readtxt(path.c_str(), vec, vlabels, maxim);
     else
-        nsubjects = 1 + readdir(path, vec, vlabels, maxim);
+        nsubjects = 1 + readdir(path, vec, vlabels, maxim, minp, maxp);
 
     Preprocessor pre(preproc,precrop,fixed_size);
 
@@ -318,14 +331,18 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |      | show this message }"
             "{ opts o         |      | show extractor / reductor / classifier options }"
-            "{ path p         |data/att.txt| path to dataset (txtfile or directory with 1 subfolder per person)}"
             "{ fold f         |10    | folds for crossvalidation }"
+            "{ minp m         |0     | mininal img count per person (when reading folders) }"
+            "{ maxp M         |-1    | maxmal img count per person (-1==read_all)}"
+            "{ maxim I        |500   | maxmal img count overall }"
             "{ ext e          |0     | extractor  enum }"
             "{ red r          |0     | reductor   enum }"
             "{ cls c          |0     | classifier enum }"
             "{ all a          |false | test all }"
             "{ pre P          |0     | preprocessing }"
-            "{ crop C         |0     | crop outer pixels }";
+            "{ crop C         |0     | crop outer pixels }"
+            "{ path p         |lfw3d_9000\\*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
+            //"{ path p         |e:\\MEDIA\\faces\\Aberdeen\\*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
  
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
@@ -346,10 +363,13 @@ int main(int argc, const char *argv[])
     int pre = parser.get<int>("pre");
     int crp = parser.get<int>("crop");
     int fold = parser.get<int>("fold");
+    int minp = parser.get<int>("minp");
+    int maxp = parser.get<int>("maxp");
+    int maxim = parser.get<int>("maxim");
 
     std::string db_path = parser.get<String>("path");
 
-    extractDB(db_path, images, labels, pre, crp, 500, 90);
+    extractDB(db_path, images, labels, pre, crp, maxim, minp, maxp, 90);
 
     // per person id lookup
     vector< vector<int> > persons;
