@@ -13,11 +13,11 @@ namespace TextureFeatureImpl
 {
 
 
-struct ReductorWalshHadamard : public Reductor
+struct FilterWalshHadamard : public Filter
 {
     int keep;
 
-    ReductorWalshHadamard(int k=0) : keep(k) {}
+    FilterWalshHadamard(int k=0) : keep(k) {}
 
     template<class T>
     void fast_had(int ndim, int lev, T *in, T *out) const
@@ -35,7 +35,7 @@ struct ReductorWalshHadamard : public Reductor
         }
     }
 
-    virtual int reduce(const Mat &src, Mat &dest) const
+    virtual int filter(const Mat &src, Mat &dest) const
     {
         Mat h; src.convertTo(h,CV_32F);
         Mat h2(h.size(), h.type());
@@ -54,13 +54,13 @@ struct ReductorWalshHadamard : public Reductor
 
 
 
-struct ReductorDct : public Reductor
+struct FilterDct : public Filter
 {
     int keep;
 
-    ReductorDct(int k=0) : keep(k) {}
+    FilterDct(int k=0) : keep(k) {}
 
-    virtual int reduce(const Mat &src, Mat &dest) const
+    virtual int filter(const Mat &src, Mat &dest) const
     {
         Mat h; src.convertTo(h, CV_32F);
         Mat h2(h.size(), h.type());
@@ -77,11 +77,11 @@ struct ReductorDct : public Reductor
 };
 
 
-struct ReductorRandomProjection : public Reductor
+struct FilterRandomProjection : public Filter
 {
     int K;
 
-    ReductorRandomProjection(int k) : K(k) {}
+    FilterRandomProjection(int k) : K(k) {}
 
     const Mat & setup(int N) const
     {
@@ -102,7 +102,7 @@ struct ReductorRandomProjection : public Reductor
         return proj;
     }
 
-    virtual int reduce(const Mat &src, Mat &dest) const
+    virtual int filter(const Mat &src, Mat &dest) const
     {
         const Mat &proj = setup(src.cols);
 
@@ -117,9 +117,9 @@ struct ReductorRandomProjection : public Reductor
 //
 // hellinger kernel (no reduction)
 //
-struct ReductorHellinger : public Reductor
+struct FilterHellinger : public Filter
 {
-    virtual int reduce(const Mat &src, Mat &dest) const
+    virtual int filter(const Mat &src, Mat &dest) const
     {
         src.convertTo(dest, CV_32F);
         float eps = 1e-7f;
@@ -133,11 +133,11 @@ struct ReductorHellinger : public Reductor
 //
 // pow(n,p) (no reduction) (-> generalized intersection)
 //
-struct ReductorPow : public Reductor
+struct FilterPow : public Filter
 {
     double P;
-    ReductorPow(double p=0.25) : P(p) {}
-    virtual int reduce(const Mat &src, Mat &dest) const
+    FilterPow(double p=0.25) : P(p) {}
+    virtual int filter(const Mat &src, Mat &dest) const
     {
         src.convertTo(dest, CV_32F);
         cv::pow(dest,P,dest);
@@ -156,22 +156,22 @@ namespace TextureFeature
 using namespace TextureFeatureImpl;
 
 
-Ptr<Reductor> createReductor(int redu)
+Ptr<Filter> createFilter(int filt)
 {
-    switch(redu)
+    switch(filt)
     {
-        case RED_NONE:     break; //red = createReductorNone(); break;
-        case RED_HELL:     return makePtr<ReductorHellinger>(); break;
-        case RED_POW:      return makePtr<ReductorPow>(); break;
-        case RED_WHAD:     return makePtr<ReductorWalshHadamard>(8000); break;
-        case RED_RP:       return makePtr<ReductorRandomProjection>(8000); break;
-        case RED_DCT8:     return makePtr<ReductorDct>(8000); break;
-        case RED_DCT12:    return makePtr<ReductorDct>(12000); break;
-        case RED_DCT16:    return makePtr<ReductorDct>(16000); break;
-        case RED_DCT24:    return makePtr<ReductorDct>(24000); break;
-//        default: cerr << "Reductor " << redu << " is not yet supported." << endl; exit(-1);
+        case FIL_NONE:     break; 
+        case FIL_HELL:     return makePtr<FilterHellinger>(); break;
+        case FIL_POW:      return makePtr<FilterPow>(); break;
+        case FIL_WHAD:     return makePtr<FilterWalshHadamard>(8000); break;
+        case FIL_RP:       return makePtr<FilterRandomProjection>(8000); break;
+        case FIL_DCT8:     return makePtr<FilterDct>(8000); break;
+        case FIL_DCT12:    return makePtr<FilterDct>(12000); break;
+        case FIL_DCT16:    return makePtr<FilterDct>(16000); break;
+        case FIL_DCT24:    return makePtr<FilterDct>(24000); break;
+//        default: cerr << "Filter " << filt << " is not yet supported." << endl; exit(-1);
     }
-    return Ptr<Reductor>();
+    return Ptr<Filter>();
 }
 
 } // TextureFeatureImpl

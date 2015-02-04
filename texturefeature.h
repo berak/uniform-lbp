@@ -17,9 +17,9 @@ namespace TextureFeature
         virtual int extract(const Mat &img, Mat &features) const = 0;
     };
 
-    struct Reductor
+    struct Filter
     {
-        virtual int reduce(const Mat &src, Mat &dest) const = 0;
+        virtual int filter(const Mat &src, Mat &dest) const = 0;
     };
 
     struct Serialize // io
@@ -113,19 +113,19 @@ namespace TextureFeature
         "HDLBP",
         0
     };
-    enum RED {
-        RED_NONE,
-        RED_HELL,
-        RED_POW,
-        RED_WHAD,
-        RED_RP,
-        RED_DCT8,
-        RED_DCT12,
-        RED_DCT16,
-        RED_DCT24,
-        RED_MAX
+    enum FIL {
+        FIL_NONE,
+        FIL_HELL,
+        FIL_POW,
+        FIL_WHAD,
+        FIL_RP,
+        FIL_DCT8,
+        FIL_DCT12,
+        FIL_DCT16,
+        FIL_DCT24,
+        FIL_MAX
     };
-    static const char *REDS[] = {
+    static const char *FILS[] = {
         "none",
         "HELL",
         "POW",
@@ -183,7 +183,7 @@ namespace TextureFeature
     };
 
     cv::Ptr<Extractor>  createExtractor(int ex);
-    cv::Ptr<Reductor>   createReductor(int rd);
+    cv::Ptr<Filter>     createFilter(int rd);
     cv::Ptr<Classifier> createClassifier(int cl);
     cv::Ptr<Verifier>   createVerifier(int ver);
 }

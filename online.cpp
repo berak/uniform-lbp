@@ -54,7 +54,7 @@ class FaceRec
     Preprocessor pre;
 
     Ptr<TextureFeature::Extractor>  extractor;
-    Ptr<TextureFeature::Reductor>   reductor;
+    Ptr<TextureFeature::Filter>     filter;
     Ptr<TextureFeature::Classifier> classifier;
 
     map<int,String> persons;
@@ -63,7 +63,7 @@ public:
     FaceRec(int ext, int red, int cls)
         : pre(3, 0, FIXED_FACE)
         , extractor(TextureFeature::createExtractor(ext))
-        , reductor(TextureFeature::createReductor(red))
+        , filter(TextureFeature::createFilter(red))
         , classifier(TextureFeature::createClassifier(cls))
     {}
 
@@ -100,8 +100,8 @@ public:
 
             Mat feature;
             extractor->extract(pre.process(img), feature);
-            if (!reductor.empty())
-                reductor->reduce(feature.reshape(1,1), feature);
+            if (!filter.empty())
+                filter->filter(feature.reshape(1,1), feature);
             features.push_back(feature);
             labels.push_back(label);
         }
@@ -118,8 +118,8 @@ public:
 
         Mat feature;
         extractor->extract(pre.process(im2), feature);
-        if (!reductor.empty())
-            reductor->reduce(feature, feature);
+        if (!filter.empty())
+            filter->filter(feature, feature);
 
         Mat_<float> result;
         classifier->predict(feature, result);
@@ -208,7 +208,7 @@ int main(int argc, const char *argv[])
 
     // feel free to swap parts here, it's intended for that..
     FaceRec reco(TextureFeature::EXT_BGC1_P,
-                 TextureFeature::RED_DCT8,
+                 TextureFeature::FIL_DCT8,
                  TextureFeature::CL_PCA_LDA);
     reco.train(imgpath);
 

@@ -84,8 +84,8 @@ void printOptions()
 {
     cerr << "[extractors]  :"<< endl;
     for (size_t i=0; i<TextureFeature::EXT_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::EXS[i],i); }
-    cerr << endl << endl << "[reductors] :" << endl;
-    for (size_t i=0; i<TextureFeature::RED_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::REDS[i],i); }
+    cerr << endl << endl << "[filters] :" << endl;
+    for (size_t i=0; i<TextureFeature::FIL_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::FILS[i],i); }
     cerr << endl << endl << "[classifiers] :" << endl;
     for (size_t i=0; i<TextureFeature::CL_MAX; ++i)  {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::CLS[i],i);  }
     //cerr << endl << endl <<  "[preproc] :" << endl;
@@ -98,7 +98,7 @@ void printOptions()
 class MyFace 
 {
     Ptr<TextureFeature::Extractor> ext;
-    Ptr<TextureFeature::Reductor>  red;
+    Ptr<TextureFeature::Filter>  fil;
     Ptr<TextureFeature::Verifier>  cls;
     Preprocessor pre;
     bool doFlip;
@@ -108,12 +108,12 @@ class MyFace
 
 public:
 
-    MyFace(int extract=0, int redu=0, int clsfy=0, int preproc=0, int crop=0, bool flip=false)
+    MyFace(int extract=0, int filt=0, int clsfy=0, int preproc=0, int crop=0, bool flip=false)
         : pre(preproc,crop)
         , doFlip(flip)
     {
         ext = TextureFeature::createExtractor(extract);
-        red = TextureFeature::createReductor(redu);
+        fil = TextureFeature::createFilter(filt);
         cls = TextureFeature::createVerifier(clsfy);
     }
 
@@ -126,8 +126,8 @@ public:
         if (fr.type() != CV_32F)
             fr.convertTo(fr,CV_32F);
 
-        if (! red.empty())
-            red->reduce(fr,fr);
+        if (! fil.empty())
+            fil->filter(fr,fr);
         if ( features.empty() )
         {
             features = Mat(4400, feat1.total(), CV_32F); // this will only work for dev mode !
@@ -184,10 +184,10 @@ public:
         Mat feat1, feat2;
         ext->extract(pre.process(a), feat1);
         ext->extract(pre.process(b), feat2);
-        if (! red.empty())
+        if (! fil.empty())
         {
-            red->reduce(feat1,feat1);
-            red->reduce(feat2,feat2);
+            fil->filter(feat1,feat1);
+            fil->filter(feat2,feat2);
         }
         return cls->same(feat1,feat2);
     }
@@ -199,14 +199,13 @@ int main(int argc, const char *argv[])
     PROFILE;
     const char *keys =
             "{ help h usage ? |    | show this message }"
-            "{ opts o         |    | show extractor / reduce / verifier options }"
+            "{ opts o         |    | show extractor / filter / verifier options }"
             "{ path p         |lfw-deepfunneled/| path to dataset (lfw2 folder) }"
             "{ ext e          |26  | extractor enum }"
-            "{ red r          |1   | reductor enum }"
+            "{ fil f          |1   | filter enum }"
             "{ cls c          |11   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
-            "{ flip f         |0   | add a flipped image }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
     CommandLineParser parser(argc, argv, keys);
@@ -222,17 +221,17 @@ int main(int argc, const char *argv[])
         return -1;
     }
     int ext = parser.get<int>("ext");
-    int red = parser.get<int>("red");
+    int fil = parser.get<int>("fil");
     int cls = parser.get<int>("cls");
     int pre = parser.get<int>("pre");
     int crp = parser.get<int>("crop");
     bool flp = parser.get<bool>("flip");
     string trainMethod(parser.get<string>("train"));
-    cout << TextureFeature::EXS[ext] << " " << TextureFeature::REDS[red] << " " << TextureFeature::CLS[cls] << " " << crp << " " << flp << " " << trainMethod << '\r';
+    cout << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << flp << " " << trainMethod << '\r';
 
     int64 t0 = getTickCount();
-    //Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,red,cls,pre,crp,flp);
-    Ptr<MyFace> model = makePtr<MyFace>(ext,red,cls,pre,crp,flp);
+    //Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,fil,cls,pre,crp,flp);
+    Ptr<MyFace> model = makePtr<MyFace>(ext,fil,cls,pre,crp,flp);
 
     // load dataset
     Ptr<FR_lfw> dataset = FR_lfw::create();
@@ -329,7 +328,7 @@ int main(int argc, const char *argv[])
 
     int64 t1 = getTickCount();
     cerr << format("%-8s",TextureFeature::EXS[ext])  << " ";
-    cerr << format("%-7s",TextureFeature::REDS[red]) << " ";
+    cerr << format("%-7s",TextureFeature::FILS[fil]) << " ";
     cerr << format("%-9s",TextureFeature::CLS[cls])  << " ";
     //cerr << format("%-8s",TextureFeature::PPS[pre])  << " ";
     cerr << format("%-6s",trainMethod.c_str()) << "\t";

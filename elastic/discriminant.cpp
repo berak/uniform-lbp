@@ -509,4 +509,5 @@ int main()
     return 0;
 }
 
-#endif ELASTIC_STANDALONE
+#endif // ELASTIC_STANDALONE
+
