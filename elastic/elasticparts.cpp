@@ -12,10 +12,13 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
+
+namespace Generative
+{
 void feature_img(const Mat_<uchar> &I, Mat &fI)
 {
-    //equalizeHist(I,fI);
     //fI.convertTo(fI, CV_32F);
+    //fI += 1.0; log(fI,fI);
 
     //Mat_<float> his=Mat_<float>::zeros(1,16*4);
     //const int m=2;
@@ -47,13 +50,13 @@ void feature_img(const Mat_<uchar> &I, Mat &fI)
     //Laplacian(I,fI,CV_32F,3,10);
     //fI.convertTo(fI, CV_8U);
 
-    //int nsec=90;
+    ////int nsec=90;
     Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
     Sobel(I, s1, CV_32F, 1, 0);
     Sobel(I, s2, CV_32F, 0, 1);
     fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
     fI = s3 ;/// (360/nsec);
-    ////fI.convertTo(fI,CV_8U);
+    //////fI.convertTo(fI,CV_8U);
 }
 
 struct Part
@@ -68,13 +71,11 @@ struct Part
         h           = w_base*scale,
     };
 
-    //Mat f[num_samples];
     Mat f,fAll;
     Point2f p;
     Size size;
 
     int num_samples;
-    //vector<Mat> samples; // only used for training
    
     Part() {}
     Part(const Point2f &p) : p(p), size(w, h), num_samples(0) {}
@@ -90,24 +91,11 @@ struct Part
         fs << "p" << p;
         fs << "f" << f;
         fs << "}";
-        //fs << "f" << "[";
-        //for(int i=0; i<num_samples; i++)
-        //{
-        //    fs << f[i];
-        //}
-        //fs << "]" << "}";
     }
     void read(const FileNode &fn)
     {
         fn["p"] >> p;
         fn["f"] >> f;
-        //FileNode pnodes = fn["f"];
-        //FileNodeIterator it=pnodes.begin();
-        //for(int i=0; i<num_samples; i++)
-        //{
-        //    (*it) >> f[i];
-        //    ++it;
-        //}
     }
 
     double distance(const Mat &a, const Mat &b) const
@@ -125,17 +113,12 @@ struct Part
             {
                 Point2f rs = Point2f(np.x+c, np.y+r);
                 Mat patch;
-                //for (int j=0; j<num_samples; j++)
-                {
-                    getRectSubPix(img, f.size(), rs, patch);
-                    //getRectSubPix(img, f[j].size(), rs, patch);
-                    //double d=distance(patch, f[j]);
-                    double d=distance(patch, f);
-                    if (d<mDist) 
-                    { 
-                        mDist=d;
-                        best=rs; 
-                    }
+                getRectSubPix(img, f.size(), rs, patch);
+                double d=distance(patch, f);
+                if (d<mDist) 
+                { 
+                    mDist=d;
+                    best=rs; 
                 }
             }
         }
@@ -144,35 +127,22 @@ struct Part
     }
     void sample(const Mat &img)
     {
-        Point2f p2(p);
-        walk(img,p2);
+        walk(img,p);
 
         Mat fI; 
-        getRectSubPix(img, size, p2, fI);
+        getRectSubPix(img, size, p, fI);
         if (fAll.empty())
             fAll = Mat(size, CV_32F, Scalar(0));
         accumulate(fI,fAll);
         num_samples ++;
-        //samples.push_back(fI);
-        //f[0] = fI;
     }
 
     void means()
     {
-        //Mat labels,centers,big;
-        //for (size_t p=0; p<samples.size(); p++)
-        //    big.push_back(samples[p].reshape(1,1));
-        //if (big.type() != CV_32F)
-        //    big.convertTo(big, CV_32F);
-
-        //kmeans(big,num_samples,labels,TermCriteria(),3,KMEANS_PP_CENTERS,centers);
-
-        //for(int i=0; i<num_samples; i++)
-        //    f[i] = centers.row(i).reshape(1,size.height).clone();
         f  = fAll / num_samples;
         fAll.release();
     }
-
+    
 };
 
 
@@ -184,11 +154,6 @@ struct ElasticPartsImpl : public ElasticParts
 
     ElasticPartsImpl()
     {
-        //Mat m=imread("lfw2mean.png",0);
-        //parts.push_back(Part(m,Point2f(12,34),12,12));
-        //parts.push_back(Part(m,Point2f(81,34),12,12));
-        //parts.push_back(Part(m,Point2f(27,78),12,12));
-        //parts.push_back(Part(m,Point2f(65,78),12,12));
     }
     virtual void addPart(cv::Point2f p) 
     {
@@ -262,21 +227,25 @@ struct ElasticPartsImpl : public ElasticParts
         return true;
     }
 
-    virtual void getPoints(const Mat & img, vector<KeyPoint> &kp) const
+    virtual double getPoints(const Mat & img, vector<Point> &kp) const
     {
         Mat ims, fI;
         resize(img,ims,Size(),Part::scale,Part::scale);
         feature_img(ims,fI);
-        for (size_t p=0; p<parts.size(); p++)
+        for (size_t k=0; k<parts.size(); k++)
         {
-            kp.push_back(KeyPoint(parts[p].p,8));
-            parts[p].walk(fI, kp[p].pt);
-            kp[p].pt /= Part::scale;
+            Point2f p = parts[k].p;
+            parts[k].walk(fI, p);
+            p /= Part::scale;
+            kp.push_back(p);
         }
+        return 0;
     }
 };
 
-cv::Ptr<ElasticParts> ElasticParts::create()
+} // Generative
+
+cv::Ptr<ElasticParts> ElasticParts::createGenerative()
 {
-	return makePtr<ElasticPartsImpl>();
+    return makePtr<Generative::ElasticPartsImpl>();
 }

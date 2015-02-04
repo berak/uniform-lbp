@@ -118,18 +118,35 @@ struct ClassifierHist : public ClassifierNearestFloat
     }
 };
 
+struct ClassifierEMD : public ClassifierNearestFloat
+{
+    ClassifierEMD(int flag=DIST_L2) 
+        : ClassifierNearestFloat(flag)
+    {}
+
+    // ClassifierNearest
+    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
+    {
+         return EMD(testFeature, trainFeature, flag);
+    }
+};
+
 
 //
 // Negated Mahalanobis Cosine Distance
 //
 struct ClassifierCosine : public ClassifierNearest
 {
-    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
+    static double cosdistance(const cv::Mat &testFeature, const cv::Mat &trainFeature)
     {
         double a = trainFeature.dot(testFeature);
         double b = trainFeature.dot(trainFeature);
         double c = testFeature.dot(testFeature);
         return -a / sqrt(b*c);
+    }
+    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
+    {
+        return cosdistance(testFeature, trainFeature);
     }
 };
 
@@ -254,6 +271,21 @@ struct CustomKernel : public ml::SVM::Kernel
             results[j] = (float)(s);
         }
     }
+    void calc_C(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        for(int j=0; j<vcount; j++)
+        {
+            double s = 0;
+            double a,b;
+            const float* sample = &vecs[j*var_count];
+            for(int k=0; k<var_count; k++)
+            {
+                a = sample[k];  b = another[k];
+                s += -log(sqrt((a-b)*(a-b))+1);
+            }
+            results[j] = (float)(s);
+        }
+    }
 
     void calc(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
@@ -265,6 +297,7 @@ struct CustomKernel : public ml::SVM::Kernel
         //case -4: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
         case -5: calc_intersect(vcount, var_count, vecs, another, results); break;
         case -6: calc_lowpass(vcount, var_count, vecs, another, results); break;
+        case -7: calc_C(vcount, var_count, vecs, another, results); break;
         default: cerr << "sorry, dave" << endl; exit(0);
         }
     }
@@ -392,7 +425,7 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
             Ptr<ml::SVM> svm = ml::SVM::create(param);
             Mat slabels; // you against all others, that's the only difference.
             for ( size_t j=0; j<labels.total(); ++j)
-                slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 );
+                slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 ); 
             svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
             svms.push_back(svm);
         }
@@ -610,6 +643,29 @@ struct VerifierHist : VerifierNearest
     }
 };
 
+//
+// similar to the classification task - just change the distance func.
+//
+struct VerifierCosine : VerifierNearest
+{
+    virtual double distance(const Mat &a, const Mat &b) const
+    {
+        return ClassifierCosine::cosdistance(a, b);
+    }
+};
+
+struct VerifierEMD : VerifierNearest
+{
+    VerifierEMD(int f=DIST_L2)
+        : VerifierNearest(f)
+    {}
+
+    virtual double distance(const Mat &a, const Mat &b) const
+    {
+        return EMD(a, b, flag);
+    }
+};
+
 
 
 
@@ -620,7 +676,6 @@ struct VerifierHist : VerifierNearest
 //  base class for svm,em,lr
 //
 
-template < class LabelType >
 struct VerifierPairDistance : public TextureFeature::Verifier
 {
     Ptr<ml::StatModel> model;
@@ -651,18 +706,15 @@ struct VerifierPairDistance : public TextureFeature::Verifier
             int j = i+1;
             distances.push_back(distance_mat(trainData.row(i), trainData.row(j)));
 
-            LabelType l = (labels.at<int>(i) == labels.at<int>(j)) ? LabelType(1) : LabelType(-1);
+            int l = (labels.at<int>(i) == labels.at<int>(j)) ? 1 : -1;
             binlabels.push_back(l);
         }
     }
 
     virtual int train(const Mat &features, const Mat &labels)
-    {
-        Mat trainData = tofloat(features.reshape(1, labels.rows));
-        
+    {      
         Mat distances, binlabels;
-        train_pre(trainData, labels, distances, binlabels);
-        trainData.release();
+        train_pre(features, labels, distances, binlabels);
 
         model->clear();
         return model->train(ml::TrainData::create(distances, ml::ROW_SAMPLE, binlabels));
@@ -672,7 +724,7 @@ struct VerifierPairDistance : public TextureFeature::Verifier
     {
         Mat res;
         model->predict(distance_mat(tofloat(a), tofloat(b)), res);
-        LabelType r = res.at<LabelType>(0);
+        int r = res.at<int>(0);
         return  r > 0;
     }
 };
@@ -681,12 +733,12 @@ struct VerifierPairDistance : public TextureFeature::Verifier
 //
 // binary (2 class) svm, same or not same based on distance
 //
-struct VerifierSVM : public VerifierPairDistance<int>
+struct VerifierSVM : public VerifierPairDistance
 {
     Ptr<ml::SVM::Kernel> krnl;
 
     VerifierSVM(int ktype=ml::SVM::LINEAR, int distFlag=2)
-        : VerifierPairDistance<int>(distFlag)
+        : VerifierPairDistance(distFlag)
     {
         ml::SVM::Params param;
         if (ktype<0)
@@ -739,6 +791,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
+        case CL_EMD:       return makePtr<ClassifierEMD>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();
@@ -761,6 +814,9 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
+        case CL_SVM_C:     return makePtr<VerifierSVM>(-7); break;
+        case CL_COSINE:    return makePtr<VerifierCosine>(); break;
+        case CL_EMD:       return makePtr<VerifierEMD>(); break;
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Verifier>();

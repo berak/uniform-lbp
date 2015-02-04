@@ -12,7 +12,7 @@ using namespace cv; // this has to go later than the dlib includes
 #include <vector>
 using namespace std;
 
-#include "profile.h"
+#include "../profile.h"
 #include "frontalizer.h"
 
 
@@ -33,7 +33,6 @@ struct FrontalizerImpl : public Frontalizer
     Mat mdl;
     Mat_<double> eyemask;
     vector<Point3d> pts3d;
-    vector<Point2d> ptsblank;
 
     FrontalizerImpl(const dlib::shape_predictor &sp, int crop, int symThreshold, double symBlend, bool debug_images)
         : sp(sp)
@@ -70,11 +69,6 @@ struct FrontalizerImpl : public Frontalizer
             Point3d p(pm[0], pm[2], -pm[1]);
             pts3d.push_back(p);
         }
-        // get pose mat for our landmarks
-        Mat KP = pnp(meanI.size(), pts2d);
-
-        Mat noI(crop,crop,CV_8U, Scalar(9));
-        getkp2d(meanI, ptsblank, Rect(0,0, crop,crop));
     }
 
     //
@@ -93,9 +87,9 @@ struct FrontalizerImpl : public Frontalizer
         // 2d -> 3d correspondence
         Mat rvec,tvec;
         solvePnP(pts3d, pts2d, camMatrix, Mat(1,4,CV_64F,0.0), rvec, tvec, false, SOLVEPNP_EPNP);
-        cerr << "rot " << rvec.t() << endl;
+        cerr << "rot " << rvec.t() *180/CV_PI << endl;
         cerr << "tra " << tvec.t() << endl;
-        tvec.at<double>(2) = 400;
+        //tvec.at<double>(2) = 400;
         // get 3d rot mat
 	    Mat rotM(3, 3, CV_64F);
 	    Rodrigues(rvec, rotM);
@@ -147,8 +141,6 @@ struct FrontalizerImpl : public Frontalizer
         vector<Point2d> pts2d;
         getkp2d(test, pts2d, Ri);
         //cerr << "nose :" << pts2d[30].x << endl;
-        double dist = norm(Mat(ptsblank),Mat(pts2d));
-        cerr << "blank dist3d = " << dist << endl;
 
         // get pose mat for our landmarks
         Mat KP = pnp(test.size(), pts2d);
@@ -189,6 +181,7 @@ struct FrontalizerImpl : public Frontalizer
 	        }
         }
         blur(counts1, counts1, Size(9,9));
+        counts1 -= eyemask;
         counts1 -= eyemask;
 
         // count occlusions in left & right half
@@ -261,6 +254,8 @@ struct FrontalizerImpl : public Frontalizer
     //
     Mat align2d(const Mat &img) const
     {
+        PROFILEX("align2d");
+
         Mat test;
         resize(img, test, Size(250,250), INTER_CUBIC);
 
@@ -268,13 +263,6 @@ struct FrontalizerImpl : public Frontalizer
         vector<Point2d> pts2d;
         getkp2d(test, pts2d, Rect(0, 0, test.cols, test.rows));
 
-        double dist = norm(Mat(ptsblank),Mat(pts2d));
-        cerr << "blank dist2d = " << dist << endl;
-        if (dist < 800)
-        {
-            cerr << "bail out !" << endl;
-            return test;
-        }
         Point2d eye_l = (pts2d[37] + pts2d[38] + pts2d[40] + pts2d[41]) * 0.25; // left eye center
         Point2d eye_r = (pts2d[43] + pts2d[44] + pts2d[46] + pts2d[47]) * 0.25; // right eye center
 
@@ -282,11 +270,13 @@ struct FrontalizerImpl : public Frontalizer
         double eyeYdis = eye_r.y - eye_l.y;
         double angle   = atan(eyeYdis/eyeXdis);
         double degree  = angle*180/CV_PI;
-        double scale   = (double(test.cols)/eyeXdis) / (250.0/44.0); // scale to lfw eye distance
+        double scale   = 44.0 / eyeXdis; // scale to lfw eye distance
 
         Mat res;
         Point2f center(test.cols/2, test.rows/2);
         Mat rot = getRotationMatrix2D(center, degree, scale);
+        cerr << rot << endl;
+        //rot.at<float>(1,2) += eye_l.y - 
         warpAffine(test, res, rot, Size(), INTER_CUBIC, BORDER_CONSTANT, Scalar(127));
 
         if (DEBUG_IMAGES)
@@ -297,6 +287,7 @@ struct FrontalizerImpl : public Frontalizer
             circle(t, eye_l, 3, Scalar(255));
             circle(t, eye_r, 3, Scalar(255));
             imshow("test2",t);
+            imshow("testr",res);
         }
         return res;
     }
@@ -320,8 +311,8 @@ int main(int argc, const char *argv[])
     const char *keys =
             "{ help h usage ? |      | show this message }"
             "{ write w        |false | (over)write images (else just show them) }"
-            "{ facedet f      |true | do a 2d face detection/crop(first) }"
-            "{ align2d a      |true | do a 2d eye alignment(first) }"
+            "{ facedet f      |false | do a 2d face detection/crop(first) }"
+            "{ align2d a      |false | do a 2d eye alignment(first) }"
             "{ project3d P    |true  | do 3d projection }"
             "{ crop c         |110   | crop size }"
             "{ sym s          |9000  | threshold for soft sym }"
@@ -379,6 +370,10 @@ int main(int argc, const char *argv[])
     {
         cerr << str[i] << endl;
         Mat in = imread(str[i], 0);
+        if (! write)
+        {
+            imshow("orig", in);
+        }
         if (facedet && !casc.empty())
         {
             vector<Rect> rects;
@@ -417,7 +412,6 @@ int main(int argc, const char *argv[])
 
         if (! write)
         {
-            imshow("orig", in);
             imshow("front", out);
             if (waitKey() == 27) break;
         }

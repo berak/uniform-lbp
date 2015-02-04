@@ -25,7 +25,7 @@ using std::cerr;
 using std::endl;
 
 #include "texturefeature.h"
-#include "elasticparts.h"
+#include "elastic/elasticparts.h"
 //#include "Profile.h"
 
 using namespace cv;
@@ -438,6 +438,101 @@ struct PyramidGrid
 
 
 //
+// various attempts to gather landmarks for sampling
+//
+
+#ifdef HAVE_DLIB
+//
+// 20 assorted keypoints extracted from the 68 dlib facial landmarks, based on the
+//    Kazemi_One_Millisecond_Face_2014_CVPR_paper.pdf
+//
+struct LandMarks
+{
+    dlib::shape_predictor sp;
+
+    LandMarks()
+    {   // lol, it's only 95mb.
+        dlib::deserialize("D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat") >> sp;
+    }
+
+    int extract(const Mat &img, vector<Point> &kp) const
+    {
+        dlib::rectangle rec(0,0,img.cols,img.rows);
+        dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(img), rec);
+
+        int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
+        //int idx[] = {18,25, 20,24, 21,22, 27,29, 31,35, 38,43, 51, 0};
+        for(int k=0; (k<40) && (idx[k]>0); k++)
+            kp.push_back(Point(shape.part(idx[k]).x(), shape.part(idx[k]).y()));
+        //dlib::point p1 = shape.part(31) + (shape.part(39) - shape.part(31)) * 0.5; // left of nose
+        //dlib::point p2 = shape.part(35) + (shape.part(42) - shape.part(35)) * 0.5;
+        //dlib::point p3 = shape.part(36) + (shape.part(39) - shape.part(36)) * 0.5; // left eye center
+        //dlib::point p4 = shape.part(42) + (shape.part(45) - shape.part(42)) * 0.5; // right eye center
+        //dlib::point p5 = shape.part(31) + (shape.part(48) - shape.part(31)) * 0.5; // betw.mouth&nose
+        //dlib::point p6 = shape.part(35) + (shape.part(54) - shape.part(35)) * 0.5; // betw.mouth&nose
+        //kp.push_back(Point(p1.x(), p1.y()));
+        //kp.push_back(Point(p2.x(), p2.y()));
+        //kp.push_back(Point(p3.x(), p3.y()));
+        //kp.push_back(Point(p4.x(), p4.y()));
+        //kp.push_back(Point(p5.x(), p5.y()));
+        //kp.push_back(Point(p6.x(), p6.y()));
+
+        return (int)kp.size();
+    }
+};
+#elif 0
+struct LandMarks
+{
+    Ptr<ElasticParts> elastic;
+
+    LandMarks()
+    {
+        elastic = ElasticParts::createDiscriminative();
+        elastic->read("data/disc.xml.gz");
+        //elastic = ElasticParts::createGenerative();
+        //elastic->read("data/disc.xml.gz");
+    }
+
+    int extract(const Mat &img, vector<Point> &kp) const
+    {
+        elastic->getPoints(img, kp);
+        return (int)kp.size();
+    }
+};
+#else
+struct LandMarks
+{
+    int extract(const Mat &img, vector<Point> &kp) const
+    {
+        kp.push_back(Point(15,19));    kp.push_back(Point(75,19));
+        kp.push_back(Point(29,20));    kp.push_back(Point(61,20));
+        kp.push_back(Point(36,24));    kp.push_back(Point(54,24));
+        kp.push_back(Point(38,35));    kp.push_back(Point(52,35));
+        kp.push_back(Point(30,39));    kp.push_back(Point(60,39));
+        kp.push_back(Point(19,39));    kp.push_back(Point(71,39));
+        kp.push_back(Point(8 ,38));    kp.push_back(Point(82,38));
+        kp.push_back(Point(40,64));    kp.push_back(Point(50,64));
+        kp.push_back(Point(31,75));    kp.push_back(Point(59,75));
+        kp.push_back(Point(27,81));    kp.push_back(Point(63,81));
+        if (img.size() != Size(90,90))
+        {
+            float scale_x=float(img.cols)/90;
+            float scale_y=float(img.rows)/90;
+            for (size_t i=0; i<kp.size(); i++)
+            {
+                kp[i].x *= scale_x;
+                kp[i].y *= scale_y;
+            }
+        }
+        return (int)kp.size();
+    }
+};
+#endif
+
+
+
+
+//
 // 64 hardcoded, precalculated gftt keypoints from the 90x90 cropped mean lfw2 img
 //
 static void gftt64(const Mat &img, vector<KeyPoint> &kp)
@@ -475,122 +570,6 @@ static void gftt64(const Mat &img, vector<KeyPoint> &kp)
         }
     }
 }
-
-static void gftt96(vector<KeyPoint> &kp)
-{
-    kp.push_back(KeyPoint(14, 33, 3));  kp.push_back(KeyPoint(29, 77, 3));  kp.push_back(KeyPoint(55, 60, 3));  kp.push_back(KeyPoint(63, 76, 3));
-    kp.push_back(KeyPoint(76, 32, 3));  kp.push_back(KeyPoint(35, 60, 3));  kp.push_back(KeyPoint(69, 21, 3));  kp.push_back(KeyPoint(45, 30, 3));
-    kp.push_back(KeyPoint(27, 31, 3));  kp.push_back(KeyPoint(64, 26, 3));  kp.push_back(KeyPoint(21, 22, 3));  kp.push_back(KeyPoint(25, 27, 3));
-    kp.push_back(KeyPoint(69, 31, 3));  kp.push_back(KeyPoint(54, 81, 3));  kp.push_back(KeyPoint(62, 30, 3));  kp.push_back(KeyPoint(20, 32, 3));
-    kp.push_back(KeyPoint(52, 33, 3));  kp.push_back(KeyPoint(37, 32, 3));  kp.push_back(KeyPoint(38, 81, 3));  kp.push_back(KeyPoint(36, 82, 3));
-    kp.push_back(KeyPoint(32, 31, 3));  kp.push_back(KeyPoint(78, 17, 3));  kp.push_back(KeyPoint(59, 24, 3));  kp.push_back(KeyPoint(30, 24, 3));
-    kp.push_back(KeyPoint(11, 18, 3));  kp.push_back(KeyPoint(13, 17, 3));  kp.push_back(KeyPoint(56, 30, 3));  kp.push_back(KeyPoint(73, 15, 3));
-    kp.push_back(KeyPoint(19, 15, 3));  kp.push_back(KeyPoint(57, 53, 3));  kp.push_back(KeyPoint(33, 54, 3));  kp.push_back(KeyPoint(34, 52, 3));
-    kp.push_back(KeyPoint(49, 25, 3));  kp.push_back(KeyPoint(66, 33, 3));  kp.push_back(KeyPoint(55, 49, 3));  kp.push_back(KeyPoint(61, 33, 3));
-    kp.push_back(KeyPoint(39, 29, 3));  kp.push_back(KeyPoint(60, 46, 3));  kp.push_back(KeyPoint(40, 26, 3));  kp.push_back(KeyPoint(41, 76, 3));
-    kp.push_back(KeyPoint(50, 76, 3));  kp.push_back(KeyPoint(53, 41, 3));  kp.push_back(KeyPoint(44, 23, 3));  kp.push_back(KeyPoint(29, 60, 3));
-    kp.push_back(KeyPoint(54, 54, 3));  kp.push_back(KeyPoint(30, 47, 3));  kp.push_back(KeyPoint(45, 50, 3));  kp.push_back(KeyPoint(83, 35, 3));
-    kp.push_back(KeyPoint(36, 54, 3));  kp.push_back(KeyPoint(13, 46, 3));  kp.push_back(KeyPoint(36, 44, 3));  kp.push_back(KeyPoint(83, 38, 3));
-    kp.push_back(KeyPoint(49, 53, 3));  kp.push_back(KeyPoint(33, 83, 3));  kp.push_back(KeyPoint(17, 88, 3));  kp.push_back(KeyPoint(31, 63, 3));
-    kp.push_back(KeyPoint(13, 27, 3));  kp.push_back(KeyPoint(50, 62, 3));  kp.push_back(KeyPoint(11, 43, 3));  kp.push_back(KeyPoint(45, 55, 3));
-    kp.push_back(KeyPoint(79, 43, 3));  kp.push_back(KeyPoint(74, 88, 3));  kp.push_back(KeyPoint(41, 62, 3));  kp.push_back(KeyPoint(24, 15, 3));
-    kp.push_back(KeyPoint(7,  40, 3));  kp.push_back(KeyPoint(76, 45, 3));  kp.push_back(KeyPoint(8,  42, 3));  kp.push_back(KeyPoint(62, 14, 3));
-    kp.push_back(KeyPoint(21, 83, 3));  kp.push_back(KeyPoint(76, 25, 3));  kp.push_back(KeyPoint(46, 67, 3));  kp.push_back(KeyPoint(31, 13, 3));
-    kp.push_back(KeyPoint(59, 67, 3));  kp.push_back(KeyPoint(29, 14, 3));  kp.push_back(KeyPoint(62, 63, 3));  kp.push_back(KeyPoint(24, 66, 3));
-    kp.push_back(KeyPoint(20, 58, 3));  kp.push_back(KeyPoint(72, 57, 3));  kp.push_back(KeyPoint(67, 64, 3));  kp.push_back(KeyPoint(18, 76, 3));
-    kp.push_back(KeyPoint(46, 78, 3));  kp.push_back(KeyPoint(74,  1, 3));  kp.push_back(KeyPoint(74, 74, 3));  kp.push_back(KeyPoint(16, 60, 3));
-    kp.push_back(KeyPoint(26, 69, 3));  kp.push_back(KeyPoint(17, 62, 3));  kp.push_back(KeyPoint(57, 88, 3));  kp.push_back(KeyPoint(81, 24, 3));
-    kp.push_back(KeyPoint(69, 54, 3));  kp.push_back(KeyPoint(69, 58, 3));  kp.push_back(KeyPoint(58, 73, 3));  kp.push_back(KeyPoint(44, 71, 3));
-    kp.push_back(KeyPoint(76, 63, 3));  kp.push_back(KeyPoint(25, 59, 3));  kp.push_back(KeyPoint(25, 59, 3));  kp.push_back(KeyPoint(75, 61, 3));
-}
-
-
-static void gftt32(vector<KeyPoint> &kp)
-{
-    kp.push_back(KeyPoint(14,33,3,-1,0,0,-1));    kp.push_back(KeyPoint(29,77,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(55,60,3,-1,0,0,-1));    kp.push_back(KeyPoint(63,76,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(76,32,3,-1,0,0,-1));    kp.push_back(KeyPoint(35,60,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(69,21,3,-1,0,0,-1));    kp.push_back(KeyPoint(45,30,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(27,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(64,26,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(21,22,3,-1,0,0,-1));    kp.push_back(KeyPoint(25,27,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(69,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(54,81,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(62,30,3,-1,0,0,-1));    kp.push_back(KeyPoint(20,32,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(52,33,3,-1,0,0,-1));    kp.push_back(KeyPoint(37,32,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(38,81,3,-1,0,0,-1));    kp.push_back(KeyPoint(36,82,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(32,31,3,-1,0,0,-1));    kp.push_back(KeyPoint(78,17,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(59,24,3,-1,0,0,-1));    kp.push_back(KeyPoint(30,24,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(11,18,3,-1,0,0,-1));    kp.push_back(KeyPoint(13,17,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(56,30,3,-1,0,0,-1));    kp.push_back(KeyPoint(73,15,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(19,15,3,-1,0,0,-1));    kp.push_back(KeyPoint(57,53,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(33,54,3,-1,0,0,-1));    kp.push_back(KeyPoint(34,52,3,-1,0,0,-1));
-}
-
-static void kp_manual(const Mat &img, vector<KeyPoint> &kp)
-{
-    kp.push_back(KeyPoint(15,19,3,-1,0,0,-1));    kp.push_back(KeyPoint(75,19,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(29,20,3,-1,0,0,-1));    kp.push_back(KeyPoint(61,20,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(36,24,3,-1,0,0,-1));    kp.push_back(KeyPoint(54,24,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(38,35,3,-1,0,0,-1));    kp.push_back(KeyPoint(52,35,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(30,39,3,-1,0,0,-1));    kp.push_back(KeyPoint(60,39,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(19,39,3,-1,0,0,-1));    kp.push_back(KeyPoint(71,39,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(8 ,38,3,-1,0,0,-1));    kp.push_back(KeyPoint(82,38,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(40,64,3,-1,0,0,-1));    kp.push_back(KeyPoint(50,64,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(31,75,3,-1,0,0,-1));    kp.push_back(KeyPoint(59,75,3,-1,0,0,-1));
-    kp.push_back(KeyPoint(27,81,3,-1,0,0,-1));    kp.push_back(KeyPoint(63,81,3,-1,0,0,-1));
-    if (img.size() != Size(90,90))
-    {
-        float scale_x=float(img.cols)/90;
-        float scale_y=float(img.rows)/90;
-        for (size_t i=0; i<kp.size(); i++)
-        {
-            kp[i].pt.x *= scale_x;
-            kp[i].pt.y *= scale_y;
-        }
-    }
-}
-
-
-#ifdef HAVE_DLIB
-//
-// 20 assorted keypoints extracted from the 68 dlib facial landmarks, based on the
-//    Kazemi_One_Millisecond_Face_2014_CVPR_paper.pdf
-//
-struct LandMarkDlib
-{
-    dlib::shape_predictor sp;
-
-    LandMarkDlib()
-    {   // lol, it's only 95mb.
-        dlib::deserialize("D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat") >> sp;
-    }
-
-    int extract(const Mat &img, vector<KeyPoint> &kp) const
-    {
-        dlib::rectangle rec(0,0,img.cols,img.rows);
-        dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(img), rec);
-
-        int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
-        //int idx[] = {18,25, 20,24, 21,22, 27,29, 31,35, 38,43, 51, 0};
-        for(int k=0; (k<40) && (idx[k]>0); k++)
-            kp.push_back(KeyPoint(shape.part(idx[k]).x(), shape.part(idx[k]).y(), 8));
-        //dlib::point p1 = shape.part(31) + (shape.part(39) - shape.part(31)) * 0.5; // left of nose
-        //dlib::point p2 = shape.part(35) + (shape.part(42) - shape.part(35)) * 0.5;
-        //dlib::point p3 = shape.part(36) + (shape.part(39) - shape.part(36)) * 0.5; // left eye center
-        //dlib::point p4 = shape.part(42) + (shape.part(45) - shape.part(42)) * 0.5; // right eye center
-        //dlib::point p5 = shape.part(31) + (shape.part(48) - shape.part(31)) * 0.5; // betw.mouth&nose
-        //dlib::point p6 = shape.part(35) + (shape.part(54) - shape.part(35)) * 0.5; // betw.mouth&nose
-        //kp.push_back(KeyPoint(p1.x(), p1.y(), 8));
-        //kp.push_back(KeyPoint(p2.x(), p2.y(), 8));
-        //kp.push_back(KeyPoint(p3.x(), p3.y(), 8));
-        //kp.push_back(KeyPoint(p4.x(), p4.y(), 8));
-        //kp.push_back(KeyPoint(p5.x(), p5.y(), 8));
-        //kp.push_back(KeyPoint(p6.x(), p6.y(), 8));
-
-        return (int)kp.size();
-    }
-};
-#endif
-
 
 struct GfttGrid
 {
@@ -835,43 +814,31 @@ typedef ExtractorGridFeature2d<xfeatures2d::BriefDescriptorExtractor> ExtractorB
 struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 {
     Ptr<Feature2D> f2d;
-#ifdef HAVE_DLIB
-    LandMarkDlib land;
-#else
-   // Ptr<ElasticParts> elastic;
-#endif
+    LandMarks land;
 
     ExtractorGfttFeature2d(Ptr<Feature2D> f)
         : f2d(f)
     {
-#ifndef HAVE_DLIB
-     //   elastic = ElasticParts::create();
-     //   elastic->read("data/parts.xml.gz");
-#endif
     }
 
     virtual int extract(const Mat &img, Mat &features) const
     {
        // PROFILEX("extract");
 
-        vector<KeyPoint> kp;
-#ifdef HAVE_DLIB
-        land.extract(img,kp);
-#else
-        {// PROFILEX("elastic")
-       // elastic->getPoints(img, kp);
-        }
-        kp_manual(img,kp);
-#endif
-        size_t s = kp.size();
+        vector<Point> pt;
+        land.extract(img,pt);
+
+        size_t s = pt.size();
         float w=5;
+        vector<KeyPoint> kp;
         for (size_t i=0; i<s; i++)
         {
-            Point2f p(kp[i].pt);
-            kp.push_back(KeyPoint(p.x,p.y-w,w*2));
-            kp.push_back(KeyPoint(p.x,p.y+w,w*2));
-            kp.push_back(KeyPoint(p.x-w,p.y,w*2));
-            kp.push_back(KeyPoint(p.x+w,p.y,w*2));
+            Point2f p(pt[i]);
+            kp.push_back(KeyPoint(p.x,p.y,w*2,8));
+            kp.push_back(KeyPoint(p.x,p.y-w,w*2,8));
+            kp.push_back(KeyPoint(p.x,p.y+w,w*2,8));
+            kp.push_back(KeyPoint(p.x-w,p.y,w*2,8));
+            kp.push_back(KeyPoint(p.x+w,p.y,w*2,8));
             //kp.push_back(KeyPoint(p.x-w,p.y-w/2,w*2));
             //kp.push_back(KeyPoint(p.x-w,p.y+w/2,w*2));
             //kp.push_back(KeyPoint(p.x+w,p.y-w/2,w*2));
@@ -896,36 +863,14 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 struct HighDimLbp : public TextureFeature::Extractor
 {
     FeatureFPLbp lbp;
-
-#ifdef HAVE_DLIB
-    LandMarkDlib land;
-#else
-    Ptr<ElasticParts> elastic;
-#endif
-
-    HighDimLbp()
-    {
-#ifndef HAVE_DLIB
-        elastic = ElasticParts::create();
-        elastic->read("data/parts.xml.gz");
-#endif
-    }
+    LandMarks land;
 
     virtual int extract(const Mat &img, Mat &features) const
     {
         //PROFILEX("extract");
         int gr=10; // 10 used in paper
-        vector<KeyPoint> kp;
-#ifdef HAVE_DLIB
+        vector<Point> kp;
         land.extract(img,kp);
-#else
-        {
-            //PROFILEX("elastic");
-            elastic->getPoints(img, kp);
-        }
-        //kp_manual(img, kp);
-#endif
-
 
         Mat histo;
         //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
@@ -970,7 +915,8 @@ struct HighDimLbp : public TextureFeature::Extractor
 
             for (size_t k=0; k<kp.size(); k++)
             {
-                Point2f pt(kp[k].pt);
+                Point2f pt(kp[k]);
+                //Point2f pt(kp[k].pt);
                 for (int o=0; o<noff; o++)
                 {
                     Mat patch;

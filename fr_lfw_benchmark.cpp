@@ -202,10 +202,10 @@ int main(int argc, const char *argv[])
             "{ opts o         |    | show extractor / reduce / verifier options }"
             "{ path p         |lfw-deepfunneled/| path to dataset (lfw2 folder) }"
             "{ ext e          |26  | extractor enum }"
-            "{ red r          |0   | reductor enum }"
-            "{ cls c          |4   | classifier enum }"
+            "{ red r          |1   | reductor enum }"
+            "{ cls c          |11   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
-            "{ crop C         |115  | cut outer 80 pixels to to 90x90 }"
+            "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ flip f         |0   | add a flipped image }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 

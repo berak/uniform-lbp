@@ -14,7 +14,7 @@ it all builds on top of opencv30 .
 * online.cpp : realtime webcam app with online training
 * duel.cpp : shootout of different (identification) pipeline combinations
 * fr_lfw_benchmark.cpp: the opencv (verification) lfw benchmark (from contrib/datasets)
-* frontalize.cpp: 3d/2d frontal face alignment lib/standalone tool (using dlib landmarks)
+* frontalize.cpp: 3d/2d frontal face alignment lib/standalone tool (using [dlib](http://sourceforge.net/projects/dclib/files/dlib/) landmarks)
 
 ------------------------------------------------------
 

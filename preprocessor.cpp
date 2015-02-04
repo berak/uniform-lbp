@@ -98,12 +98,13 @@ Mat Preprocessor::process(const Mat &imgin)  const
         case 2: clahe->apply(imgt,imgout); break;
         case 3: retina->run(imgt); retina->getParvo(imgout); break;
         case 4: cv::normalize(tan_triggs_preprocessing(imgt), imgout, 0, 255, NORM_MINMAX, CV_8UC1); break;
+        case 5: imgt.convertTo(imgout,CV_32F,1,1); log(imgout,imgout); imgout.convertTo(imgout,CV_8U);break; // logscale
     }
     return imgout;
 }
 
 const char * Preprocessor::pps() const
 {
-    static const char *PPS[] = { "none","eqhist","clahe","retina","tan-triggs",0 };
+    static const char *PPS[] = { "none","eqhist","clahe","retina","tan-triggs","logscale",0 };
     return PPS[preproc];
 }

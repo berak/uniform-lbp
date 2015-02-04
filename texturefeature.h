@@ -116,6 +116,7 @@ namespace TextureFeature
     enum RED {
         RED_NONE,
         RED_HELL,
+        RED_POW,
         RED_WHAD,
         RED_RP,
         RED_DCT8,
@@ -127,6 +128,7 @@ namespace TextureFeature
     static const char *REDS[] = {
         "none",
         "HELL",
+        "POW",
         "WHAD",
         "RP",
         "DCT8",
@@ -150,10 +152,11 @@ namespace TextureFeature
         CL_SVM_INT2, // custom 
         CL_SVM_HEL,  // custom
         CL_SVM_LOW,  // custom
+        CL_SVM_C,
         CL_SVM_MULTI,
         CL_PCA,
         CL_PCA_LDA,
-        //CL_FISH_SVM,
+        CL_EMD,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -171,10 +174,11 @@ namespace TextureFeature
         "SVM_INT2",
         "SVM_HEL",
         "SVM_LOW",
+        "SVM_C",
         "SVM_MULTI",
         "PCA",
         "PCA_LDA",
-        //"FISH_SVM",
+        "EMD",
         0
     };
 
