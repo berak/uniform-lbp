@@ -281,7 +281,8 @@ struct CustomKernel : public ml::SVM::Kernel
             for(int k=0; k<var_count; k++)
             {
                 a = sample[k];  b = another[k];
-                s += -log(sqrt((a-b)*(a-b))+1);
+                s += -log(((a-b)*(a-b))+1);
+                //s += -log(sqrt((a-b)*(a-b))+1);
             }
             results[j] = (float)(s);
         }
