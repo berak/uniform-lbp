@@ -480,7 +480,7 @@ struct LandMarks
         return (int)kp.size();
     }
 };
-#elif 0
+#elif 1
 struct LandMarks
 {
     Ptr<ElasticParts> elastic;

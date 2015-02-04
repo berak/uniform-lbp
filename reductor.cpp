@@ -140,7 +140,8 @@ struct ReductorPow : public Reductor
     virtual int reduce(const Mat &src, Mat &dest) const
     {
         src.convertTo(dest, CV_32F);
-        cv::pow(cv::abs(dest),P,dest);
+        cv::pow(dest,P,dest);
+       // cv::pow(cv::abs(dest),P,dest);
         return 0;
     }
 };

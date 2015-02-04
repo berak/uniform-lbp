@@ -152,7 +152,7 @@ namespace TextureFeature
         CL_SVM_INT2, // custom 
         CL_SVM_HEL,  // custom
         CL_SVM_LOW,  // custom
-        CL_SVM_C,
+        CL_SVM_LOG,
         CL_SVM_MULTI,
         CL_PCA,
         CL_PCA_LDA,
@@ -174,7 +174,7 @@ namespace TextureFeature
         "SVM_INT2",
         "SVM_HEL",
         "SVM_LOW",
-        "SVM_C",
+        "SVM_LOG",
         "SVM_MULTI",
         "PCA",
         "PCA_LDA",

@@ -789,6 +789,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_INT2:  return makePtr<ClassifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<ClassifierSVM>(-1); break;
         case CL_SVM_LOW:   return makePtr<ClassifierSVM>(-6); break;
+        case CL_SVM_LOG:   return makePtr<ClassifierSVM>(-7); break;
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
@@ -815,7 +816,7 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
-        case CL_SVM_C:     return makePtr<VerifierSVM>(-7); break;
+        case CL_SVM_LOG:   return makePtr<VerifierSVM>(-7); break;
         case CL_COSINE:    return makePtr<VerifierCosine>(); break;
         case CL_EMD:       return makePtr<VerifierEMD>(); break;
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);

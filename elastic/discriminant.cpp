@@ -10,7 +10,7 @@
 
 #include "elasticparts.h"
 
-#if 1
+#if 0
  #include "../profile.h"
 #else
  #define PROFILE ;
