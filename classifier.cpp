@@ -281,10 +281,10 @@ struct CustomKernel : public ml::SVM::Kernel
             const float* sample = &vecs[j*var_count];
             for(int k=0; k<var_count; k+=4)
             {
-                a = sample[k];     b = z[k];    s += (a - b) * (a - b);
-                a = sample[k+1];   b = z[k+1];  s += (a - b) * (a - b);
-                a = sample[k+2];   b = z[k+2];  s += (a - b) * (a - b);
-                a = sample[k+3];   b = z[k+3];  s += (a - b) * (a - b);
+                a = sample[k];     b = another[k];    s += (a - b) * (a - b);
+                a = sample[k+1];   b = another[k+1];  s += (a - b) * (a - b);
+                a = sample[k+2];   b = another[k+2];  s += (a - b) * (a - b);
+                a = sample[k+3];   b = another[k+3];  s += (a - b) * (a - b);
             }
             results[j] = (float)(-s);
         }
