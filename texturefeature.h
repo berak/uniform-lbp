@@ -117,6 +117,7 @@ namespace TextureFeature
         FIL_NONE,
         FIL_HELL,
         FIL_POW,
+        FIL_SQRT,
         FIL_WHAD,
         FIL_RP,
         FIL_DCT8,
@@ -129,6 +130,7 @@ namespace TextureFeature
         "none",
         "HELL",
         "POW",
+        "SQRT",
         "WHAD",
         "RP",
         "DCT8",
@@ -151,8 +153,9 @@ namespace TextureFeature
         CL_SVM_INT,
         CL_SVM_INT2, // custom 
         CL_SVM_HEL,  // custom
+        CL_SVM_HELSQ,  // custom
         CL_SVM_LOW,  // custom
-        CL_SVM_LOG,
+        CL_SVM_LOG,  // custom
         CL_SVM_MULTI,
         CL_PCA,
         CL_PCA_LDA,
@@ -173,6 +176,7 @@ namespace TextureFeature
         "SVM_INT",
         "SVM_INT2",
         "SVM_HEL",
+        "SVM_HELSQ",
         "SVM_LOW",
         "SVM_LOG",
         "SVM_MULTI",

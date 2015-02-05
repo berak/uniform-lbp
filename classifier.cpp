@@ -255,6 +255,42 @@ struct CustomKernel : public ml::SVM::Kernel
 #endif
     }
 
+    // assumes, you did the sqrt before on the input data !    
+    void calc_hellinger_sqrt(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+#ifdef HAVE_SSE
+        for(int j=0; j<vcount; j++)
+        {
+            __m128 b,c,s = _mm_set_ps1(0);
+            __m128* ptr_a = (__m128*)another;
+            __m128* ptr_b = (__m128*)(&vecs[j*var_count]);
+            for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
+            {
+                b = _mm_sub_ps(*ptr_a, *ptr_b);
+                c = _mm_mul_ps(b, b);
+                s = _mm_add_ps(s, c);
+            }
+            union { __m128 m; float f[4]; } x;
+            x.m = s;
+            results[j] = (-(x.f[0] + x.f[1] + x.f[2] + x.f[3]));
+        }
+#else       
+        for(int j=0; j<vcount; j++)
+        {
+            double a,b, s = 0;
+            const float* sample = &vecs[j*var_count];
+            for(int k=0; k<var_count; k+=4)
+            {
+                a = sample[k];     b = z[k];    s += (a - b) * (a - b);
+                a = sample[k+1];   b = z[k+1];  s += (a - b) * (a - b);
+                a = sample[k+2];   b = z[k+2];  s += (a - b) * (a - b);
+                a = sample[k+3];   b = z[k+3];  s += (a - b) * (a - b);
+            }
+            results[j] = (float)(-s);
+        }
+#endif
+    }
+
     void calc_lowpass(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         for(int j=0; j<vcount; j++)
@@ -293,6 +329,7 @@ struct CustomKernel : public ml::SVM::Kernel
         switch(K)
         {
         case -1: calc_hellinger(vcount, var_count, vecs, another, results); break;
+        case -2: calc_hellinger_sqrt(vcount, var_count, vecs, another, results); break;
         //case -2: calc_correl(vcount, var_count, vecs, another, results); break;
         //case -3: calc_cosine(vcount, var_count, vecs, another, results); break;
         //case -4: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
@@ -553,7 +590,7 @@ struct ClassifierPCA_LDA : public ClassifierPCA
         gemm(pca.eigenvectors, leigen, 1.0, Mat(), 0.0, eigenvectors, GEMM_1_T);
 
         // step four, keep labels and projected dataset:
-        features.release();
+        features.release(); // TODO: pre-allocate, push_back() is giving ugly mem-spikes !
         for (int i=0; i<trainData.rows; i++)
             features.push_back(project(trainData.row(i)));
         labels = trainLabels;
@@ -788,6 +825,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_INT:   return makePtr<ClassifierSVM>(int(cv::ml::SVM::INTER)); break;
         case CL_SVM_INT2:  return makePtr<ClassifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<ClassifierSVM>(-1); break;
+        case CL_SVM_HELSQ: return makePtr<ClassifierSVM>(-2); break;
         case CL_SVM_LOW:   return makePtr<ClassifierSVM>(-6); break;
         case CL_SVM_LOG:   return makePtr<ClassifierSVM>(-7); break;
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
@@ -815,6 +853,7 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_INT:   return makePtr<VerifierSVM>(int(cv::ml::SVM::INTER)); break;
         case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
         case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
+        case CL_SVM_HELSQ: return makePtr<VerifierSVM>(-2); break;
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
         case CL_SVM_LOG:   return makePtr<VerifierSVM>(-7); break;
         case CL_COSINE:    return makePtr<VerifierCosine>(); break;

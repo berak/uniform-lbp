@@ -146,6 +146,16 @@ struct FilterPow : public Filter
     }
 };
 
+struct FilterSqrt : public Filter
+{
+    virtual int filter(const Mat &src, Mat &dest) const
+    {
+        src.convertTo(dest, CV_32F);
+        cv::sqrt(dest,dest);
+        return 0;
+    }
+};
+
 
 
 } // TextureFeatureImpl
@@ -163,6 +173,7 @@ Ptr<Filter> createFilter(int filt)
         case FIL_NONE:     break; 
         case FIL_HELL:     return makePtr<FilterHellinger>(); break;
         case FIL_POW:      return makePtr<FilterPow>(); break;
+        case FIL_SQRT:     return makePtr<FilterSqrt>(); break;
         case FIL_WHAD:     return makePtr<FilterWalshHadamard>(8000); break;
         case FIL_RP:       return makePtr<FilterRandomProjection>(8000); break;
         case FIL_DCT8:     return makePtr<FilterDct>(8000); break;
