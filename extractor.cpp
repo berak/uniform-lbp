@@ -490,7 +490,7 @@ struct LandMarks
         elastic = ElasticParts::createDiscriminative();
         elastic->read("data/disc.xml.gz");
         //elastic = ElasticParts::createGenerative();
-        //elastic->read("data/disc.xml.gz");
+        //elastic->read("data/parts.xml.gz");
     }
 
     int extract(const Mat &img, vector<Point> &kp) const
@@ -810,7 +810,6 @@ typedef ExtractorGridFeature2d<xfeatures2d::SIFT> ExtractorSIFTGrid;
 typedef ExtractorGridFeature2d<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
 
 
-//template < class Descriptor >
 struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 {
     Ptr<Feature2D> f2d;
@@ -853,13 +852,13 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
     }
 };
 
+
+
 //
 // "Review and Implementation of High-Dimensional Local Binary Patterns
 //    and Its Application to Face Recognition"
 //    Bor-Chun Chen, Chu-Song Chen, Winston Hsu
 //
-
-
 struct HighDimLbp : public TextureFeature::Extractor
 {
     FeatureFPLbp lbp;
@@ -873,42 +872,18 @@ struct HighDimLbp : public TextureFeature::Extractor
         land.extract(img,kp);
 
         Mat histo;
-        //float scale[] = {0.6f, 0.9f, 1.2f, 1.5f, 1.8f, 2.3f};
         float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
-        //float offsets_4[] = {
-        //    -0.5f,-0.5f, 0.5f,-0.5f,
-        //    -0.5f, 0.5f, 0.5f, 0.5f,
-        //};
-        //float offsets_9[] = {
-        //    -1.0f,-1.0f,   -1.0f,-0.0f,  -1.0f, 0.0f,
-        //    -0.0f,-1.0f,   -0.0f,-0.0f,  -0.0f, 0.0f,
-        //     1.0f,-1.0f,    1.0f,-0.0f,   1.0f, 0.0f
-        //};
         float offsets_16[] = {
             -1.5f,-1.5f, -0.5f,-1.5f, 0.5f,-1.5f, 1.5f,-1.5f,
             -1.5f,-0.5f, -0.5f,-0.5f, 0.5f,-0.5f, 1.5f,-0.5f,
             -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
             -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
         };
-        //float *off_table[] = {
-        //    offsets_4,
-        //    offsets_9,
-        //    offsets_16,
-        //    offsets_16,
-        //    offsets_16
-        //};
-        //int off_size[] = {
-        //    4,9,16,16,16
-        //};
-        //int grs[] = {
-        //    4,8,8,10,10
-        //};
         for (int i=0; i<5; i++)
         {
             float s = scale[i];
             int noff = 16;//off_size[i];
             float *off = offsets_16;//off_table[i];
-            //gr = grs[i];
             Mat f1,f2,imgs;
             resize(img,imgs,Size(),s,s);
             int histSize = lbp(imgs,f1);
@@ -916,7 +891,6 @@ struct HighDimLbp : public TextureFeature::Extractor
             for (size_t k=0; k<kp.size(); k++)
             {
                 Point2f pt(kp[k]);
-                //Point2f pt(kp[k].pt);
                 for (int o=0; o<noff; o++)
                 {
                     Mat patch;

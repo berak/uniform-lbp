@@ -271,7 +271,7 @@ struct CustomKernel : public ml::SVM::Kernel
             results[j] = (float)(s);
         }
     }
-    void calc_C(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    void calc_log(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         for(int j=0; j<vcount; j++)
         {
@@ -281,8 +281,8 @@ struct CustomKernel : public ml::SVM::Kernel
             for(int k=0; k<var_count; k++)
             {
                 a = sample[k];  b = another[k];
-                s += -log(((a-b)*(a-b))+1);
-                //s += -log(sqrt((a-b)*(a-b))+1);
+                //s += -log(((a-b)*(a-b))+1);
+                s += -log(sqrt((a-b)*(a-b))+1);
             }
             results[j] = (float)(s);
         }
@@ -298,7 +298,7 @@ struct CustomKernel : public ml::SVM::Kernel
         //case -4: calc_bhattacharyya(vcount, var_count, vecs, another, results); break;
         case -5: calc_intersect(vcount, var_count, vecs, another, results); break;
         case -6: calc_lowpass(vcount, var_count, vecs, another, results); break;
-        case -7: calc_C(vcount, var_count, vecs, another, results); break;
+        case -7: calc_log(vcount, var_count, vecs, another, results); break;
         default: cerr << "sorry, dave" << endl; exit(0);
         }
     }

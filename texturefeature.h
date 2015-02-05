@@ -45,7 +45,7 @@ namespace TextureFeature
 
 //
 // the pipeline is:
-//    extractor -> reductor -> classifier (or verifier)
+//    extractor -> filter -> classifier (or verifier)
 //
 
 
@@ -182,9 +182,9 @@ namespace TextureFeature
         0
     };
 
-    cv::Ptr<Extractor>  createExtractor(int ex);
-    cv::Ptr<Filter>     createFilter(int rd);
-    cv::Ptr<Classifier> createClassifier(int cl);
+    cv::Ptr<Extractor>  createExtractor(int ext);
+    cv::Ptr<Filter>     createFilter(int fil);
+    cv::Ptr<Classifier> createClassifier(int cla);
     cv::Ptr<Verifier>   createVerifier(int ver);
 }
 

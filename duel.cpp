@@ -289,13 +289,13 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
     return err;
 }
 
-double runtest(int ext, int red, int cls, const vector<Mat> &images, const vector<int> &labels, const vector< vector<int> > &persons, size_t fold=10)
+double runtest(int ext, int fil, int cls, const vector<Mat> &images, const vector<int> &labels, const vector< vector<int> > &persons, size_t fold=10)
 {
-    string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::FILS[red], TextureFeature::CLS[cls]); 
+    string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::FILS[fil], TextureFeature::CLS[cls]); 
     try {
         runtest(name,  
             TextureFeature::createExtractor(ext),  
-            TextureFeature::createFilter(red),
+            TextureFeature::createFilter(fil),
             TextureFeature::createClassifier(cls),
             images,labels,persons, fold); 
     } 
@@ -324,21 +324,17 @@ void printOptions()
 
 int main(int argc, const char *argv[])
 {
-    vector<Mat> images;
-    Mat labels;
-
-
     const char *keys =
             "{ help h usage ? |      | show this message }"
             "{ opts o         |      | show extractor / reductor / classifier options }"
             "{ fold F         |10    | folds for crossvalidation }"
             "{ minp m         |0     | mininal img count per person (when reading folders) }"
-            "{ maxp M         |-1    | maxmal img count per person (-1==read_all)}"
-            "{ maxim I        |500   | maxmal img count overall }"
+            "{ maxp M         |-1    | maximal img count per person (-1==read_all)}"
+            "{ maxim I        |500   | maximal img count overall }"
             "{ ext e          |0     | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
             "{ cls c          |0     | classifier enum }"
-            "{ all a          |false | test all }"
+            "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |0     | preprocessing }"
             "{ crop C         |0     | crop outer pixels }"
             "{ path p         |lfw3d_9000\\*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
@@ -369,6 +365,9 @@ int main(int argc, const char *argv[])
 
     std::string db_path = parser.get<String>("path");
 
+    // load data:
+    Mat labels;
+    vector<Mat> images;
     extractDB(db_path, images, labels, pre, crp, maxim, minp, maxp, 90);
 
     // per person id lookup
@@ -378,10 +377,10 @@ int main(int argc, const char *argv[])
 
     // some diagnostics:
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
-    const char *pp[] = { "no preproc","eqhist","clahe","retina","tan-triggs","logscale",0 };
+    const char *pp[] = { "no preproc", "eqhist", "clahe", "retina", "tan-triggs", "logscale",0 };
     if (all)
         cout << "-------------------------------------------------------------------" << endl;
-    cout << format("%-24s",dbs.c_str()) << fold  << " fold, " << persons.size()  << " classes, " << images.size() << " images, " << pp[pre] << endl;
+    cout << format("%-24s",dbs.c_str()) << fold  << " fold, " << persons.size() << " classes, " << images.size() << " images, " << pp[pre] << endl;
     if (all)
     {
         cout << "-------------------------------------------------------------------" << endl;

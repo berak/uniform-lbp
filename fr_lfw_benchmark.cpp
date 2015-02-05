@@ -101,7 +101,6 @@ class MyFace
     Ptr<TextureFeature::Filter>  fil;
     Ptr<TextureFeature::Verifier>  cls;
     Preprocessor pre;
-    bool doFlip;
 
     Mat labels;
     Mat features;
@@ -110,7 +109,6 @@ public:
 
     MyFace(int extract=0, int filt=0, int clsfy=0, int preproc=0, int crop=0, bool flip=false)
         : pre(preproc,crop)
-        , doFlip(flip)
     {
         ext = TextureFeature::createExtractor(extract);
         fil = TextureFeature::createFilter(filt);
@@ -149,36 +147,36 @@ public:
         labels.release();
         return ok!=0;
     }
-    virtual bool train_pca(int ncomps)
-    {
-        cerr << "pca in  " << features.size() << endl;
-        PCA pca(features, Mat(), cv::PCA::DATA_AS_ROW, ncomps);
-        cerr << "pca out " << pca.eigenvectors.size() << endl;
-        cerr << "**";
-        FILE * f = fopen("pca.hdlbp.bin","wb");
-        int mr = pca.mean.rows;
-        fwrite(&mr, sizeof(int), 1, f);
-        int mc = pca.mean.cols;
-        fwrite(&mc, sizeof(int), 1, f);
-        fwrite(pca.mean.ptr<float>(), mc*mr, 1, f);
-        fflush(f);
-        cerr << "##";
+    //virtual bool train_pca(int ncomps)
+    //{
+    //    cerr << "pca in  " << features.size() << endl;
+    //    PCA pca(features, Mat(), cv::PCA::DATA_AS_ROW, ncomps);
+    //    cerr << "pca out " << pca.eigenvectors.size() << endl;
+    //    cerr << "**";
+    //    FILE * f = fopen("pca.hdlbp.bin","wb");
+    //    int mr = pca.mean.rows;
+    //    fwrite(&mr, sizeof(int), 1, f);
+    //    int mc = pca.mean.cols;
+    //    fwrite(&mc, sizeof(int), 1, f);
+    //    fwrite(pca.mean.ptr<float>(), mc*mr, 1, f);
+    //    fflush(f);
+    //    cerr << "##";
 
-        // will have to transpose later !
-        int er = pca.eigenvectors.rows;
-        fwrite(&er, sizeof(int), 1, f);
-        int ec = pca.eigenvectors.cols;
-        fwrite(&ec, sizeof(int), 1, f);
-        fwrite(pca.eigenvectors.ptr<float>(), 1, ec*er, f);
-        fclose(f);
-        cerr << "!!";
-        //FileStorage fs("pca.hdlbp.yml.gz",FileStorage::WRITE);
-        //fs << "num_components" << ncomps;
-        //fs << "mean" << pca.mean;
-        //fs << "eigenvectors" << pca.eigenvectors.t();
-        //fs.release();
-        return true;
-    }
+    //    // will have to transpose later !
+    //    int er = pca.eigenvectors.rows;
+    //    fwrite(&er, sizeof(int), 1, f);
+    //    int ec = pca.eigenvectors.cols;
+    //    fwrite(&ec, sizeof(int), 1, f);
+    //    fwrite(pca.eigenvectors.ptr<float>(), 1, ec*er, f);
+    //    fclose(f);
+    //    cerr << "!!";
+    //    //FileStorage fs("pca.hdlbp.yml.gz",FileStorage::WRITE);
+    //    //fs << "num_components" << ncomps;
+    //    //fs << "mean" << pca.mean;
+    //    //fs << "eigenvectors" << pca.eigenvectors.t();
+    //    //fs.release();
+    //    return true;
+    //}
     virtual int same(const Mat & a, const Mat &b) const
     {
         Mat feat1, feat2;
