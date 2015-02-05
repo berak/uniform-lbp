@@ -104,11 +104,13 @@ class MyFace
 
     Mat labels;
     Mat features;
+    int nimg;
 
 public:
 
-    MyFace(int extract=0, int filt=0, int clsfy=0, int preproc=0, int crop=0, bool flip=false)
+    MyFace(int extract=0, int filt=0, int clsfy=0, int preproc=0, int crop=0, const String &train="dev",int skip=1)
         : pre(preproc,crop)
+        , nimg(train=="dev"?4400/skip:10800/skip)
     {
         ext = TextureFeature::createExtractor(extract);
         fil = TextureFeature::createFilter(filt);
@@ -128,7 +130,7 @@ public:
             fil->filter(fr,fr);
         if ( features.empty() )
         {
-            features = Mat(4400, feat1.total(), CV_32F); // this will only work for dev mode !
+            features = Mat(nimg, feat1.total(), CV_32F); // this will only work for dev mode !
         }
         //features.push_back(fr); // damn memory problems
         feat1.copyTo(features.row(labels.rows));
@@ -199,12 +201,13 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ opts o         |    | show extractor / filter / verifier options }"
             "{ path p         |lfw-deepfunneled/| path to dataset (lfw2 folder) }"
-            "{ ext e          |26  | extractor enum }"
+            "{ ext e          |8   | extractor enum }"
             "{ fil f          |1   | filter enum }"
             "{ cls c          |11   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
+            "{ skip s         |1   | skip imgs for train }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
-            "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
+            "{ train t        |train | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
@@ -223,13 +226,13 @@ int main(int argc, const char *argv[])
     int cls = parser.get<int>("cls");
     int pre = parser.get<int>("pre");
     int crp = parser.get<int>("crop");
-    bool flp = parser.get<bool>("flip");
+    int skip = parser.get<int>("skip");
     string trainMethod(parser.get<string>("train"));
-    cout << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << flp << " " << trainMethod << '\r';
+    cout << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << trainMethod << '\r';
 
     int64 t0 = getTickCount();
     //Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,fil,cls,pre,crp,flp);
-    Ptr<MyFace> model = makePtr<MyFace>(ext,fil,cls,pre,crp,flp);
+    Ptr<MyFace> model = makePtr<MyFace>(ext,fil,cls,pre,crp,trainMethod,skip);
 
     // load dataset
     Ptr<FR_lfw> dataset = FR_lfw::create();
@@ -238,7 +241,7 @@ int main(int argc, const char *argv[])
 
     if (trainMethod == "dev") // train on personsDevTrain.txt
     {
-        for (unsigned int i=0; i<dataset->getTrain().size(); i+=1)
+        for (unsigned int i=0; i<dataset->getTrain().size(); i+=skip)
         {
             FR_lfwObj *example = static_cast<FR_lfwObj *>(dataset->getTrain()[i].get());
 
@@ -260,13 +263,13 @@ int main(int argc, const char *argv[])
     //return 1;
 
 
-    vector<double> p;
+    vector<double> p_acc, p_tpr, p_fpr;
     for (unsigned int j=0; j<numSplits; ++j)
     {
         PROFILEX("splits");
         if (trainMethod == "split") // train on the remaining 9 splits from pairs.txt
         {
-            for (unsigned int j2=0; j2<numSplits; ++j2)
+            for (unsigned int j2=0; j2<numSplits; j2+=skip)
             {
                 if (j==j2) continue;
 
@@ -289,7 +292,7 @@ int main(int argc, const char *argv[])
             }
         }
 
-        unsigned int incorrect = 0, correct = 0;
+        unsigned int incorrect[2] = {0}, correct[2] = {0};
         vector < Ptr<Object> > &curr = dataset->getTest(j);
         for (unsigned int i=0; i<curr.size(); ++i)
         {
@@ -300,38 +303,46 @@ int main(int argc, const char *argv[])
             Mat img2 = imread(path+example->image2, IMREAD_GRAYSCALE);
             bool same = model->same(img1,img2)>0;
             if (same == example->same)
-                correct++;
+                correct[example->same]++;
             else
-                incorrect++;
+                incorrect[example->same]++;
         }
 
-        double acc = double(correct)/(correct+incorrect);
-        printf("%4u %5u/%-5u  %2.3f                        \r", j, correct,incorrect,acc );
-        p.push_back(acc);
+        double acc = double(correct[1]+correct[0])/(curr.size());
+        double tpr = double(correct[1])/(correct[1]+incorrect[1]);
+        double fpr = double(incorrect[0])/(correct[0]+incorrect[1]);
+        printf("%4u %2.3f/%-2.3f  %2.3f                        \r", j, tpr,fpr,acc );
+        p_acc.push_back(acc);
+        p_tpr.push_back(tpr);
+        p_fpr.push_back(fpr);
     }
 
-    double mu = 0.0;
-    for (vector<double>::iterator it=p.begin(); it!=p.end(); ++it)
+    double mu_acc = 0.0, mu_tpr=0.0, mu_fpr=0.0;
+    for (size_t i=0; i<p_acc.size(); ++i)
     {
-        mu += *it;
+        mu_acc += p_acc[i];
+        mu_tpr += p_tpr[i];
+        mu_fpr += p_fpr[i];
     }
-    mu /= p.size();
+    mu_acc /= p_acc.size();
+    mu_tpr /= p_tpr.size();
+    mu_fpr /= p_fpr.size();
     double sigma = 0.0;
-    for (vector<double>::iterator it=p.begin(); it!=p.end(); ++it)
+    for (vector<double>::iterator it=p_acc.begin(); it!=p_acc.end(); ++it)
     {
-        sigma += (*it - mu)*(*it - mu);
+        sigma += (*it - mu_acc)*(*it - mu_acc);
     }
-    sigma = sqrt(sigma/p.size());
-    double se = sigma/sqrt(double(p.size()));
+    sigma = sqrt(sigma/p_acc.size());
+    double se = sigma/sqrt(double(p_acc.size()));
 
     int64 t1 = getTickCount();
     cerr << format("%-8s",TextureFeature::EXS[ext])  << " ";
     cerr << format("%-7s",TextureFeature::FILS[fil]) << " ";
-    cerr << format("%-9s",TextureFeature::CLS[cls])  << " ";
+    cerr << format("%-7s",TextureFeature::CLS[cls])  << " ";
     //cerr << format("%-8s",TextureFeature::PPS[pre])  << " ";
-    cerr << format("%-6s",trainMethod.c_str()) << "\t";
+    cerr << format("%-5s",trainMethod.c_str()) << "\t";
     //cerr << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
-    cerr << format("%9.4f %9.4f %9.4f", mu, se, ((t1-t0)/getTickFrequency())) << endl;
+    cerr << format("%3.4f/%-3.4f %3.4f/%-3.4f %3.4f", mu_acc, se, mu_tpr, mu_fpr, ((t1-t0)/getTickFrequency())) << endl;
 
     return 0;
 }
