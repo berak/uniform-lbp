@@ -849,8 +849,8 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
         {
             Mat f = features.row(i)(Rect(64,0,64,1)).clone();
             normalize(f.reshape(1,64), f);
-            f.push_back(kp[i].pt.x);
-            f.push_back(kp[i].pt.y);
+            f.push_back(kp[i].pt.x / img.cols - 0.5f);
+            f.push_back(kp[i].pt.y / img.rows - 0.5f);
             f2.push_back(f);
         }
         features = f2.reshape(1,1);
