@@ -26,7 +26,7 @@ using std::endl;
 
 #include "texturefeature.h"
 #include "elastic/elasticparts.h"
-//#include "Profile.h"
+//#include "profile.h"
 
 using namespace cv;
 using namespace TextureFeature;
@@ -844,10 +844,20 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
             //kp.push_back(KeyPoint(p.x+w,p.y+w/2,w*2));
         }
         f2d->compute(img, kp, features);
+        Mat f2;
+        for (size_t i=0; i< features.rows; i++)
+        {
+            Mat f = features.row(i)(Rect(64,0,64,1)).clone();
+            normalize(f.reshape(1,1), f);
+            f.push_back(kp[i].pt.x);
+            f.push_back(kp[i].pt.y);
+            f2.push_back(f);
+        }
+        features = f2.reshape(1,1);
         // resize(features,features,Size(),0.5,1.0);                  // not good.
         // features = features(Rect(64,0,64,features.rows)).clone();  // amazing.
         //features = features.reshape(1,1);
-        normalize(features.reshape(1,1), features);
+        //normalize(features.reshape(1,1), features);
         return features.total() * features.elemSize();
     }
 };
@@ -905,6 +915,93 @@ struct HighDimLbp : public TextureFeature::Extractor
 };
 
 
+
+//
+// CDIKP: A Highly-Compact Local Feature Descriptor  
+//        Yun-Ta Tsai, Quan Wang, Suya You 
+//
+struct ExtractorCDIKP : public TextureFeature::Extractor
+{
+    LandMarks land;
+
+    template<class T>
+    void fast_had(int ndim, int lev, T *in, T *out) const
+    {
+        int h = lev/2;
+        for (int j=0; j<ndim/lev; j++)
+        {
+            for(int i=0; i<h; i++)
+            {
+                out[i]   = in[i] + in[i+h];
+                out[i+h] = in[i] - in[i+h];
+            }
+            out += lev;
+            in  += lev;
+        }
+    }
+    Mat project(Mat &in) const
+    {
+        const int keep = 10;
+        Mat h = in.clone().reshape(1,1);
+        Mat wh(1, h.total(), h.type());
+        for (int lev=in.total(); lev>2; lev/=2)
+        {
+            fast_had(in.total(), lev, h.ptr<float>(), wh.ptr<float>());
+            if (lev>4) cv::swap(h,wh);
+        }
+        return wh(Rect(0,0,keep,1));
+    }
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        Mat fI; 
+        img.convertTo(fI,CV_32F);
+        Mat dx,dy;
+        Sobel(fI,dx,CV_32F,1,0);
+        Sobel(fI,dy,CV_32F,0,1);
+        // Rect b(0,0,img.cols,img.rows);
+        const int ps = 16;
+        //vector<Point> kp;
+        //land.extract(img, kp);
+        //float off[] = {
+        //    -1.5f,-1.5f, -0.5f,-1.5f, 0.5f,-1.5f, 1.5f,-1.5f,
+        //    -1.5f,-0.5f, -0.5f,-0.5f, 0.5f,-0.5f, 1.5f,-0.5f,
+        //    -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
+        //    -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
+        //};
+        //for (int i=0; i<kp.size(); i++)
+        //{
+        //    float s=1;
+        //    float gr=8;
+        //    Point2f pt(kp[i]);
+        //    for (int o=0; o<16; o++)
+        //    {
+        //        Mat patch;
+        //        getRectSubPix(dx, Size(gr,gr), Point2f(pt.x*s + off[o*2]*gr, pt.y*s + off[o*2+1]*gr), patch);
+        //        features.push_back(project(patch));
+        //        getRectSubPix(dy, Size(gr,gr), Point2f(pt.x*s + off[o*2]*gr, pt.y*s + off[o*2+1]*gr), patch);
+        //        features.push_back(project(patch));
+        //    }
+        //    //Mat patch;
+        //    //cv::getRectSubPix(dx,Size(ps,ps),kp[i],patch);
+        //    //features.push_back(project(patch));
+        //}
+        const int step=3;
+        for (int i=ps/4; i<img.rows-3*ps/4; i+=step)
+        {
+            for (int j=ps/4; j<img.cols-3*ps/4; j+=step)
+            {
+                Mat patch;
+                cv::getRectSubPix(dx,Size(ps,ps),Point2f(j,i),patch);
+                features.push_back(project(patch));
+                cv::getRectSubPix(dy,Size(ps,ps),Point2f(j,i),patch);
+                features.push_back(project(patch));
+            }
+        }
+        features = features.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
+
 } // TextureFeatureImpl
 
 namespace TextureFeature
@@ -941,6 +1038,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_GradMag:  return makePtr< GradMagExtractor<GfttGrid> >(GfttGrid()); break;
         case EXT_GradMag_P:  return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
+        case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Extractor>();

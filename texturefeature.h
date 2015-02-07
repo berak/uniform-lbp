@@ -81,6 +81,7 @@ namespace TextureFeature
         EXT_GradMag,
         EXT_GradMag_P,
         EXT_HDLBP,
+        EXT_CDIKP,
         EXT_MAX
     };
     static const char *EXS[] = {
@@ -111,6 +112,7 @@ namespace TextureFeature
         "GradMag",
         "GradMagP",
         "HDLBP",
+        "CDIKP",
         0
     };
     enum FIL {

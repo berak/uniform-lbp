@@ -56,6 +56,7 @@
 #include <iostream>
 #include <cstdio>
 #include <string>
+#include <fstream>
 #include <vector>
 #include <map>
 #include <set>
@@ -128,11 +129,12 @@ public:
 
         if (! fil.empty())
             fil->filter(fr,fr);
+
+        //features.push_back(fr); // damn memory problems
         if ( features.empty() )
         {
-            features = Mat(nimg, feat1.total(), CV_32F); // this will only work for dev mode !
+            features = Mat(nimg, feat1.total(), CV_32F); 
         }
-        //features.push_back(fr); // damn memory problems
         feat1.copyTo(features.row(labels.rows));
         labels.push_back(label);
         cerr << fr.cols << " i_" << labels.rows << "\r";
@@ -140,45 +142,45 @@ public:
     }
     virtual bool train()
     {
-        cerr << "." << features.cols << "     ";
-        cerr << "start training." << '\r';
+        //cerr << "\n." << features.cols << " ";
+        //cerr << "start training." << " ";
         int ok = cls->train(features, labels.reshape(1,features.rows));
-        cerr << "done training." << '\r';
+        //cerr << "done training." << endl;
         CV_Assert(ok);
         features.release();
         labels.release();
         return ok!=0;
     }
-    //virtual bool train_pca(int ncomps)
-    //{
-    //    cerr << "pca in  " << features.size() << endl;
-    //    PCA pca(features, Mat(), cv::PCA::DATA_AS_ROW, ncomps);
-    //    cerr << "pca out " << pca.eigenvectors.size() << endl;
-    //    cerr << "**";
-    //    FILE * f = fopen("pca.hdlbp.bin","wb");
-    //    int mr = pca.mean.rows;
-    //    fwrite(&mr, sizeof(int), 1, f);
-    //    int mc = pca.mean.cols;
-    //    fwrite(&mc, sizeof(int), 1, f);
-    //    fwrite(pca.mean.ptr<float>(), mc*mr, 1, f);
-    //    fflush(f);
-    //    cerr << "##";
+    virtual bool train_pca(int ncomps)
+    {
+        cerr << "pca in  " << features.size() << endl;
+        PCA pca(features, Mat(), cv::PCA::DATA_AS_ROW, ncomps);
+        cerr << "pca out " << pca.eigenvectors.size() << endl;
+        cerr << "**";
+        FILE * f = fopen("pca.hdlbp.bin","wb");
+        int mr = pca.mean.rows;
+        fwrite(&mr, sizeof(int), 1, f);
+        int mc = pca.mean.cols;
+        fwrite(&mc, sizeof(int), 1, f);
+        fwrite(pca.mean.ptr<float>(), mc*mr, 1, f);
+        fflush(f);
+        cerr << "##";
 
-    //    // will have to transpose later !
-    //    int er = pca.eigenvectors.rows;
-    //    fwrite(&er, sizeof(int), 1, f);
-    //    int ec = pca.eigenvectors.cols;
-    //    fwrite(&ec, sizeof(int), 1, f);
-    //    fwrite(pca.eigenvectors.ptr<float>(), 1, ec*er, f);
-    //    fclose(f);
-    //    cerr << "!!";
-    //    //FileStorage fs("pca.hdlbp.yml.gz",FileStorage::WRITE);
-    //    //fs << "num_components" << ncomps;
-    //    //fs << "mean" << pca.mean;
-    //    //fs << "eigenvectors" << pca.eigenvectors.t();
-    //    //fs.release();
-    //    return true;
-    //}
+        // will have to transpose later !
+        int er = pca.eigenvectors.rows;
+        fwrite(&er, sizeof(int), 1, f);
+        int ec = pca.eigenvectors.cols;
+        fwrite(&ec, sizeof(int), 1, f);
+        fwrite(pca.eigenvectors.ptr<float>(), 1, ec*er, f);
+        fclose(f);
+        cerr << "!!";
+        //FileStorage fs("pca.hdlbp.yml.gz",FileStorage::WRITE);
+        //fs << "num_components" << ncomps;
+        //fs << "mean" << pca.mean;
+        //fs << "eigenvectors" << pca.eigenvectors.t();
+        //fs.release();
+        return true;
+    }
     virtual int same(const Mat & a, const Mat &b) const
     {
         Mat feat1, feat2;
@@ -201,13 +203,13 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ opts o         |    | show extractor / filter / verifier options }"
             "{ path p         |lfw-deepfunneled/| path to dataset (lfw2 folder) }"
-            "{ ext e          |8   | extractor enum }"
-            "{ fil f          |1   | filter enum }"
-            "{ cls c          |11   | classifier enum }"
+            "{ ext e          |0   | extractor enum }"
+            "{ fil f          |0   | filter enum }"
+            "{ cls c          |0   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ skip s         |1   | skip imgs for train }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
-            "{ train t        |train | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
+            "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
@@ -228,7 +230,7 @@ int main(int argc, const char *argv[])
     int crp = parser.get<int>("crop");
     int skip = parser.get<int>("skip");
     string trainMethod(parser.get<string>("train"));
-    cout << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << trainMethod << '\r';
+    cout << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << trainMethod << endl;
 
     int64 t0 = getTickCount();
     //Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,fil,cls,pre,crp,flp);
@@ -269,12 +271,12 @@ int main(int argc, const char *argv[])
         PROFILEX("splits");
         if (trainMethod == "split") // train on the remaining 9 splits from pairs.txt
         {
-            for (unsigned int j2=0; j2<numSplits; j2+=skip)
+            for (unsigned int j2=0; j2<numSplits; j2++)
             {
                 if (j==j2) continue;
 
                 vector < Ptr<Object> > &curr = dataset->getTest(j2);
-                for (unsigned int i=0; i<curr.size(); ++i)
+                for (unsigned int i=0; i<curr.size(); i+=skip)
                 {
                     FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
                     int currNum1 = getLabel(example->image1);
@@ -310,8 +312,8 @@ int main(int argc, const char *argv[])
 
         double acc = double(correct[1]+correct[0])/(curr.size());
         double tpr = double(correct[1])/(correct[1]+incorrect[1]);
-        double fpr = double(incorrect[0])/(correct[0]+incorrect[1]);
-        printf("%4u %2.3f/%-2.3f  %2.3f                        \r", j, tpr,fpr,acc );
+        double fpr = double(incorrect[0])/(correct[0]+incorrect[0]);
+        printf("%4u %2.3f/%-2.3f  %2.3f                        \n", j, tpr,fpr,acc );
         p_acc.push_back(acc);
         p_tpr.push_back(tpr);
         p_fpr.push_back(fpr);
@@ -342,7 +344,26 @@ int main(int argc, const char *argv[])
     //cerr << format("%-8s",TextureFeature::PPS[pre])  << " ";
     cerr << format("%-5s",trainMethod.c_str()) << "\t";
     //cerr << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
-    cerr << format("%3.4f/%-3.4f %3.4f/%-3.4f %3.4f", mu_acc, se, mu_tpr, mu_fpr, ((t1-t0)/getTickFrequency())) << endl;
+    cerr << format("%3.4f/%-3.4f %3.4f/%-3.4f %3.4f",  mu_acc, se, mu_tpr, mu_fpr, ((t1-t0)/getTickFrequency())) << endl;
 
+    ofstream of("roc_data");
+    of << " # name: Tpr" << endl;
+    of << " # type: matrix" << endl;
+    of << " # rows: 1" << endl;
+    of << " # columns: " << p_tpr.size()+2 << endl << ".0001 ";   
+    for ( size_t i=0;i<p_tpr.size(); i++)
+    {
+        of << p_tpr[i] << " ";
+    }
+    of << ".9999" << endl << endl;
+    of << " # name: Fpr" << endl;
+    of << " # type: matrix" << endl;
+    of << " # rows: 1" << endl;
+    of << " # columns: " << p_fpr.size()+2 << endl << ".0001 ";   
+    for ( size_t i=0;i<p_fpr.size(); i++)
+    {
+        of << p_fpr[i] << " ";
+    }
+    of << ".9999" << endl << endl;
     return 0;
 }

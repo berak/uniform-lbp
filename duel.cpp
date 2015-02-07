@@ -292,17 +292,18 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
 double runtest(int ext, int fil, int cls, const vector<Mat> &images, const vector<int> &labels, const vector< vector<int> > &persons, size_t fold=10)
 {
     string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::FILS[fil], TextureFeature::CLS[cls]); 
-    try {
+    //try 
+    {
         runtest(name,  
             TextureFeature::createExtractor(ext),  
             TextureFeature::createFilter(fil),
             TextureFeature::createClassifier(cls),
             images,labels,persons, fold); 
     } 
-    catch(...)
-    {
-        cerr << name << " failed!" << endl;
-    }
+    //catch(...)
+    //{
+    //    cerr << name << " failed!" << endl;
+    //}
     return 0;
 }
 
@@ -331,9 +332,9 @@ int main(int argc, const char *argv[])
             "{ minp m         |0     | mininal img count per person (when reading folders) }"
             "{ maxp M         |-1    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |0     | extractor  enum }"
+            "{ ext e          |27     | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
-            "{ cls c          |0     | classifier enum }"
+            "{ cls c          |4     | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |0     | preprocessing }"
             "{ crop C         |0     | crop outer pixels }"
