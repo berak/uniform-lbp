@@ -809,6 +809,50 @@ typedef ExtractorGridFeature2d<xfeatures2d::FREAK> ExtractorFREAKGrid;
 typedef ExtractorGridFeature2d<xfeatures2d::SIFT> ExtractorSIFTGrid;
 typedef ExtractorGridFeature2d<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
 
+struct ExtractorORBHist : public TextureFeature::Extractor
+{
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        int kps = 5;
+        int grid = 6;
+        float gw = float(img.cols) / grid;
+        float gh = float(img.rows) / grid;
+        vector<KeyPoint> kp;
+        for (float i=0; i<img.rows; i++)
+        {
+            for (float j=0; j<img.cols; j++)
+            {
+                KeyPoint k(j, i, kps);
+                kp.push_back(k);
+            }
+        }
+        Ptr<Feature2D> f2d = BRISK::create();
+        f2d->compute(img, kp, features);
+        int siz = f2d->descriptorSize();
+        int w = img.cols - kp[0].pt.x*2;
+        int h = img.rows - kp[0].pt.x*2;
+        Mat_<float> his=Mat_<float>::zeros(1,siz*8*grid*grid);
+        for (float i=0; i<features.rows; i++)
+        {
+            int ox = int((kp[i].pt.x-kp[0].pt.x) / ((w / (grid-1))));
+            int oy = int((kp[i].pt.y-kp[0].pt.y) / ((h / (grid-1))));
+            int off = siz*8 * (oy*grid + ox);
+            Mat f = features.row(i);
+            for (int j=0; j<f.cols; j++)
+            {
+                uchar b = f.at<uchar>(j);
+                for (int k=0; k<8; k++)
+                {
+                    int v = b & (1<<k);
+                    his(off + j*8 + k) += (v!=0);
+                }
+            }
+        }
+        normalize(his,features);
+        return features.total() * features.elemSize();
+    }
+};
+
 
 struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 {
@@ -844,18 +888,18 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
             //kp.push_back(KeyPoint(p.x+w,p.y+w/2,w*2));
         }
         f2d->compute(img, kp, features);
-        Mat f2;
-        for (size_t i=0; i< features.rows; i++)
-        {
-            Mat f = features.row(i)(Rect(64,0,64,1)).clone().reshape(1,64);
-            f.push_back(kp[i].pt.x / img.cols - 0.5f);
-            f.push_back(kp[i].pt.y / img.rows - 0.5f);
-            f2.push_back(f);
-        }
+        //Mat f2;
+        //for (size_t i=0; i< features.rows; i++)
+        //{
+        //    Mat f = features.row(i)(Rect(32,0,64,1)).clone().reshape(1,64);
+        //    f.push_back(kp[i].pt.x / img.cols - 0.5f);
+        //    f.push_back(kp[i].pt.y / img.rows - 0.5f);
+        //    f2.push_back(f);
+        //}
         // resize(features,features,Size(),0.5,1.0);                  // not good.
         // features = features(Rect(64,0,64,features.rows)).clone();  // amazing.
         //features = features.reshape(1,1);
-        normalize(f2.reshape(1,1), features);
+        normalize(features.reshape(1,1), features);
         return features.total() * features.elemSize();
     }
 };
@@ -956,34 +1000,8 @@ struct ExtractorCDIKP : public TextureFeature::Extractor
         Mat dx,dy;
         Sobel(fI,dx,CV_32F,1,0);
         Sobel(fI,dy,CV_32F,0,1);
-        // Rect b(0,0,img.cols,img.rows);
         const int ps = 16;
-        //vector<Point> kp;
-        //land.extract(img, kp);
-        //float off[] = {
-        //    -1.5f,-1.5f, -0.5f,-1.5f, 0.5f,-1.5f, 1.5f,-1.5f,
-        //    -1.5f,-0.5f, -0.5f,-0.5f, 0.5f,-0.5f, 1.5f,-0.5f,
-        //    -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
-        //    -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
-        //};
-        //for (int i=0; i<kp.size(); i++)
-        //{
-        //    float s=1;
-        //    float gr=8;
-        //    Point2f pt(kp[i]);
-        //    for (int o=0; o<16; o++)
-        //    {
-        //        Mat patch;
-        //        getRectSubPix(dx, Size(gr,gr), Point2f(pt.x*s + off[o*2]*gr, pt.y*s + off[o*2+1]*gr), patch);
-        //        features.push_back(project(patch));
-        //        getRectSubPix(dy, Size(gr,gr), Point2f(pt.x*s + off[o*2]*gr, pt.y*s + off[o*2+1]*gr), patch);
-        //        features.push_back(project(patch));
-        //    }
-        //    //Mat patch;
-        //    //cv::getRectSubPix(dx,Size(ps,ps),kp[i],patch);
-        //    //features.push_back(project(patch));
-        //}
-        const int step=3;
+        const int step = 3;
         for (int i=ps/4; i<img.rows-3*ps/4; i+=step)
         {
             for (int j=ps/4; j<img.cols-3*ps/4; j+=step)
@@ -1028,6 +1046,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_Gabor:    return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist()); break;
         case EXT_Dct:      return makePtr< ExtractorDct >(); break;
         case EXT_Orb:      return makePtr< ExtractorORBGrid >();  break;
+        case EXT_OrbHist:  return makePtr< ExtractorORBHist >();  break;
         case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(20); break;
         case EXT_Sift_G:   return makePtr< ExtractorGfttFeature2d >(xfeatures2d::SIFT::create()); break;
         case EXT_Grad:     return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist());  break;

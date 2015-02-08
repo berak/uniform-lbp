@@ -73,6 +73,7 @@ namespace TextureFeature
         EXT_Gabor,
         EXT_Dct,
         EXT_Orb,
+        EXT_OrbHist,
         EXT_Sift,
         EXT_Sift_G,
         EXT_Grad,
@@ -104,6 +105,7 @@ namespace TextureFeature
         "Gabor",
         "Dct",
         "Orb",
+        "OrbHist",
         "Sift",
         "Sift_G",
         "Grad",
@@ -158,7 +160,7 @@ namespace TextureFeature
         CL_SVM_HELSQ,  // custom
         CL_SVM_LOW,  // custom
         CL_SVM_LOG,  // custom
-        CL_SVM_KL,  // custom
+        CL_SVM_KMOD,  // custom
         CL_SVM_MULTI,
         CL_PCA,
         CL_PCA_LDA,
@@ -182,7 +184,7 @@ namespace TextureFeature
         "SVM_HELSQ",
         "SVM_LOW",
         "SVM_LOG",
-        "SVM_KL",
+        "SVM_KMOD",
         "SVM_MULTI",
         "PCA",
         "PCA_LDA",
