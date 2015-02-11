@@ -177,47 +177,43 @@ struct CustomKernel : public ml::SVM::Kernel
         x.m = s;
         return (x.f[0] + x.f[1] + x.f[2] + x.f[3]);
     }
+
     inline __m128 exp_ps(__m128 x) 
     {
         static const __m128 _ps_1   = _mm_set_ps1(1.0f);
         static const __m128 _ps_0p5 = _mm_set_ps1(0.5f);
-        static const __m128 _exp_hi = _mm_set_ps1(	88.3762626647949f);
-        static const __m128 _exp_lo = _mm_set_ps1(	-88.3762626647949f);
-        static const __m128 _LOG2EF = _mm_set_ps1( 1.44269504088896341f);
-        static const __m128 _exp_C1 = _mm_set_ps1( 0.693359375f);
-        static const __m128 _exp_C2 = _mm_set_ps1( -2.12194440e-4f);
-        static const __m128 _exp_p0 = _mm_set_ps1( 1.9875691500E-4f);
-        static const __m128 _exp_p1 = _mm_set_ps1( 1.3981999507E-3f);
-        static const __m128 _exp_p2 = _mm_set_ps1( 8.3334519073E-3f);
-        static const __m128 _exp_p3 = _mm_set_ps1( 4.1665795894E-2f);
-        static const __m128 _exp_p4 = _mm_set_ps1( 1.6666665459E-1f);
-        static const __m128 _exp_p5 = _mm_set_ps1( 5.0000001201E-1f);
+        static const __m128 _exp_hi = _mm_set_ps1(88.3762626647949f);
+        static const __m128 _exp_lo = _mm_set_ps1(-88.3762626647949f);
+        static const __m128 _LOG2EF = _mm_set_ps1(1.44269504088896341f);
+        static const __m128 _exp_C1 = _mm_set_ps1(0.693359375f);
+        static const __m128 _exp_C2 = _mm_set_ps1(-2.12194440e-4f);
+        static const __m128 _exp_p0 = _mm_set_ps1(1.9875691500E-4f);
+        static const __m128 _exp_p1 = _mm_set_ps1(1.3981999507E-3f);
+        static const __m128 _exp_p2 = _mm_set_ps1(8.3334519073E-3f);
+        static const __m128 _exp_p3 = _mm_set_ps1(4.1665795894E-2f);
+        static const __m128 _exp_p4 = _mm_set_ps1(1.6666665459E-1f);
+        static const __m128 _exp_p5 = _mm_set_ps1(5.0000001201E-1f);
         static const __m128i _pi32_0x7f = _mm_set1_epi32(0x7f);
-
-        __m128 tmp = _mm_setzero_ps(), fx;
-        __m128i emm0;
-        __m128 one = _ps_1;
 
         x = _mm_min_ps(x, _exp_hi);
         x = _mm_max_ps(x, _exp_lo);
 
-        /* express exp(x) as exp(g + n*log(2)) */
-        fx = _mm_mul_ps(x, _LOG2EF);
+        // express exp(x) as exp(g + n*log(2)) 
+        __m128 fx = _mm_mul_ps(x, _LOG2EF);
         fx = _mm_add_ps(fx, _ps_0p5);
 
-        /* how to perform a floorf with SSE: just below */
-        emm0 = _mm_cvttps_epi32(fx);
-        tmp  = _mm_cvtepi32_ps(emm0);
-        /* if greater, substract 1 */
+        // how to perform a floorf with SSE: just below 
+        __m128i emm0 = _mm_cvttps_epi32(fx);
+        __m128 tmp  = _mm_cvtepi32_ps(emm0);
+        // if greater, substract 1 
         __m128 mask = _mm_cmpgt_ps(tmp, fx);    
-        mask = _mm_and_ps(mask, one);
+        mask = _mm_and_ps(mask, _ps_1);
         fx = _mm_sub_ps(tmp, mask);
 
         tmp = _mm_mul_ps(fx, _exp_C1);
         __m128 z = _mm_mul_ps(fx, _exp_C2);
         x = _mm_sub_ps(x, tmp);
         x = _mm_sub_ps(x, z);
-
         z = _mm_mul_ps(x,x);
 
         __m128 y = _exp_p0;
@@ -233,9 +229,9 @@ struct CustomKernel : public ml::SVM::Kernel
         y = _mm_add_ps(y, _exp_p5);
         y = _mm_mul_ps(y, z);
         y = _mm_add_ps(y, x);
-        y = _mm_add_ps(y, one);
+        y = _mm_add_ps(y, _ps_1);
 
-        /* build 2^n */
+        // build 2^n 
         emm0 = _mm_cvttps_epi32(fx);
         emm0 = _mm_add_epi32(emm0, _pi32_0x7f);
         emm0 = _mm_slli_epi32(emm0, 23);
@@ -300,7 +296,7 @@ struct CustomKernel : public ml::SVM::Kernel
                 c = _mm_mul_ps(b, b);
                 s = _mm_add_ps(s, c);
             }
-            results[j] = (-res(s));
+            results[j] = -res(s);
         }
 #else       
         for(int k=0; k<var_count; k+=4)
@@ -402,7 +398,7 @@ struct CustomKernel : public ml::SVM::Kernel
     //
     void calc_kmod(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
-        const float K  = 10.0f; // normalization constant
+        const float K  = 1.0f; // normalization constant
         const float s2 = 9.0f; // kernelsize squared
         const float ga = 0.7f; // decrease speed
 

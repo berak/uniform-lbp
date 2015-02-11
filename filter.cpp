@@ -174,8 +174,12 @@ Ptr<Filter> createFilter(int filt)
         case FIL_HELL:     return makePtr<FilterHellinger>(); break;
         case FIL_POW:      return makePtr<FilterPow>(); break;
         case FIL_SQRT:     return makePtr<FilterSqrt>(); break;
-        case FIL_WHAD:     return makePtr<FilterWalshHadamard>(8000); break;
+        case FIL_WHAD4:    return makePtr<FilterWalshHadamard>(4000); break;
+        case FIL_WHAD8:    return makePtr<FilterWalshHadamard>(8000); break;
         case FIL_RP:       return makePtr<FilterRandomProjection>(8000); break;
+        case FIL_DCT2:     return makePtr<FilterDct>(2000); break;
+        case FIL_DCT4:     return makePtr<FilterDct>(4000); break;
+        case FIL_DCT6:     return makePtr<FilterDct>(6000); break;
         case FIL_DCT8:     return makePtr<FilterDct>(8000); break;
         case FIL_DCT12:    return makePtr<FilterDct>(12000); break;
         case FIL_DCT16:    return makePtr<FilterDct>(16000); break;

@@ -64,7 +64,6 @@
 using namespace std;
 using namespace cv;
 using namespace cv::datasets;
-//using namespace cv::face;
 
 map<string, int> people;
 
@@ -151,36 +150,6 @@ public:
         labels.release();
         return ok!=0;
     }
-    virtual bool train_pca(int ncomps)
-    {
-        cerr << "pca in  " << features.size() << endl;
-        PCA pca(features, Mat(), cv::PCA::DATA_AS_ROW, ncomps);
-        cerr << "pca out " << pca.eigenvectors.size() << endl;
-        cerr << "**";
-        FILE * f = fopen("pca.hdlbp.bin","wb");
-        int mr = pca.mean.rows;
-        fwrite(&mr, sizeof(int), 1, f);
-        int mc = pca.mean.cols;
-        fwrite(&mc, sizeof(int), 1, f);
-        fwrite(pca.mean.ptr<float>(), mc*mr, 1, f);
-        fflush(f);
-        cerr << "##";
-
-        // will have to transpose later !
-        int er = pca.eigenvectors.rows;
-        fwrite(&er, sizeof(int), 1, f);
-        int ec = pca.eigenvectors.cols;
-        fwrite(&ec, sizeof(int), 1, f);
-        fwrite(pca.eigenvectors.ptr<float>(), 1, ec*er, f);
-        fclose(f);
-        cerr << "!!";
-        //FileStorage fs("pca.hdlbp.yml.gz",FileStorage::WRITE);
-        //fs << "num_components" << ncomps;
-        //fs << "mean" << pca.mean;
-        //fs << "eigenvectors" << pca.eigenvectors.t();
-        //fs.release();
-        return true;
-    }
     virtual int same(const Mat & a, const Mat &b) const
     {
         Mat feat1, feat2;
@@ -233,7 +202,6 @@ int main(int argc, const char *argv[])
     cout << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << trainMethod << endl;
 
     int64 t0 = getTickCount();
-    //Ptr<myface::FaceVerifier> model = createMyFaceVerifier(ext,fil,cls,pre,crp,flp);
     Ptr<MyFace> model = makePtr<MyFace>(ext,fil,cls,pre,crp,trainMethod,skip);
 
     // load dataset
@@ -259,10 +227,8 @@ int main(int argc, const char *argv[])
         {
             PROFILEX("train");
             model->train();
-            //model->train_pca(4000);
         }
     }
-    //return 1;
 
 
     vector<double> p_acc, p_tpr, p_fpr;

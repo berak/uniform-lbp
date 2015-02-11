@@ -114,7 +114,6 @@ struct FeatureLbp
     }
 };
 
-
 //
 // "Description of Interest Regions with Center-Symmetric Local Binary Patterns"
 // (http://www.ee.oulu.fi/mvg/files/pdf/pdf_750.pdf).
@@ -346,35 +345,36 @@ static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
     }
     histo.push_back(h.reshape(1,1));
 }
-//
-//static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
-//{
-//    static int uniform[256] =
-//    {   // the well known original uniform2 pattern
-//        0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
-//        14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
-//        58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
-//        58,58,58,58,58,58,58,58,58,58,58,58,23,58,58,58,58,58,58,58,58,58,58,58,58,58,
-//        58,58,24,58,58,58,58,58,58,58,25,58,58,58,26,58,27,28,29,30,58,31,58,58,58,32,58,
-//        58,58,58,58,58,58,33,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,34,58,58,58,58,
-//        58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
-//        58,35,36,37,58,38,58,58,58,39,58,58,58,58,58,58,58,40,58,58,58,58,58,58,58,58,58,
-//        58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
-//        58,58,58,50,51,52,58,53,54,55,56,57
-//    };
-//
-//    Mat_<float> h(1, 59, 0.0f);
-//    for (int i=0; i<fI.rows; i++)
-//    {
-//        for (int j=0; j<fI.cols; j++)
-//        {
-//            int v = int(fI(i,j));
-//            h( uniform[v] ) += 1.0f;
-//        }
-//    }
-//    histo.push_back(h.reshape(1,1));
-//}
-//
+
+
+static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
+{
+    static int uniform[256] =
+    {   // the well known original uniform2 pattern
+        0,1,2,3,4,58,5,6,7,58,58,58,8,58,9,10,11,58,58,58,58,58,58,58,12,58,58,58,13,58,
+        14,15,16,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,17,58,58,58,58,58,58,58,18,
+        58,58,58,19,58,20,21,22,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
+        58,58,58,58,58,58,58,58,58,58,58,58,23,58,58,58,58,58,58,58,58,58,58,58,58,58,
+        58,58,24,58,58,58,58,58,58,58,25,58,58,58,26,58,27,28,29,30,58,31,58,58,58,32,58,
+        58,58,58,58,58,58,33,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,34,58,58,58,58,
+        58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,58,
+        58,35,36,37,58,38,58,58,58,39,58,58,58,58,58,58,58,40,58,58,58,58,58,58,58,58,58,
+        58,58,58,58,58,58,41,42,43,58,44,58,58,58,45,58,58,58,58,58,58,58,46,47,48,58,49,
+        58,58,58,50,51,52,58,53,54,55,56,57
+    };
+
+    Mat_<float> h(1, 59, 0.0f);
+    for (int i=0; i<fI.rows; i++)
+    {
+        for (int j=0; j<fI.cols; j++)
+        {
+            int v = int(fI(i,j));
+            h( uniform[v] ) += 1.0f;
+        }
+    }
+    histo.push_back(h.reshape(1,1));
+}
+
 
 struct GriddedHist
 {
@@ -409,6 +409,10 @@ struct GriddedHist
 //
 struct PyramidGrid
 {
+    bool uniform;
+
+    PyramidGrid(bool uniform=false): uniform(uniform) {}
+
     void hist_level(const Mat &feature, Mat &histo, int GRIDX, int GRIDY,int histSize=256) const
     {
         int sw = feature.cols/GRIDX;
@@ -418,7 +422,10 @@ struct PyramidGrid
             for (int j=0; j<GRIDY; j++)
             {
                 Mat patch(feature, Range(j*sh,(j+1)*sh), Range(i*sw,(i+1)*sw));
-                hist_patch(patch, histo, histSize);
+                if (uniform)
+                    hist_patch_uniform(patch, histo, histSize);
+                else
+                    hist_patch(patch, histo, histSize);
             }
         }
     }
@@ -451,8 +458,8 @@ struct LandMarks
     dlib::shape_predictor sp;
 
     LandMarks()
-    {   // lol, it's only 95mb.
-        dlib::deserialize("D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat") >> sp;
+    {   // it's only 95mb...
+        dlib::deserialize("data/shape_predictor_68_face_landmarks.dat") >> sp;
     }
 
     int extract(const Mat &img, vector<Point> &kp) const
@@ -809,51 +816,6 @@ typedef ExtractorGridFeature2d<xfeatures2d::FREAK> ExtractorFREAKGrid;
 typedef ExtractorGridFeature2d<xfeatures2d::SIFT> ExtractorSIFTGrid;
 typedef ExtractorGridFeature2d<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
 
-struct ExtractorORBHist : public TextureFeature::Extractor
-{
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        int kps = 5;
-        int grid = 6;
-        float gw = float(img.cols) / grid;
-        float gh = float(img.rows) / grid;
-        vector<KeyPoint> kp;
-        for (float i=0; i<img.rows; i++)
-        {
-            for (float j=0; j<img.cols; j++)
-            {
-                KeyPoint k(j, i, kps);
-                kp.push_back(k);
-            }
-        }
-        Ptr<Feature2D> f2d = BRISK::create();
-        f2d->compute(img, kp, features);
-        int siz = f2d->descriptorSize();
-        int w = img.cols - kp[0].pt.x*2;
-        int h = img.rows - kp[0].pt.x*2;
-        Mat_<float> his=Mat_<float>::zeros(1,siz*8*grid*grid);
-        for (float i=0; i<features.rows; i++)
-        {
-            int ox = int((kp[i].pt.x-kp[0].pt.x) / ((w / (grid-1))));
-            int oy = int((kp[i].pt.y-kp[0].pt.y) / ((h / (grid-1))));
-            int off = siz*8 * (oy*grid + ox);
-            Mat f = features.row(i);
-            for (int j=0; j<f.cols; j++)
-            {
-                uchar b = f.at<uchar>(j);
-                for (int k=0; k<8; k++)
-                {
-                    int v = b & (1<<k);
-                    his(off + j*8 + k) += (v!=0);
-                }
-            }
-        }
-        normalize(his,features);
-        return features.total() * features.elemSize();
-    }
-};
-
-
 struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 {
     Ptr<Feature2D> f2d;
@@ -931,11 +893,11 @@ struct HighDimLbp : public TextureFeature::Extractor
             -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
             -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
         };
+        int noff = 16;
+        float *off = offsets_16;
         for (int i=0; i<5; i++)
         {
             float s = scale[i];
-            int noff = 16;//off_size[i];
-            float *off = offsets_16;//off_table[i];
             Mat f1,f2,imgs;
             resize(img,imgs,Size(),s,s);
             int histSize = lbp(imgs,f1);
@@ -950,6 +912,96 @@ struct HighDimLbp : public TextureFeature::Extractor
                     hist_patch(patch, histo, histSize);
                 }
             }
+        }
+        normalize(histo.reshape(1,1), features);
+        return features.total() * features.elemSize();
+    }
+};
+
+struct HighDimLbpPCA : public TextureFeature::Extractor
+{
+    LandMarks land;
+    FeatureFPLbp lbp;
+    //FeatureLbp lbp;
+    PCA pca[20];
+
+    HighDimLbpPCA()
+    {
+        FileStorage fs("data/fplbp_pca.xml.gz",FileStorage::READ);
+        CV_Assert(fs.isOpened());
+        FileNode pnodes = fs["hdlbp"];
+        int i=0;
+        for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
+        {
+            pca[i++].read(*it);
+        }
+        fs.release();
+
+        //FILE * f = fopen("data/pca.hdlbpu.bin","rb");
+        //CV_Assert(f!=0);
+        //for (int i=0; i<20; i++)
+        //{
+        //    read_pca(pca[i],f);
+        //}
+        //fclose(f);
+    }
+    //void read_pca(PCA &pca, FILE *f)
+    //{
+    //    int mr,mc;
+    //    fread(&mr, sizeof(int), 1, f);
+    //    fread(&mc, sizeof(int), 1, f);
+    //    pca.mean.create(mr,mc,CV_32F);
+    //    fread(pca.mean.ptr<float>(), mc*mr, 1, f);
+    //    int er, ec;
+    //    fread(&er, sizeof(int), 1, f);
+    //    fread(&ec, sizeof(int), 1, f);
+    //    pca.eigenvectors.create(er,ec,CV_32F);
+    //    fread(pca.eigenvectors.ptr<float>(), 1, ec*er, f);
+    //}
+
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        //PROFILEX("extract");
+        int gr=10; // 10 used in paper
+        vector<Point> kp;
+        land.extract(img,kp);
+        CV_Assert(kp.size()==20);
+        Mat histo;
+        float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
+        float offsets_16[] = {
+            -1.5f,-1.5f, -0.5f,-1.5f, 0.5f,-1.5f, 1.5f,-1.5f,
+            -1.5f,-0.5f, -0.5f,-0.5f, 0.5f,-0.5f, 1.5f,-0.5f,
+            -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
+            -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
+        };
+        int noff = 16;
+        float *off = offsets_16;
+        Mat h[20];
+        for (int i=0; i<5; i++)
+        {
+            float s = scale[i];
+            Mat f1,f2,imgs;
+            resize(img,imgs,Size(),s,s);
+            int histSize = lbp(imgs,f1);
+
+            for (size_t k=0; k<kp.size(); k++)
+            {
+                Point2f pt(kp[k]);
+                for (int o=0; o<noff; o++)
+                {
+                    Mat patch;
+                    getRectSubPix(f1, Size(gr,gr), Point2f(pt.x*s + off[o*2]*gr, pt.y*s + off[o*2+1]*gr), patch);
+                    hist_patch(patch, h[k], histSize);
+                    //hist_patch_uniform(patch, h[k], histSize);
+                }
+            }
+        }
+        for (size_t k=0; k<kp.size(); k++)
+        {
+            Mat hx = h[k].reshape(1,1);
+            normalize(hx,hx);
+            Mat hy = pca[k].project(hx);
+            histo.push_back(hy);
         }
         normalize(histo.reshape(1,1), features);
         return features.total() * features.elemSize();
@@ -1001,10 +1053,10 @@ struct ExtractorCDIKP : public TextureFeature::Extractor
         Sobel(fI,dx,CV_32F,1,0);
         Sobel(fI,dy,CV_32F,0,1);
         const int ps = 16;
-        const int step = 3;
-        for (int i=ps/4; i<img.rows-3*ps/4; i+=step)
+        const float step = 3;
+        for (float i=ps/4; i<img.rows-3*ps/4; i+=step)
         {
-            for (int j=ps/4; j<img.cols-3*ps/4; j+=step)
+            for (float j=ps/4; j<img.cols-3*ps/4; j+=step)
             {
                 Mat patch;
                 cv::getRectSubPix(dx,Size(ps,ps),Point2f(j,i),patch);
@@ -1031,6 +1083,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_Pixels:   return makePtr< ExtractorPixels >(); break;
         case EXT_Lbp:      return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist()); break;
         case EXT_LBP_P:    return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid()); break;
+        case EXT_LBPU_P:   return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid(true)); break;
         case EXT_TPLbp:    return makePtr< GenericExtractor<FeatureTPLbp,GriddedHist> >(FeatureTPLbp(), GriddedHist()); break;
         case EXT_TPLBP_P:  return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid()); break;
         case EXT_TPLBP_G:  return makePtr< GenericExtractor<FeatureTPLbp,GfttGrid> >(FeatureTPLbp(), GfttGrid()); break;
@@ -1046,7 +1099,6 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_Gabor:    return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist()); break;
         case EXT_Dct:      return makePtr< ExtractorDct >(); break;
         case EXT_Orb:      return makePtr< ExtractorORBGrid >();  break;
-        case EXT_OrbHist:  return makePtr< ExtractorORBHist >();  break;
         case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(20); break;
         case EXT_Sift_G:   return makePtr< ExtractorGfttFeature2d >(xfeatures2d::SIFT::create()); break;
         case EXT_Grad:     return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist());  break;
@@ -1055,6 +1107,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_GradMag:  return makePtr< GradMagExtractor<GfttGrid> >(GfttGrid()); break;
         case EXT_GradMag_P:  return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
+        case EXT_HDLBP_PCA:  return makePtr< HighDimLbpPCA >();  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
