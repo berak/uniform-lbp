@@ -183,20 +183,22 @@ struct CustomKernel : public ml::SVM::Kernel
     float l2sqr(int var_count, int j, const float *vecs, const float *another)
     {
 #ifdef HAVE_SSE
-        CV_Assert (var_count%4==0);
-        __m128 c,d, s = _mm_set_ps1(0);
-        __m128* ptr_a = (__m128*)another;
-        __m128* ptr_b = (__m128*)(&vecs[j*var_count]);
-        for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
+        if (var_count % 4 == 0)
         {
-            c = _mm_sub_ps(*ptr_a, *ptr_b);
-            d = _mm_mul_ps(c, c);
-            s = _mm_add_ps(s, d);
-        }
-        return res(s);
-#else
-        double s = 0;
-        double a,b,c;
+            __m128 c,d, s = _mm_set_ps1(0);
+            __m128* ptr_a = (__m128*)another;
+            __m128* ptr_b = (__m128*)(&vecs[j*var_count]);
+            for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
+            {
+                c = _mm_sub_ps(*ptr_a, *ptr_b);
+                d = _mm_mul_ps(c, c);
+                s = _mm_add_ps(s, d);
+            }
+            return res(s);
+        } // else fall back to sw
+#endif
+        float s = 0;
+        float a,b,c;
         const float* sample = &vecs[j*var_count];
         for(int k=0; k<var_count; k++)
         {
@@ -205,25 +207,26 @@ struct CustomKernel : public ml::SVM::Kernel
             s += c*c;
         }
         return s;
-#endif
     }
 
     float min(int var_count, int j, const float *vecs, const float *another)
     {
 #ifdef HAVE_SSE
-        CV_Assert (var_count%4==0);
-        __m128 c,   s = _mm_set_ps1(0);
-        __m128* ptr_a = (__m128*)another;
-        __m128* ptr_b = (__m128*)(&vecs[j*var_count]);
-        for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
-        {
-            c = _mm_min_ps(*ptr_a, *ptr_b);
-            s = _mm_add_ps(s, c);
+        if (var_count % 4 == 0)
+        { 
+            __m128 c,   s = _mm_set_ps1(0);
+            __m128* ptr_a = (__m128*)another;
+            __m128* ptr_b = (__m128*)(&vecs[j*var_count]);
+            for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
+            {
+                c = _mm_min_ps(*ptr_a, *ptr_b);
+                s = _mm_add_ps(s, c);
+            }
+            return res(s);
         }
-        return res(s);
-#else
-        double s = 0;
-        double a,b,c;
+#endif
+        float s = 0;
+        float a,b,c;
         const float* sample = &vecs[j*var_count];
         for(int k=0; k<var_count; k++)
         {
@@ -232,7 +235,6 @@ struct CustomKernel : public ml::SVM::Kernel
             s += c*c;
         }
         return s;
-#endif
     }
 
     void calc_intersect(int vcount, int var_count, const float* vecs, const float* another, float* results)
@@ -384,7 +386,7 @@ struct CustomKernel : public ml::SVM::Kernel
         for(int j=0; j<vcount; j++)
         {
             float z = l2sqr(var_count,j,vecs,another);
-            results[j] = 1.0 / (1+(z/sigma2));
+            results[j] = 1.0f / (1.0f+(z/sigma2));
         }
     }
     void calc(int vcount, int var_count, const float* vecs, const float* another, float* results)
