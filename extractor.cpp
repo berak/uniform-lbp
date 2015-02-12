@@ -347,7 +347,7 @@ static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
 }
 
 
-static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
+static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo)
 {
     static int uniform[256] =
     {   // the well known original uniform2 pattern
@@ -363,7 +363,7 @@ static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo, int histSize=2
         58,58,58,50,51,52,58,53,54,55,56,57
     };
 
-    Mat_<float> h(1, 59, 0.0f);
+    Mat_<float> h(1, 60, 0.0f); // mod4
     for (int i=0; i<fI.rows; i++)
     {
         for (int j=0; j<fI.cols; j++)
@@ -422,8 +422,8 @@ struct PyramidGrid
             for (int j=0; j<GRIDY; j++)
             {
                 Mat patch(feature, Range(j*sh,(j+1)*sh), Range(i*sw,(i+1)*sw));
-                if (uniform)
-                    hist_patch_uniform(patch, histo, histSize);
+                if (uniform && histSize==256)
+                    hist_patch_uniform(patch, histo);
                 else
                     hist_patch(patch, histo, histSize);
             }

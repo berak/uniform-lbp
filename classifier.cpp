@@ -177,98 +177,70 @@ struct CustomKernel : public ml::SVM::Kernel
         x.m = s;
         return (x.f[0] + x.f[1] + x.f[2] + x.f[3]);
     }
+#endif
 
-    inline __m128 exp_ps(__m128 x) 
+
+    float l2sqr(int var_count, int j, const float *vecs, const float *another)
     {
-        static const __m128 _ps_1   = _mm_set_ps1(1.0f);
-        static const __m128 _ps_0p5 = _mm_set_ps1(0.5f);
-        static const __m128 _exp_hi = _mm_set_ps1(88.3762626647949f);
-        static const __m128 _exp_lo = _mm_set_ps1(-88.3762626647949f);
-        static const __m128 _LOG2EF = _mm_set_ps1(1.44269504088896341f);
-        static const __m128 _exp_C1 = _mm_set_ps1(0.693359375f);
-        static const __m128 _exp_C2 = _mm_set_ps1(-2.12194440e-4f);
-        static const __m128 _exp_p0 = _mm_set_ps1(1.9875691500E-4f);
-        static const __m128 _exp_p1 = _mm_set_ps1(1.3981999507E-3f);
-        static const __m128 _exp_p2 = _mm_set_ps1(8.3334519073E-3f);
-        static const __m128 _exp_p3 = _mm_set_ps1(4.1665795894E-2f);
-        static const __m128 _exp_p4 = _mm_set_ps1(1.6666665459E-1f);
-        static const __m128 _exp_p5 = _mm_set_ps1(5.0000001201E-1f);
-        static const __m128i _pi32_0x7f = _mm_set1_epi32(0x7f);
-
-        x = _mm_min_ps(x, _exp_hi);
-        x = _mm_max_ps(x, _exp_lo);
-
-        // express exp(x) as exp(g + n*log(2)) 
-        __m128 fx = _mm_mul_ps(x, _LOG2EF);
-        fx = _mm_add_ps(fx, _ps_0p5);
-
-        // how to perform a floorf with SSE: just below 
-        __m128i emm0 = _mm_cvttps_epi32(fx);
-        __m128 tmp  = _mm_cvtepi32_ps(emm0);
-        // if greater, substract 1 
-        __m128 mask = _mm_cmpgt_ps(tmp, fx);    
-        mask = _mm_and_ps(mask, _ps_1);
-        fx = _mm_sub_ps(tmp, mask);
-
-        tmp = _mm_mul_ps(fx, _exp_C1);
-        __m128 z = _mm_mul_ps(fx, _exp_C2);
-        x = _mm_sub_ps(x, tmp);
-        x = _mm_sub_ps(x, z);
-        z = _mm_mul_ps(x,x);
-
-        __m128 y = _exp_p0;
-        y = _mm_mul_ps(y, x);
-        y = _mm_add_ps(y, _exp_p1);
-        y = _mm_mul_ps(y, x);
-        y = _mm_add_ps(y, _exp_p2);
-        y = _mm_mul_ps(y, x);
-        y = _mm_add_ps(y, _exp_p3);
-        y = _mm_mul_ps(y, x);
-        y = _mm_add_ps(y, _exp_p4);
-        y = _mm_mul_ps(y, x);
-        y = _mm_add_ps(y, _exp_p5);
-        y = _mm_mul_ps(y, z);
-        y = _mm_add_ps(y, x);
-        y = _mm_add_ps(y, _ps_1);
-
-        // build 2^n 
-        emm0 = _mm_cvttps_epi32(fx);
-        emm0 = _mm_add_epi32(emm0, _pi32_0x7f);
-        emm0 = _mm_slli_epi32(emm0, 23);
-        __m128 pow2n = _mm_castsi128_ps(emm0);
-        y = _mm_mul_ps(y, pow2n);
-        return y;
+#ifdef HAVE_SSE
+        CV_Assert (var_count%4==0);
+        __m128 c,d, s = _mm_set_ps1(0);
+        __m128* ptr_a = (__m128*)another;
+        __m128* ptr_b = (__m128*)(&vecs[j*var_count]);
+        for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
+        {
+            c = _mm_sub_ps(*ptr_a, *ptr_b);
+            d = _mm_mul_ps(c, c);
+            s = _mm_add_ps(s, d);
+        }
+        return res(s);
+#else
+        double s = 0;
+        double a,b,c;
+        const float* sample = &vecs[j*var_count];
+        for(int k=0; k<var_count; k++)
+        {
+            a = sample[k];  b = another[k];
+            c = (a-b);
+            s += c*c;
+        }
+        return s;
+#endif
     }
 
+    float min(int var_count, int j, const float *vecs, const float *another)
+    {
+#ifdef HAVE_SSE
+        CV_Assert (var_count%4==0);
+        __m128 c,   s = _mm_set_ps1(0);
+        __m128* ptr_a = (__m128*)another;
+        __m128* ptr_b = (__m128*)(&vecs[j*var_count]);
+        for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
+        {
+            c = _mm_min_ps(*ptr_a, *ptr_b);
+            s = _mm_add_ps(s, c);
+        }
+        return res(s);
+#else
+        double s = 0;
+        double a,b,c;
+        const float* sample = &vecs[j*var_count];
+        for(int k=0; k<var_count; k++)
+        {
+            a = sample[k];  b = another[k];
+            c = std::min(a,b);
+            s += c*c;
+        }
+        return s;
 #endif
+    }
 
     void calc_intersect(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
-        CV_Assert (var_count%4==0);
-#ifdef HAVE_SSE
         for(int j=0; j<vcount; j++)
         {
-            int k=0;
-            const float* sample = (&vecs[j*var_count]);
-            __m128 c,s = _mm_set_ps1(0);
-            __m128* ptr_a = (__m128*)sample;
-            __m128* ptr_b = (__m128*)another;
-            for(; k<var_count; k+=4, ptr_a++, ptr_b++)
-            {
-                c = _mm_min_ps(*ptr_a, *ptr_b);
-                s = _mm_add_ps(s, c);
-            }
-            results[j] = res(s);
+            results[j] = min(var_count,j,vecs,another);
         }
-#else
-        Mat V(1,var_count,CV_32F,(void*)0);
-        Mat A(1,var_count,CV_32F,(void*)another);
-        for(int j=0; j<vcount; j++)
-        {
-            V.data = (uchar*)(&vecs[j*var_count]);
-            results[j] = (float)(sum(cv::min(V,A))[0]);
-        }
-#endif
     }
 
     void calc_hellinger(int vcount, int var_count, const float* vecs, const float* another, float* results)
@@ -326,35 +298,11 @@ struct CustomKernel : public ml::SVM::Kernel
     // assumes, you did the sqrt before on the input data !    
     void calc_hellinger_sqrt(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
-#ifdef HAVE_SSE
         for(int j=0; j<vcount; j++)
         {
-            __m128 b,c,s = _mm_set_ps1(0);
-            __m128* ptr_a = (__m128*)another;
-            __m128* ptr_b = (__m128*)(&vecs[j*var_count]);
-            for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
-            {
-                b = _mm_sub_ps(*ptr_a, *ptr_b);
-                c = _mm_mul_ps(b, b);
-                s = _mm_add_ps(s, c);
-            }
-            results[j] = -res(s);
+            float z = l2sqr(var_count,j,vecs,another);
+            results[j] = -z;
         }
-#else       
-        for(int j=0; j<vcount; j++)
-        {
-            double a,b, s = 0;
-            const float* sample = &vecs[j*var_count];
-            for(int k=0; k<var_count; k+=4)
-            {
-                a = sample[k];     b = another[k];    s += (a - b) * (a - b);
-                a = sample[k+1];   b = another[k+1];  s += (a - b) * (a - b);
-                a = sample[k+2];   b = another[k+2];  s += (a - b) * (a - b);
-                a = sample[k+3];   b = another[k+3];  s += (a - b) * (a - b);
-            }
-            results[j] = (float)(-s);
-        }
-#endif
     }
 
     void calc_lowpass(int vcount, int var_count, const float* vecs, const float* another, float* results)
@@ -377,16 +325,8 @@ struct CustomKernel : public ml::SVM::Kernel
     {
         for(int j=0; j<vcount; j++)
         {
-            double s = 0;
-            double a,b;
-            const float* sample = &vecs[j*var_count];
-            for(int k=0; k<var_count; k++)
-            {
-                a = sample[k];  b = another[k];
-                s += -log(((a-b)*(a-b))+1);
-                //s += -log(sqrt((a-b)*(a-b))+1);
-            }
-            results[j] = (float)(s);
+            float z = l2sqr(var_count,j,vecs,another);
+            results[j] = float(-log(z+1));
         }
     }
     //
@@ -398,52 +338,55 @@ struct CustomKernel : public ml::SVM::Kernel
     //
     void calc_kmod(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
-        const float K  = 1.0f; // normalization constant
-        const float s2 = 9.0f; // kernelsize squared
-        const float ga = 0.7f; // decrease speed
+        const float K  = 1.0f;  // normalization constant
+        const float s2 = 15.0f; // kernelsize squared
+        const float ga = 0.7f;  // decrease speed
 
-#if HAVE_SSE
-        __m128 c,d,e,f,g,h,i,_s2 = _mm_set_ps1(s2), _ga = _mm_set_ps1(ga), _m1 = _mm_set_ps1(1.0f), _e =_mm_set_ps1(2.8f);
         for(int j=0; j<vcount; j++)
         {
-            __m128 s = _mm_set_ps1(0);
-            __m128* ptr_a = (__m128*)another;
-            __m128* ptr_b = (__m128*)(&vecs[j*var_count]);
-            for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
-            {
-                c = _mm_sub_ps(*ptr_a, *ptr_b);
-                d = _mm_mul_ps(c, c);
-                e = _mm_sqrt_ps(d);
-                f = _mm_add_ps(e, _s2);
-                g = _mm_div_ps(_ga, f);
-                h =  exp_ps(g);
-                i = _mm_sub_ps(h, _m1);
-                s = _mm_add_ps(s,i);
-            }
-            results[j] = res(s) * (K);
+            float z = l2sqr(var_count,j,vecs,another);
+            results[j] = K * (exp(ga/(z+s2))-1);
         }
-#else       
+    }
+    // http://crsouza.blogspot.de/2010/03/kernel-functions-for-machine-learning.html
+    // special case for d=2, so it cancels the sqrt
+    void calc_rational_quadratic(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        const static float C=10.0f;
         for(int j=0; j<vcount; j++)
         {
-            double s = 0;
-            double a,b,c,d,e,f,g,h;
-            const float* sample = &vecs[j*var_count];
-            for(int k=0; k<var_count; k++)
-            {
-                a = sample[k];  b = another[k];
-                c = (a-b);
-                d = c*c;
-                e = sqrt(d);
-                f = e + s2;
-                g = ga / f;
-                h = exp(g);
-                s += h - 1;
-            }
-            results[j] = (float)(K*s);
+            float z = l2sqr(var_count,j,vecs,another);
+            results[j] = 1.0f - z / (z+C);
         }
-#endif
     }
 
+    void calc_inv_multiquad(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        float C2 = 100;
+        for(int j=0; j<vcount; j++)
+        {
+            float z = l2sqr(var_count,j,vecs,another);
+            results[j] = 1.0f/sqrt(z+C2);
+        }
+    }
+    void calc_laplacian(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        float sigma = 3;
+        for(int j=0; j<vcount; j++)
+        {
+            float z = l2sqr(var_count,j,vecs,another);
+            results[j] = exp(-sqrt(z) / sigma);
+        }
+    }
+    void calc_cauchy(int vcount, int var_count, const float* vecs, const float* another, float* results)
+    {
+        float sigma2 = 3*3;
+        for(int j=0; j<vcount; j++)
+        {
+            float z = l2sqr(var_count,j,vecs,another);
+            results[j] = 1.0 / (1+(z/sigma2));
+        }
+    }
     void calc(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         switch(K)
@@ -457,6 +400,7 @@ struct CustomKernel : public ml::SVM::Kernel
         case -6: calc_lowpass(vcount, var_count, vecs, another, results); break;
         case -7: calc_log(vcount, var_count, vecs, another, results); break;
         case -8: calc_kmod(vcount, var_count, vecs, another, results); break;
+        case -9: calc_cauchy(vcount, var_count, vecs, another, results); break;
         default: cerr << "sorry, dave" << endl; exit(0);
         }
     }
@@ -951,6 +895,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_LOW:   return makePtr<ClassifierSVM>(-6); break;
         case CL_SVM_LOG:   return makePtr<ClassifierSVM>(-7); break;
         case CL_SVM_KMOD:  return makePtr<ClassifierSVM>(-8); break;
+        case CL_SVM_CAUCHY: return makePtr<ClassifierSVM>(-9); break;
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
@@ -981,6 +926,7 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
         case CL_SVM_LOG:   return makePtr<VerifierSVM>(-7); break;
         case CL_SVM_KMOD:  return makePtr<VerifierSVM>(-8); break;
+        case CL_SVM_CAUCHY:  return makePtr<VerifierSVM>(-9); break;
         case CL_COSINE:    return makePtr<VerifierCosine>(); break;
         case CL_EMD:       return makePtr<VerifierEMD>(); break;
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);

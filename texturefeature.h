@@ -171,6 +171,7 @@ namespace TextureFeature
         CL_SVM_LOW,  // custom
         CL_SVM_LOG,  // custom
         CL_SVM_KMOD,  // custom
+        CL_SVM_CAUCHY,  // custom
         CL_SVM_MULTI,
         CL_PCA,
         CL_PCA_LDA,
@@ -195,6 +196,7 @@ namespace TextureFeature
         "SVM_LOW",
         "SVM_LOG",
         "SVM_KMOD",
+        "SVM_CAUCHY",
         "SVM_MULTI",
         "PCA",
         "PCA_LDA",
