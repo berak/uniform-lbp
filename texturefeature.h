@@ -61,7 +61,6 @@ namespace TextureFeature
         EXT_TPLbp,
         EXT_TPLBP_P,
         EXT_TPLBP_G,
-        EXT_TPLbp2_G,
         EXT_FPLbp,
         EXT_FPLBP_P,
         EXT_MTS,
@@ -83,6 +82,7 @@ namespace TextureFeature
         EXT_GradMag_P,
         EXT_HDLBP,
         EXT_HDLBP_PCA,
+        EXT_PCASIFT,
         EXT_CDIKP,
         EXT_MAX
     };
@@ -94,7 +94,6 @@ namespace TextureFeature
         "TPLbp",
         "TpLbp_P",
         "TpLbp_G",
-        "TPLbp2_G",
         "FPLbp",
         "FpLbp_P",
         "MTS",
@@ -116,6 +115,7 @@ namespace TextureFeature
         "GradMagP",
         "HDLBP",
         "HDLBP_PCA",
+        "PCASIFT",
         "CDIKP",
         0
     };

@@ -26,6 +26,7 @@ using std::endl;
 
 #include "texturefeature.h"
 #include "elastic/elasticparts.h"
+
 //#include "profile.h"
 
 using namespace cv;
@@ -544,28 +545,29 @@ struct LandMarks
 //
 static void gftt64(const Mat &img, vector<KeyPoint> &kp)
 {
-    kp.push_back(KeyPoint(14, 33, 3));        kp.push_back(KeyPoint(29, 77, 3));        kp.push_back(KeyPoint(55, 60, 3));
-    kp.push_back(KeyPoint(63, 76, 3));        kp.push_back(KeyPoint(76, 32, 3));        kp.push_back(KeyPoint(35, 60, 3));
-    kp.push_back(KeyPoint(69, 21, 3));        kp.push_back(KeyPoint(45, 30, 3));        kp.push_back(KeyPoint(27, 31, 3));
-    kp.push_back(KeyPoint(64, 26, 3));        kp.push_back(KeyPoint(21, 22, 3));        kp.push_back(KeyPoint(25, 27, 3));
-    kp.push_back(KeyPoint(69, 31, 3));        kp.push_back(KeyPoint(54, 81, 3));        kp.push_back(KeyPoint(62, 30, 3));
-    kp.push_back(KeyPoint(20, 32, 3));        kp.push_back(KeyPoint(52, 33, 3));        kp.push_back(KeyPoint(37, 32, 3));
-    kp.push_back(KeyPoint(38, 81, 3));        kp.push_back(KeyPoint(36, 82, 3));        kp.push_back(KeyPoint(32, 31, 3));
-    kp.push_back(KeyPoint(78, 17, 3));        kp.push_back(KeyPoint(59, 24, 3));        kp.push_back(KeyPoint(30, 24, 3));
-    kp.push_back(KeyPoint(11, 18, 3));        kp.push_back(KeyPoint(13, 17, 3));        kp.push_back(KeyPoint(56, 30, 3));
-    kp.push_back(KeyPoint(73, 15, 3));        kp.push_back(KeyPoint(19, 15, 3));        kp.push_back(KeyPoint(57, 53, 3));
-    kp.push_back(KeyPoint(33, 54, 3));        kp.push_back(KeyPoint(34, 52, 3));        kp.push_back(KeyPoint(49, 25, 3));
-    kp.push_back(KeyPoint(66, 33, 3));        kp.push_back(KeyPoint(55, 49, 3));        kp.push_back(KeyPoint(61, 33, 3));
-    kp.push_back(KeyPoint(39, 29, 3));        kp.push_back(KeyPoint(60, 46, 3));        kp.push_back(KeyPoint(40, 26, 3));
-    kp.push_back(KeyPoint(41, 76, 3));        kp.push_back(KeyPoint(50, 76, 3));        kp.push_back(KeyPoint(53, 41, 3));
-    kp.push_back(KeyPoint(44, 23, 3));        kp.push_back(KeyPoint(29, 60, 3));        kp.push_back(KeyPoint(54, 54, 3));
-    kp.push_back(KeyPoint(30, 47, 3));        kp.push_back(KeyPoint(45, 50, 3));        kp.push_back(KeyPoint(83, 35, 3));
-    kp.push_back(KeyPoint(36, 54, 3));        kp.push_back(KeyPoint(13, 46, 3));        kp.push_back(KeyPoint(36, 44, 3));
-    kp.push_back(KeyPoint(83, 38, 3));        kp.push_back(KeyPoint(49, 53, 3));        kp.push_back(KeyPoint(33, 83, 3));
-    kp.push_back(KeyPoint(17, 88, 3));        kp.push_back(KeyPoint(31, 63, 3));        kp.push_back(KeyPoint(13, 27, 3));
-    kp.push_back(KeyPoint(50, 62, 3));        kp.push_back(KeyPoint(11, 43, 3));        kp.push_back(KeyPoint(45, 55, 3));
-    kp.push_back(KeyPoint(45, 56, 3));        kp.push_back(KeyPoint(79, 43, 3));        kp.push_back(KeyPoint(74, 88, 3));
-    kp.push_back(KeyPoint(41, 62, 3));
+    static const int kpsize = 3;
+    kp.push_back(KeyPoint(14, 33, kpsize));        kp.push_back(KeyPoint(29, 77, kpsize));        kp.push_back(KeyPoint(55, 60, kpsize));
+    kp.push_back(KeyPoint(63, 76, kpsize));        kp.push_back(KeyPoint(76, 32, kpsize));        kp.push_back(KeyPoint(35, 60, kpsize));
+    kp.push_back(KeyPoint(69, 21, kpsize));        kp.push_back(KeyPoint(45, 30, kpsize));        kp.push_back(KeyPoint(27, 31, kpsize));
+    kp.push_back(KeyPoint(64, 26, kpsize));        kp.push_back(KeyPoint(21, 22, kpsize));        kp.push_back(KeyPoint(25, 27, kpsize));
+    kp.push_back(KeyPoint(69, 31, kpsize));        kp.push_back(KeyPoint(54, 81, kpsize));        kp.push_back(KeyPoint(62, 30, kpsize));
+    kp.push_back(KeyPoint(20, 32, kpsize));        kp.push_back(KeyPoint(52, 33, kpsize));        kp.push_back(KeyPoint(37, 32, kpsize));
+    kp.push_back(KeyPoint(38, 81, kpsize));        kp.push_back(KeyPoint(36, 82, kpsize));        kp.push_back(KeyPoint(32, 31, kpsize));
+    kp.push_back(KeyPoint(78, 17, kpsize));        kp.push_back(KeyPoint(59, 24, kpsize));        kp.push_back(KeyPoint(30, 24, kpsize));
+    kp.push_back(KeyPoint(11, 18, kpsize));        kp.push_back(KeyPoint(13, 17, kpsize));        kp.push_back(KeyPoint(56, 30, kpsize));
+    kp.push_back(KeyPoint(73, 15, kpsize));        kp.push_back(KeyPoint(19, 15, kpsize));        kp.push_back(KeyPoint(57, 53, kpsize));
+    kp.push_back(KeyPoint(33, 54, kpsize));        kp.push_back(KeyPoint(34, 52, kpsize));        kp.push_back(KeyPoint(49, 25, kpsize));
+    kp.push_back(KeyPoint(66, 33, kpsize));        kp.push_back(KeyPoint(55, 49, kpsize));        kp.push_back(KeyPoint(61, 33, kpsize));
+    kp.push_back(KeyPoint(39, 29, kpsize));        kp.push_back(KeyPoint(60, 46, kpsize));        kp.push_back(KeyPoint(40, 26, kpsize));
+    kp.push_back(KeyPoint(41, 76, kpsize));        kp.push_back(KeyPoint(50, 76, kpsize));        kp.push_back(KeyPoint(53, 41, kpsize));
+    kp.push_back(KeyPoint(44, 23, kpsize));        kp.push_back(KeyPoint(29, 60, kpsize));        kp.push_back(KeyPoint(54, 54, kpsize));
+    kp.push_back(KeyPoint(30, 47, kpsize));        kp.push_back(KeyPoint(45, 50, kpsize));        kp.push_back(KeyPoint(83, 35, kpsize));
+    kp.push_back(KeyPoint(36, 54, kpsize));        kp.push_back(KeyPoint(13, 46, kpsize));        kp.push_back(KeyPoint(36, 44, kpsize));
+    kp.push_back(KeyPoint(83, 38, kpsize));        kp.push_back(KeyPoint(49, 53, kpsize));        kp.push_back(KeyPoint(33, 83, kpsize));
+    kp.push_back(KeyPoint(17, 88, kpsize));        kp.push_back(KeyPoint(31, 63, kpsize));        kp.push_back(KeyPoint(13, 27, kpsize));
+    kp.push_back(KeyPoint(50, 62, kpsize));        kp.push_back(KeyPoint(11, 43, kpsize));        kp.push_back(KeyPoint(45, 55, kpsize));
+    kp.push_back(KeyPoint(45, 56, kpsize));        kp.push_back(KeyPoint(79, 43, kpsize));        kp.push_back(KeyPoint(74, 88, kpsize));
+    kp.push_back(KeyPoint(41, 62, kpsize));
     if (img.size() != Size(90,90))
     {
         float scale_x=float(img.cols)/90;
@@ -1009,6 +1011,71 @@ struct HighDimLbpPCA : public TextureFeature::Extractor
 };
 
 
+struct HighDimPCASift : public TextureFeature::Extractor
+{
+    LandMarks land;
+    Ptr<Feature2D> sift;
+    PCA pca[20];
+
+    HighDimPCASift()
+        : sift(xfeatures2d::SIFT::create())
+    {
+        FileStorage fs("data/hd_pcasift_20.xml.gz",FileStorage::READ);
+        CV_Assert(fs.isOpened());
+        FileNode pnodes = fs["hd_pcasift"];
+        int i=0;
+        for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
+        {
+            pca[i++].read(*it);
+        }
+        fs.release();
+    }
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        int gr=5; // 10 used in paper
+        vector<Point> pt;
+        land.extract(img,pt);
+        CV_Assert(pt.size()==20);
+
+        Mat histo;
+        float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
+        float offsets_16[] = {
+            -1.5f,-1.5f, -0.5f,-1.5f, 0.5f,-1.5f, 1.5f,-1.5f,
+            -1.5f,-0.5f, -0.5f,-0.5f, 0.5f,-0.5f, 1.5f,-0.5f,
+            -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
+            -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
+        };
+        int noff = 16;
+        float *off = offsets_16;
+        for (int i=0; i<5; i++)
+        {
+            float s = scale[i];
+            Mat f1,f2,imgs;
+            resize(img,imgs,Size(),s,s);
+
+            for (size_t k=0; k<pt.size(); k++)
+            {
+                vector<KeyPoint> kp;
+                Mat h;
+                for (int o=0; o<noff; o++)
+                {
+                    kp.push_back(KeyPoint(pt[k].x*s + off[o*2]*gr, pt[k].y*s + off[o*2+1]*gr,gr));
+                }
+                sift->compute(imgs,kp,h);
+                for (size_t j=0; j<kp.size(); j++)
+                {
+                    Mat hx = h.row(j);
+                    Mat hy = pca[k].project(hx);
+                    histo.push_back(hy);
+                }
+            }
+        }
+        features = histo.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
+
+
 
 //
 // CDIKP: A Highly-Compact Local Feature Descriptor  
@@ -1108,6 +1175,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_GradMag_P:  return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
         case EXT_HDLBP_PCA:  return makePtr< HighDimLbpPCA >();  break;
+        case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }

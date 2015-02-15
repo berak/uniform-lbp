@@ -378,7 +378,7 @@ int main(int argc, const char *argv[])
 
     // some diagnostics:
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
-    const char *pp[] = { "no preproc", "eqhist", "clahe", "retina", "tan-triggs", "logscale",0 };
+    const char *pp[] = { "no preproc", "eqhist", "clahe", "retina", "tan-triggs", "logscale", 0}; //"radon","csdn","dog",0 };
     if (all)
         cout << "-------------------------------------------------------------------" << endl;
     cout << format("%-24s",dbs.c_str()) << fold  << " fold, " << persons.size() << " classes, " << images.size() << " images, " << pp[pre] << endl;

@@ -303,7 +303,7 @@ struct CustomKernel : public ml::SVM::Kernel
         for(int j=0; j<vcount; j++)
         {
             float z = l2sqr(var_count,j,vecs,another);
-            results[j] = -z;
+            results[j] = -(z);
         }
     }
 
