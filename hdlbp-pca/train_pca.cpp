@@ -212,26 +212,30 @@ struct HighDimPcaSift
             -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
             -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
         };
-        for (int i=0; i<5; i++)
-        {
-            float s = scale[i];
-            int noff = 16;
-            float *off = offsets_16;
-            Mat f1,f2,imgs;
-            resize(img,imgs,Size(),s,s);
+        float offsets_9[] = {
+            -1.f,-1.f, 0.f,-1.f, 1.f,-1.f,
+            -1.f, 0.f, 0.f, 0.f, 1.f, 0.f,
+            -1.f, 1.f, 0.f, 1.f, 1.f, 1.f,
+        };
+        int noff = 16;
+        float *off = offsets_16;
 
-            //for (size_t k=0; k<kp.size(); k++)
-            {
-                vector<KeyPoint> kp;
-                Mat h;
-                for (int o=0; o<noff; o++)
-                {
-                    kp.push_back(KeyPoint(pt[k].x*s + off[o*2]*gr, pt[k].y*s + off[o*2+1]*gr,gr*4));
-                }
-                sift->compute(imgs,kp,h);
-                trainData.push_back(h);
-            }
+        vector<KeyPoint> kp;
+        Mat h;
+        for (int o=0; o<noff; o++)
+        {
+            kp.push_back(KeyPoint(pt[k].x + off[o*2]*gr, pt[k].y + off[o*2+1]*gr,gr*2));
         }
+        sift->compute(img,kp,h);
+        Mat h2;
+        for (size_t j=0; j<kp.size(); j++)
+        {
+            Mat hx = h.row(j).t();
+            hx.push_back(float(kp[j].pt.x/img.cols - 0.5));
+            hx.push_back(float(kp[j].pt.y/img.rows - 0.5));
+            h2.push_back(hx.reshape(1,1));
+        }
+        trainData.push_back(h2);
         return 1; 
     }
 

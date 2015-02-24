@@ -424,32 +424,29 @@ struct ClassifierSVM : public TextureFeature::Classifier
 {
     Ptr<ml::SVM> svm;
     Ptr<ml::SVM::Kernel> krnl;
-    ml::SVM::Params param;
+    //ml::SVM::Params param;
 
 
     ClassifierSVM(int ktype=ml::SVM::POLY, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
     //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
     {
+
+        svm = ml::SVM::create();
+        svm->setType(ml::SVM::NU_SVC);
         if (ktype<0)
         {
             krnl = CustomKernel::create(ktype);
             ktype=-1;
+            svm->setCustomKernel(krnl);
         }
-        param.kernelType = ktype; //ml::SVM::POLY ; // CvSVM :: RBF , CvSVM :: LINEAR...
-        param.svmType = ml::SVM::NU_SVC; // NU_SVC
-        param.degree = degree; // for poly
-        param.gamma = gamma; // for poly / rbf / sigmoid
-        param.coef0 = coef0; // for poly / sigmoid
-        param.C = C; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
-        param.nu = nu; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
-        param.p = p; // for CV_SVM_EPS_SVR
-        param.classWeights = NULL ; // for CV_SVM_C_SVC
-
-        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
-        param.termCrit.maxCount = 1000;
-        param.termCrit.epsilon = 1e-6;
-
-        svm = ml::SVM::create(param,krnl);
+        svm->setKernel(ktype); //SVM::LINEAR;
+        svm->setDegree(degree);
+        svm->setGamma(gamma);
+        svm->setCoef0(coef0);
+        svm->setNu(nu);
+        svm->setP(p);
+        svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 1000, 1e-6));
+        svm->setC(C);
     }
 
     virtual int train(const Mat &src, const Mat &labels)
@@ -485,85 +482,102 @@ struct ClassifierSVM : public TextureFeature::Classifier
 };
 
 
-
 //
-// single class(one vs. all), multi svm approach
+////
+//// single class(one vs. all), multi svm approach
+////
+//struct ClassifierSvmMulti : public TextureFeature::Classifier
+//{
+//    vector< Ptr<ml::SVM> > svms;
+//   // ml::SVM::Params param;
 //
-struct ClassifierSvmMulti : public TextureFeature::Classifier
-{
-    vector< Ptr<ml::SVM> > svms;
-    ml::SVM::Params param;
-
-    ClassifierSvmMulti()
-    {
-        //
-        // again, call me helpless on parameterizing this ;[
-        //
-        param.kernelType = ml::SVM::LINEAR; //, CvSVM::LINEAR...
-        //param.svmType = ml::SVM::NU_SVC;
-        ////param.degree = degree; // for poly
-        param.gamma = 1.0; // for poly / rbf / sigmoid
-        param.coef0 = 0.0; // for poly / sigmoid
-        param.C = 0.5; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
-        param.nu = 0.5; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
-        //param.p = p; // for CV_SVM_EPS_SVR
-        //param.classWeights = NULL ; // for CV_SVM_C_SVC
-
-        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
-        param.termCrit.maxCount = 100;
-        param.termCrit.epsilon = 1e-6;
-    }
-
-    virtual int train(const Mat &src, const Mat &labels)
-    {
-        svms.clear();
-
-        Mat trainData = tofloat(src.reshape(1,labels.rows));
-        //
-        // train one svm per class:
-        //
-        set<int> classes;
-        unique(labels,classes);
-
-        for (set<int>::iterator it=classes.begin(); it != classes.end(); ++it)
-        {
-            Ptr<ml::SVM> svm = ml::SVM::create(param);
-            Mat slabels; // you against all others, that's the only difference.
-            for ( size_t j=0; j<labels.total(); ++j)
-                slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 ); 
-            svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
-            svms.push_back(svm);
-        }
-        return trainData.rows;
-    }
-
-
-    virtual int predict(const Mat &src, Mat &res) const
-    {
-        Mat query = tofloat(src);
-        //
-        // predict per-class, return best(largest) result
-        // hrmm, this assumes, the labels are [0..N]
-        //
-        float m = -1.0f;
-        float mi = 0.0f;
-        for (size_t j=0; j<svms.size(); ++j)
-        {
-            Mat r;
-            svms[j]->predict(query, r);
-            float p = r.at<float>(0);
-            if (p > m)
-            {
-                m = p;
-                mi = float(j);
-            }
-        }
-        res = (Mat_<float>(1,2) << mi, m);
-        return res.rows;
-    }
-};
-
-
+//    ClassifierSvmMulti()
+//    {
+//        //
+//        // again, call me helpless on parameterizing this ;[
+//        //
+//        svm = ml::SVM::create();
+//        svm->setType(ml::SVM::NU_SVC);
+//        if (ktype<0)
+//        {
+//            krnl = CustomKernel::create(ktype);
+//            ktype=-1;
+//            svm->setKernel(krnl);
+//        }
+//        svm->setKernel(ktype); //SVM::LINEAR;
+//        svm->setDegree(degree);
+//        svm->setGamma(gamma);
+//        svm->setCoef0(coef0);
+//        svm->setNu(nu);
+//        svm->setP(p);
+//        svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 1000, 1e-6));
+//        svm->setC(C);
+//
+//        //param.kernelType = ml::SVM::LINEAR; //, CvSVM::LINEAR...
+//        ////param.svmType = ml::SVM::NU_SVC;
+//        //////param.degree = degree; // for poly
+//        //param.gamma = 1.0; // for poly / rbf / sigmoid
+//        //param.coef0 = 0.0; // for poly / sigmoid
+//        //param.C = 0.5; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
+//        //param.nu = 0.5; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
+//        ////param.p = p; // for CV_SVM_EPS_SVR
+//        ////param.classWeights = NULL ; // for CV_SVM_C_SVC
+//
+//        //param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
+//        //param.termCrit.maxCount = 100;
+//        //param.termCrit.epsilon = 1e-6;
+//    }
+//
+//    virtual int train(const Mat &src, const Mat &labels)
+//    {
+//        svms.clear();
+//
+//        Mat trainData = tofloat(src.reshape(1,labels.rows));
+//        //
+//        // train one svm per class:
+//        //
+//        set<int> classes;
+//        unique(labels,classes);
+//
+//        for (set<int>::iterator it=classes.begin(); it != classes.end(); ++it)
+//        {
+//            Ptr<ml::SVM> svm = ml::SVM::create(param);
+//            Mat slabels; // you against all others, that's the only difference.
+//            for ( size_t j=0; j<labels.total(); ++j)
+//                slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 ); 
+//            svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
+//            svms.push_back(svm);
+//        }
+//        return trainData.rows;
+//    }
+//
+//
+//    virtual int predict(const Mat &src, Mat &res) const
+//    {
+//        Mat query = tofloat(src);
+//        //
+//        // predict per-class, return best(largest) result
+//        // hrmm, this assumes, the labels are [0..N]
+//        //
+//        float m = -1.0f;
+//        float mi = 0.0f;
+//        for (size_t j=0; j<svms.size(); ++j)
+//        {
+//            Mat r;
+//            svms[j]->predict(query, r);
+//            float p = r.at<float>(0);
+//            if (p > m)
+//            {
+//                m = p;
+//                mi = float(j);
+//            }
+//        }
+//        res = (Mat_<float>(1,2) << mi, m);
+//        return res.rows;
+//    }
+//};
+//
+//
 //
 // 'Eigenfaces'
 //
@@ -845,25 +859,23 @@ struct VerifierSVM : public VerifierPairDistance
     VerifierSVM(int ktype=ml::SVM::LINEAR, int distFlag=2)
         : VerifierPairDistance(distFlag)
     {
-        ml::SVM::Params param;
+        //ml::SVM::Params param;
+        Ptr<ml::SVM> svm = ml::SVM::create();
+        svm->setType(ml::SVM::NU_SVC);
         if (ktype<0)
         {
             krnl = CustomKernel::create(ktype);
-            ktype=ml::SVM::CUSTOM;
+            ktype=-1;
+            svm->setCustomKernel(krnl);
         }
-        param.kernelType = ktype; 
-        param.svmType = ml::SVM::NU_SVC;
-        param.C = 1;
-        param.nu = 0.5;
-        param.degree = 3; // POLY
-        param.gamma = 0.1;
-
-        param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
-        param.termCrit.maxCount = 1000;
-        param.termCrit.epsilon = 1e-6;
+        svm->setKernel(ktype); //SVM::LINEAR;
+        svm->setDegree(3);
+        svm->setGamma(0.1);
+        svm->setNu(0.5);
+        svm->setC(1);
+        svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 1000, 1e-6));
         //cerr << "SVM KERNEL: " << param.kernelType << endl;
-
-        model = ml::SVM::create(param,krnl);
+        model = svm;
     }
 };
 
@@ -898,7 +910,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_LOG:   return makePtr<ClassifierSVM>(-7); break;
         case CL_SVM_KMOD:  return makePtr<ClassifierSVM>(-8); break;
         case CL_SVM_CAUCHY: return makePtr<ClassifierSVM>(-9); break;
-        case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
+        //case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
         case CL_EMD:       return makePtr<ClassifierEMD>(); break;

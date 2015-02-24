@@ -545,7 +545,7 @@ struct LandMarks
 //
 static void gftt64(const Mat &img, vector<KeyPoint> &kp)
 {
-    static const int kpsize = 3;
+    static const int kpsize = 16;
     kp.push_back(KeyPoint(14, 33, kpsize));        kp.push_back(KeyPoint(29, 77, kpsize));        kp.push_back(KeyPoint(55, 60, kpsize));
     kp.push_back(KeyPoint(63, 76, kpsize));        kp.push_back(KeyPoint(76, 32, kpsize));        kp.push_back(KeyPoint(35, 60, kpsize));
     kp.push_back(KeyPoint(69, 21, kpsize));        kp.push_back(KeyPoint(45, 30, kpsize));        kp.push_back(KeyPoint(27, 31, kpsize));
@@ -712,7 +712,44 @@ struct GradMagExtractor : public TextureFeature::Extractor
     }
 };
 
+//
+// 2d histogram with "rings" of magnitude and "sectors" of gradients.
+//
+struct FeatureGradBin : public TextureFeature::Extractor
+{
+    int nsec,nrad,grid;
+    FeatureGradBin(int nsec=8, int nrad=2, int grid=18) : nsec(nsec), nrad(nrad), grid(grid) {}
 
+    virtual int extract(const Mat &I, Mat &features) const
+    {
+        Mat s1, s2, s3(I.size(), CV_32F), s4(I.size(), CV_32F), s5;
+        Sobel(I, s1, CV_32F, 1, 0);
+        Sobel(I, s2, CV_32F, 0, 1);
+        fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+        s3 /= (360/nsec);
+
+        magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s4.ptr<float>(0), I.total());
+        normalize(s4,s4,nrad);
+
+        int sx = I.cols/(grid-1);
+        int sy = I.rows/(grid-1);
+        int nbins = nsec*nrad;
+        features = Mat(1,nbins*grid*grid,CV_32F,Scalar(0));
+        for (int i=0; i<I.rows; i++)
+        {
+            int oy = i/sy;
+            for (int j=0; j<I.cols; j++)
+            {
+                int ox = j/sx;
+                int off = nbins*(oy*grid + ox);
+                int g = (int)s3.at<float>(i,j);
+                int m = (int)s4.at<float>(i,j);
+                features.at<float>(off + g + m*nsec) ++;
+            }
+        }
+        return features.total() * features.elemSize();
+    }
+};
 
 //
 // concat histograms from lbp-like features generated from a bank of gabor filtered images
@@ -1045,11 +1082,16 @@ struct HighDimPCASift : public TextureFeature::Extractor
             -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
             -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
         };
+        float offsets_9[] = {
+            -1.f,-1.f, 0.f,-1.f, 1.f,-1.f,
+            -1.f, 0.f, 0.f, 0.f, 1.f, 0.f,
+            -1.f, 1.f, 0.f, 1.f, 1.f, 1.f,
+        };
         int noff = 16;
         float *off = offsets_16;
-        for (int i=0; i<5; i++)
+//        for (int i=0; i<5; i++)
         {
-            float s = scale[i];
+            float s = 1.0f;//scale[i];
             Mat f1,f2,imgs;
             resize(img,imgs,Size(),s,s);
 
@@ -1064,8 +1106,10 @@ struct HighDimPCASift : public TextureFeature::Extractor
                 sift->compute(imgs,kp,h);
                 for (size_t j=0; j<kp.size(); j++)
                 {
-                    Mat hx = h.row(j);
-                    Mat hy = pca[k].project(hx);
+                    Mat hx = h.row(j).t();
+                    hx.push_back(float(kp[j].pt.x/img.cols - 0.5));
+                    hx.push_back(float(kp[j].pt.y/img.rows - 0.5));
+                    Mat hy = pca[k].project(hx.reshape(1,1));
                     histo.push_back(hy);
                 }
             }
@@ -1173,6 +1217,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_Grad_P:   return makePtr< GenericExtractor<FeatureGrad,PyramidGrid> >(FeatureGrad(),PyramidGrid()); break;
         case EXT_GradMag:  return makePtr< GradMagExtractor<GfttGrid> >(GfttGrid()); break;
         case EXT_GradMag_P:  return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
+        case EXT_GradBin:  return makePtr< FeatureGradBin >(); break;
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
         case EXT_HDLBP_PCA:  return makePtr< HighDimLbpPCA >();  break;
         case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;

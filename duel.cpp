@@ -329,14 +329,14 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |      | show this message }"
             "{ opts o         |      | show extractor / reductor / classifier options }"
             "{ fold F         |10    | folds for crossvalidation }"
-            "{ minp m         |10     | mininal img count per person (when reading folders) }"
+            "{ minp m         |10    | mininal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |3     | extractor  enum }"
+            "{ ext e          |26    | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
-            "{ cls c          |11     | classifier enum }"
+            "{ cls c          |0     | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
-            "{ pre P          |0     | preprocessing }"
+            "{ pre P          |3     | preprocessing }"
             "{ crop C         |0     | crop outer pixels }"
             "{ path p         |lfw3d_9000\\*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
             //"{ path p         |e:\\MEDIA\\faces\\Aberdeen\\*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
