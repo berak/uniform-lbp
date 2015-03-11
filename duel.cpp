@@ -332,9 +332,9 @@ int main(int argc, const char *argv[])
             "{ minp m         |10    | mininal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |26    | extractor  enum }"
-            "{ fil f          |0     | filter   enum }"
-            "{ cls c          |0     | classifier enum }"
+            "{ ext e          |14    | extractor  enum }"
+            "{ fil f          |9     | filter   enum }"
+            "{ cls c          |20     | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
             "{ crop C         |0     | crop outer pixels }"
@@ -398,42 +398,49 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_Pixels, TextureFeature::FIL_NONE,  TextureFeature::CL_NORM_L2,
             TextureFeature::EXT_Pixels, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
             TextureFeature::EXT_Pixels, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_Dct,    TextureFeature::FIL_NONE,  TextureFeature::CL_COSINE,
-            TextureFeature::EXT_Dct,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
-            TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_HIST_HELL,
-            TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
-            TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
+           // TextureFeature::EXT_Dct,    TextureFeature::FIL_NONE,  TextureFeature::CL_COSINE,
+           // TextureFeature::EXT_Dct,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
+            //TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_HIST_HELL,
+            //TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
+            //TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
             TextureFeature::EXT_Lbp,    TextureFeature::FIL_DCT8,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_LBP_P,  TextureFeature::FIL_DCT8,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_LBPU_P, TextureFeature::FIL_DCT8,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_MTS_P,  TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_MTS_P,  TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
-            TextureFeature::EXT_MTS,    TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
-            TextureFeature::EXT_COMB_G, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_COMB_G, TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
-            TextureFeature::EXT_COMB_P, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_COMB_P, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
-            TextureFeature::EXT_COMB_P, TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
+            //TextureFeature::EXT_MTS_P,  TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
+            //TextureFeature::EXT_MTS,    TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
+            //TextureFeature::EXT_COMB_G, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_COMB_G, TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
+            TextureFeature::EXT_COMB_P,  TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_COMB_P, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
+            TextureFeature::EXT_COMB_P,  TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_TPLBP_P, TextureFeature::FIL_DCT8, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_TPLBP_G, TextureFeature::FIL_HELL, TextureFeature::CL_SVM_INT2,
-            TextureFeature::EXT_FPLbp,   TextureFeature::FIL_NONE, TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_TPLBP_G, TextureFeature::FIL_HELL, TextureFeature::CL_SVM_INT2,
+            //TextureFeature::EXT_FPLbp,   TextureFeature::FIL_NONE, TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_NONE, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_NONE, TextureFeature::CL_SVM_POL,
+            //TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_NONE, TextureFeature::CL_SVM_POL,
             TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_HELL, TextureFeature::CL_SVM_INT2,
-            TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_HELL, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_BGC1_P,  TextureFeature::FIL_WHAD8, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_HDLBP,  TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
-            TextureFeature::EXT_HDLBP,  TextureFeature::FIL_WHAD8,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_HELL, TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_BGC1_P,  TextureFeature::FIL_WHAD8, TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_HDGRAD, TextureFeature::FIL_DCT12,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_HDLBP,  TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
+            TextureFeature::EXT_HDLBP,  TextureFeature::FIL_DCT6,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_HDLBP_PCA,  TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_Sift,   TextureFeature::FIL_DCT12, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_Sift,   TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_Sift,   TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
+            //TextureFeature::EXT_Sift,   TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_Sift,   TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
             TextureFeature::EXT_Sift,   TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
-            TextureFeature::EXT_Sift_G, TextureFeature::FIL_DCT8,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_Sift_G, TextureFeature::FIL_DCT8,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_Grad_P, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_Grad_P, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
+            //TextureFeature::EXT_Grad_P, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
+            TextureFeature::EXT_GradBin,TextureFeature::FIL_DCT4,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_GradMag,TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_GradMag_P,TextureFeature::FIL_WHAD8,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_GradMag_P,TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
-            TextureFeature::EXT_GradMag_P,TextureFeature::FIL_DCT8,  TextureFeature::CL_SVM_INT2,
+            //TextureFeature::EXT_GradMag_P,TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
+            //TextureFeature::EXT_GradMag_P,TextureFeature::FIL_DCT8,  TextureFeature::CL_SVM_INT2,
+            TextureFeature::EXT_PCASIFT, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_GaborGB, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
+
 
             -1,-1,-1
         };

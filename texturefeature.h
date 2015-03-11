@@ -30,14 +30,18 @@ namespace TextureFeature
 
     struct Classifier : public Serialize // identification
     {
-        virtual int train(const Mat &features, const Mat &labels) = 0;
         virtual int predict(const Mat &test, Mat &result) const = 0;
+        virtual int train(const Mat &features, const Mat &labels) = 0;
+        virtual int update(const Mat &features, const Mat &labels) 
+        {
+            throw("not implemented!");
+        }
     };
 
     struct Verifier : public Serialize   // same-notSame
     {
-        virtual int train(const Mat &features, const Mat &labels) = 0;
         virtual bool same(const Mat &a, const Mat &b) const = 0;
+        virtual int train(const Mat &features, const Mat &labels) = 0;
     };
 }
 
@@ -70,7 +74,8 @@ namespace TextureFeature
         EXT_COMB,
         EXT_COMB_P,
         EXT_COMB_G,
-        EXT_Gabor,
+        EXT_GaborLBP,
+        EXT_GaborGB,
         EXT_Dct,
         EXT_Orb,
         EXT_Sift,
@@ -81,6 +86,7 @@ namespace TextureFeature
         EXT_GradMag,
         EXT_GradMag_P,
         EXT_GradBin,
+        EXT_HDGRAD,
         EXT_HDLBP,
         EXT_HDLBP_PCA,
         EXT_PCASIFT,
@@ -104,7 +110,8 @@ namespace TextureFeature
         "COMB",
         "COMB_P",
         "COMB_G",
-        "Gabor",
+        "GaborLBP",
+        "GaborGB",
         "Dct",
         "Orb",
         "Sift",
@@ -115,6 +122,7 @@ namespace TextureFeature
         "GradMag",
         "GradMagP",
         "GradBin",
+        "HDGRAD",
         "HDLBP",
         "HDLBP_PCA",
         "PCASIFT",
@@ -177,7 +185,7 @@ namespace TextureFeature
         CL_SVM_MULTI,
         CL_PCA,
         CL_PCA_LDA,
-        CL_EMD,
+        CL_RTREE,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -202,7 +210,7 @@ namespace TextureFeature
         "SVM_MULTI",
         "PCA",
         "PCA_LDA",
-        "EMD",
+        "RTREE",
         0
     };
 

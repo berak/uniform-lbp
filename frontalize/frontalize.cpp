@@ -43,7 +43,7 @@ struct FrontalizerImpl : public Frontalizer
     {
         PROFILEX("Frontalizer")
 
-        // model is rotated 90Â° already, but still in col-major, right hand coords
+        // model is rotated 90° already, but still in col-major, right hand coords
         FileStorage fs("data/mdl.yml.gz", FileStorage::READ);
         fs["mdl"] >> mdl;
         fs["eyemask"] >> eyemask;
@@ -89,7 +89,6 @@ struct FrontalizerImpl : public Frontalizer
         solvePnP(pts3d, pts2d, camMatrix, Mat(1,4,CV_64F,0.0), rvec, tvec, false, SOLVEPNP_EPNP);
         cerr << "rot " << rvec.t() *180/CV_PI << endl;
         cerr << "tra " << tvec.t() << endl;
-        //tvec.at<double>(2) = 400;
         // get 3d rot mat
 	    Mat rotM(3, 3, CV_64F);
 	    Rodrigues(rvec, rotM);

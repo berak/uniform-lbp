@@ -122,20 +122,22 @@ struct FeatureLbp
 //
 struct FeatureCsLbp
 {
+    int radius;
+    FeatureCsLbp(int r=1) : radius(r) {}
     int operator() (const Mat &I, Mat &fI) const
     {
         Mat_<uchar> feature(I.size(),0);
         Mat_<uchar> img(I);
-        const int m=1;
-        for (int r=m; r<img.rows-m; r++)
+        const int R=radius;
+        for (int r=R; r<img.rows-R; r++)
         {
-            for (int c=m; c<img.cols-m; c++)
+            for (int c=R; c<img.cols-R; c++)
             {
                 uchar v = 0;
-                v |= (img(r-1,c  ) > img(r+1,c  )) << 0;
-                v |= (img(r-1,c+1) > img(r+1,c-1)) << 1;
-                v |= (img(r  ,c+1) > img(r  ,c-1)) << 2;
-                v |= (img(r+1,c+1) > img(r-1,c-1)) << 3;
+                v |= (img(r-R,c  ) > img(r+R,c  )) << 0;
+                v |= (img(r-R,c+R) > img(r+R,c-R)) << 1;
+                v |= (img(r  ,c+R) > img(r  ,c-R)) << 2;
+                v |= (img(r+R,c+R) > img(r-R,c-R)) << 3;
                 feature(r,c) = v;
             }
         }
@@ -151,20 +153,22 @@ struct FeatureCsLbp
 //
 struct FeatureDiamondLbp
 {
+    int radius;
+    FeatureDiamondLbp(int r=1) : radius(r) {}
     int operator() (const Mat &I, Mat &fI) const
     {
         Mat_<uchar> feature(I.size(),0);
         Mat_<uchar> img(I);
-        const int m=1;
-        for (int r=m; r<img.rows-m; r++)
+        const int R=radius;
+        for (int r=R; r<img.rows-R; r++)
         {
-            for (int c=m; c<img.cols-m; c++)
+            for (int c=R; c<img.cols-R; c++)
             {
                 uchar v = 0;
-                v |= (img(r-1,c  ) > img(r  ,c+1)) << 0;
-                v |= (img(r  ,c+1) > img(r+1,c  )) << 1;
-                v |= (img(r+1,c  ) > img(r  ,c-1)) << 2;
-                v |= (img(r  ,c-1) > img(r-1,c  )) << 3;
+                v |= (img(r-R,c  ) > img(r  ,c+R)) << 0;
+                v |= (img(r  ,c+R) > img(r+R,c  )) << 1;
+                v |= (img(r+R,c  ) > img(r  ,c-R)) << 2;
+                v |= (img(r  ,c-R) > img(r-R,c  )) << 3;
                 feature(r,c) = v;
             }
         }
@@ -180,20 +184,22 @@ struct FeatureDiamondLbp
 //
 struct FeatureSquareLbp
 {
+    int radius;
+    FeatureSquareLbp(int r=1) : radius(r) {}
     int operator() (const Mat &I, Mat &fI) const
     {
         Mat_<uchar> feature(I.size(),0);
         Mat_<uchar> img(I);
-        const int m=1;
-        for (int r=m; r<img.rows-m; r++)
+        const int R=radius;
+        for (int r=R; r<img.rows-R; r++)
         {
-            for (int c=m; c<img.cols-m; c++)
+            for (int c=R; c<img.cols-R; c++)
             {
                 uchar v = 0;
-                v |= (img(r-1,c-1) > img(r-1,c+1)) << 0;
-                v |= (img(r-1,c+1) > img(r+1,c+1)) << 1;
-                v |= (img(r+1,c+1) > img(r+1,c-1)) << 2;
-                v |= (img(r+1,c-1) > img(r-1,c-1)) << 3;
+                v |= (img(r-R,c-R) > img(r-R,c+R)) << 0;
+                v |= (img(r-R,c+R) > img(r+R,c+R)) << 1;
+                v |= (img(r+R,c+R) > img(r+R,c-R)) << 2;
+                v |= (img(r+R,c-R) > img(r-R,c-R)) << 3;
                 feature(r,c) = v;
             }
         }
@@ -277,10 +283,10 @@ struct FeatureTPLbp
     {
         Mat_<uchar> I(img);
         Mat_<uchar> fI(I.size(), 0);
-        const int border=2;
-        for (int r=border; r<I.rows-border; r++)
+        const int R=2;
+        for (int r=R; r<I.rows-R; r++)
         {
-            for (int c=border; c<I.cols-border; c++)
+            for (int c=R; c<I.cols-R; c++)
             {
                 uchar v = 0;
                 v |= ((I(r,c) - I(r  ,c-2)) > (I(r,c) - I(r-2,c  ))) * 1;
@@ -307,20 +313,23 @@ struct FeatureTPLbp
 //
 struct FeatureFPLbp
 {
+    int radius;
+    FeatureFPLbp(int r=2) : radius(r) {}
+
     int operator () (const Mat &img, Mat &features) const
     {
         Mat_<uchar> I(img);
         Mat_<uchar> fI(I.size(), 0);
-        const int border=2;
-        for (int r=border; r<I.rows-border; r++)
+        const int R=radius;
+        for (int r=R; r<I.rows-R; r++)
         {
-            for (int c=border; c<I.cols-border; c++)
+            for (int c=R; c<I.cols-R; c++)
             {
                 uchar v = 0;
-                v |= ((I(r  ,c+1) - I(r+2,c+2)) > (I(r  ,c-1) - I(r-2,c-2))) * 1;
-                v |= ((I(r+1,c+1) - I(r+2,c  )) > (I(r-1,c-1) - I(r-2,c  ))) * 2;
-                v |= ((I(r+1,c  ) - I(r+2,c-2)) > (I(r-1,c  ) - I(r-2,c+2))) * 4;
-                v |= ((I(r+1,c-1) - I(r  ,c-2)) > (I(r-1,c+1) - I(r  ,c+2))) * 8;
+                v |= ((I(r  ,c+1) - I(r+R,c+R)) > (I(r  ,c-1) - I(r-R,c-R))) * 1;
+                v |= ((I(r+1,c+1) - I(r+R,c  )) > (I(r-1,c-1) - I(r-R,c  ))) * 2;
+                v |= ((I(r+1,c  ) - I(r+R,c-R)) > (I(r-1,c  ) - I(r-R,c+R))) * 4;
+                v |= ((I(r+1,c-1) - I(r  ,c-R)) > (I(r-1,c+1) - I(r  ,c+R))) * 8;
                 fI(r,c) = v;
             }
         }
@@ -642,32 +651,31 @@ struct GenericExtractor : public TextureFeature::Extractor
 template <typename Grid>
 struct CombinedExtractor : public TextureFeature::Extractor
 {
-    FeatureCsLbp      cslbp;
-    FeatureDiamondLbp dialbp;
-    FeatureSquareLbp  sqlbp;
     Grid grid;
 
     CombinedExtractor(const Grid &grid)
         : grid(grid)
     {}
 
+    template <class Extract>
+    void extract(const Mat &img, Mat &features, int r) const
+    {
+        Extract ext(r);
+        Mat f,fI;
+        int histSize = ext(img, f);
+        grid.hist(f, fI, histSize);
+        features.push_back(fI.reshape(1,1));
+    }
     // TextureFeature::Extractor
     virtual int extract(const Mat &img, Mat &features) const
     {
-        Mat fI, f;
-        int histSize = cslbp(img, f);
-        grid.hist(f, fI, histSize);
-        features.push_back(fI.reshape(1,1));
-
-        histSize = dialbp(img, f);
-        grid.hist(f, fI, histSize);
-        features.push_back(fI.reshape(1,1));
-
-        histSize = sqlbp(img, f);
-        grid.hist(f, fI, histSize);
-        features.push_back(fI.reshape(1,1));
+        extract<FeatureCsLbp>(img,features,2);
+        extract<FeatureCsLbp>(img,features,4);
+        extract<FeatureFPLbp>(img,features,2);
+        extract<FeatureFPLbp>(img,features,4);
+        extract<FeatureDiamondLbp>(img,features,3);
+        extract<FeatureSquareLbp>(img,features,4);
         features = features.reshape(1,1);
-
         return features.total() * features.elemSize();
     }
 };
@@ -715,10 +723,10 @@ struct GradMagExtractor : public TextureFeature::Extractor
 //
 // 2d histogram with "rings" of magnitude and "sectors" of gradients.
 //
-struct FeatureGradBin : public TextureFeature::Extractor
+struct ExtractorGradBin : public TextureFeature::Extractor
 {
     int nsec,nrad,grid;
-    FeatureGradBin(int nsec=8, int nrad=2, int grid=18) : nsec(nsec), nrad(nrad), grid(grid) {}
+    ExtractorGradBin(int nsec=8, int nrad=2, int grid=18) : nsec(nsec), nrad(nrad), grid(grid) {}
 
     virtual int extract(const Mat &I, Mat &features) const
     {
@@ -750,6 +758,39 @@ struct FeatureGradBin : public TextureFeature::Extractor
         return features.total() * features.elemSize();
     }
 };
+
+
+struct ExtractorGaborGradBin : public ExtractorGradBin
+{
+    Size kernel_size;
+
+    ExtractorGaborGradBin(int nsec=8, int nrad=2, int grid=12, int kernel_siz=9)
+        : ExtractorGradBin(nsec, nrad, grid)
+        , kernel_size(kernel_siz, kernel_siz)
+    {}
+
+    void gabor(const Mat &src_f, Mat &features,double sigma, double theta, double lambda, double gamma, double psi) const
+    {
+        Mat dest,dest8u,his;
+        cv::filter2D(src_f, dest, CV_32F, getGaborKernel(kernel_size, sigma,theta, lambda, gamma, psi, CV_64F));
+        //dest.convertTo(dest8u, CV_8U);
+        ExtractorGradBin::extract(dest, his);
+        features.push_back(his.reshape(1, 1));
+    }
+
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        Mat src_f;
+        img.convertTo(src_f, CV_32F, 1.0/255.0);
+        gabor(src_f, features, 8,4,90,15,0);
+        gabor(src_f, features, 8,4,45,30,1);
+        gabor(src_f, features, 8,4,45,45,0);
+        gabor(src_f, features, 8,4,90,60,1);
+        features = features.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
+
 
 //
 // concat histograms from lbp-like features generated from a bank of gabor filtered images
@@ -1121,6 +1162,55 @@ struct HighDimPCASift : public TextureFeature::Extractor
 
 
 
+struct HighDimGrad : public TextureFeature::Extractor
+{
+    LandMarks land;
+    ExtractorGradBin grad;
+    PCA pca[20];
+
+    HighDimGrad()
+        : grad(18,2,8)
+    {
+        //FileStorage fs("data/hd_pcagrad.xml.gz",FileStorage::READ);
+        //CV_Assert(fs.isOpened());
+        //FileNode pnodes = fs["hd_pcasift"];
+        //int i=0;
+        //for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
+        //{
+        //    pca[i++].read(*it);
+        //}
+        //fs.release();
+    }
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        vector<Point> pt;
+        land.extract(img,pt);
+        CV_Assert(pt.size()==20);
+
+        Mat histo;
+        //float scales[] = {1.0f, 1.7f, 2.5f};
+        // for (int i=0; i<3; i++)
+        {
+            //Mat ims;
+            //float s=scales[i];
+            //resize(img,ims,Size(),s,s);
+            for (size_t k=0; k<pt.size(); k++)
+            {
+                Mat h;
+                Mat patch; 
+                getRectSubPix(img,Size(32,32),pt[k],patch);
+                grad.extract(patch, h);
+                histo.push_back(h.reshape(1,1));
+                //histo.push_back(pca[k].project(h.reshape(1,1)));
+            }
+        }
+        features = histo.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
+
+
+
 //
 // CDIKP: A Highly-Compact Local Feature Descriptor  
 //        Yun-Ta Tsai, Quan Wang, Suya You 
@@ -1207,7 +1297,6 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_COMB:     return makePtr< CombinedExtractor<GriddedHist> >(GriddedHist()); break;
         case EXT_COMB_P:   return makePtr< CombinedExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_COMB_G:   return makePtr< CombinedExtractor<GfttGrid> >(GfttGrid()); break;
-        case EXT_Gabor:    return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist()); break;
         case EXT_Dct:      return makePtr< ExtractorDct >(); break;
         case EXT_Orb:      return makePtr< ExtractorORBGrid >();  break;
         case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(20); break;
@@ -1217,7 +1306,10 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_Grad_P:   return makePtr< GenericExtractor<FeatureGrad,PyramidGrid> >(FeatureGrad(),PyramidGrid()); break;
         case EXT_GradMag:  return makePtr< GradMagExtractor<GfttGrid> >(GfttGrid()); break;
         case EXT_GradMag_P:  return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
-        case EXT_GradBin:  return makePtr< FeatureGradBin >(); break;
+        case EXT_GradBin:  return makePtr< ExtractorGradBin >(); break;
+        case EXT_GaborLBP: return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist()); break;
+        case EXT_GaborGB:  return makePtr< ExtractorGaborGradBin >(); break;
+        case EXT_HDGRAD:   return makePtr< HighDimGrad >();  break;
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
         case EXT_HDLBP_PCA:  return makePtr< HighDimLbpPCA >();  break;
         case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;

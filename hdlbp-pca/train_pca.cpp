@@ -35,6 +35,43 @@ struct LandMarks
     }
 };
 
+
+struct ExtractorGradBin 
+{
+    int nsec,nrad,grid;
+    ExtractorGradBin(int nsec=8, int nrad=2, int grid=18) : nsec(nsec), nrad(nrad), grid(grid) {}
+
+    virtual int extract(const Mat &I, Mat &features) const
+    {
+        Mat s1, s2, s3(I.size(), CV_32F), s4(I.size(), CV_32F), s5;
+        Sobel(I, s1, CV_32F, 1, 0);
+        Sobel(I, s2, CV_32F, 0, 1);
+        fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+        s3 /= (360/nsec);
+
+        magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s4.ptr<float>(0), I.total());
+        normalize(s4,s4,nrad);
+
+        int sx = I.cols/(grid-1);
+        int sy = I.rows/(grid-1);
+        int nbins = nsec*nrad;
+        features = Mat(1,nbins*grid*grid,CV_32F,Scalar(0));
+        for (int i=0; i<I.rows; i++)
+        {
+            int oy = i/sy;
+            for (int j=0; j<I.cols; j++)
+            {
+                int ox = j/sx;
+                int off = nbins*(oy*grid + ox);
+                int g = (int)s3.at<float>(i,j);
+                int m = (int)s4.at<float>(i,j);
+                features.at<float>(off + g + m*nsec) ++;
+            }
+        }
+        return features.total() * features.elemSize();
+    }
+};
+
 struct FeatureLbp
 {
     int operator() (const Mat &I, Mat &fI) const
@@ -250,18 +287,58 @@ struct HighDimPcaSift
     }
 };
 
+struct HighDimPcaGrad
+{
+    ExtractorGradBin grad;;
+    LandMarks land;
+
+    HighDimPcaGrad()
+        : grad(18,2,8)
+    {}
+
+    int extract(const Mat &img, int k, Mat &trainData) 
+    {
+        vector<Point> pt;
+        land.extract(img,pt);
+
+        Mat h;
+       // for (size_t j=0; j<pt.size(); j++)
+        {
+            Mat patch; 
+            getRectSubPix(img,Size(32,32),pt[k],patch);
+            grad.extract(patch, h);
+            trainData.push_back(h.reshape(1,1));
+        }
+        
+        return 1; 
+    }
+
+
+    void train(FileStorage &fs, Mat &trainData, int K=750)  
+    {
+        Mat td = trainData;
+        PCA p(td,Mat(),cv::PCA::DATA_AS_ROW,K);
+        fs << "{:" ;
+        p.write(fs);
+        fs << "}";
+    }
+};
+
 
 int main()
 {
+    Mat m;
+    m.setTo(
     //HighDimLbp hd;
-    HighDimPcaSift hd;
+    //HighDimPcaSift hd;
+    HighDimPcaGrad hd;
     std::vector<String> fns;
     glob("lfw-deepfunneled/*.jpg",fns,true);
     if ( fns.empty())
         return 0;
     vector<Mat> images;
     RNG rn(getTickCount());
-    FileStorage fs("data/hd_pcasift_20.xml.gz", FileStorage::WRITE);
+    FileStorage fs("data/hd_pcagrad.xml.gz", FileStorage::WRITE);
     fs << "hd_pcasift" << "[";
 
     for (size_t k=0; k<20; k++)
@@ -273,7 +350,7 @@ int main()
             Mat im = imread(fns[id],0);
             Mat i2 = im(Rect(80,80,90,90));
             hd.extract(i2,k,trainData);
-            cerr << "extracted    " << i << '\r';
+            cerr << "extracted    " << i << " " << trainData.size() << '\r';
         }
         hd.train(fs, trainData);
         cerr << "trained " << k << '\n';

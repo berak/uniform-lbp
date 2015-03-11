@@ -67,6 +67,12 @@ struct ClassifierNearest : public TextureFeature::Classifier
         labels = trainLabels;
         return 1;
     }
+    virtual int update(const cv::Mat &trainFeatures, const cv::Mat &trainLabels)
+    {
+        features.push_back(trainFeatures);
+        labels.push_back(trainLabels);
+        return 1;
+    }
 
     // Serialize
     virtual bool save(FileStorage &fs) const
@@ -103,7 +109,7 @@ struct ClassifierNearestFloat : public ClassifierNearest
 //
 // just swap the comparison
 //   the flag enums are overlapping, so i like to have this in a different class
-//   HISTCMP_CHISQR is default as in opencv's lbph facereco, though HELLINGER deinitely works better.
+//   HISTCMP_CHISQR is default as in opencv's lbph facereco, though HELLINGER definitely works better.
 //
 struct ClassifierHist : public ClassifierNearestFloat
 {
@@ -115,19 +121,6 @@ struct ClassifierHist : public ClassifierNearestFloat
     virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
     {
          return compareHist(testFeature, trainFeature, flag);
-    }
-};
-
-struct ClassifierEMD : public ClassifierNearestFloat
-{
-    ClassifierEMD(int flag=DIST_L2) 
-        : ClassifierNearestFloat(flag)
-    {}
-
-    // ClassifierNearest
-    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
-    {
-         return EMD(testFeature, trainFeature, flag);
     }
 };
 
@@ -248,31 +241,36 @@ struct CustomKernel : public ml::SVM::Kernel
     void calc_hellinger(int vcount, int var_count, const float* vecs, const float* another, float* results)
     {
         CV_Assert (var_count<64000);
-        CV_Assert (var_count%4==0);
-        float z[64000]; // there *must* be a better idea than this.
+        //float z[64000]; // there *must* be a better idea than this.
+        cv::AutoBuffer<float> buf(var_count);
+        float *z = buf;
 #ifdef HAVE_SSE
-        __m128* ptr_out= (__m128*)z;
-        __m128* ptr_in = (__m128*)another;
-        // cache sqrt(another[k])        
-        for(int k=0; k<var_count; k+=4, ptr_in++, ptr_out++)
+        if (var_count%4 == 0)
         {
-            *ptr_out = _mm_sqrt_ps(*ptr_in);
-        }
-        for(int j=0; j<vcount; j++)
-        {
-            __m128 a,b,c,s = _mm_set_ps1(0);
-            __m128* ptr_a = (__m128*)(&vecs[j*var_count]);
-            __m128* ptr_b = (__m128*)z;
-            for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
+            __m128* ptr_out= (__m128*)z;
+            __m128* ptr_in = (__m128*)another;
+            // cache sqrt(another[k])        
+            for(int k=0; k<var_count; k+=4, ptr_in++, ptr_out++)
             {
-                a = _mm_sqrt_ps(*ptr_a);
-                b = _mm_sub_ps(a, *ptr_b);
-                c = _mm_mul_ps(b, b);
-                s = _mm_add_ps(s, c);
+                *ptr_out = _mm_sqrt_ps(*ptr_in);
             }
-            results[j] = -res(s);
+            for(int j=0; j<vcount; j++)
+            {
+                __m128 a,b,c,s = _mm_set_ps1(0);
+                __m128* ptr_a = (__m128*)(&vecs[j*var_count]);
+                __m128* ptr_b = (__m128*)z;
+                for(int k=0; k<var_count; k+=4, ptr_a++, ptr_b++)
+                {
+                    a = _mm_sqrt_ps(*ptr_a);
+                    b = _mm_sub_ps(a, *ptr_b);
+                    c = _mm_mul_ps(b, b);
+                    s = _mm_add_ps(s, c);
+                }
+                results[j] = -res(s);
+            }
+            return;
         }
-#else       
+#endif       
         for(int k=0; k<var_count; k+=4)
         {
             z[k]   = sqrt(another[k]);
@@ -294,7 +292,6 @@ struct CustomKernel : public ml::SVM::Kernel
             }
             results[j] = (float)(-s);
         }
-#endif
     }
 
     // assumes, you did the sqrt before on the input data !    
@@ -482,101 +479,71 @@ struct ClassifierSVM : public TextureFeature::Classifier
 };
 
 
+
 //
-////
-//// single class(one vs. all), multi svm approach
-////
-//struct ClassifierSvmMulti : public TextureFeature::Classifier
-//{
-//    vector< Ptr<ml::SVM> > svms;
-//   // ml::SVM::Params param;
+// single class(one vs. all), multi svm approach
 //
-//    ClassifierSvmMulti()
-//    {
-//        //
-//        // again, call me helpless on parameterizing this ;[
-//        //
-//        svm = ml::SVM::create();
-//        svm->setType(ml::SVM::NU_SVC);
-//        if (ktype<0)
-//        {
-//            krnl = CustomKernel::create(ktype);
-//            ktype=-1;
-//            svm->setKernel(krnl);
-//        }
-//        svm->setKernel(ktype); //SVM::LINEAR;
-//        svm->setDegree(degree);
-//        svm->setGamma(gamma);
-//        svm->setCoef0(coef0);
-//        svm->setNu(nu);
-//        svm->setP(p);
-//        svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 1000, 1e-6));
-//        svm->setC(C);
-//
-//        //param.kernelType = ml::SVM::LINEAR; //, CvSVM::LINEAR...
-//        ////param.svmType = ml::SVM::NU_SVC;
-//        //////param.degree = degree; // for poly
-//        //param.gamma = 1.0; // for poly / rbf / sigmoid
-//        //param.coef0 = 0.0; // for poly / sigmoid
-//        //param.C = 0.5; // for CV_SVM_C_SVC , CV_SVM_EPS_SVR and CV_SVM_NU_SVR
-//        //param.nu = 0.5; // for CV_SVM_NU_SVC , CV_SVM_ONE_CLASS , and CV_SVM_NU_SVR
-//        ////param.p = p; // for CV_SVM_EPS_SVR
-//        ////param.classWeights = NULL ; // for CV_SVM_C_SVC
-//
-//        //param.termCrit.type = TermCriteria::MAX_ITER | TermCriteria::EPS;
-//        //param.termCrit.maxCount = 100;
-//        //param.termCrit.epsilon = 1e-6;
-//    }
-//
-//    virtual int train(const Mat &src, const Mat &labels)
-//    {
-//        svms.clear();
-//
-//        Mat trainData = tofloat(src.reshape(1,labels.rows));
-//        //
-//        // train one svm per class:
-//        //
-//        set<int> classes;
-//        unique(labels,classes);
-//
-//        for (set<int>::iterator it=classes.begin(); it != classes.end(); ++it)
-//        {
-//            Ptr<ml::SVM> svm = ml::SVM::create(param);
-//            Mat slabels; // you against all others, that's the only difference.
-//            for ( size_t j=0; j<labels.total(); ++j)
-//                slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 ); 
-//            svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
-//            svms.push_back(svm);
-//        }
-//        return trainData.rows;
-//    }
-//
-//
-//    virtual int predict(const Mat &src, Mat &res) const
-//    {
-//        Mat query = tofloat(src);
-//        //
-//        // predict per-class, return best(largest) result
-//        // hrmm, this assumes, the labels are [0..N]
-//        //
-//        float m = -1.0f;
-//        float mi = 0.0f;
-//        for (size_t j=0; j<svms.size(); ++j)
-//        {
-//            Mat r;
-//            svms[j]->predict(query, r);
-//            float p = r.at<float>(0);
-//            if (p > m)
-//            {
-//                m = p;
-//                mi = float(j);
-//            }
-//        }
-//        res = (Mat_<float>(1,2) << mi, m);
-//        return res.rows;
-//    }
-//};
-//
+struct ClassifierSvmMulti : public TextureFeature::Classifier
+{
+    vector< Ptr<ml::SVM> > svms;
+
+    virtual int train(const Mat &src, const Mat &labels)
+    {
+        svms.clear();
+
+        Mat trainData = tofloat(src.reshape(1,labels.rows));
+        //
+        // train one svm per class:
+        //
+        set<int> classes;
+        unique(labels,classes);
+
+        for (set<int>::iterator it=classes.begin(); it != classes.end(); ++it)
+        {
+            Ptr<ml::SVM> svm = ml::SVM::create();
+            svm->setType(ml::SVM::NU_SVC);
+            svm->setKernel(ml::SVM::LINEAR);
+            svm->setDegree(0.8);
+            svm->setGamma(1.0);
+            svm->setCoef0(0.0);
+            svm->setNu(0.5);
+            svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 1000, 1e-6));
+
+            Mat slabels; // you against all others, that's the only difference.
+            for ( size_t j=0; j<labels.total(); ++j)
+                slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 ); 
+            svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
+            svms.push_back(svm);
+        }
+        return trainData.rows;
+    }
+
+
+    virtual int predict(const Mat &src, Mat &res) const
+    {
+        Mat query = tofloat(src);
+        //
+        // predict per-class, return best(largest) result
+        // hrmm, this assumes, the labels are [0..N]
+        //
+        float m = -1.0f;
+        float mi = 0.0f;
+        for (size_t j=0; j<svms.size(); ++j)
+        {
+            Mat r;
+            svms[j]->predict(query, r);
+            float p = r.at<float>(0);
+            if (p > m)
+            {
+                m = p;
+                mi = float(j);
+            }
+        }
+        res = (Mat_<float>(1,2) << mi, m);
+        return res.rows;
+    }
+};
+
 //
 //
 // 'Eigenfaces'
@@ -773,19 +740,6 @@ struct VerifierCosine : VerifierNearest
     }
 };
 
-struct VerifierEMD : VerifierNearest
-{
-    VerifierEMD(int f=DIST_L2)
-        : VerifierNearest(f)
-    {}
-
-    virtual double distance(const Mat &a, const Mat &b) const
-    {
-        return EMD(a, b, flag);
-    }
-};
-
-
 
 
 //
@@ -859,7 +813,6 @@ struct VerifierSVM : public VerifierPairDistance
     VerifierSVM(int ktype=ml::SVM::LINEAR, int distFlag=2)
         : VerifierPairDistance(distFlag)
     {
-        //ml::SVM::Params param;
         Ptr<ml::SVM> svm = ml::SVM::create();
         svm->setType(ml::SVM::NU_SVC);
         if (ktype<0)
@@ -868,16 +821,34 @@ struct VerifierSVM : public VerifierPairDistance
             ktype=-1;
             svm->setCustomKernel(krnl);
         }
-        svm->setKernel(ktype); //SVM::LINEAR;
-        svm->setDegree(3);
-        svm->setGamma(0.1);
-        svm->setNu(0.5);
-        svm->setC(1);
+        svm->setKernel(ktype); 
+        svm->setDegree(3.52);
+        svm->setGamma(4.29);
+        svm->setNu(0.52);
+        svm->setC(699);
         svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 1000, 1e-6));
-        //cerr << "SVM KERNEL: " << param.kernelType << endl;
         model = svm;
     }
 };
+
+
+
+class VerifierRTree : public VerifierPairDistance
+{
+public:
+
+    VerifierRTree() 
+    {
+        Ptr<ml::RTrees> cl = ml::RTrees::create();
+        cl->setMaxCategories(2);
+        cl->setMaxDepth(2);
+        cl->setMinSampleCount(2);
+        cl->setCVFolds(0);
+        model = cl;
+    }
+};
+
+
 
 
 
@@ -909,11 +880,10 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_LOW:   return makePtr<ClassifierSVM>(-6); break;
         case CL_SVM_LOG:   return makePtr<ClassifierSVM>(-7); break;
         case CL_SVM_KMOD:  return makePtr<ClassifierSVM>(-8); break;
-        case CL_SVM_CAUCHY: return makePtr<ClassifierSVM>(-9); break;
-        //case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
+        case CL_SVM_CAUCHY:return makePtr<ClassifierSVM>(-9); break;
+        case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
-        case CL_EMD:       return makePtr<ClassifierEMD>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();
@@ -940,9 +910,9 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
         case CL_SVM_LOG:   return makePtr<VerifierSVM>(-7); break;
         case CL_SVM_KMOD:  return makePtr<VerifierSVM>(-8); break;
-        case CL_SVM_CAUCHY:  return makePtr<VerifierSVM>(-9); break;
+        case CL_SVM_CAUCHY:return makePtr<VerifierSVM>(-9); break;
         case CL_COSINE:    return makePtr<VerifierCosine>(); break;
-        case CL_EMD:       return makePtr<VerifierEMD>(); break;
+        case CL_RTREE:     return makePtr<VerifierRTree>(); break;
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Verifier>();

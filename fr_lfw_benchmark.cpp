@@ -174,9 +174,9 @@ int main(int argc, const char *argv[])
             "{ path p         |lfw-deepfunneled/| path to dataset (lfw2 folder) }"
             "{ ext e          |0   | extractor enum }"
             "{ fil f          |0   | filter enum }"
-            "{ cls c          |0   | classifier enum }"
+            "{ cls c          |21   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
-            "{ skip s         |1   | skip imgs for train }"
+            "{ skip s         |10   | skip imgs for train }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
@@ -312,24 +312,5 @@ int main(int argc, const char *argv[])
     //cerr << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
     cerr << format("%3.4f/%-3.4f %3.4f/%-3.4f %3.4f",  mu_acc, se, mu_tpr, mu_fpr, ((t1-t0)/getTickFrequency())) << endl;
 
-    ofstream of("roc_data");
-    of << " # name: Tpr" << endl;
-    of << " # type: matrix" << endl;
-    of << " # rows: 1" << endl;
-    of << " # columns: " << p_tpr.size()+2 << endl << ".0001 ";   
-    for ( size_t i=0;i<p_tpr.size(); i++)
-    {
-        of << p_tpr[i] << " ";
-    }
-    of << ".9999" << endl << endl;
-    of << " # name: Fpr" << endl;
-    of << " # type: matrix" << endl;
-    of << " # rows: 1" << endl;
-    of << " # columns: " << p_fpr.size()+2 << endl << ".0001 ";   
-    for ( size_t i=0;i<p_fpr.size(); i++)
-    {
-        of << p_fpr[i] << " ";
-    }
-    of << ".9999" << endl << endl;
     return 0;
 }
