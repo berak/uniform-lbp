@@ -186,6 +186,7 @@ namespace TextureFeature
         CL_PCA,
         CL_PCA_LDA,
         CL_RTREE,
+        CL_GRAV,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -211,6 +212,7 @@ namespace TextureFeature
         "PCA",
         "PCA_LDA",
         "RTREE",
+        "GRAV",
         0
     };
 
