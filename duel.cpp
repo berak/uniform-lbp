@@ -369,7 +369,7 @@ int main(int argc, const char *argv[])
     // load data:
     Mat labels;
     vector<Mat> images;
-    extractDB(db_path, images, labels, pre, crp, maxim, minp, maxp, 90);
+    extractDB(db_path, images, labels, pre, crp, maxim, minp, maxp, 110);
 
     // per person id lookup
     vector< vector<int> > persons;

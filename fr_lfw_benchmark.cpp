@@ -176,7 +176,7 @@ int main(int argc, const char *argv[])
             "{ fil f          |0   | filter enum }"
             "{ cls c          |21  | classifier enum }"
             "{ pre P          |0   | preprocessing }"
-            "{ skip s         |10  | skip imgs for train }"
+            "{ skip s         |1   | skip imgs for train }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 

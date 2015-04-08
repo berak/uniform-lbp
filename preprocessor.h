@@ -14,7 +14,7 @@ class Preprocessor
 
 public:
 
-	Preprocessor(int mode=0, int crop=0, int retsize=90);
+	Preprocessor(int mode=0, int crop=0, int retsize=110);
 
     Mat process(const Mat &in) const;
 
