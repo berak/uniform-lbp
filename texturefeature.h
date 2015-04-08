@@ -90,6 +90,7 @@ namespace TextureFeature
         EXT_HDLBP,
         EXT_HDLBP_PCA,
         EXT_PCASIFT,
+        EXT_PCANET,
         EXT_CDIKP,
         EXT_MAX
     };
@@ -126,6 +127,7 @@ namespace TextureFeature
         "HDLBP",
         "HDLBP_PCA",
         "PCASIFT",
+        "PCANET",
         "CDIKP",
         0
     };
@@ -186,7 +188,6 @@ namespace TextureFeature
         CL_PCA,
         CL_PCA_LDA,
         CL_RTREE,
-        CL_GRAV,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -212,7 +213,6 @@ namespace TextureFeature
         "PCA",
         "PCA_LDA",
         "RTREE",
-        "GRAV",
         0
     };
 

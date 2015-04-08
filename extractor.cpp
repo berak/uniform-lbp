@@ -25,7 +25,10 @@ using std::cerr;
 using std::endl;
 
 #include "texturefeature.h"
-#include "elastic/elasticparts.h"
+#include "pcanet/PCANet.h"
+#if 0
+ #include "elastic/elasticparts.h"
+#endif
 
 //#include "profile.h"
 
@@ -1271,6 +1274,27 @@ struct ExtractorCDIKP : public TextureFeature::Extractor
     }
 };
 
+struct ExtractorPCANet : public TextureFeature::Extractor
+{
+    PCANet pnet;
+    ExtractorPCANet() 
+    {
+        pnet.dimensionLDA=0;
+        pnet.load("data/pcanet.xml");
+    }
+
+    virtual int extract(const Mat &I, Mat &features) const
+    {
+        Mat img;
+        if (I.type() != CV_32F)
+            I.convertTo(img,CV_32F);
+        else 
+            img = I;
+        features = pnet.extract(img);
+        return features.total() * features.elemSize();
+    }
+};
+
 } // TextureFeatureImpl
 
 namespace TextureFeature
@@ -1313,6 +1337,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
         case EXT_HDLBP_PCA:  return makePtr< HighDimLbpPCA >();  break;
         case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
+        case EXT_PCANET:   return makePtr< ExtractorPCANet >();  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
