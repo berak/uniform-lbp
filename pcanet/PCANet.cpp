@@ -391,7 +391,11 @@ bool PCANet::save(const cv::String &fn) const
 bool PCANet::load(const cv::String &fn)
 {
     cv::FileStorage fs(fn, cv::FileStorage::READ);
-    if (! fs.isOpened()) return false;
+    if (! fs.isOpened()) 
+    {
+        cerr << "PCANet::load : " << fn << " nor found !" << endl;
+        return false;
+    }
     fs["NumStages"] >> NumStages;
     fs["PatchSize"] >> PatchSize;
     fs["BlkOverLapRatio"] >> BlkOverLapRatio;
