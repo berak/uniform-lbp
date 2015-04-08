@@ -10,13 +10,13 @@ using namespace std;
 struct PCANet
 {
     int dimensionLDA;
-	int NumStages;
-	int PatchSize;
-	vector<int> NumFilters;
-	vector<int> HistBlockSize;
-	double BlkOverLapRatio;
+    int NumStages;
+    int PatchSize;
+    vector<int> NumFilters;
+    vector<int> HistBlockSize;
+    double BlkOverLapRatio;
     
-	vector<cv::Mat> Filters;
+    vector<cv::Mat> Filters;
 
     cv::Mat ProjVecPCA;
     cv::Mat ProjVecLDA;
