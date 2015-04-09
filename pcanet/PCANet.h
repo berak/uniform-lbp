@@ -36,7 +36,7 @@ public :
 
 
     cv::Mat trainPCA(vector<cv::Mat> &InImg, bool extract_feature=true);
-    cv::Mat trainLDA(const cv::Mat &features, const cv::Mat &labels);
+    cv::Mat trainLDA(const cv::Mat &features, const cv::Mat &labels, int dimensionLDA=100);
 
     cv::Mat extract(const cv::Mat &img) const;
 

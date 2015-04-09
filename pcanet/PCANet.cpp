@@ -233,12 +233,12 @@ cv::Mat PCANet::extract(const cv::Mat &img) const
     for (int i=0; i<numStages; i++)
     {
         calcStage(feat, post, patchSize, stages[i].numFilters, stages[i].filters, 1);
-        stage.clear();
+        feat.clear();
         cv::swap(feat,post);
     }
     cv::Mat hashing = hashingHist(feat);
 
-    if (dimensionLDA > 0)
+    if ((!projVecPCA.empty()) && (!projVecLDA.empty()))
     {
         cv::Mat lowTFeatTes = hashing * projVecPCA.t();
         hashing = lowTFeatTes * projVecLDA;
@@ -358,7 +358,7 @@ cv::Mat PCANet::hashingHist(const vector<cv::Mat> &images) const
 
 
 
-cv::Mat PCANet::trainLDA(const cv::Mat &features, const cv::Mat &labels)
+cv::Mat PCANet::trainLDA(const cv::Mat &features, const cv::Mat &labels, int dimensionLDA)
 {
     PROFILE;
 
@@ -391,7 +391,6 @@ cv::String PCANet::settings() const
 bool PCANet::save(const cv::String &fn) const
 {
     cv::FileStorage fs(fn, cv::FileStorage::WRITE);
-    fs << "DimensionLDA" << dimensionLDA;
     fs << "NumStages" << numStages;
     fs << "PatchSize" << patchSize;
     fs << "BlkOverLapRatio" << blkOverLapRatio;
@@ -405,11 +404,8 @@ bool PCANet::save(const cv::String &fn) const
         fs << "}";
     }
     fs << "]";
-    if (dimensionLDA > 0)
-    {
-        fs << "ProjVecPCA" << projVecPCA;
-        fs << "ProjVecLDA" << projVecLDA;
-    }
+    fs << "ProjVecPCA" << projVecPCA;
+    fs << "ProjVecLDA" << projVecLDA;
     fs.release();    
     return true;
 }
@@ -421,7 +417,6 @@ bool PCANet::load(const cv::String &fn)
         cerr << "PCANet::load : " << fn << " nor found !" << endl;
         return false;
     }
-    fs["DimensionLDA"] >> dimensionLDA;
     fs["NumStages"] >> numStages;
     fs["PatchSize"] >> patchSize;
     fs["BlkOverLapRatio"] >> blkOverLapRatio;
@@ -435,11 +430,8 @@ bool PCANet::load(const cv::String &fn)
         n["Filter"] >> stage.filters;
         stages.push_back(stage);
     }
-    if (dimensionLDA > 0)
-    {
-        fs["ProjVecPCA"] >> projVecPCA;
-        fs["ProjVecLDA"] >> projVecLDA;
-    }
+    fs["ProjVecPCA"] >> projVecPCA;
+    fs["ProjVecLDA"] >> projVecLDA;
     fs.release();
     return true;
 }
