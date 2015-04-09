@@ -1329,13 +1329,13 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_Grad_G:   return makePtr< GenericExtractor<FeatureGrad,GfttGrid> >(FeatureGrad(),GfttGrid()); break;
         case EXT_Grad_P:   return makePtr< GenericExtractor<FeatureGrad,PyramidGrid> >(FeatureGrad(),PyramidGrid()); break;
         case EXT_GradMag:  return makePtr< GradMagExtractor<GfttGrid> >(GfttGrid()); break;
-        case EXT_GradMag_P:  return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
+        case EXT_GradMag_P:return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_GradBin:  return makePtr< ExtractorGradBin >(); break;
         case EXT_GaborLBP: return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist()); break;
         case EXT_GaborGB:  return makePtr< ExtractorGaborGradBin >(); break;
         case EXT_HDGRAD:   return makePtr< HighDimGrad >();  break;
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
-        case EXT_HDLBP_PCA:  return makePtr< HighDimLbpPCA >();  break;
+        case EXT_HDLBP_PCA:return makePtr< HighDimLbpPCA >();  break;
         case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
         case EXT_PCANET:   return makePtr< ExtractorPCANet >();  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;

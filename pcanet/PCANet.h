@@ -10,16 +10,16 @@ using namespace std;
 struct PCANet
 {
     int dimensionLDA;
-    int NumStages;
-    int PatchSize;
-    vector<int> NumFilters;
-    vector<int> HistBlockSize;
-    double BlkOverLapRatio;
+    int numStages;
+    int patchSize;
+    vector<int> numFilters;
+    vector<int> histBlockSize;
+    double blkOverLapRatio;
     
-    vector<cv::Mat> Filters;
+    vector<cv::Mat> filters;
 
-    cv::Mat ProjVecPCA;
-    cv::Mat ProjVecLDA;
+    cv::Mat projVecPCA;
+    cv::Mat projVecLDA;
 
     cv::Mat hashingHist(const vector<cv::Mat> &Imgs) const;
 
