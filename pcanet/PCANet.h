@@ -18,21 +18,18 @@ class PCANet
         int histBlockSize;
         cv::Mat filters;
     };
-
-    int dimensionLDA;
+    vector<Stage> stages;
     int numStages;
     int patchSize;
-    double blkOverLapRatio;
-    
-    vector<Stage> stages;
-
+    double blkOverLapRatio;    
     cv::Mat projVecPCA;
     cv::Mat projVecLDA;
+
     cv::Mat hashingHist(const vector<cv::Mat> &Imgs) const;
 
 public :
 
-    PCANet(int p=7) : dimensionLDA(0),numStages(0),patchSize(p),blkOverLapRatio(0) {}
+    PCANet(int p=7) : numStages(0), patchSize(p), blkOverLapRatio(0) {}
 
 
     cv::Mat trainPCA(vector<cv::Mat> &InImg, bool extract_feature=true);

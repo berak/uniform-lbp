@@ -380,7 +380,7 @@ cv::Mat PCANet::trainLDA(const cv::Mat &features, const cv::Mat &labels, int dim
 
 cv::String PCANet::settings() const
 {
-    cv::String s = cv::format("%d %d %d ", dimensionLDA, numStages, patchSize);
+    cv::String s = cv::format("%d %d ", numStages, patchSize);
     for (int i=0; i<numStages; i++)
     {
         s += cv::format("[%d %d]", stages[i].numFilters, stages[i].histBlockSize);
