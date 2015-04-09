@@ -3,12 +3,14 @@
 #include <math.h>
 using namespace std;
 
+
 //
 // original code from:
 // https://github.com/Ldpe2G/PCANet
 //
 // * changed everything to float Mat's (lower memory footprint)
 // * removed the indexing
+// * enabled variable stage count
 //
 class PCANet
 {
@@ -18,10 +20,14 @@ class PCANet
         int histBlockSize;
         cv::Mat filters;
     };
+
+    // pca filter bank data
     vector<Stage> stages;
     int numStages;
     int patchSize;
     double blkOverLapRatio;    
+
+    // lda data
     cv::Mat projVecPCA;
     cv::Mat projVecLDA;
 
@@ -29,20 +35,19 @@ class PCANet
 
 public :
 
+    // larger patchSize seems to improve more than more filters
     PCANet(int p=7) : numStages(0), patchSize(p), blkOverLapRatio(0) {}
+    int addStage(int nfil, int blocs);
 
+    cv::Mat extract(const cv::Mat &img) const;
 
     cv::Mat trainPCA(vector<cv::Mat> &InImg, bool extract_feature=true);
     cv::Mat trainLDA(const cv::Mat &features, const cv::Mat &labels, int dimensionLDA=100);
 
-    cv::Mat extract(const cv::Mat &img) const;
-
-    cv::String settings() const;
-
     bool save(const cv::String &fn) const;
     bool load(const cv::String &fn);
 
-    int addStage(int nfil, int blocs);
+    cv::String settings() const;
 };
 
 

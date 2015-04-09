@@ -1,9 +1,10 @@
 #include "PCANet.h"
-#include "../profile.h"
-#include <fstream>
+#if 0
+ #include "../profile.h"
+#else
+ #define PROFILE
+#endif
 
-const int ROW_DIM = 0;
-const int COL_DIM = 1;
 
 
 cv::Mat heaviside(const cv::Mat& X)
@@ -34,7 +35,9 @@ cv::Mat bsxfun_times(cv::Mat &bhist, int numFilters)
     {
         const float *pb = bhist.ptr<float>(i);
         for (int j = 0; j<col; j++)
+        {
             sum[j] += pb[j];
+        }
     }
 
     float p = pow(2.0f, numFilters);
@@ -79,6 +82,8 @@ cv::Mat hist(const cv::Mat &mat, int range)
 cv::Mat im2col(const cv::Mat &images, const vector<int> &blockSize, const vector<int> &stepSize)
 {
     PROFILE;
+    const int ROW_DIM = 0;
+    const int COL_DIM = 1;
     int row_diff = images.rows - blockSize[ROW_DIM];
     int col_diff = images.cols - blockSize[COL_DIM];
     int r_row = blockSize[ROW_DIM] * blockSize[COL_DIM];
@@ -291,7 +296,7 @@ cv::Mat PCANet::trainPCA(vector<cv::Mat>& feat0, bool extract_feature)
         }
         int64 e2 = cv::getTickCount();
         double time = (e2 - e1) / cv::getTickFrequency();
-        cout << "\n Hashing time: " << time << endl;
+        cout << "\n Extraction time: " << time << endl;
     }
     return features;
 }
@@ -391,16 +396,16 @@ cv::String PCANet::settings() const
 bool PCANet::save(const cv::String &fn) const
 {
     cv::FileStorage fs(fn, cv::FileStorage::WRITE);
-    fs << "NumStages" << numStages;
-    fs << "PatchSize" << patchSize;
+    fs << "NumStages"       << numStages;
+    fs << "PatchSize"       << patchSize;
     fs << "BlkOverLapRatio" << blkOverLapRatio;
     fs << "Stages" << "[" ;
     for (int i=0; i<numStages; i++)
     {
         fs << "{:" ;
-        fs << "NumFilters" << stages[i].numFilters;
+        fs << "NumFilters"    << stages[i].numFilters;
         fs << "HistBlockSize" << stages[i].histBlockSize;
-        fs << "Filter" << stages[i].filters;
+        fs << "Filter"        << stages[i].filters;
         fs << "}";
     }
     fs << "]";
@@ -417,17 +422,17 @@ bool PCANet::load(const cv::String &fn)
         cerr << "PCANet::load : " << fn << " nor found !" << endl;
         return false;
     }
-    fs["NumStages"] >> numStages;
-    fs["PatchSize"] >> patchSize;
+    fs["NumStages"]       >> numStages;
+    fs["PatchSize"]       >> patchSize;
     fs["BlkOverLapRatio"] >> blkOverLapRatio;
-    FileNode pnodes = fs["Stages"];
-    for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
+    cv::FileNode pnodes = fs["Stages"];
+    for (cv::FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
     {
-        const FileNode &n = *it;
+        const cv::FileNode &n = *it;
         Stage stage;
-        n["NumFilters"] >> stage.numFilters;
+        n["NumFilters"]    >> stage.numFilters;
         n["HistBlockSize"] >> stage.histBlockSize;
-        n["Filter"] >> stage.filters;
+        n["Filter"]        >> stage.filters;
         stages.push_back(stage);
     }
     fs["ProjVecPCA"] >> projVecPCA;
