@@ -1,9 +1,14 @@
 #include "PCANet.h"
+
 #if 0
  #include "../profile.h"
 #else
  #define PROFILE
 #endif
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 
 
@@ -187,7 +192,7 @@ cv::Mat pcaFilterBank(const vector<cv::Mat> &images, int patchSize, int numFilte
 
 
 
-void calcStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSize, int numFilters, const cv::Mat &filters, int threadnum)
+void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSize, int numFilters, const cv::Mat &filters, int threadnum)
 {
     PROFILE;
     int img_length = inImg.size();
@@ -229,7 +234,6 @@ void calcStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchS
 }
 
 
-
 cv::Mat PCANet::extract(const cv::Mat &img) const
 {
     PROFILE;
@@ -237,7 +241,7 @@ cv::Mat PCANet::extract(const cv::Mat &img) const
 
     for (int i=0; i<numStages; i++)
     {
-        calcStage(feat, post, patchSize, stages[i].numFilters, stages[i].filters, 1);
+        pcaStage(feat, post, patchSize, stages[i].numFilters, stages[i].filters, 1);
         feat.clear();
         cv::swap(feat,post);
     }
@@ -252,24 +256,23 @@ cv::Mat PCANet::extract(const cv::Mat &img) const
 }
 
 
-cv::Mat PCANet::trainPCA(vector<cv::Mat>& feat0, bool extract_feature)
+cv::Mat PCANet::trainPCA(vector<cv::Mat> &images, bool extract_feature)
 {
     PROFILE;
     assert(stages.size() == numStages);
     int64 e1 = cv::getTickCount();
 
-    int end = numStages - 1;
-    Stage & lastStage = stages[end];
-    vector<cv::Mat>feat(feat0), post;
-
-    for (int i=0; i<end; i++)
+    Stage &lastStage = stages[numStages - 1];
+    vector<cv::Mat>feat(images), post;
+    for (int i=0; i<(numStages - 1); i++)
     {
         stages[i].filters = pcaFilterBank(feat, patchSize, stages[i].numFilters);
-        calcStage(feat, post, patchSize, stages[i].numFilters, stages[i].filters, 1);
+        pcaStage(feat, post, patchSize, stages[i].numFilters, stages[i].filters, 1);
         feat.clear();
         cv::swap(feat,post);
     }
     lastStage.filters = pcaFilterBank(feat, patchSize, lastStage.numFilters);
+
     int64 e2 = cv::getTickCount();
     double time = (e2 - e1) / cv::getTickFrequency();
     cout << "\n Train     time: " << time << endl;
@@ -277,26 +280,22 @@ cv::Mat PCANet::trainPCA(vector<cv::Mat>& feat0, bool extract_feature)
     cv::Mat features;
     if (extract_feature)
     {
-        size_t feat0Size = feat0.size();
-        feat0.clear();
+        size_t feat0Size = images.size();
+        images.clear();
 
         vector<cv::Mat>::const_iterator first = feat.begin();
         vector<cv::Mat>::const_iterator last  = feat.begin();
-        size_t endFilters = lastStage.numFilters;
-        e1 = cv::getTickCount();
         for (size_t i=0; i<feat0Size; i++)
         {
             vector<cv::Mat> subInImg(first + i * lastStage.numFilters, last + (i + 1) * lastStage.numFilters);
 
             vector<cv::Mat> feat2;
-            calcStage(subInImg, feat2, patchSize, lastStage.numFilters, lastStage.filters, 1);
+            pcaStage(subInImg, feat2, patchSize, lastStage.numFilters, lastStage.filters, 1);
 
             cv::Mat hashing = hashingHist(feat2);
             features.push_back(hashing);
         }
-        int64 e2 = cv::getTickCount();
-        double time = (e2 - e1) / cv::getTickFrequency();
-        cout << "\n Extraction time: " << time << endl;
+        cout << "\n Extraction time: " << ((cv::getTickCount() - e2) / cv::getTickFrequency()) << endl;
     }
     return features;
 }
@@ -317,7 +316,7 @@ cv::Mat PCANet::hashingHist(const vector<cv::Mat> &images) const
     }
 
     vector<int> ro_BlockSize,histBlockSize;
-    double rate = 1.0 - blkOverLapRatio;
+    double rate = 1.0 - blockOverLapRatio;
     for (size_t i=0; i<stages.size(); i++)
     {
         histBlockSize.push_back(stages[i].histBlockSize);
@@ -398,7 +397,7 @@ bool PCANet::save(const cv::String &fn) const
     cv::FileStorage fs(fn, cv::FileStorage::WRITE);
     fs << "NumStages"       << numStages;
     fs << "PatchSize"       << patchSize;
-    fs << "BlkOverLapRatio" << blkOverLapRatio;
+    fs << "BlockOverLapRatio" << blockOverLapRatio;
     fs << "Stages" << "[" ;
     for (int i=0; i<numStages; i++)
     {
@@ -414,6 +413,7 @@ bool PCANet::save(const cv::String &fn) const
     fs.release();    
     return true;
 }
+
 bool PCANet::load(const cv::String &fn)
 {
     cv::FileStorage fs(fn, cv::FileStorage::READ);
@@ -424,7 +424,7 @@ bool PCANet::load(const cv::String &fn)
     }
     fs["NumStages"]       >> numStages;
     fs["PatchSize"]       >> patchSize;
-    fs["BlkOverLapRatio"] >> blkOverLapRatio;
+    fs["BlockOverLapRatio"] >> blockOverLapRatio;
     cv::FileNode pnodes = fs["Stages"];
     for (cv::FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
     {

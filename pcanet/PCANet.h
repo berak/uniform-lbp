@@ -1,7 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <math.h>
-using namespace std;
+using std::vector;
 
 
 //
@@ -25,9 +25,9 @@ class PCANet
     vector<Stage> stages;
     int numStages;
     int patchSize;
-    double blkOverLapRatio;    
+    double blockOverLapRatio;    
 
-    // lda data
+    // (optional) lda data
     cv::Mat projVecPCA;
     cv::Mat projVecLDA;
 
@@ -36,7 +36,7 @@ class PCANet
 public :
 
     // larger patchSize seems to improve more than more filters
-    PCANet(int p=7) : numStages(0), patchSize(p), blkOverLapRatio(0) {}
+    PCANet(int p=7) : numStages(0), patchSize(p), blockOverLapRatio(0) {}
     int addStage(int nfil, int blocs);
 
     cv::Mat extract(const cv::Mat &img) const;
