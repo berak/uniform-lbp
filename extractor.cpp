@@ -1279,7 +1279,6 @@ struct ExtractorPCANet : public TextureFeature::Extractor
     PCANet pnet;
     ExtractorPCANet() 
     {
-        pnet.dimensionLDA=0;
         pnet.load("data/pcanet.xml");
     }
 
