@@ -558,28 +558,28 @@ struct LandMarks
 static void gftt64(const Mat &img, vector<KeyPoint> &kp)
 {
     static const int kpsize = 16;
-    kp.push_back(KeyPoint(14, 33, kpsize));        kp.push_back(KeyPoint(29, 77, kpsize));        kp.push_back(KeyPoint(55, 60, kpsize));
-    kp.push_back(KeyPoint(63, 76, kpsize));        kp.push_back(KeyPoint(76, 32, kpsize));        kp.push_back(KeyPoint(35, 60, kpsize));
-    kp.push_back(KeyPoint(69, 21, kpsize));        kp.push_back(KeyPoint(45, 30, kpsize));        kp.push_back(KeyPoint(27, 31, kpsize));
-    kp.push_back(KeyPoint(64, 26, kpsize));        kp.push_back(KeyPoint(21, 22, kpsize));        kp.push_back(KeyPoint(25, 27, kpsize));
-    kp.push_back(KeyPoint(69, 31, kpsize));        kp.push_back(KeyPoint(54, 81, kpsize));        kp.push_back(KeyPoint(62, 30, kpsize));
-    kp.push_back(KeyPoint(20, 32, kpsize));        kp.push_back(KeyPoint(52, 33, kpsize));        kp.push_back(KeyPoint(37, 32, kpsize));
-    kp.push_back(KeyPoint(38, 81, kpsize));        kp.push_back(KeyPoint(36, 82, kpsize));        kp.push_back(KeyPoint(32, 31, kpsize));
-    kp.push_back(KeyPoint(78, 17, kpsize));        kp.push_back(KeyPoint(59, 24, kpsize));        kp.push_back(KeyPoint(30, 24, kpsize));
-    kp.push_back(KeyPoint(11, 18, kpsize));        kp.push_back(KeyPoint(13, 17, kpsize));        kp.push_back(KeyPoint(56, 30, kpsize));
-    kp.push_back(KeyPoint(73, 15, kpsize));        kp.push_back(KeyPoint(19, 15, kpsize));        kp.push_back(KeyPoint(57, 53, kpsize));
-    kp.push_back(KeyPoint(33, 54, kpsize));        kp.push_back(KeyPoint(34, 52, kpsize));        kp.push_back(KeyPoint(49, 25, kpsize));
-    kp.push_back(KeyPoint(66, 33, kpsize));        kp.push_back(KeyPoint(55, 49, kpsize));        kp.push_back(KeyPoint(61, 33, kpsize));
-    kp.push_back(KeyPoint(39, 29, kpsize));        kp.push_back(KeyPoint(60, 46, kpsize));        kp.push_back(KeyPoint(40, 26, kpsize));
-    kp.push_back(KeyPoint(41, 76, kpsize));        kp.push_back(KeyPoint(50, 76, kpsize));        kp.push_back(KeyPoint(53, 41, kpsize));
-    kp.push_back(KeyPoint(44, 23, kpsize));        kp.push_back(KeyPoint(29, 60, kpsize));        kp.push_back(KeyPoint(54, 54, kpsize));
-    kp.push_back(KeyPoint(30, 47, kpsize));        kp.push_back(KeyPoint(45, 50, kpsize));        kp.push_back(KeyPoint(83, 35, kpsize));
-    kp.push_back(KeyPoint(36, 54, kpsize));        kp.push_back(KeyPoint(13, 46, kpsize));        kp.push_back(KeyPoint(36, 44, kpsize));
-    kp.push_back(KeyPoint(83, 38, kpsize));        kp.push_back(KeyPoint(49, 53, kpsize));        kp.push_back(KeyPoint(33, 83, kpsize));
-    kp.push_back(KeyPoint(17, 88, kpsize));        kp.push_back(KeyPoint(31, 63, kpsize));        kp.push_back(KeyPoint(13, 27, kpsize));
-    kp.push_back(KeyPoint(50, 62, kpsize));        kp.push_back(KeyPoint(11, 43, kpsize));        kp.push_back(KeyPoint(45, 55, kpsize));
-    kp.push_back(KeyPoint(45, 56, kpsize));        kp.push_back(KeyPoint(79, 43, kpsize));        kp.push_back(KeyPoint(74, 88, kpsize));
-    kp.push_back(KeyPoint(41, 62, kpsize));
+    kp.push_back(KeyPoint(14.f, 33.f, kpsize));        kp.push_back(KeyPoint(29.f, 77.f, kpsize));        kp.push_back(KeyPoint(55.f, 60.f, kpsize));
+    kp.push_back(KeyPoint(63.f, 76.f, kpsize));        kp.push_back(KeyPoint(76.f, 32.f, kpsize));        kp.push_back(KeyPoint(35.f, 60.f, kpsize));
+    kp.push_back(KeyPoint(69.f, 21.f, kpsize));        kp.push_back(KeyPoint(45.f, 30.f, kpsize));        kp.push_back(KeyPoint(27.f, 31.f, kpsize));
+    kp.push_back(KeyPoint(64.f, 26.f, kpsize));        kp.push_back(KeyPoint(21.f, 22.f, kpsize));        kp.push_back(KeyPoint(25.f, 27.f, kpsize));
+    kp.push_back(KeyPoint(69.f, 31.f, kpsize));        kp.push_back(KeyPoint(54.f, 81.f, kpsize));        kp.push_back(KeyPoint(62.f, 30.f, kpsize));
+    kp.push_back(KeyPoint(20.f, 32.f, kpsize));        kp.push_back(KeyPoint(52.f, 33.f, kpsize));        kp.push_back(KeyPoint(37.f, 32.f, kpsize));
+    kp.push_back(KeyPoint(38.f, 81.f, kpsize));        kp.push_back(KeyPoint(36.f, 82.f, kpsize));        kp.push_back(KeyPoint(32.f, 31.f, kpsize));
+    kp.push_back(KeyPoint(78.f, 17.f, kpsize));        kp.push_back(KeyPoint(59.f, 24.f, kpsize));        kp.push_back(KeyPoint(30.f, 24.f, kpsize));
+    kp.push_back(KeyPoint(11.f, 18.f, kpsize));        kp.push_back(KeyPoint(13.f, 17.f, kpsize));        kp.push_back(KeyPoint(56.f, 30.f, kpsize));
+    kp.push_back(KeyPoint(73.f, 15.f, kpsize));        kp.push_back(KeyPoint(19.f, 15.f, kpsize));        kp.push_back(KeyPoint(57.f, 53.f, kpsize));
+    kp.push_back(KeyPoint(33.f, 54.f, kpsize));        kp.push_back(KeyPoint(34.f, 52.f, kpsize));        kp.push_back(KeyPoint(49.f, 25.f, kpsize));
+    kp.push_back(KeyPoint(66.f, 33.f, kpsize));        kp.push_back(KeyPoint(55.f, 49.f, kpsize));        kp.push_back(KeyPoint(61.f, 33.f, kpsize));
+    kp.push_back(KeyPoint(39.f, 29.f, kpsize));        kp.push_back(KeyPoint(60.f, 46.f, kpsize));        kp.push_back(KeyPoint(40.f, 26.f, kpsize));
+    kp.push_back(KeyPoint(41.f, 76.f, kpsize));        kp.push_back(KeyPoint(50.f, 76.f, kpsize));        kp.push_back(KeyPoint(53.f, 41.f, kpsize));
+    kp.push_back(KeyPoint(44.f, 23.f, kpsize));        kp.push_back(KeyPoint(29.f, 60.f, kpsize));        kp.push_back(KeyPoint(54.f, 54.f, kpsize));
+    kp.push_back(KeyPoint(30.f, 47.f, kpsize));        kp.push_back(KeyPoint(45.f, 50.f, kpsize));        kp.push_back(KeyPoint(83.f, 35.f, kpsize));
+    kp.push_back(KeyPoint(36.f, 54.f, kpsize));        kp.push_back(KeyPoint(13.f, 46.f, kpsize));        kp.push_back(KeyPoint(36.f, 44.f, kpsize));
+    kp.push_back(KeyPoint(83.f, 38.f, kpsize));        kp.push_back(KeyPoint(49.f, 53.f, kpsize));        kp.push_back(KeyPoint(33.f, 83.f, kpsize));
+    kp.push_back(KeyPoint(17.f, 88.f, kpsize));        kp.push_back(KeyPoint(31.f, 63.f, kpsize));        kp.push_back(KeyPoint(13.f, 27.f, kpsize));
+    kp.push_back(KeyPoint(50.f, 62.f, kpsize));        kp.push_back(KeyPoint(11.f, 43.f, kpsize));        kp.push_back(KeyPoint(45.f, 55.f, kpsize));
+    kp.push_back(KeyPoint(45.f, 56.f, kpsize));        kp.push_back(KeyPoint(79.f, 43.f, kpsize));        kp.push_back(KeyPoint(74.f, 88.f, kpsize));
+    kp.push_back(KeyPoint(41.f, 62.f, kpsize));
     if (img.size() != Size(90,90))
     {
         float scale_x=float(img.cols)/90;
@@ -1274,12 +1274,27 @@ struct ExtractorCDIKP : public TextureFeature::Extractor
     }
 };
 
+
+//
+// use an off-line trained pca filterbank
+// (can't use the lda pass here, due to restrictions of my stupid framework)
+//
 struct ExtractorPCANet : public TextureFeature::Extractor
 {
     PCANet pnet;
-    ExtractorPCANet() 
+    ExtractorPCANet(bool rando=false)
+        : pnet(11)
     {
-        pnet.load("data/pcanet.xml");
+        if (rando)
+        {
+            pnet.addStage(4,28);
+            pnet.addStage(4,23);
+            pnet.randomProjection();
+        }
+        else
+        {
+            pnet.load("data/pcanet.xml");
+        }
     }
 
     virtual int extract(const Mat &I, Mat &features) const
@@ -1336,7 +1351,8 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
         case EXT_HDLBP_PCA:return makePtr< HighDimLbpPCA >();  break;
         case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
-        case EXT_PCANET:   return makePtr< ExtractorPCANet >();  break;
+        case EXT_PCANET:   return makePtr< ExtractorPCANet >(false);  break;
+        case EXT_RANDNET:  return makePtr< ExtractorPCANet >(true);  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }

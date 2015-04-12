@@ -50,6 +50,8 @@ GradMag  none   PCA_LDA       23552    733      8    0.989   97.937
 GradMagP WHAD8  PCA_LDA       32000    739      2    0.997  143.955
 GaborGB  none   PCA_LDA       36864    732      9    0.988  179.415
 PCASIFT  none   PCA_LDA       25600    695     46    0.938  696.151
+PCANET   none   SVM_LIN        3072    730     11    0.985 1306.950
+RANDNET  none   SVM_LIN        3072    728     13    0.982 2424.438
 
 -------------------------------------------------------------------
 data/yale:              10 fold, 15 classes, 165 images, retina
@@ -136,5 +138,6 @@ GradMag  none   PCA_LDA       23552    911     39    0.959  179.856
 GradMagP WHAD8  PCA_LDA       32000    911     39    0.959  260.980
 PCASIFT  none   PCA_LDA       25600    915     35    0.963 1021.913
 GaborGB  none   PCA_LDA       36864    918     32    0.966  328.633
+PCANET   none   SVM_LIN        3072    880     70    0.926 1683.532
 
 </pre>

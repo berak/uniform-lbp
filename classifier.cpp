@@ -9,7 +9,7 @@ using namespace std;
 using namespace cv;
 
 #include "texturefeature.h"
-
+#include "pcanet/PCANet.h"
 
 using namespace TextureFeature;
 
@@ -142,6 +142,17 @@ struct ClassifierCosine : public ClassifierNearest
         return cosdistance(testFeature, trainFeature);
     }
 };
+//
+//struct ClassifierMahalanobis : public ClassifierNearest
+//{
+//    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
+//    {
+//        Mat c[2] = {testFeature,trainFeature},covar,icovar,mean;
+//        calcCovarMatrix(c,2,covar,mean,COVAR_NORMAL);
+//        invert(covar,icovar, DECOMP_SVD);
+//        return cv::Mahalanobis(testFeature, trainFeature, icovar);
+//    }
+//};
 
 
 
@@ -838,22 +849,66 @@ struct VerifierSVM : public VerifierPairDistance
 };
 
 
+//
+//struct VerifierRTree : public VerifierPairDistance
+//{
+//    VerifierRTree() 
+//    {
+//        Ptr<ml::Boost> cl = ml::Boost::create();
+//        //Ptr<ml::RTrees> cl = ml::RTrees::create();
+//        //cl->setMaxCategories(2);
+//        //cl->setMaxDepth(2);
+//        //cl->setMinSampleCount(2);
+//        //cl->setCVFolds(0);
+//        model = cl;
+//    }
+//};
+//
 
-struct VerifierRTree : public VerifierPairDistance
+struct ClassisfierPCANet : public VerifierSVM
 {
-    VerifierRTree() 
+    PCANet pnet;
+    ClassisfierPCANet() 
     {
-        Ptr<ml::Boost> cl = ml::Boost::create();
-        //Ptr<ml::RTrees> cl = ml::RTrees::create();
-        //cl->setMaxCategories(2);
-        //cl->setMaxDepth(2);
-        //cl->setMinSampleCount(2);
-        //cl->setCVFolds(0);
-        model = cl;
+        pnet.load("data/pcanet.xml");
     }
+
+    int extract(const Mat &I, Mat &features) const
+    {
+        for (int r=0; r<I.rows; r++)
+        {
+            Mat img = tofloat(I.row(r));
+            features.push_back(pnet.extract(img));
+        }
+        return features.total() * features.elemSize();
+    }
+
+    virtual int train(const Mat &features, const Mat &labels)
+    {      
+        Mat distances, binlabels;
+        train_pre(features, labels, distances, binlabels);
+
+        Mat pcaDistances;
+        extract(distances,pcaDistances);
+
+        model->clear();
+        return model->train(ml::TrainData::create(pcaDistances, ml::ROW_SAMPLE, binlabels));
+    }
+
+    virtual bool same(const Mat &a, const Mat &b) const
+    {
+        Mat dist = distance_mat(tofloat(a), tofloat(b));
+
+        Mat pcaDist;
+        extract(dist,pcaDist);
+        
+        Mat res;
+        model->predict(pcaDist, res);
+        int r = res.at<int>(0);
+        return  r > 0;
+    }
+
 };
-
-
 
 
 } // TextureFeatureImpl
@@ -888,6 +943,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
+        //case CL_MAHALANOBIS: return makePtr<ClassifierMahalanobis>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();
@@ -916,7 +972,7 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_KMOD:  return makePtr<VerifierSVM>(-8); break;
         case CL_SVM_CAUCHY:return makePtr<VerifierSVM>(-9); break;
         case CL_COSINE:    return makePtr<VerifierCosine>(); break;
-        case CL_RTREE:     return makePtr<VerifierRTree>(); break;
+        //case CL_RTREE:     return makePtr<VerifierRTree>(); break;
 
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
     }

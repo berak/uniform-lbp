@@ -136,6 +136,25 @@ void getRandom(vector<int> &idx)
     }
 }
 
+cv::Mat reduceMean(const cv::Mat &image, int patchSize)
+{
+    vector<int> blockSize(2,patchSize);
+    vector<int> stepSize(2,1);
+    cv::Mat temp = im2col(image, blockSize, stepSize);
+
+    cv::Mat mean;
+    cv::reduce(temp, mean, 0, CV_REDUCE_AVG);
+
+    cv::Mat res;
+    for (int i=0; i<temp.rows; i++)
+    {
+        cv::Mat temp2 = (temp.row(i) - mean.row(0));
+        res.push_back(temp2.row(0));
+    }
+    return res;
+}
+
+
 cv::Mat pcaFilterBank(const vector<cv::Mat> &images, int patchSize, int numFilters)
 {
     PROFILE;
@@ -147,33 +166,13 @@ cv::Mat pcaFilterBank(const vector<cv::Mat> &images, int patchSize, int numFilte
     int size = patchSize * patchSize;
     cv::Mat Rx = cv::Mat::zeros(size, size, images[0].type());
 
-    vector<int> blockSize;
-    vector<int> stepSize;
-
-    for (int i=0; i<2; i++)
-    {
-        blockSize.push_back(patchSize);
-        stepSize.push_back(1);
-    }
-
-    int cols=0;
     for (size_t j=0; j<images.size(); j++)
     {
-        cv::Mat temp = im2col(images[randIdx[j]], blockSize, stepSize);
-        cols = temp.cols;
-
-        cv::Mat mean;
-        cv::reduce(temp, mean, 0, CV_REDUCE_AVG);
-
-        cv::Mat temp3;
-        for (int i=0; i<temp.rows; i++)
-        {
-            cv::Mat temp2 = (temp.row(i) - mean.row(0));
-            temp3.push_back(temp2.row(0));
-        }
-        Rx = Rx + temp3 * temp3.t();
+        cv::Mat temp = reduceMean(images[randIdx[j]],patchSize);
+        Rx = Rx + temp * temp.t();
     }
-    Rx = Rx / (double)(images.size() * cols);
+    int count = images[0].cols * images.size();
+    Rx = Rx / (double)(count);
 
     cv::Mat evals, evecs;
     eigen(Rx, evals, evecs);
@@ -197,36 +196,17 @@ void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSi
     PROFILE;
     int img_length = inImg.size();
     int mag = (patchSize - 1) / 2;
-
     cv::Mat img;
-
-    vector<int> blockSize;
-    vector<int> stepSize;
-
-    for (int i=0; i<2; i++)
-    {
-        blockSize.push_back(patchSize);
-        stepSize.push_back(1);
-    }
 
     for (int i=0; i<img_length; i++)
     {
         cv::copyMakeBorder(inImg[i], img, mag, mag, mag, mag, cv::BORDER_CONSTANT, cv::Scalar(0));
 
-        cv::Mat temp = im2col(img, blockSize, stepSize);
+        cv::Mat temp3 = reduceMean(img, patchSize);
 
-        cv::Mat mean;
-        cv::reduce(temp, mean, 0, CV_REDUCE_AVG);
-
-        cv::Mat temp3;
-        for (int j=0; j<temp.rows; j++)
-        {
-            cv::Mat temp2 = (temp.row(j) - mean.row(0));
-            temp3.push_back(temp2.row(0));
-        }
         for (int j=0; j<numFilters; j++)
         {
-            temp = filters.row(j) * temp3;
+            cv::Mat temp = filters.row(j) * temp3;
             temp = temp.reshape(0, inImg[i].cols);
             outImg.push_back(temp.t());
         }
@@ -262,7 +242,6 @@ cv::Mat PCANet::trainPCA(vector<cv::Mat> &images, bool extract_feature)
     assert(stages.size() == numStages);
     int64 e1 = cv::getTickCount();
 
-    Stage &lastStage = stages[numStages - 1];
     vector<cv::Mat>feat(images), post;
     for (int i=0; i<(numStages - 1); i++)
     {
@@ -271,6 +250,7 @@ cv::Mat PCANet::trainPCA(vector<cv::Mat> &images, bool extract_feature)
         feat.clear();
         cv::swap(feat,post);
     }
+    Stage &lastStage = stages[numStages - 1];
     lastStage.filters = pcaFilterBank(feat, patchSize, lastStage.numFilters);
 
     int64 e2 = cv::getTickCount();
@@ -341,23 +321,23 @@ cv::Mat PCANet::hashingHist(const vector<cv::Mat> &images) const
         if (i == 0) bhist = t2;
         else hconcat(bhist, t2, bhist);
     }
+    return bhist.reshape(1,1); // below is transposed, but do we need the t() ? it's a histogram.
+    //int rows = bhist.rows;
+    //int cols = bhist.cols;
 
-    int rows = bhist.rows;
-    int cols = bhist.cols;
+    //cv::Mat hashed(1, rows * cols, bhist.type());
 
-    cv::Mat hashed(1, rows * cols, bhist.type());
-
-    float *p_Fe = hashed.ptr<float>(0);
-    float *p_Hi;
-    for (int i=0; i<rows; i++)
-    {
-        p_Hi = bhist.ptr<float>(i);
-        for (int j=0; j<cols; j++)
-        {
-            p_Fe[j * rows + i] = p_Hi[j];
-        }
-    }
-    return hashed;
+    //float *p_Fe = hashed.ptr<float>(0);
+    //float *p_Hi;
+    //for (int i=0; i<rows; i++)
+    //{
+    //    p_Hi = bhist.ptr<float>(i);
+    //    for (int j=0; j<cols; j++)
+    //    {
+    //        p_Fe[j * rows + i] = p_Hi[j];
+    //    }
+    //}
+    //return hashed;
 }
 
 
@@ -447,4 +427,23 @@ int PCANet::addStage(int a, int b)
     stages.push_back(s);
     numStages++;
     return stages.size();
+}
+
+void PCANet::randomProjection()
+{
+    cv::theRNG().state = 37183927;
+    for (int s=0; s<numStages; s++)
+    {
+        int N = stages[s].numFilters, K = patchSize*patchSize;
+        cv::Mat proj(N, K, CV_32F);
+
+        cv::randn(proj, cv::Scalar(0), cv::Scalar(1.0));
+        //randu(proj, Scalar(0), Scalar(1));
+
+        for (int i=0; i<K; i++)
+        {
+            cv::normalize(proj.col(i), proj.col(i));
+        }
+        stages[s].filters = proj;
+    }
 }
