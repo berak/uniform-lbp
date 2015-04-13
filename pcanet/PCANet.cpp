@@ -321,23 +321,8 @@ cv::Mat PCANet::hashingHist(const vector<cv::Mat> &images) const
         if (i == 0) bhist = t2;
         else hconcat(bhist, t2, bhist);
     }
-    return bhist.reshape(1,1); // below is transposed, but do we need the t() ? it's a histogram.
-    //int rows = bhist.rows;
-    //int cols = bhist.cols;
 
-    //cv::Mat hashed(1, rows * cols, bhist.type());
-
-    //float *p_Fe = hashed.ptr<float>(0);
-    //float *p_Hi;
-    //for (int i=0; i<rows; i++)
-    //{
-    //    p_Hi = bhist.ptr<float>(i);
-    //    for (int j=0; j<cols; j++)
-    //    {
-    //        p_Fe[j * rows + i] = p_Hi[j];
-    //    }
-    //}
-    //return hashed;
+    return bhist.reshape(1,1); 
 }
 
 

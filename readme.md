@@ -81,6 +81,7 @@ GradMagP WHAD8  PCA_LDA       32000    287     13    0.957   21.069
 PCASIFT  none   PCA_LDA       25600    280     20    0.933  277.623
 GaborGB  none   PCA_LDA       36864    289     11    0.963   31.939
 PCANET   none   SVM_LIN        3072    289     11    0.963  822.886
+RANDNET  none   SVM_LIN        3072    285     15    0.950  837.750
 
 -------------------------------------------------------------------
 lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina
