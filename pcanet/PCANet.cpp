@@ -366,18 +366,30 @@ bool PCANet::save(const cv::String &fn) const
     fs.release();
 
     // save filter visualization as well.
+    int maxFilters=0;
+    for (int i=0; i<numStages; i++)
+    {
+        maxFilters = std::max(stages[i].numFilters, maxFilters);
+    }
+
     cv::Mat fils;
     for (int i=0; i<numStages; i++)
     {
         cv::Mat f; stages[i].filters.convertTo(f,CV_8U,128,128);
         cv::Mat res;
-        for (int j=0; j<stages[i].numFilters; j++)
+        int j=0;
+        for (; j<stages[i].numFilters; j++)
         {
             cv::Mat r = f.row(j).clone().reshape(1,patchSize);
             cv::Mat rb;
             cv::copyMakeBorder(r,rb,1,1,1,1,cv::BORDER_CONSTANT);
             if (j==0) res=rb;
             else cv::hconcat(res,rb,res);
+        }
+        for (; j<maxFilters; j++)
+        {
+            cv::Mat &first = f.row(0);
+            cv::hconcat(res,cv::Mat(first.size(), first.type(),cv::Scalar(0)),res);
         }
         fils.push_back(res);
     }
