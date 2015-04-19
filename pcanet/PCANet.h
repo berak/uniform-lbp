@@ -14,7 +14,6 @@ using std::vector;
 //
 class PCANet
 {
-public :
     struct Stage
     {
         int numFilters;
@@ -34,12 +33,14 @@ public :
 
     cv::Mat hashingHist(const vector<cv::Mat> &Imgs) const;
 
+public :
 
     // larger patchSize seems to improve more than more filters
     PCANet(int p=7) : numStages(0), patchSize(p), blockOverLapRatio(0) {}
     int addStage(int nfil, int blocs);
 
     void randomProjection();
+    void waveProjection(float freq=1.0f);
 
     cv::Mat extract(const cv::Mat &img) const;
 

@@ -1287,8 +1287,8 @@ struct ExtractorPCANet : public TextureFeature::Extractor
     {
         if (rando)
         {
-            pnet.addStage(4,28);
-            pnet.addStage(4,23);
+            pnet.addStage(8,28);
+            pnet.addStage(8,23);
             pnet.randomProjection();
         }
         else

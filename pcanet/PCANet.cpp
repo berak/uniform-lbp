@@ -1,6 +1,6 @@
 #include "PCANet.h"
 
-#if 0
+#if 1
  #include "../profile.h"
 #else
  #define PROFILE
@@ -366,18 +366,18 @@ bool PCANet::save(const cv::String &fn) const
 
     // save filter visualization as well.
     cv::Mat fils;
-    for (int i=0; i<pcaNet.numStages; i++)
+    for (int i=0; i<numStages; i++)
     {
-        cv::Mat f; pcaNet.stages[i].filters.convertTo(f,CV_8U,128,128);
+        cv::Mat f; stages[i].filters.convertTo(f,CV_8U,128,128);
         cv::Mat res;
-        for (int j=0; j<pcaNet.stages[i].numFilters; j++)
+        for (int j=0; j<stages[i].numFilters; j++)
         {
-            cv::Mat r = f.row(j).clone().reshape(1,pcaNet.patchSize);
+            cv::Mat r = f.row(j).clone().reshape(1,patchSize);
             cv::Mat rb;
             cv::copyMakeBorder(r,rb,1,1,1,1,cv::BORDER_CONSTANT);
-            res.push_back(rb);
+            if (j==0) res=rb;
+            else cv::hconcat(res,rb,res);
         }
-        res = res.t();
         fils.push_back(res);
     }
     cv::imwrite("filters.png",fils);
@@ -434,6 +434,34 @@ void PCANet::randomProjection()
         {
             cv::normalize(proj.row(i), proj.row(i));
         }
+        stages[s].filters = proj;
+    }
+}
+
+void sin(cv::Mat &im, float t, float off)
+{
+    float *fp=im.ptr<float>(0);
+    for (int j=0; j<im.cols; j++)
+    {
+        *fp++ = sin(off + float(j)*t);
+    }
+}
+
+void PCANet::waveProjection(float freq)
+{
+    for (int s=0; s<numStages; s++)
+    {
+        int N = stages[s].numFilters, K = patchSize*patchSize;
+        cv::Mat proj(N, K, CV_32F);
+
+        float off = 1.0f/float(s+1);
+        float t = 0.32f *freq;
+        for (int i=0; i<N; i++)
+        {
+            sin(proj.row(i), t*float(i+1), off);            
+        }
+        freq *= 0.71f;
+        off  += 0.37f;
         stages[s].filters = proj;
     }
 }

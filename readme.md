@@ -80,11 +80,12 @@ GradMag  none   PCA_LDA       23552    291      9    0.970   14.966
 GradMagP WHAD8  PCA_LDA       32000    287     13    0.957   21.069
 PCASIFT  none   PCA_LDA       25600    280     20    0.933  277.623
 GaborGB  none   PCA_LDA       36864    289     11    0.963   31.939
-PCANET   none   SVM_LIN        3072    289     11    0.963  822.886   *    2 [4 28][4 23]
-PCANET   none   SVM_LIN       98304    291      9    0.970 1903.782   *    2 [8 28][8 28]
-PCANET   DCT8   SVM_LIN       32000    292      8    0.973 1897.975   *    2 [8 28][8 28]
+PCANET   none   SVM_LIN        3072    289     11    0.963  822.886   *    11 [4 28][4 23]
+PCANET   none   SVM_LIN       98304    291      9    0.970 1903.782   *    11 [8 28][8 28]
+PCANET   DCT8   SVM_LIN       32000    292      8    0.973 1897.975   *     9 [8 28][8 28]
+PCANET   none   SVM_LIN       18432    292      8    0.973  875.066   * wave 9 [6 28][6 28]
 RANDNET  none   SVM_LIN        3072    289     11    0.963 1025.370
-
+RANDNET  none   SVM_LIN       98304    292      8    0.973 1896.199
 -------------------------------------------------------------------
 lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina
 -------------------------------------------------------------------
