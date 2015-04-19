@@ -177,6 +177,7 @@ int main(int argc, const char *argv[])
     cerr << "      space, to stop recording. (then input a name)." << endl;
     cerr << "      'p' to predict," << endl;
     cerr << "      'n' for neutral," << endl;
+    cerr << "      's' to save the current model," << endl;
     cerr << "      esc to quit." << endl;
 
     string cp("0");

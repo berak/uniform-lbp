@@ -28,6 +28,7 @@ cv::Mat heaviside(const cv::Mat& X)
     return H;
 }
 
+
 cv::Mat bsxfun_times(cv::Mat &bhist, int numFilters)
 {
     PROFILE;
@@ -62,6 +63,7 @@ cv::Mat bsxfun_times(cv::Mat &bhist, int numFilters)
 
     return bhist;
 }
+
 
 cv::Mat hist(const cv::Mat &mat, int range)
 {
@@ -118,28 +120,11 @@ cv::Mat im2col(const cv::Mat &images, const vector<int> &blockSize, const vector
     return outBlocks.t();
 }
 
-void getRandom(vector<int> &idx)
-{
-    PROFILE;
-    // fill the index vector
-    for (size_t i=0; i<idx.size(); i++)
-    {
-        idx[i] = i;
-    }
-    // random shuffle it
-    for (size_t i=0; i<idx.size(); i++)
-    {
-        int ti = cv::theRNG().uniform(0,idx.size());
-        int t = idx[i];
-        idx[i] = idx[ti];
-        idx[ti] = t;
-    }
-}
 
 cv::Mat reduceMean(const cv::Mat &image, int patchSize)
 {
-    vector<int> blockSize(2,patchSize);
-    vector<int> stepSize(2,1);
+    vector<int> blockSize(2, patchSize);
+    vector<int> stepSize(2, 1);
     cv::Mat temp = im2col(image, blockSize, stepSize);
 
     cv::Mat mean;
@@ -160,15 +145,19 @@ cv::Mat pcaFilterBank(const vector<cv::Mat> &images, int patchSize, int numFilte
     PROFILE;
     int64 e1 = cv::getTickCount();
     
-    vector<int> randIdx(images.size());
-    getRandom(randIdx);
+    cv::Mat_<int> randIdx(1, images.size());
+    for (size_t i=0; i<images.size(); i++)
+    {
+        randIdx(i) = i;
+    }
+    cv::randShuffle(randIdx);
 
     int size = patchSize * patchSize;
     cv::Mat Rx = cv::Mat::zeros(size, size, images[0].type());
 
     for (size_t j=0; j<images.size(); j++)
     {
-        cv::Mat temp = reduceMean(images[randIdx[j]],patchSize);
+        cv::Mat temp = reduceMean(images[randIdx(j)], patchSize);
         Rx = Rx + temp * temp.t();
     }
     int count = images[0].cols * images.size();
@@ -187,8 +176,6 @@ cv::Mat pcaFilterBank(const vector<cv::Mat> &images, int patchSize, int numFilte
     cout << "\n Filter  time: " << time << " " << filters.size() << " " << images.size() << " " << images[0].size() << endl;
     return filters;
 }
-
-
 
 
 void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSize, int numFilters, const cv::Mat &filters, int threadnum)
@@ -326,7 +313,6 @@ cv::Mat PCANet::hashingHist(const vector<cv::Mat> &images) const
 }
 
 
-
 cv::Mat PCANet::trainLDA(const cv::Mat &features, const cv::Mat &labels, int dimensionLDA)
 {
     PROFILE;
@@ -357,6 +343,7 @@ cv::String PCANet::settings() const
     return s;
 }
 
+
 bool PCANet::save(const cv::String &fn) const
 {
     cv::FileStorage fs(fn, cv::FileStorage::WRITE);
@@ -375,9 +362,28 @@ bool PCANet::save(const cv::String &fn) const
     fs << "]";
     fs << "ProjVecPCA" << projVecPCA;
     fs << "ProjVecLDA" << projVecLDA;
-    fs.release();    
+    fs.release();
+
+    // save filter visualization as well.
+    cv::Mat fils;
+    for (int i=0; i<pcaNet.numStages; i++)
+    {
+        cv::Mat f; pcaNet.stages[i].filters.convertTo(f,CV_8U,128,128);
+        cv::Mat res;
+        for (int j=0; j<pcaNet.stages[i].numFilters; j++)
+        {
+            cv::Mat r = f.row(j).clone().reshape(1,pcaNet.patchSize);
+            cv::Mat rb;
+            cv::copyMakeBorder(r,rb,1,1,1,1,cv::BORDER_CONSTANT);
+            res.push_back(rb);
+        }
+        res = res.t();
+        fils.push_back(res);
+    }
+    cv::imwrite("filters.png",fils);
     return true;
 }
+
 
 bool PCANet::load(const cv::String &fn)
 {
@@ -406,6 +412,7 @@ bool PCANet::load(const cv::String &fn)
     return true;
 }
 
+
 int PCANet::addStage(int a, int b)
 {
     Stage s = {a,b};
@@ -414,6 +421,7 @@ int PCANet::addStage(int a, int b)
     return stages.size();
 }
 
+
 void PCANet::randomProjection()
 {
     cv::theRNG().state = 37183927;
@@ -421,13 +429,10 @@ void PCANet::randomProjection()
     {
         int N = stages[s].numFilters, K = patchSize*patchSize;
         cv::Mat proj(N, K, CV_32F);
-
         cv::randn(proj, cv::Scalar(0), cv::Scalar(1.0));
-        //randu(proj, Scalar(0), Scalar(1));
-
-        for (int i=0; i<K; i++)
+        for (int i=0; i<N; i++)
         {
-            cv::normalize(proj.col(i), proj.col(i));
+            cv::normalize(proj.row(i), proj.row(i));
         }
         stages[s].filters = proj;
     }
