@@ -33,10 +33,12 @@ class PCANet
 
     cv::Mat hashingHist(const vector<cv::Mat> &Imgs) const;
 
+    cv::String _type;
+
 public :
 
     // larger patchSize seems to improve more than more filters
-    PCANet(int p=7) : numStages(0), patchSize(p), blockOverLapRatio(0) {}
+    PCANet(int p=7) : numStages(0), patchSize(p), blockOverLapRatio(0), _type("Pca") {}
     int addStage(int nfil, int blocs);
 
     void randomProjection();

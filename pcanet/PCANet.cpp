@@ -347,6 +347,7 @@ cv::String PCANet::settings() const
 bool PCANet::save(const cv::String &fn) const
 {
     cv::FileStorage fs(fn, cv::FileStorage::WRITE);
+    fs << "Type"            << _type;
     fs << "NumStages"       << numStages;
     fs << "PatchSize"       << patchSize;
     fs << "BlockOverLapRatio" << blockOverLapRatio;
@@ -393,6 +394,7 @@ bool PCANet::load(const cv::String &fn)
         cerr << "PCANet::load : " << fn << " nor found !" << endl;
         return false;
     }
+    fs["Type"]            >> _type;
     fs["NumStages"]       >> numStages;
     fs["PatchSize"]       >> patchSize;
     fs["BlockOverLapRatio"] >> blockOverLapRatio;
@@ -438,15 +440,6 @@ void PCANet::randomProjection()
     }
 }
 
-void sin(cv::Mat &im, float t, float off)
-{
-    float *fp=im.ptr<float>(0);
-    for (int j=0; j<im.cols; j++)
-    {
-        *fp++ = sin(off + float(j)*t);
-    }
-}
-
 void PCANet::waveProjection(float freq)
 {
     for (int s=0; s<numStages; s++)
@@ -454,14 +447,17 @@ void PCANet::waveProjection(float freq)
         int N = stages[s].numFilters, K = patchSize*patchSize;
         cv::Mat proj(N, K, CV_32F);
 
+        float t = 0.32f * freq;
         float off = 1.0f/float(s+1);
-        float t = 0.32f *freq;
         for (int i=0; i<N; i++)
         {
-            sin(proj.row(i), t*float(i+1), off);            
+            float *fp = proj.ptr<float>(i);
+            for (int j=0; j<K; j++)
+            {
+                *fp++ = sin(off + (t*float(j)*float(i+1)));
+            }
         }
         freq *= 0.71f;
-        off  += 0.37f;
         stages[s].filters = proj;
     }
 }

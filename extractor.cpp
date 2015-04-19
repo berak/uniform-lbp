@@ -1282,19 +1282,10 @@ struct ExtractorCDIKP : public TextureFeature::Extractor
 struct ExtractorPCANet : public TextureFeature::Extractor
 {
     PCANet pnet;
-    ExtractorPCANet(bool rando=false)
+    ExtractorPCANet(const cv::String path)
         : pnet(11)
     {
-        if (rando)
-        {
-            pnet.addStage(8,28);
-            pnet.addStage(8,23);
-            pnet.randomProjection();
-        }
-        else
-        {
-            pnet.load("data/pcanet.xml");
-        }
+        pnet.load(path);
     }
 
     virtual int extract(const Mat &I, Mat &features) const
@@ -1351,8 +1342,9 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
         case EXT_HDLBP_PCA:return makePtr< HighDimLbpPCA >();  break;
         case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
-        case EXT_PCANET:   return makePtr< ExtractorPCANet >(false);  break;
-        case EXT_RANDNET:  return makePtr< ExtractorPCANet >(true);  break;
+        case EXT_PCANET:   return makePtr< ExtractorPCANet >("data/pcanet.xml");  break;
+        case EXT_WAVENET:  return makePtr< ExtractorPCANet >("data/wavenet.xml");  break;
+        case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
