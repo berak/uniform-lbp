@@ -43,15 +43,17 @@ public :
 
     void randomProjection();
     void waveProjection(float freq=1.0f);
+    //void haarProjection(float freq=1.0f);
 
     cv::Mat extract(const cv::Mat &img) const;
 
     cv::Mat trainPCA(vector<cv::Mat> &InImg, bool extract_feature=true);
     cv::Mat trainLDA(const cv::Mat &features, const cv::Mat &labels, int dimensionLDA=100);
 
-    bool save(const cv::String &fn) const;
     bool load(const cv::String &fn);
+    bool save(const cv::String &fn) const;
 
+    bool saveFilterVis(const cv::String &fn) const;
     cv::String settings() const;
 };
 

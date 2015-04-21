@@ -262,7 +262,7 @@ int main(int argc, const char *argv[])
 
         unsigned int incorrect[2] = {0}, correct[2] = {0};
         vector < Ptr<Object> > &curr = dataset->getTest(j);
-        for (unsigned int i=0; i<curr.size(); ++i)
+        for (unsigned int i=0; i<curr.size(); i+=skip)
         {
             PROFILEX("tests");
             FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
@@ -276,7 +276,7 @@ int main(int argc, const char *argv[])
                 incorrect[example->same]++;
         }
 
-        double acc = double(correct[1]+correct[0])/(curr.size());
+        double acc = double(correct[1]+correct[0])/((curr.size()/skip));
         double tpr = double(correct[1])/(correct[1]+incorrect[1]);
         double fpr = double(incorrect[0])/(correct[0]+incorrect[0]);
         printf("%4u %2.3f/%-2.3f  %2.3f                        \n", j, tpr,fpr,acc );

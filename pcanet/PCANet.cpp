@@ -123,12 +123,16 @@ cv::Mat im2col(const cv::Mat &images, const vector<int> &blockSize, const vector
 
 cv::Mat reduceMean(const cv::Mat &image, int patchSize)
 {
+    PROFILE;
     vector<int> blockSize(2, patchSize);
     vector<int> stepSize(2, 1);
     cv::Mat temp = im2col(image, blockSize, stepSize);
 
     cv::Mat mean;
-    cv::reduce(temp, mean, 0, CV_REDUCE_AVG);
+    {
+        PROFILEX("reduce");
+        cv::reduce(temp, mean, 0, CV_REDUCE_AVG);
+    }
 
     cv::Mat res;
     for (int i=0; i<temp.rows; i++)
@@ -187,12 +191,15 @@ void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSi
 
     for (int i=0; i<img_length; i++)
     {
-        cv::copyMakeBorder(inImg[i], img, mag, mag, mag, mag, cv::BORDER_CONSTANT, cv::Scalar(0));
-
+        {
+            PROFILEX("pca_border");
+            cv::copyMakeBorder(inImg[i], img, mag, mag, mag, mag, cv::BORDER_CONSTANT, cv::Scalar(0));
+        }
         cv::Mat temp3 = reduceMean(img, patchSize);
 
         for (int j=0; j<numFilters; j++)
         {
+            PROFILEX("pca_mult");
             cv::Mat temp = filters.row(j) * temp3;
             temp = temp.reshape(0, inImg[i].cols);
             outImg.push_back(temp.t());
@@ -203,16 +210,21 @@ void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSi
 
 cv::Mat PCANet::extract(const cv::Mat &img) const
 {
-    PROFILE;
+    PROFILEX("extract");
     vector<cv::Mat>feat(1,img), post;
 
     for (int i=0; i<numStages; i++)
     {
+        PROFILEX("extract_stages");
         pcaStage(feat, post, patchSize, stages[i].numFilters, stages[i].filters, 1);
         feat.clear();
         cv::swap(feat,post);
     }
-    cv::Mat hashing = hashingHist(feat);
+    cv::Mat hashing;
+    {
+        PROFILEX("extract_hash");
+        hashing = hashingHist(feat);
+    }
 
     if ((!projVecPCA.empty()) && (!projVecLDA.empty()))
     {
@@ -335,7 +347,7 @@ cv::Mat PCANet::trainLDA(const cv::Mat &features, const cv::Mat &labels, int dim
 
 cv::String PCANet::settings() const
 {
-    cv::String s = cv::format("%d %d ", numStages, patchSize);
+    cv::String s = _type + cv::format(" %d %d ", numStages, patchSize);
     for (int i=0; i<numStages; i++)
     {
         s += cv::format("[%d %d]", stages[i].numFilters, stages[i].histBlockSize);
@@ -364,32 +376,33 @@ bool PCANet::save(const cv::String &fn) const
     fs << "ProjVecPCA" << projVecPCA;
     fs << "ProjVecLDA" << projVecLDA;
     fs.release();
+    return true;
+}
 
-    // save filter visualization as well.
+bool PCANet::saveFilterVis(const cv::String &fn) const
+{
     int maxFilters=0;
     for (int i=0; i<numStages; i++)
     {
         maxFilters = std::max(stages[i].numFilters, maxFilters);
     }
-
     cv::Mat fils;
     for (int i=0; i<numStages; i++)
     {
         cv::Mat f; stages[i].filters.convertTo(f,CV_8U,128,128);
         cv::Mat res;
         int j=0;
-        for (; j<stages[i].numFilters; j++)
+        for (; j<maxFilters; j++)
         {
-            cv::Mat r = f.row(j).clone().reshape(1,patchSize);
+            cv::Mat r;
+            if (j<stages[i].numFilters)
+                r = f.row(j).clone().reshape(1,patchSize);
+            else
+                r = cv::Mat(patchSize,patchSize,CV_8U,cv::Scalar(0));
             cv::Mat rb;
             cv::copyMakeBorder(r,rb,1,1,1,1,cv::BORDER_CONSTANT);
             if (j==0) res=rb;
             else cv::hconcat(res,rb,res);
-        }
-        for (; j<maxFilters; j++)
-        {
-            cv::Mat &first = f.row(0);
-            cv::hconcat(res,cv::Mat(first.size(), first.type(),cv::Scalar(0)),res);
         }
         fils.push_back(res);
     }
@@ -450,6 +463,7 @@ void PCANet::randomProjection()
         }
         stages[s].filters = proj;
     }
+    _type = "Rand";
 }
 
 void PCANet::waveProjection(float freq)
@@ -459,17 +473,46 @@ void PCANet::waveProjection(float freq)
         int N = stages[s].numFilters, K = patchSize*patchSize;
         cv::Mat proj(N, K, CV_32F);
 
-        float t = 0.32f * freq;
-        float off = 1.0f/float(s+1);
+        float t = freq * 0.17f;
+        float off = 1.0f + 1.0f/float(s+1);
         for (int i=0; i<N; i++)
         {
             float *fp = proj.ptr<float>(i);
             for (int j=0; j<K; j++)
             {
-                *fp++ = sin(off + (t*float(j)*float(i+1)));
+                *fp++ = sin(off + (t*float(j+3)*float(i+3)));
             }
         }
         freq *= 0.71f;
         stages[s].filters = proj;
     }
+    _type = "Wave";
 }
+//
+//int checker(cv::Mat &m, int b)
+//{
+//    for (int i=0; i<m.rows-2*b; i+=2*b)
+//    {
+//        for (int j=0; j<m.cols-2*b; j+=2*b)
+//        {
+//            m(cv::Rect(i,j,b,b)) ~= 1;
+//        }
+//    }
+//}
+//
+//void PCANet::haarProjection(float freq)
+//{
+//    for (int s=0; s<numStages; s++)
+//    {
+//        int N = stages[s].numFilters, K = patchSize*patchSize;
+//        cv::Mat proj(N, K, CV_32F);
+//
+//        for (int i=0; i<N; i++)
+//        {
+//            checker(m(cv::Rect(i*patchSize,0)), patchSize/(N+1));
+//        }
+//        freq *= 0.71f;
+//        stages[s].filters = proj;
+//    }
+//    _type = "Wave";
+//}
