@@ -1309,7 +1309,7 @@ struct ExtractorPCANet : public TextureFeature::Extractor
 
 } // TextureFeatureImpl
 
-#include "pcanet/PNet.cpp"
+//#include "pcanet/PNet.cpp"
 
 namespace TextureFeature
 {
@@ -1354,7 +1354,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_PCANET:   return makePtr< ExtractorPCANet >("data/pcanet.xml");  break;
         case EXT_WAVENET:  return makePtr< ExtractorPCANet >("data/wavenet.xml");  break;
         case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
-        case EXT_PNET:     return makePtr< PNet>();  break;
+        //case EXT_PNET:     return makePtr< PNet>();  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
