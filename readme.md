@@ -147,4 +147,32 @@ PCANET   none   SVM_LIN        3072    880     70    0.926 1683.532
 RANDNET  none   SVM_LIN        3072    874     76    0.920 2506.335
 WAVENET  none   SVM_LIN       18432    893     57    0.940 3232.364
 
+-------------------------------------------------------------------
+data/f94gender:         10 fold, 2 classes, 484 images, retina
+-------------------------------------------------------------------
+[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]
+Pixels   none   N_L2          12100    445     45    0.908    6.271
+Pixels   none   SVM_POL       12100    467     23    0.953   13.195
+Pixels   none   PCA_LDA       12100    466     24    0.951  406.137
+Lbp      none   H_CHI         65536    407     83    0.831   42.218
+Lbp      DCT8   PCA_LDA       32000    468     22    0.955  257.919
+Lbp_P    DCT8   PCA_LDA       32000    470     20    0.959  271.282
+Lbpu_P   DCT8   PCA_LDA       32000    472     18    0.963  248.733
+MTS_P    none   PCA_LDA       11136    462     28    0.943  149.284
+COMB_P   none   PCA_LDA       66816    466     24    0.951  392.213
+COMB_P   HELL   SVM_INT2      66816    466     24    0.951   88.184
+TpLbp_P  DCT8   PCA_LDA       32000    469     21    0.957  256.392
+FpLbp_P  none   PCA_LDA       11136    462     28    0.943  138.421
+FpLbp_P  HELL   SVM_INT2      11136    451     39    0.920   13.367
+HDGRAD   DCT12  PCA_LDA       48000    426     64    0.869  467.374
+HDLBP    DCT6   PCA_LDA       24000    412     78    0.841  358.071
+HDLBP_PCA none   PCA_LDA      51200    428     62    0.873  706.529
+Sift     DCT12  PCA_LDA       48000    448     42    0.914  790.889
+Sift     HELL   SVM_INT2     184832    456     34    0.931  510.964
+Grad_P   none   PCA_LDA       32016    468     22    0.955  231.309
+GaborGB  none   PCA_LDA       36864    454     36    0.927  366.183
+CDIKP    DCT8   PCA_LDA       32000    444     46    0.906  427.614
+WAVENET  none   SVM_LIN       13824    452     38    0.922 2517.690
+
+
 </pre>

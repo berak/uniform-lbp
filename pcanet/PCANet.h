@@ -43,6 +43,7 @@ public :
 
     void randomProjection();
     void waveProjection(float freq=1.0f);
+    void gaborProjection(float freq=1.0f);
     //void haarProjection(float freq=1.0f);
 
     cv::Mat extract(const cv::Mat &img) const;
@@ -53,7 +54,7 @@ public :
     bool load(const cv::String &fn);
     bool save(const cv::String &fn) const;
 
-    bool saveFilterVis(const cv::String &fn) const;
+    cv::Mat filterVis() const;
     cv::String settings() const;
 };
 

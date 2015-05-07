@@ -9,7 +9,7 @@ using namespace std;
 using namespace cv;
 
 #include "texturefeature.h"
-#include "pcanet/PCANet.h"
+//#include "pcanet/PCANet.h"
 
 using namespace TextureFeature;
 
@@ -175,8 +175,6 @@ struct ClassifierSVM : public TextureFeature::Classifier
 {
     Ptr<ml::SVM> svm;
     Ptr<ml::SVM::Kernel> krnl;
-    //ml::SVM::Params param;
-
 
     ClassifierSVM(int ktype=ml::SVM::POLY, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
     //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
@@ -608,50 +606,6 @@ struct VerifierSVM : public VerifierPairDistance
 //};
 //
 
-struct ClassisfierPCANet : public VerifierSVM
-{
-    PCANet pnet;
-    ClassisfierPCANet() 
-    {
-        pnet.load("data/pcanet.xml");
-    }
-
-    int extract(const Mat &I, Mat &features) const
-    {
-        for (int r=0; r<I.rows; r++)
-        {
-            Mat img = tofloat(I.row(r));
-            features.push_back(pnet.extract(img));
-        }
-        return features.total() * features.elemSize();
-    }
-
-    virtual int train(const Mat &features, const Mat &labels)
-    {      
-        Mat distances, binlabels;
-        train_pre(features, labels, distances, binlabels);
-
-        Mat pcaDistances;
-        extract(distances,pcaDistances);
-
-        model->clear();
-        return model->train(ml::TrainData::create(pcaDistances, ml::ROW_SAMPLE, binlabels));
-    }
-
-    virtual bool same(const Mat &a, const Mat &b) const
-    {
-        Mat dist = distance_mat(tofloat(a), tofloat(b));
-
-        Mat pcaDist;
-        extract(dist,pcaDist);
-        
-        Mat res;
-        model->predict(pcaDist, res);
-        int r = res.at<int>(0);
-        return  r > 0;
-    }
-
-};
 
 
 } // TextureFeatureImpl

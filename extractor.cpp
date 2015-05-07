@@ -74,7 +74,7 @@ struct FeatureGrad
         Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
         Sobel(I, s1, CV_32F, 1, 0);
         Sobel(I, s2, CV_32F, 0, 1);
-        fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+        hal::fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
         fI = s3 / (360/nsec);
         fI.convertTo(fI,CV_8U);
 
@@ -360,6 +360,9 @@ static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
 }
 
 
+//
+// uniform 8bit lookup
+//
 static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo)
 {
     static int uniform[256] =
@@ -389,6 +392,9 @@ static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo)
 }
 
 
+//
+// concatenate histograms from grid based patches
+//
 struct GriddedHist
 {
     int GRIDX,GRIDY;
@@ -461,7 +467,7 @@ struct PyramidGrid
 // various attempts to gather landmarks for sampling
 //
 
-#ifdef HAVE_DLIB
+#ifdef HAVE_DLIB // 20 pt subset of dlib's landmarks
 //
 // 20 assorted keypoints extracted from the 68 dlib facial landmarks, based on the
 //    Kazemi_One_Millisecond_Face_2014_CVPR_paper.pdf
@@ -500,7 +506,7 @@ struct LandMarks
         return (int)kp.size();
     }
 };
-#elif 0
+#elif 0 // pre-trained discriminant parts based landmarks
 struct LandMarks
 {
     Ptr<ElasticParts> elastic;
@@ -519,7 +525,7 @@ struct LandMarks
         return (int)kp.size();
     }
 };
-#else
+#else // fixed manmade landmarks
 struct LandMarks
 {
     int extract(const Mat &img, vector<Point> &kp) const
@@ -557,7 +563,7 @@ struct LandMarks
 //
 static void gftt64(const Mat &img, vector<KeyPoint> &kp)
 {
-    static const int kpsize = 16;
+    static const float kpsize = 16.0f;
     kp.push_back(KeyPoint(14.f, 33.f, kpsize));        kp.push_back(KeyPoint(29.f, 77.f, kpsize));        kp.push_back(KeyPoint(55.f, 60.f, kpsize));
     kp.push_back(KeyPoint(63.f, 76.f, kpsize));        kp.push_back(KeyPoint(76.f, 32.f, kpsize));        kp.push_back(KeyPoint(35.f, 60.f, kpsize));
     kp.push_back(KeyPoint(69.f, 21.f, kpsize));        kp.push_back(KeyPoint(45.f, 30.f, kpsize));        kp.push_back(KeyPoint(27.f, 31.f, kpsize));
@@ -704,14 +710,14 @@ struct GradMagExtractor : public TextureFeature::Extractor
         Sobel(I, s1, CV_32F, 1, 0);
         Sobel(I, s2, CV_32F, 0, 1);
 
-        fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+        hal::fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
         fgrad = s3 / (360/nbins);
         fgrad.convertTo(fgrad,CV_8U);
         Mat fg;
         grid.hist(fgrad,fg,nbins+1);
         features.push_back(fg.reshape(1,1));
 
-        magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s4.ptr<float>(0), I.total());
+        hal::magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s4.ptr<float>(0), I.total());
         normalize(s4,fmag);
         fmag.convertTo(fmag,CV_8U,nbins);
         Mat fm;
@@ -736,10 +742,10 @@ struct ExtractorGradBin : public TextureFeature::Extractor
         Mat s1, s2, s3(I.size(), CV_32F), s4(I.size(), CV_32F), s5;
         Sobel(I, s1, CV_32F, 1, 0);
         Sobel(I, s2, CV_32F, 0, 1);
-        fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+        hal::fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
         s3 /= (360/nsec);
 
-        magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s4.ptr<float>(0), I.total());
+        hal::magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s4.ptr<float>(0), I.total());
         normalize(s4,s4,nrad);
 
         int sx = I.cols/(grid-1);
@@ -1283,7 +1289,6 @@ struct ExtractorPCANet : public TextureFeature::Extractor
 {
     PCANet pnet;
     ExtractorPCANet(const cv::String path)
-        : pnet(11)
     {
         pnet.load(path);
     }
@@ -1300,13 +1305,17 @@ struct ExtractorPCANet : public TextureFeature::Extractor
     }
 };
 
+
+
 } // TextureFeatureImpl
+
+#include "pcanet/PNet.cpp"
 
 namespace TextureFeature
 {
 using namespace TextureFeatureImpl;
 
-Ptr<Extractor> createExtractor(int extract)
+cv::Ptr<Extractor> createExtractor(int extract)
 {
     switch(int(extract))
     {
@@ -1345,6 +1354,7 @@ Ptr<Extractor> createExtractor(int extract)
         case EXT_PCANET:   return makePtr< ExtractorPCANet >("data/pcanet.xml");  break;
         case EXT_WAVENET:  return makePtr< ExtractorPCANet >("data/wavenet.xml");  break;
         case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
+        case EXT_PNET:     return makePtr< PNet>();  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }

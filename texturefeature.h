@@ -93,6 +93,7 @@ namespace TextureFeature
         EXT_PCANET,
         EXT_RANDNET,
         EXT_WAVENET,
+        EXT_PNET,
         EXT_CDIKP,
         EXT_MAX
     };
@@ -132,6 +133,7 @@ namespace TextureFeature
         "PCANET",
         "RANDNET",
         "WAVENET",
+        "PNET",
         "CDIKP",
         0
     };

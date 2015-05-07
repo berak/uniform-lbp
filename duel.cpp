@@ -329,16 +329,17 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |      | show this message }"
             "{ opts o         |      | show extractor / reductor / classifier options }"
             "{ fold F         |10    | folds for crossvalidation }"
-            "{ minp m         |10    | mininal img count per person (when reading folders) }"
+            "{ minp m         |10    | minimal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |33     | extractor  enum }"
+            "{ ext e          |34     | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
-            "{ cls c          |0     | classifier enum }"
+            "{ cls c          |7     | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
             "{ crop C         |0     | crop outer pixels }"
-            "{ path p         |lfw3d_9000/*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
+            "{ path p         |data/yale.txt|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
+            //"{ path p         |lfw3d_9000/*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
  
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
@@ -401,7 +402,7 @@ int main(int argc, const char *argv[])
            // TextureFeature::EXT_Dct,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
             //TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_HIST_HELL,
             //TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
-            //TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
+            TextureFeature::EXT_Lbp,    TextureFeature::FIL_NONE,  TextureFeature::CL_HIST_CHI,
             TextureFeature::EXT_Lbp,    TextureFeature::FIL_DCT8,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_LBP_P,  TextureFeature::FIL_DCT8,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_LBPU_P, TextureFeature::FIL_DCT8,  TextureFeature::CL_PCA_LDA,
@@ -432,13 +433,14 @@ int main(int argc, const char *argv[])
             //TextureFeature::EXT_Sift_G, TextureFeature::FIL_DCT8,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_Grad_P, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_Grad_P, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
-            TextureFeature::EXT_GradBin,TextureFeature::FIL_DCT4,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_GradBin,TextureFeature::FIL_DCT4,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_GradMag,TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_GradMag_P,TextureFeature::FIL_WHAD8,  TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_GradMag_P,TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
             //TextureFeature::EXT_GradMag_P,TextureFeature::FIL_DCT8,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_PCASIFT, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_GaborGB, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_WAVENET, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_LIN,
 
 
             -1,-1,-1

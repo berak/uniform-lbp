@@ -12,23 +12,6 @@ using std::endl;
 
 
 
-cv::Mat heaviside(const cv::Mat& X)
-{
-    PROFILE;
-    cv::Mat H(X.size(), X.type());
-    for (int i=0; i<X.rows; i++)
-    {
-        const float *x = X.ptr<float>(i);
-        float *h = H.ptr<float>(i);
-        for (int j=0; j<X.cols; j++)
-        {
-            h[j] = (x[j] > 0) ? 1.0f : 0.0f;
-        }
-    }
-    return H;
-}
-
-
 cv::Mat bsxfun_times(cv::Mat &bhist, int numFilters)
 {
     PROFILE;
@@ -137,6 +120,7 @@ cv::Mat reduceMean(const cv::Mat &image, int patchSize)
     cv::Mat res;
     for (int i=0; i<temp.rows; i++)
     {
+        PROFILEX("reduce_sub");
         cv::Mat temp2 = (temp.row(i) - mean.row(0));
         res.push_back(temp2.row(0));
     }
@@ -308,8 +292,8 @@ cv::Mat PCANet::hashingHist(const vector<cv::Mat> &images) const
         cv::Mat T(images[0].rows, images[0].cols, images[0].type(), cv::Scalar(0));
         for (int j=0; j<filtersLast; j++)
         {
-            cv::Mat temp = heaviside(images[filtersLast * i + j]);
-            temp *= map_weights[j];
+            cv::Mat temp;
+            threshold(images[filtersLast * i + j], temp, 0.0, map_weights[j], 0);
             T += temp;
         }
 
@@ -379,7 +363,7 @@ bool PCANet::save(const cv::String &fn) const
     return true;
 }
 
-bool PCANet::saveFilterVis(const cv::String &fn) const
+cv::Mat PCANet::filterVis() const
 {
     int maxFilters=0;
     for (int i=0; i<numStages; i++)
@@ -390,9 +374,8 @@ bool PCANet::saveFilterVis(const cv::String &fn) const
     for (int i=0; i<numStages; i++)
     {
         cv::Mat f; stages[i].filters.convertTo(f,CV_8U,128,128);
-        cv::Mat res;
-        int j=0;
-        for (; j<maxFilters; j++)
+        cv::Mat res;        
+        for (int j=0; j<maxFilters; j++)
         {
             cv::Mat r;
             if (j<stages[i].numFilters)
@@ -406,8 +389,7 @@ bool PCANet::saveFilterVis(const cv::String &fn) const
         }
         fils.push_back(res);
     }
-    cv::imwrite("filters.png",fils);
-    return true;
+    return fils;
 }
 
 
@@ -487,6 +469,29 @@ void PCANet::waveProjection(float freq)
         stages[s].filters = proj;
     }
     _type = "Wave";
+}
+
+void PCANet::gaborProjection(float freq)
+{
+    for (int s=0; s<numStages; s++)
+    {
+        int N = stages[s].numFilters, K = patchSize*patchSize;
+        Mat proj;
+        for (int i=0; i<N; i++)
+        {
+            double sigma  = 12.0;;
+            double theta  = double(freq*(7-i)) * CV_PI;
+            double lambda = double(1.3*(10-i)) * CV_PI/4;// * 180.0;//180.0 - theta;//45.0;// * 180.0 / CV_PI;
+            double gamma  = (i+5);//6.0;// * 180.0 / CV_PI;
+            double psi = CV_PI;//90.0;
+            Mat gab = getGaborKernel(Size(patchSize,patchSize),sigma,theta,lambda,gamma,psi);
+            gab.convertTo(gab,CV_32F);
+            proj.push_back(gab.reshape(1,1));
+        }
+        freq *= 3.71f;
+        stages[s].filters = proj;
+    }
+    _type = "Gabor";
 }
 //
 //int checker(cv::Mat &m, int b)
