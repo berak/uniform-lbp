@@ -309,21 +309,21 @@ int main(int argc, const char *argv[])
     PROFILE;
     const char *keys =
             "{ help h usage ? |      | show this message }"
-            "{ write w        |false | (over)write images (else just show them) }"
-            "{ facedet f      |false | do a 2d face detection/crop(first) }"
-            "{ align2d a      |false | do a 2d eye alignment(first) }"
+            "{ write w        |true | (over)write images (else just show them) }"
+            "{ facedet f      |true | do a 2d face detection/crop(first) }"
+            "{ align2d a      |true | do a 2d eye alignment(first) }"
             "{ project3d P    |true  | do 3d projection }"
             "{ crop c         |110   | crop size }"
             "{ sym s          |9000  | threshold for soft sym }"
             "{ blend b        |0.7   | blend factor for soft sym }"
-            "{ path p         |e:/MEDIA/faces/aberdeen/*.jpg| path to data folder}"
+            "{ path p         |Aberdeen/*.jpg| path to data folder}"
 //            "{ path p         |e:/MEDIA/faces/faces96/*.jpg| path to data folder}"
 //            "{ path p         |e:/MEDIA/faces/tv/*.png| path to data folder}"
 //            "{ path p         |e:/MEDIA/faces/orl_faces/*.pgm| path to data folder}"
 //            "{ path p         |e:/MEDIA/faces/faces94/male/*.jpg| path to data folder}"
 //            "{ path p         |lfw-deepfunneled/*.jpg| path to data folder}"
             "{ cascade C      |E:\\code\\opencv\\data\\haarcascades\\|\n     path to haarcascades folder}"
-            "{ dlibpath d     |D:/Temp/dlib-18.10/examples/shape_predictor_68_face_landmarks.dat|\n     path to dlib landmarks model}";
+            "{ dlibpath d     |data/shape_predictor_68_face_landmarks.dat|\n     path to dlib landmarks model}";
 
 
     CommandLineParser parser(argc, argv, keys);
@@ -379,6 +379,7 @@ int main(int argc, const char *argv[])
             casc.detectMultiScale(in, rects, 1.3, 4);
             if (rects.size() > 0)
             {
+                cerr << "frontal " << rects[0] << endl;
                 in = in(rects[0]);
             }
             else

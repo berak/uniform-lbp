@@ -114,7 +114,7 @@ cv::Mat reduceMean(const cv::Mat &image, int patchSize)
     cv::Mat mean;
     {
         PROFILEX("reduce");
-        cv::reduce(temp, mean, 0, CV_REDUCE_AVG);
+        cv::reduce(temp, mean, 0, cv::REDUCE_AVG);
     }
 
     cv::Mat res;
@@ -180,13 +180,19 @@ void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSi
             cv::copyMakeBorder(inImg[i], img, mag, mag, mag, mag, cv::BORDER_CONSTANT, cv::Scalar(0));
         }
         cv::Mat temp3 = reduceMean(img, patchSize);
+        cv::UMat tu; temp3.copyTo(tu);
 
         for (int j=0; j<numFilters; j++)
         {
             PROFILEX("pca_mult");
-            cv::Mat temp = filters.row(j) * temp3;
+            cv::UMat temp,fu; filters.row(j).copyTo(fu);
+            cv::gemm(fu, tu, 1,cv::UMat(), 0,temp);
             temp = temp.reshape(0, inImg[i].cols);
-            outImg.push_back(temp.t());
+            cv::Mat z; cv::transpose(temp, z);
+            outImg.push_back(z);
+            //cv::Mat temp = filters.row(j)) * temp3;
+            //temp = temp.reshape(0, inImg[i].cols);
+            //outImg.push_back(temp.t());
         }
     }
 }
