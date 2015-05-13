@@ -332,7 +332,7 @@ int main(int argc, const char *argv[])
             "{ minp m         |10    | minimal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |34     | extractor  enum }"
+            "{ ext e          |1     | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
             "{ cls c          |7     | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"

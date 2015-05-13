@@ -40,6 +40,7 @@ struct ClassifierNearest : public TextureFeature::Classifier
     {
         return norm(testFeature, trainFeature, flag);
     }
+
     // TextureFeature::Classifier
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
@@ -67,6 +68,7 @@ struct ClassifierNearest : public TextureFeature::Classifier
         labels = trainLabels;
         return 1;
     }
+
     virtual int update(const cv::Mat &trainFeatures, const cv::Mat &trainLabels)
     {
         features.push_back(trainFeatures);
@@ -81,6 +83,7 @@ struct ClassifierNearest : public TextureFeature::Classifier
         fs << "features" << features;
         return true;
     }
+
     virtual bool load(const FileStorage &fs)
     {
         fs["labels"] >> labels;
@@ -98,6 +101,7 @@ struct ClassifierNearestFloat : public ClassifierNearest
     {
         return ClassifierNearest::predict(tofloat(testFeature), results);
     }
+
     virtual int train(const cv::Mat &trainFeatures, const cv::Mat &trainLabels)
     {
         return ClassifierNearest::train(tofloat(trainFeatures), trainLabels);
@@ -137,6 +141,7 @@ struct ClassifierCosine : public ClassifierNearest
         double c = testFeature.dot(testFeature);
         return -a / sqrt(b*c);
     }
+
     virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
     {
         return cosdistance(testFeature, trainFeature);
@@ -222,6 +227,7 @@ struct ClassifierSVM : public TextureFeature::Classifier
         svm->write(fs);
         return true;
     }
+
     virtual bool load(const FileStorage &fs)
     {
         if(!fs.isOpened()) return false;
@@ -435,29 +441,23 @@ struct VerifierNearest : TextureFeature::Verifier
         int    nSame=0, nNotSame=0;
         for (size_t i=0; i<labels.total()-1; i+=2)
         {
-            //for (size_t j=0; j<labels.total()-1; j+=2)
+            int j = i+1;
+            double d = distance(features.row(i), features.row(j));
+            if (labels.at<int>(i) == labels.at<int>(j))
             {
-                //if (i==j) continue;
-                int j = i+1;
-                double d = distance(features.row(i), features.row(j));
-                if (labels.at<int>(i) == labels.at<int>(j))
-                {
-                    dSame += d;
-                    nSame ++;
-                }
-                else
-                {
-                    dNotSame += d;
-                    nNotSame ++;
-                }
+                dSame += d;
+                nSame ++;
             }
-            // cerr << i << "/" << labels.total() << '\r';
+            else
+            {
+                dNotSame += d;
+                nNotSame ++;
+            }
         }
         dSame    = (dSame/nSame);
         dNotSame = (dNotSame/nNotSame);
         double dt = dNotSame - dSame;
         thresh = dSame + dt*0.25; //(dSame + dNotSame) / 2;
-        //cerr << dSame << " " << dNotSame << " " << thresh << "\t" << nSame << " " << nNotSame <<  endl;
         return 1;
     }
 
@@ -475,6 +475,7 @@ struct VerifierHist : VerifierNearest
     VerifierHist(int f=HISTCMP_CHISQR)
         : VerifierNearest(f)
     {}
+
     virtual double distance(const Mat &a, const Mat &b) const
     {
         return compareHist(a,b,flag);
@@ -507,6 +508,7 @@ struct PairDistance
     PairDistance(int df=2)
         : dist_flag(df)
     {}
+
     Mat distance_mat(const Mat &a, const Mat &b) const
     {
         Mat d;
@@ -625,6 +627,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_NORM_HAM:  return makePtr<ClassifierHist>(NORM_HAMMING2); break;
         case CL_HIST_HELL: return makePtr<ClassifierHist>(HISTCMP_HELLINGER); break;
         case CL_HIST_CHI:  return makePtr<ClassifierHist>(HISTCMP_CHISQR); break;
+        case CL_KLDIV:     return makePtr<ClassifierHist>(HISTCMP_KL_DIV); break;
         case CL_COSINE:    return makePtr<ClassifierCosine>(); break;
         case CL_SVM_LIN:   return makePtr<ClassifierSVM>(int(cv::ml::SVM::LINEAR)); break;
         case CL_SVM_RBF:   return makePtr<ClassifierSVM>(int(cv::ml::SVM::RBF)); break;

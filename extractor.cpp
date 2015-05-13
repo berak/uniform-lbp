@@ -89,6 +89,8 @@ struct FeatureGrad
 };
 
 
+
+
 struct FeatureLbp
 {
     int operator() (const Mat &I, Mat &fI) const
@@ -343,6 +345,96 @@ struct FeatureFPLbp
 
 
 
+
+
+
+//
+// stolen from https://github.com/biometrics/openbr
+//
+/*!
+ * \ingroup transforms
+ * \brief Tan, Xiaoyang, and Bill Triggs. "Enhanced local texture feature sets for face recognition under difficult lighting conditions." Analysis and Modeling of Faces and Gestures. Springer Berlin Heidelberg, 2007. 168-182.
+ * \author Brendan Klare \cite bklare
+ * \author Josh Klontz \cite jklontz
+ */
+struct LTPTransform 
+{
+    unsigned short lut[8][3];
+    int radius;
+    float threshold;
+
+    LTPTransform()
+        : radius(1)
+        , threshold(0.1f)
+    {
+        unsigned short cnt = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 3; j++) 
+                lut[i][j] = cnt++;
+            cnt++;  //we skip the 4th number (only three patterns)
+        }
+    }
+
+    int operator() (const Mat &I, Mat &fI) const
+    {
+        Mat m; I.convertTo(m, CV_32F); CV_Assert(m.isContinuous() && (m.channels() == 1));
+
+        Mat n(m.rows, m.cols, CV_16U, Scalar(0));
+        float thresholdNeg = -1.0 * threshold; //compute once (can move to init)
+
+        const float *p = (const float*)m.ptr();
+        float diff;
+        for (int r=radius; r<m.rows-radius; r++) 
+        {
+            for (int c=radius; c<m.cols-radius; c++) 
+            {
+                const float cval  = (p[(r+0*radius)*m.cols+c+0*radius]);
+
+                diff = p[(r-1*radius)*m.cols+c-1*radius] - cval;
+                if      (diff > threshold)      n.at<unsigned short>(r,c) = lut[0][0];
+                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) = lut[0][1];
+                else                            n.at<unsigned short>(r,c) = lut[0][2];
+
+                diff = p[(r-1*radius)*m.cols+c+0*radius] - cval;
+                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[1][0];
+                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[1][1];
+                else                            n.at<unsigned short>(r,c) += lut[1][2];
+
+                diff = p[(r-1*radius)*m.cols+c+1*radius] - cval;
+                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[2][0];
+                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[2][1];
+                else                            n.at<unsigned short>(r,c) += lut[2][2];
+
+                diff = p[(r+0*radius)*m.cols+c+1*radius] - cval;
+                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[3][0];
+                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[3][1];
+                else                            n.at<unsigned short>(r,c) += lut[3][2];
+
+                diff = p[(r+1*radius)*m.cols+c+1*radius] - cval;
+                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[4][0];
+                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[4][1];
+                else                            n.at<unsigned short>(r,c) += lut[4][2];
+
+                diff = p[(r+1*radius)*m.cols+c+0*radius] - cval;
+                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[5][0];
+                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[5][1];
+                else                            n.at<unsigned short>(r,c) += lut[5][2];
+
+                diff = p[(r+1*radius)*m.cols+c-1*radius] - cval;
+                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[6][0];
+                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[6][1];
+                else                            n.at<unsigned short>(r,c) += lut[6][2];
+
+                diff = p[(r+0*radius)*m.cols+c-1*radius] - cval;
+                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[7][0];
+                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[7][1];
+                else                            n.at<unsigned short>(r,c) += lut[7][2];
+            }
+        }
+        fI = n;
+        return 256;
+    }
+};
 
 
 static void hist_patch(const Mat_<uchar> &fI, Mat &histo, int histSize=256)
@@ -1320,6 +1412,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
     switch(int(extract))
     {
         case EXT_Pixels:   return makePtr< ExtractorPixels >(); break;
+        case EXT_Ltp:      return makePtr< GenericExtractor<LTPTransform,GriddedHist> >(LTPTransform(), GriddedHist()); break;
         case EXT_Lbp:      return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist()); break;
         case EXT_LBP_P:    return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid()); break;
         case EXT_LBPU_P:   return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid(true)); break;
