@@ -99,7 +99,8 @@ class MyFace
 {
     Ptr<TextureFeature::Extractor> ext;
     Ptr<TextureFeature::Filter>  fil;
-    Ptr<TextureFeature::Verifier>  cls;
+    Ptr<TextureFeature::Verifier>  ver;
+    Ptr<TextureFeature::Classifier>  cls;
     Preprocessor pre;
 
     Mat labels;
@@ -108,13 +109,16 @@ class MyFace
 
 public:
 
-    MyFace(int extract=0, int filt=0, int clsfy=0, int preproc=0, int crop=0, const String &train="dev",int skip=1)
+    MyFace(int extract=0, int filt=0, int clsfy=0, int preproc=0, int crop=0, const String &train="dev",int skip=1, bool lab=false)
         : pre(preproc,crop)
         , nimg(train=="dev"?4400/skip:10800/skip)
     {
         ext = TextureFeature::createExtractor(extract);
         fil = TextureFeature::createFilter(filt);
-        cls = TextureFeature::createVerifier(clsfy);
+        if (lab)
+            cls = TextureFeature::createClassifier(clsfy);
+        else
+            ver = TextureFeature::createVerifier(clsfy);
     }
 
     virtual int addTraining(const Mat & img, int label) 
@@ -143,7 +147,11 @@ public:
     {
         //cerr << "\n." << features.cols << " ";
         //cerr << "start training." << " ";
-        int ok = cls->train(features, labels.reshape(1,features.rows));
+        int ok = 0;
+        if (!cls.empty())
+            ok = cls->train(features, labels.reshape(1,features.rows));
+        if (!ver.empty())
+            ok = ver->train(features, labels.reshape(1,features.rows));
         //cerr << "done training." << endl;
         CV_Assert(ok);
         features.release();
@@ -154,13 +162,26 @@ public:
     {
         Mat feat1, feat2;
         ext->extract(pre.process(a), feat1);
+        if (feat1.type() != CV_32F)
+            feat1.convertTo(feat1,CV_32F);
         ext->extract(pre.process(b), feat2);
+        if (feat2.type() != CV_32F)
+            feat2.convertTo(feat2,CV_32F);
+
         if (! fil.empty())
         {
             fil->filter(feat1,feat1);
             fil->filter(feat2,feat2);
         }
-        return cls->same(feat1,feat2);
+
+        if (!ver.empty())
+            return ver->same(feat1,feat2);
+
+        Mat_<float> r1,r2;
+        cls->predict(feat1,r1);
+        cls->predict(feat2,r2);
+        cerr << format("%4d %4d\t",int(r1(0)),int(r2(0)));
+        return int(r1(0)) == int(r2(0));
     }
 };
 
@@ -174,8 +195,9 @@ int main(int argc, const char *argv[])
             "{ path p         |lfw-deepfunneled/| path to dataset (lfw2 folder) }"
             "{ ext e          |0   | extractor enum }"
             "{ fil f          |0   | filter enum }"
-            "{ cls c          |21  | classifier enum }"
+            "{ cls c          |0   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
+            "{ lab l          |0   | train / test with labels(instead of direct image compare) }"
             "{ skip s         |1   | skip imgs for train }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
@@ -192,6 +214,7 @@ int main(int argc, const char *argv[])
         printOptions();
         return -1;
     }
+    bool lab = parser.has("lab");
     int ext = parser.get<int>("ext");
     int fil = parser.get<int>("fil");
     int cls = parser.get<int>("cls");
@@ -199,10 +222,10 @@ int main(int argc, const char *argv[])
     int crp = parser.get<int>("crop");
     int skip = parser.get<int>("skip");
     string trainMethod(parser.get<string>("train"));
-    cout << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << trainMethod << endl;
+    cout << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << trainMethod << (lab?" c":" v") << endl;
 
     int64 t0 = getTickCount();
-    Ptr<MyFace> model = makePtr<MyFace>(ext,fil,cls,pre,crp,trainMethod,skip);
+    Ptr<MyFace> model = makePtr<MyFace>(ext,fil,cls,pre,crp,trainMethod,skip,lab);
 
     // load dataset
     Ptr<FR_lfw> dataset = FR_lfw::create();
@@ -266,7 +289,7 @@ int main(int argc, const char *argv[])
         {
             PROFILEX("tests");
             FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
-
+            cerr << i << "\t";
             Mat img1 = imread(path+example->image1, IMREAD_GRAYSCALE);
             Mat img2 = imread(path+example->image2, IMREAD_GRAYSCALE);
             bool same = model->same(img1,img2)>0;
@@ -274,6 +297,7 @@ int main(int argc, const char *argv[])
                 correct[example->same]++;
             else
                 incorrect[example->same]++;
+            cerr << same << " " << example->same << "                 \r";
         }
 
         double acc = double(correct[1]+correct[0])/((curr.size()/skip));

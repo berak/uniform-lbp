@@ -351,6 +351,8 @@ struct FeatureFPLbp
 //
 // stolen from https://github.com/biometrics/openbr
 //
+// (.. would there be a license issue here ?)
+//
 /*!
  * \ingroup transforms
  * \brief Tan, Xiaoyang, and Bill Triggs. "Enhanced local texture feature sets for face recognition under difficult lighting conditions." Analysis and Modeling of Faces and Gestures. Springer Berlin Heidelberg, 2007. 168-182.
