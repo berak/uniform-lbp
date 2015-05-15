@@ -31,12 +31,6 @@ using std::endl;
 #endif
 
 
-#if 1
- #include "profile.h"
-#else
- #define PROFILE
- #define PROFILEX
-#endif
 
 using namespace cv;
 using namespace TextureFeature;
@@ -1420,7 +1414,7 @@ struct ExtractorLatch : public TextureFeature::Extractor
                 kps.push_back(KeyPoint(i,j,1));
             }
         }
-        Latch::compute(img,kps,features);
+        Latch::compute(img,kps,features,(1<<4),3);
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
