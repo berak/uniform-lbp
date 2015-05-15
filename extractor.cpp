@@ -1412,10 +1412,10 @@ struct ExtractorLatch : public TextureFeature::Extractor
         {
             for (float j=Latch::PATCH_SIZE/2; j<img.cols-Latch::PATCH_SIZE/2; j+=step)
             {
-                kps.push_back(KeyPoint(i,j,1));
+                kps.push_back(KeyPoint(i, j, 1));
             }
         }
-        Latch::compute(img,kps,features,(1<<3),4);
+        Latch::compute(img, kps, features, 8, 4);
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }

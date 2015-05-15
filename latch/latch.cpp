@@ -191,7 +191,7 @@ static void pixelTests(int N, const cv::Mat& grayImage, const std::vector<cv::Ke
 {
     PROFILEX("Latch::pixelTests");
 	cv::Mat descriptors = _descriptors.getMat();
-	for (int i = 0; i < (int)keypoints.size(); ++i)
+	for (size_t i=0; i<keypoints.size(); ++i)
 	{
 		uchar* desc = descriptors.ptr(i);
 		const KeyPoint& pt = keypoints[i];

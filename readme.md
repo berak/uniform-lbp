@@ -53,6 +53,8 @@ PCASIFT  none   PCA_LDA       25600    695     46    0.938  696.151
 PCANET   none   SVM_LIN        3072    730     11    0.985 1306.950
 RANDNET  none   SVM_LIN        3072    728     13    0.982 2424.438
 WAVENET  none   SVM_LIN       18432    738      3    0.996 2563.668  * 9 [6 28][6 28]
+LATCH    none   SVM_POL        1568    721     20    0.973  134.163
+LATCH    none   PCA_LDA        1568    725     16    0.978  202.412
 
 -------------------------------------------------------------------
 data/yale:              10 fold, 15 classes, 165 images, retina
@@ -149,7 +151,8 @@ GaborGB  none   PCA_LDA       36864    918     32    0.966  328.633
 PCANET   none   SVM_LIN        3072    880     70    0.926 1683.532
 RANDNET  none   SVM_LIN        3072    874     76    0.920 2506.335
 WAVENET  none   SVM_LIN       18432    893     57    0.940 3232.364
-
+LATCH    none   SVM_POL        1568    847    103    0.892  170.802
+LATCH    none   PCA_LDA        1568    883     67    0.929  318.049
 -------------------------------------------------------------------
 data/f94gender:         10 fold, 2 classes, 484 images, retina
 -------------------------------------------------------------------

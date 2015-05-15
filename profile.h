@@ -12,13 +12,12 @@ using namespace std;
 
 struct Profile
 {
-    double dt(int64 t) const { return double(t*1000/freq)/1000.0; }
+    double dt(int64 t) const { return 1000.0*double(t/1000)/get_freq(); }
 
-    static double freq;
     cv::String name;
     int64 t; // accumulated time
     int64 c; // function calls
-    double d_tc;
+    double d_tc; // must cache, (getTickCount() etc will not be availabe in destructor) 
     double d_t;
 
     Profile(cv::String name)
@@ -42,9 +41,9 @@ struct Profile
     {
         if (delta <= 0)  return;
 
-        t += delta;
         c ++;
-        d_t  = dt(delta);
+        t += delta;
+        d_t  = dt(t); 
         d_tc = d_t/c;
     }
 
@@ -65,7 +64,6 @@ struct Profile
         }
     };
 };
-double Profile::freq = get_freq();
 
 #define PROFILEX(s) static Profile _a_rose(s); Profile::Scope _is_a_rose_is(_a_rose);
 #define PROFILE PROFILEX(__FUNCTION__)
