@@ -1,7 +1,7 @@
 #include <opencv2/opencv.hpp>
 
 #if 1
- #include "profile.h"
+ #include "../profile.h"
 #else
  #define PROFILE
  #define PROFILEX
