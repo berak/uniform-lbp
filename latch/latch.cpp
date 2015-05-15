@@ -7,6 +7,16 @@
  #define PROFILEX
 #endif
 
+//
+//Based on the following paper:
+//Gil Levi and Tal Hassner, "LATCH: Learned Arrangements of Three Patch Codes", arXiv preprint arXiv:1501.03719, 15 Jan. 2015
+//
+//link: http://arxiv.org/abs/1501.03719
+//impl: https://github.com/Itseez/opencv_contrib/pull/231
+//
+// assuming, that faces all come 'upright', the rotational invariant part was skipped here.
+//
+
 namespace TextureFeature
 {
 namespace Latch
