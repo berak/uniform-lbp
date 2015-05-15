@@ -137,7 +137,7 @@ int sampling_points[3072]=
 	11, 2, -1, 7, 14, -2,	11, 20, -1, -4, -3, -23,	-19, 20, -11, -2, -20, -24,	11, -12, 5, -21, -2, -13
 };
 
-void calculateSums(int count, const int points[], const Mat &grayImage, const KeyPoint &pt, int &suma, int &sumc, int half_ssd_size)
+void calculateSums(int count, const int points[], const cv::Mat &grayImage, const cv::KeyPoint &pt, int &suma, int &sumc, int half_ssd_size)
 {
     PROFILEX("Latch::calculateSums");
 	int ax = points[count]     + (int)(pt.pt.x + 0.5);
@@ -168,10 +168,10 @@ void calculateSums(int count, const int points[], const Mat &grayImage, const Ke
 }
 
 
-static void pixelTests(int N, const Mat& grayImage, const std::vector<KeyPoint>& keypoints, OutputArray _descriptors, const int points[], int half_ssd_size)
+static void pixelTests(int N, const cv::Mat& grayImage, const std::vector<cv::KeyPoint>& keypoints, cv::OutputArray _descriptors, const int points[], int half_ssd_size)
 {
     PROFILEX("Latch::pixelTests");
-	Mat descriptors = _descriptors.getMat();
+	cv::Mat descriptors = _descriptors.getMat();
 	for (int i = 0; i < (int)keypoints.size(); ++i)
 	{
 		uchar* desc = descriptors.ptr(i);
@@ -196,22 +196,22 @@ static void pixelTests(int N, const Mat& grayImage, const std::vector<KeyPoint>&
 }
 
 
-void compute(InputArray image, std::vector<KeyPoint>& keypoints, OutputArray descriptors, 
+void compute(cv::InputArray image, std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors, 
                   int N=32, int half_ssd_size=3)
 {
     PROFILEX("Latch::compute");
-	Mat grayImage;
+    cv::Mat grayImage;
     {
         PROFILEX("Latch::blur");
-    	GaussianBlur(image, grayImage, cv::Size(3, 3), 2, 2);
+    	cv::GaussianBlur(image, grayImage, cv::Size(3, 3), 2, 2);
     }
 
-	if (image.type() != CV_8U) cvtColor(image, grayImage, COLOR_BGR2GRAY);
+	if (image.type() != CV_8U) cv::cvtColor(image, grayImage, COLOR_BGR2GRAY);
 
     {
         PROFILEX("Latch::kp_filter");
 	    //Remove keypoints very close to the border
-	    KeyPointsFilter::runByImageBorder(keypoints, image.size(), PATCH_SIZE / 2 + half_ssd_size);
+	    cv::KeyPointsFilter::runByImageBorder(keypoints, image.size(), PATCH_SIZE / 2 + half_ssd_size);
     }
 	descriptors.create((int)keypoints.size(), N, CV_8U);
 
