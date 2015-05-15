@@ -87,6 +87,8 @@ PCANET   DCT8   SVM_LIN       32000    292      8    0.973 1897.975   *     9 [8
 PCANET   none   SVM_LIN       18432    292      8    0.973  875.066   * wave 9 [6 28][6 28]
 RANDNET  none   SVM_LIN        3072    289     11    0.963 1025.370
 RANDNET  none   SVM_LIN       98304    292      8    0.973 1896.199
+LATCH    none   SVM_POL        1568    293      7    0.977   53.987   * N=8, PS=4
+
 -------------------------------------------------------------------
 lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina
 -------------------------------------------------------------------
@@ -115,6 +117,7 @@ GradMag  none   PCA_LDA       23552    874     76    0.920  179.792
 GradMagP WHAD8  PCA_LDA       32000    905     45    0.953  259.194
 GaborGB  none   PCA_LDA       36864    890     60    0.937  315.207
 PCASIFT  none   PCA_LDA       25600    884     66    0.931 1069.912
+LATCH    none   SVM_POL        1568    813    137    0.856  173.486
 
 -------------------------------------------------------------------
 lfw-3daligned:            10 fold, 50 classes, 500 images, retina

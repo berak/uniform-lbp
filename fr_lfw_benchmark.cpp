@@ -180,7 +180,7 @@ public:
         Mat_<float> r1,r2;
         cls->predict(feat1,r1);
         cls->predict(feat2,r2);
-        cerr << format("%4d %4d\t",int(r1(0)),int(r2(0)));
+        //cerr << format("%4d %4d\t",int(r1(0)),int(r2(0)));
         return int(r1(0)) == int(r2(0));
     }
 };
@@ -289,7 +289,7 @@ int main(int argc, const char *argv[])
         {
             PROFILEX("tests");
             FR_lfwObj *example = static_cast<FR_lfwObj *>(curr[i].get());
-            cerr << i << "\t";
+            //cerr << i << "\t";
             Mat img1 = imread(path+example->image1, IMREAD_GRAYSCALE);
             Mat img2 = imread(path+example->image2, IMREAD_GRAYSCALE);
             bool same = model->same(img1,img2)>0;
@@ -297,7 +297,7 @@ int main(int argc, const char *argv[])
                 correct[example->same]++;
             else
                 incorrect[example->same]++;
-            cerr << same << " " << example->same << "                 \r";
+            //cerr << same << " " << example->same << "                 \r";
         }
 
         double acc = double(correct[1]+correct[0])/((curr.size()/skip));
