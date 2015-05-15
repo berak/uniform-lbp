@@ -1401,11 +1401,12 @@ struct ExtractorPCANet : public TextureFeature::Extractor
     }
 };
 
+
 struct ExtractorLatch : public TextureFeature::Extractor
 {
     virtual int extract(const Mat &img, Mat &features) const
     {
-        int step = 1;
+        int step = 4;
         vector<KeyPoint> kps;
         for (float i=Latch::PATCH_SIZE/2; i<img.rows-Latch::PATCH_SIZE/2; i+=step)
         {
@@ -1414,7 +1415,7 @@ struct ExtractorLatch : public TextureFeature::Extractor
                 kps.push_back(KeyPoint(i,j,1));
             }
         }
-        Latch::compute(img,kps,features,(1<<4),3);
+        Latch::compute(img,kps,features,(1<<3),4);
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
