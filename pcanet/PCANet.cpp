@@ -1,9 +1,10 @@
 #include "PCANet.h"
 
-#if 1
+#if 0
  #include "../profile.h"
 #else
  #define PROFILE
+ #define PROFILEX
 #endif
 
 using std::cerr;
@@ -488,7 +489,7 @@ void PCANet::gaborProjection(float freq)
     for (int s=0; s<numStages; s++)
     {
         int N = stages[s].numFilters, K = patchSize*patchSize;
-        Mat proj;
+        cv::Mat proj;
         for (int i=0; i<N; i++)
         {
             double sigma  = 12.0;;
@@ -496,7 +497,7 @@ void PCANet::gaborProjection(float freq)
             double lambda = double(1.3*(10-i)) * CV_PI/4;// * 180.0;//180.0 - theta;//45.0;// * 180.0 / CV_PI;
             double gamma  = (i+5);//6.0;// * 180.0 / CV_PI;
             double psi = CV_PI;//90.0;
-            Mat gab = getGaborKernel(Size(patchSize,patchSize),sigma,theta,lambda,gamma,psi);
+            cv::Mat gab = cv::getGaborKernel(cv::Size(patchSize,patchSize),sigma,theta,lambda,gamma,psi);
             gab.convertTo(gab,CV_32F);
             proj.push_back(gab.reshape(1,1));
         }

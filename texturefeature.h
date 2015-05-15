@@ -96,6 +96,7 @@ namespace TextureFeature
         EXT_WAVENET,
         //EXT_PNET,
         EXT_CDIKP,
+        EXT_LATCH,
         EXT_MAX
     };
     static const char *EXS[] = {
@@ -137,6 +138,7 @@ namespace TextureFeature
         "WAVENET",
         //"PNET",
         "CDIKP",
+        "LATCH",
         0
     };
     enum FIL {
