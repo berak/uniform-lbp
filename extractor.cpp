@@ -1415,7 +1415,7 @@ struct ExtractorLatch : public TextureFeature::Extractor
                 kps.push_back(KeyPoint(i, j, 1));
             }
         }
-        Latch::compute(img, kps, features, 8, 4);
+        Latch::compute(img, kps, features, 8, 1);
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }

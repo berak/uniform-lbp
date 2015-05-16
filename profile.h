@@ -12,13 +12,11 @@ using namespace std;
 
 struct Profile
 {
-    double dt(int64 t) const { return 1000.0*double(t/1000)/get_freq(); }
-
     cv::String name;
-    int64 t; // accumulated time
-    int64 c; // function calls
-    double d_tc; // must cache, (getTickCount() etc will not be availabe in destructor) 
+    int64 t;     // accumulated time
+    int64 c;     // function calls
     double d_t;
+    double d_tc; // must cache, (getTickCount() etc will not be availabe in destructor)
 
     Profile(cv::String name)
         : name(name)
@@ -43,8 +41,8 @@ struct Profile
 
         c ++;
         t += delta;
-        d_t  = dt(t); 
-        d_tc = d_t/c;
+        d_t  = double(t) / get_freq(); 
+        d_tc = double(d_t)/c;
     }
 
 

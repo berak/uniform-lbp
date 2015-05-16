@@ -24,6 +24,7 @@ namespace Latch
 
 const int PATCH_SIZE=48;
 
+// 64 * 8  = 512 triplets(6 elems)
 int sampling_points[3072]= 
 {   
     13, -6, 19, 19, 23, -4,   4, 16, 24, -11, 4, -21,	22, -14, -2, -20, 23, 5,	17, -10, 2, 10, 14, -18,
@@ -169,7 +170,34 @@ void calculateSums(int count, const int points[], const cv::Mat &grayImage, cons
 	int cy = points[count + 5] + (int)(pt.pt.y + 0.5);
 
 	int K = half_ssd_size;
-	for (int iy = -K; iy <= K; iy++)
+    int iy = -K;
+//#if HAVE_SSE 
+//    const int SSE_OFF = 8;
+//    if (((2*K)%SSE_OFF) == 0)
+//    {
+//        __m64 sab = _mm_set1_epi8(0), scb = _mm_set1_epi8(0);
+//	    for (; iy <= K; iy += SSE_OFF)
+//	    {
+//            __m64 *a = ((__m64*)(cv::alignPtr(grayImage.ptr<char>(ax + iy), SSE_OFF)));;
+//            __m64 *b = ((__m64*)(cv::alignPtr(grayImage.ptr<char>(by + iy), SSE_OFF)));;
+//            __m64 *c = ((__m64*)(cv::alignPtr(grayImage.ptr<char>(cy + iy), SSE_OFF)));;
+//		    for (int ix = -K; ix <= K; ix+=SSE_OFF,a++,b++,c++)
+//		    {
+//                __m64 difa = _mm_sub_epi32(*a, *b);
+//			    __m64 sqda = _mm_mul_epi32(difa, difa);
+//			    sab = _mm_add_epi32(sab, sqda);
+//
+//                __m64 difc = _mm_sub_epi32(*c, *b);
+//			    __m64 sqdc = _mm_mul_epi32(difc, difc);
+//			    scb = _mm_add_epi32(scb, sqdc);
+//		    }
+//	    }
+//        union { __m64 m; uchar c[SSE_OFF]; } x;
+//        x.m = sab;   suma = (x.c[0] + x.c[1] + x.c[2] + x.c[3]);
+//        x.m = scb;   sumc = (x.c[0] + x.c[1] + x.c[2] + x.c[3]);
+//    }
+//#endif
+	for (; iy <= K; iy++)
 	{
 		const uchar * Mi_a = grayImage.ptr<uchar>(ay + iy);
 		const uchar * Mi_b = grayImage.ptr<uchar>(by + iy);
