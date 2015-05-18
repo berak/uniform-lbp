@@ -15,6 +15,7 @@
 //impl: https://github.com/Itseez/opencv_contrib/pull/231
 //
 // assuming, that faces all come 'upright', the rotational invariant part was skipped here.
+// (i guess, i don't need a keypointfilter for dense grid based things either)
 //
 
 namespace TextureFeature
@@ -188,7 +189,7 @@ void calculateSums(int count, const int points[], const cv::Mat &grayImage, cons
 }
 
 
-static void pixelTests(int N, const cv::Mat& grayImage, const std::vector<cv::KeyPoint>& keypoints, cv::OutputArray _descriptors, const int points[], int half_ssd_size)
+static void pixelTests(int N, const cv::Mat &grayImage, const std::vector<cv::KeyPoint> &keypoints, cv::OutputArray _descriptors, const int points[], int half_ssd_size)
 {
     PROFILEX("Latch::pixelTests");
 	cv::Mat descriptors = _descriptors.getMat();
@@ -225,17 +226,10 @@ void compute(cv::InputArray image, std::vector<cv::KeyPoint>& keypoints, cv::Out
         PROFILEX("Latch::blur");
     	cv::GaussianBlur(image, grayImage, cv::Size(3, 3), 2, 2);
     }
-
-	if (image.type() != CV_8U) cv::cvtColor(image, grayImage, COLOR_BGR2GRAY);
-
-    {
-        PROFILEX("Latch::kp_filter");
-	    //Remove keypoints very close to the border
-	    cv::KeyPointsFilter::runByImageBorder(keypoints, image.size(), PATCH_SIZE / 2 + half_ssd_size);
-    }
 	descriptors.create((int)keypoints.size(), N, CV_8U);
 
 	pixelTests(N, grayImage, keypoints, descriptors, sampling_points, half_ssd_size);
 }
+
 } // Latch
 } // TextureFeature

@@ -327,7 +327,7 @@ struct ClassifierPCA : public ClassifierNearestFloat
         if((num_components <= 0) || (num_components > trainData.rows))
             num_components = trainData.rows;
 
-        PCA pca(trainData, Mat(), cv::PCA::DATA_AS_ROW, num_components);
+        PCA pca(tofloat(trainData), Mat(), cv::PCA::DATA_AS_ROW, num_components);
 
         transpose(pca.eigenvectors, eigenvectors);
         mean = pca.mean.reshape(1,1);
@@ -340,7 +340,7 @@ struct ClassifierPCA : public ClassifierNearestFloat
 
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
-        return ClassifierNearestFloat::predict(project(testFeature), results);
+        return ClassifierNearestFloat::predict(project(tofloat(testFeature)), results);
     }
 
     // Serialize
@@ -383,7 +383,7 @@ struct ClassifierPCA_LDA : public ClassifierPCA
             num_components = (C-1);
 
         // step one, do pca on the original data:
-        PCA pca(trainData, Mat(), cv::PCA::DATA_AS_ROW, (N-C));
+        PCA pca(tofloat(trainData), Mat(), cv::PCA::DATA_AS_ROW, (N-C));
         mean = pca.mean.reshape(1,1);
 
         // step two, do lda on data projected to pca space:
@@ -478,7 +478,7 @@ struct VerifierHist : VerifierNearest
 
     virtual double distance(const Mat &a, const Mat &b) const
     {
-        return compareHist(a,b,flag);
+        return compareHist(tofloat(a),tofloat(b),flag);
     }
 };
 
@@ -624,7 +624,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_NORM_L2:   return makePtr<ClassifierNearest>(NORM_L2); break;
         case CL_NORM_L2SQR:return makePtr<ClassifierNearest>(NORM_L2SQR); break;
         case CL_NORM_L1:   return makePtr<ClassifierNearest>(NORM_L1); break;
-        case CL_NORM_HAM:  return makePtr<ClassifierHist>(NORM_HAMMING2); break;
+        case CL_NORM_HAM:  return makePtr<ClassifierNearest>(NORM_HAMMING2); break;
         case CL_HIST_HELL: return makePtr<ClassifierHist>(HISTCMP_HELLINGER); break;
         case CL_HIST_CHI:  return makePtr<ClassifierHist>(HISTCMP_CHISQR); break;
         case CL_KLDIV:     return makePtr<ClassifierHist>(HISTCMP_KL_DIV); break;
@@ -657,7 +657,7 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_NORM_L2:   return makePtr<VerifierNearest>(NORM_L2); break;
         case CL_NORM_L2SQR:return makePtr<VerifierNearest>(NORM_L2SQR); break;
         case CL_NORM_L1:   return makePtr<VerifierNearest>(NORM_L1); break;
-        case CL_NORM_HAM:  return makePtr<VerifierHist>(NORM_HAMMING2); break;
+        case CL_NORM_HAM:  return makePtr<VerifierNearest>(NORM_HAMMING2); break;
         case CL_HIST_HELL: return makePtr<VerifierHist>(HISTCMP_HELLINGER); break;
         case CL_HIST_CHI:  return makePtr<VerifierHist>(HISTCMP_CHISQR); break;
         case CL_SVM_LIN:   return makePtr<VerifierSVM>(int(cv::ml::SVM::LINEAR)); break;

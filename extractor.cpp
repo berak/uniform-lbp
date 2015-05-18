@@ -1402,6 +1402,9 @@ struct ExtractorPCANet : public TextureFeature::Extractor
 };
 
 
+//
+// Gil Levi and Tal Hassner, "LATCH: Learned Arrangements of Three Patch Codes", arXiv preprint arXiv:1501.03719, 15 Jan. 2015
+//
 struct ExtractorLatch : public TextureFeature::Extractor
 {
     virtual int extract(const Mat &img, Mat &features) const
@@ -1420,6 +1423,113 @@ struct ExtractorLatch : public TextureFeature::Extractor
         return features.total() * features.elemSize();
     }
 };
+
+
+struct ExtractorLatch2 : Extractor
+{
+    struct LocalLatch
+    {
+        Point2f keypoint;
+        Mat_<int> points;
+    };
+    vector<LocalLatch> latches;
+
+
+    ExtractorLatch2()
+    {
+        load("data/latch.xml.gz");
+    }
+
+    static bool calculateSums(int count, const LocalLatch &latch, const cv::Mat &grayImage, int half_ssd_size)
+    {
+        PROFILEX("Latch::calculateSums");
+        const Point2f &pt = latch.keypoint;
+	    int ax = latch.points(count)     + (int)(pt.x + 0.5);
+	    int ay = latch.points(count + 1) + (int)(pt.y + 0.5);
+
+	    int	bx = latch.points(count + 2) + (int)(pt.x + 0.5);
+	    int	by = latch.points(count + 3) + (int)(pt.y + 0.5);
+
+	    int cx = latch.points(count + 4) + (int)(pt.x + 0.5);
+	    int cy = latch.points(count + 5) + (int)(pt.y + 0.5);
+
+	    int suma = 0, sumc = 0;
+
+        int K = half_ssd_size;
+	    for (int iy = -K; iy <= K; iy++)
+	    {
+		    const uchar * Mi_a = grayImage.ptr<uchar>(ay + iy);
+		    const uchar * Mi_b = grayImage.ptr<uchar>(by + iy);
+		    const uchar * Mi_c = grayImage.ptr<uchar>(cy + iy);
+
+		    for (int ix = -K; ix <= K; ix++)
+		    {
+			    double difa = Mi_a[ax + ix] - Mi_b[bx + ix];
+			    suma += (int)((difa)*(difa));
+
+			    double difc = Mi_c[cx + ix] - Mi_b[bx + ix];
+			    sumc += (int)((difc)*(difc));
+		    }
+	    }
+        return (suma < sumc);
+    }
+
+
+    void pixelTests(int i, int N, const cv::Mat &grayImage, cv::Mat &descriptors, int half_ssd_size) const
+    {
+        PROFILEX("Latch::pixelTests");
+	    int count = 0;
+        const LocalLatch &latch = latches[i];
+	    uchar* desc = descriptors.ptr(i);
+	    for (int ix=0; ix<N; ix++)
+        {
+		    desc[ix] = 0;
+		    for (int j=7; j>=0; j--)
+            {
+			    bool bit = calculateSums(count, latch, grayImage, half_ssd_size);
+			    desc[ix] += (uchar)(bit << j);
+
+                count += 6;
+		    }
+	    }
+    }
+
+
+    virtual int extract(const cv::Mat &image, cv::Mat &features) const
+    {
+        PROFILEX("Latch::extract");
+        cv::Mat grayImage;
+        {
+            PROFILEX("Latch::blur");
+    	    cv::GaussianBlur(image, grayImage, cv::Size(3, 3), 2, 2);
+        }
+        int N = 64;
+        int half_ssd_size = 5;
+	    features.create((int)latches.size(), N, CV_8U);
+
+        for (size_t i=0; i<latches.size(); i++)
+        {
+            pixelTests(i, N, grayImage, features, half_ssd_size);
+        }
+        features = features.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+
+    void load(const String &fn)  
+    {
+        FileStorage fs(fn, FileStorage::READ);
+        FileNode pnodes = fs["latches"];
+        for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
+        {
+            LocalLatch latch;
+            (*it)["kp"] >> latch.keypoint;
+            (*it)["pt"] >> latch.points;
+            latches.push_back(latch);
+        }
+        fs.release();
+    }
+};
+
 
 
 
@@ -1474,6 +1584,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         //case EXT_PNET:     return makePtr< PNet>();  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         case EXT_LATCH:    return makePtr< ExtractorLatch >();  break;
+        case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Extractor>();

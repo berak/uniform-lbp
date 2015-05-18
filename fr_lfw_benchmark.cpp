@@ -127,8 +127,8 @@ public:
         ext->extract(pre.process(img), feat1);
 
         Mat fr = feat1.reshape(1,1);
-        if (fr.type() != CV_32F)
-            fr.convertTo(fr,CV_32F);
+        //if (fr.type() != CV_32F)
+        //    fr.convertTo(fr,CV_32F);
 
         if (! fil.empty())
             fil->filter(fr,fr);
@@ -136,7 +136,7 @@ public:
         //features.push_back(fr); // damn memory problems
         if ( features.empty() )
         {
-            features = Mat(nimg, feat1.total(), CV_32F); 
+            features = Mat(nimg, feat1.total(), feat1.type()); 
         }
         feat1.copyTo(features.row(labels.rows));
         labels.push_back(label);
@@ -162,11 +162,11 @@ public:
     {
         Mat feat1, feat2;
         ext->extract(pre.process(a), feat1);
-        if (feat1.type() != CV_32F)
-            feat1.convertTo(feat1,CV_32F);
+        //if (feat1.type() != CV_32F)
+        //    feat1.convertTo(feat1,CV_32F);
         ext->extract(pre.process(b), feat2);
-        if (feat2.type() != CV_32F)
-            feat2.convertTo(feat2,CV_32F);
+        //if (feat2.type() != CV_32F)
+        //    feat2.convertTo(feat2,CV_32F);
 
         if (! fil.empty())
         {
@@ -193,9 +193,9 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ opts o         |    | show extractor / filter / verifier options }"
             "{ path p         |lfw-deepfunneled/| path to dataset (lfw2 folder) }"
-            "{ ext e          |0   | extractor enum }"
+            "{ ext e          |37   | extractor enum }"
             "{ fil f          |0   | filter enum }"
-            "{ cls c          |0   | classifier enum }"
+            "{ cls c          |9   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ lab l          |0   | train / test with labels(instead of direct image compare) }"
             "{ skip s         |1   | skip imgs for train }"
