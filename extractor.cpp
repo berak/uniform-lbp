@@ -10,7 +10,8 @@
 // if not present, fall back to a precalculated
 // 'one-size-fits-all' set of points(based on the mean lfw image)
 //
-//#define HAVE_DLIB
+#define HAVE_DLIB
+//#undef HAVE_DLIB
 
 #ifdef HAVE_DLIB
  #include <dlib/image_processing.h>
@@ -572,11 +573,14 @@ struct LandMarks
 {
     dlib::shape_predictor sp;
 
-    LandMarks()
+    int offset;
+    LandMarks(int off=0) 
+        : offset(off) 
     {   // it's only 95mb...
         dlib::deserialize("data/shape_predictor_68_face_landmarks.dat") >> sp;
     }
 
+    inline int crop(int v) const {return (v<offset?offset:(v>90-offset?90-offset:v)); }
     int extract(const Mat &img, vector<Point> &kp) const
     {
         dlib::rectangle rec(0,0,img.cols,img.rows);
@@ -585,7 +589,8 @@ struct LandMarks
         int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
         //int idx[] = {18,25, 20,24, 21,22, 27,29, 31,35, 38,43, 51, 0};
         for(int k=0; (k<40) && (idx[k]>0); k++)
-            kp.push_back(Point(shape.part(idx[k]).x(), shape.part(idx[k]).y()));
+            kp.push_back(Point(crop(shape.part(idx[k]).x()), crop(shape.part(idx[k]).y())));
+            //kp.push_back(Point(shape.part(idx[k]).x(), shape.part(idx[k]).y()));
         //dlib::point p1 = shape.part(31) + (shape.part(39) - shape.part(31)) * 0.5; // left of nose
         //dlib::point p2 = shape.part(35) + (shape.part(42) - shape.part(35)) * 0.5;
         //dlib::point p3 = shape.part(36) + (shape.part(39) - shape.part(36)) * 0.5; // left eye center
@@ -632,10 +637,21 @@ struct LandMarks
         kp.push_back(Point(38,35));    kp.push_back(Point(52,35));
         kp.push_back(Point(30,39));    kp.push_back(Point(60,39));
         kp.push_back(Point(19,39));    kp.push_back(Point(71,39));
-        kp.push_back(Point(8 ,38));    kp.push_back(Point(82,38));
+        kp.push_back(Point(10,38));    kp.push_back(Point(79,38));
         kp.push_back(Point(40,64));    kp.push_back(Point(50,64));
         kp.push_back(Point(31,75));    kp.push_back(Point(59,75));
-        kp.push_back(Point(27,81));    kp.push_back(Point(63,81));
+        kp.push_back(Point(32,49));    kp.push_back(Point(59,49));
+
+        //kp.push_back(Point(15,19));    kp.push_back(Point(75,19));
+        //kp.push_back(Point(29,20));    kp.push_back(Point(61,20));
+        //kp.push_back(Point(36,24));    kp.push_back(Point(54,24));
+        //kp.push_back(Point(38,35));    kp.push_back(Point(52,35));
+        //kp.push_back(Point(30,39));    kp.push_back(Point(60,39));
+        //kp.push_back(Point(19,39));    kp.push_back(Point(71,39));
+        //kp.push_back(Point(8 ,38));    kp.push_back(Point(82,38));
+        //kp.push_back(Point(40,64));    kp.push_back(Point(50,64));
+        //kp.push_back(Point(31,75));    kp.push_back(Point(59,75));
+        //kp.push_back(Point(27,81));    kp.push_back(Point(63,81));
         if (img.size() != Size(90,90))
         {
             float scale_x=float(img.cols)/90;
@@ -1409,7 +1425,7 @@ struct ExtractorLatch : public TextureFeature::Extractor
 {
     virtual int extract(const Mat &img, Mat &features) const
     {
-        int step = 4;
+        int step = 4; // dense grid of ~10x10 kp.
         vector<KeyPoint> kps;
         for (float i=Latch::PATCH_SIZE/2; i<img.rows-Latch::PATCH_SIZE/2; i+=step)
         {
@@ -1425,25 +1441,31 @@ struct ExtractorLatch : public TextureFeature::Extractor
 };
 
 
-struct ExtractorLatch2 : Extractor
+struct ExtractorLatch2 : public TextureFeature::Extractor
 {
     struct LocalLatch
     {
-        Point2f keypoint;
+        //Point2f keypoint;
         Mat_<int> points;
     };
     vector<LocalLatch> latches;
+    int feature_bytes;
+    int half_ssd_size;
+    int patch_size;
 
+    LandMarks land;
 
     ExtractorLatch2()
     {
+        feature_bytes = 96;
+        half_ssd_size = 5;
+        patch_size    = 12;
         load("data/latch.xml.gz");
     }
 
-    static bool calculateSums(int count, const LocalLatch &latch, const cv::Mat &grayImage, int half_ssd_size)
+    static bool calculateSums(int count, const Point &pt, const LocalLatch &latch, const Mat &grayImage, int half_ssd_size)
     {
         PROFILEX("Latch::calculateSums");
-        const Point2f &pt = latch.keypoint;
 	    int ax = latch.points(count)     + (int)(pt.x + 0.5);
 	    int ay = latch.points(count + 1) + (int)(pt.y + 0.5);
 
@@ -1475,7 +1497,7 @@ struct ExtractorLatch2 : Extractor
     }
 
 
-    void pixelTests(int i, int N, const cv::Mat &grayImage, cv::Mat &descriptors, int half_ssd_size) const
+    void pixelTests(int i, int N, const Point &pt, const Mat &grayImage, Mat &descriptors, int half_ssd_size) const
     {
         PROFILEX("Latch::pixelTests");
 	    int count = 0;
@@ -1486,7 +1508,7 @@ struct ExtractorLatch2 : Extractor
 		    desc[ix] = 0;
 		    for (int j=7; j>=0; j--)
             {
-			    bool bit = calculateSums(count, latch, grayImage, half_ssd_size);
+			    bool bit = calculateSums(count, pt, latch, grayImage, half_ssd_size);
 			    desc[ix] += (uchar)(bit << j);
 
                 count += 6;
@@ -1495,22 +1517,34 @@ struct ExtractorLatch2 : Extractor
     }
 
 
-    virtual int extract(const cv::Mat &image, cv::Mat &features) const
+    virtual int extract(const Mat &image, Mat &features) const
     {
         PROFILEX("Latch::extract");
-        cv::Mat grayImage;
+        Mat blurImage;
         {
             PROFILEX("Latch::blur");
-    	    cv::GaussianBlur(image, grayImage, cv::Size(3, 3), 2, 2);
+    	    GaussianBlur(image, blurImage, cv::Size(3, 3), 2, 2);
         }
-        int N = 64;
-        int half_ssd_size = 5;
-	    features.create((int)latches.size(), N, CV_8U);
+	    features.create((int)latches.size(), feature_bytes, CV_8U);
 
+        vector<Point> pts;
+        land.extract(image, pts);
         for (size_t i=0; i<latches.size(); i++)
         {
-            pixelTests(i, N, grayImage, features, half_ssd_size);
+            pixelTests(i, feature_bytes, pts[i], blurImage, features, half_ssd_size);
         }
+
+        static int debugK=0;
+        if ((++debugK % 5) == 1)
+        {
+            for (size_t i=0; i<latches.size(); i++)
+            {
+                rectangle(blurImage, Rect(pts[i].x-patch_size, pts[i].y-patch_size, 2*patch_size, 2*patch_size), Scalar(64), 2);
+            }
+            imshow("J",blurImage);
+            waitKey(1);
+        }
+
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
     }
@@ -1518,11 +1552,14 @@ struct ExtractorLatch2 : Extractor
     void load(const String &fn)  
     {
         FileStorage fs(fn, FileStorage::READ);
+        fs["patch"] >> patch_size;
+        fs["bytes"] >> feature_bytes;
+        fs["ssd"]   >> half_ssd_size;
         FileNode pnodes = fs["latches"];
         for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
         {
             LocalLatch latch;
-            (*it)["kp"] >> latch.keypoint;
+           // (*it)["kp"] >> latch.keypoint;
             (*it)["pt"] >> latch.points;
             latches.push_back(latch);
         }
@@ -1583,7 +1620,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
         //case EXT_PNET:     return makePtr< PNet>();  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
-        case EXT_LATCH:    return makePtr< ExtractorLatch >();  break;
+        case EXT_LATCH:    return makePtr< ExtractorLatch >();  break; //return makePtr< GenericExtractor<ExtractorLatch,GriddedHist> >(ExtractorLatch(), GriddedHist());
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }

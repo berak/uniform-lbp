@@ -332,13 +332,13 @@ int main(int argc, const char *argv[])
             "{ minp m         |10    | minimal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |37     | extractor  enum }"
-            "{ fil f          |0     | filter   enum }"
-            "{ cls c          |9     | classifier enum }"
+            "{ ext e          |38     | extractor  enum }"
+            "{ fil f          |14     | filter   enum }"
+            "{ cls c          |21     | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
-            "{ crop C         |0     | crop outer pixels }"
-            "{ path p         |data/yale.txt|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
+            "{ crop C         |80     | crop outer pixels }"
+            "{ path p         |data/yale_crop.txt|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
             //"{ path p         |lfw3d_9000/*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
  
     CommandLineParser parser(argc, argv, keys);

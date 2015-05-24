@@ -182,9 +182,7 @@ struct ClassifierSVM : public TextureFeature::Classifier
     Ptr<ml::SVM::Kernel> krnl;
 
     ClassifierSVM(int ktype=ml::SVM::POLY, double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.002, double p = 0.5)
-    //ClassifierSvm(double degree = 0.5,double gamma = 0.8,double coef0 = 0,double C = 0.99, double nu = 0.2, double p = 0.5)
     {
-
         svm = ml::SVM::create();
         svm->setType(ml::SVM::NU_SVC);
         if (ktype<0)
@@ -405,6 +403,49 @@ struct ClassifierPCA_LDA : public ClassifierPCA
 };
 
 
+struct ClassifierMLP : Classifier
+{
+    Ptr<ml::ANN_MLP> ann;
+
+    void setup(int ni, int no)
+    {
+        ann = ml::ANN_MLP::create(); 
+        Mat_<int> layers(4,1);
+        layers(0) = ni;
+        layers(1) = no*2;
+        layers(2) = no*8;
+        layers(3) = no;
+        ann->setLayerSizes(layers);
+        ann->setActivationFunction(ml::ANN_MLP::SIGMOID_SYM,0,0);
+        ann->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 300, 0.0001));
+        ann->setTrainMethod(ml::ANN_MLP::BACKPROP, 0.0001);
+    }
+
+    virtual int train(const Mat &trainData, const Mat &trainLabels)
+    {
+        set<int> classes;
+        int C = TextureFeatureImpl::unique(trainLabels, classes);
+
+        if (ann.empty())
+        {
+            setup(trainData.cols, C);
+        }
+    
+        Mat trainClasses = Mat::zeros(trainLabels.total(), C, CV_32FC1);
+        for(int i=0; i < trainClasses.rows; i++)
+        {
+            trainClasses.at<float>(i, trainLabels.at<int>(i)) = 1.f;
+        }
+
+        return ann->train(tofloat(trainData), ml::ROW_SAMPLE, trainClasses);
+    }
+    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
+    {
+        float r = ann->predict(tofloat(testFeature),results);
+        results = (Mat_<float>(1,1) << r);
+        return 1;
+    }
+};
 
 //------->8-----------------------------------------------------------------------
 //
@@ -499,8 +540,6 @@ struct VerifierCosine : VerifierNearest
 // Wolf, Hassner, Taigman : "Descriptor Based Methods in the Wild"
 //  4.1 Distance thresholding for pair matching
 //
-//  base class for svm,em,lr
-//
 struct PairDistance
 {
     int dist_flag;
@@ -515,8 +554,9 @@ struct PairDistance
         switch(dist_flag)
         {
             case 0: absdiff(a,b,d); break;
-            case 1: d = a-b; multiply(d,d,d,1,CV_32F);
-            case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d);
+            case 1: d = a-b; multiply(d,d,d,1,CV_32F); break;
+            case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d); break;
+            case 3: d = a^b; break;
         }
         return d;
     }
@@ -536,6 +576,9 @@ struct PairDistance
     }
 };
 
+//
+//  base class for svm,em,lr
+//
 struct VerifierPairDistance : public TextureFeature::Verifier, PairDistance
 {
     Ptr<ml::StatModel> model;
@@ -625,6 +668,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_NORM_L2SQR:return makePtr<ClassifierNearest>(NORM_L2SQR); break;
         case CL_NORM_L1:   return makePtr<ClassifierNearest>(NORM_L1); break;
         case CL_NORM_HAM:  return makePtr<ClassifierNearest>(NORM_HAMMING2); break;
+       // case CL_NORM_MIN:  return makePtr<ClassifierNearest>(NORM_INF); break;
         case CL_HIST_HELL: return makePtr<ClassifierHist>(HISTCMP_HELLINGER); break;
         case CL_HIST_CHI:  return makePtr<ClassifierHist>(HISTCMP_CHISQR); break;
         case CL_KLDIV:     return makePtr<ClassifierHist>(HISTCMP_KL_DIV); break;
@@ -634,6 +678,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_POL:   return makePtr<ClassifierSVM>(int(cv::ml::SVM::POLY)); break;
         case CL_SVM_INT:   return makePtr<ClassifierSVM>(int(cv::ml::SVM::INTER)); break;
         case CL_SVM_INT2:  return makePtr<ClassifierSVM>(-5); break;
+        case CL_SVM_INT2X: return makePtr<ClassifierSVM>(-5,3); break;
         case CL_SVM_HEL:   return makePtr<ClassifierSVM>(-1); break;
         case CL_SVM_HELSQ: return makePtr<ClassifierSVM>(-2); break;
         case CL_SVM_LOW:   return makePtr<ClassifierSVM>(-6); break;
@@ -643,6 +688,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
+        case CL_MLP:       return makePtr<ClassifierMLP>(); break;
         //case CL_MAHALANOBIS: return makePtr<ClassifierMahalanobis>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
@@ -665,6 +711,7 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_POL:   return makePtr<VerifierSVM>(int(cv::ml::SVM::POLY)); break;
         case CL_SVM_INT:   return makePtr<VerifierSVM>(int(cv::ml::SVM::INTER)); break;
         case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
+        case CL_SVM_INT2X: return makePtr<VerifierSVM>(-5, 3); break;
         case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
         case CL_SVM_HELSQ: return makePtr<VerifierSVM>(-2); break;
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;

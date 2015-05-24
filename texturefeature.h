@@ -158,6 +158,9 @@ namespace TextureFeature
         FIL_DCT12,
         FIL_DCT16,
         FIL_DCT24,
+        FIL_BITS2,
+        FIL_BITS4,
+        FIL_BITS8,
         FIL_MAX
     };
     static const char *FILS[] = {
@@ -175,6 +178,9 @@ namespace TextureFeature
         "DCT12",
         "DCT16",
         "DCT24",
+        "BITS2",
+        "BITS4",
+        "BITS8",
         0
     };
     enum CLA {
@@ -182,6 +188,7 @@ namespace TextureFeature
         CL_NORM_L2SQR,
         CL_NORM_L1,
         CL_NORM_HAM,
+       // CL_NORM_MIN,
         CL_HIST_HELL,
         CL_HIST_CHI,
         CL_COSINE,
@@ -191,6 +198,7 @@ namespace TextureFeature
         CL_SVM_RBF,
         CL_SVM_INT,
         CL_SVM_INT2, // custom 
+        CL_SVM_INT2X, // custom 
         CL_SVM_HEL,  // custom
         CL_SVM_HELSQ,  // custom
         CL_SVM_LOW,  // custom
@@ -200,6 +208,7 @@ namespace TextureFeature
         CL_SVM_MULTI,
         CL_PCA,
         CL_PCA_LDA,
+        CL_MLP,
         //CL_RTREE,
         //CL_MAHALANOBIS,
         CL_MAX
@@ -209,6 +218,7 @@ namespace TextureFeature
         "N_L2SQR",
         "N_L1",
         "N_HAM",
+       // "N_MIN",
         "H_HELL",
         "H_CHI",
         "COSINE",
@@ -218,6 +228,7 @@ namespace TextureFeature
         "SVM_RBF",
         "SVM_INT",
         "SVM_INT2",
+        "SVM_INT2X",
         "SVM_HEL",
         "SVM_HELSQ",
         "SVM_LOW",
@@ -227,6 +238,7 @@ namespace TextureFeature
         "SVM_MULTI",
         "PCA",
         "PCA_LDA",
+        "MLP",
         //"RTREE",
         //"MAHALANOB",
         0

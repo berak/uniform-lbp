@@ -13,6 +13,66 @@ namespace TextureFeatureImpl
 {
 
 
+
+//
+// unroll bitstrings to 1 byte per bit
+// (in the hope, to work more nicely with L2 based classifiers)
+//
+struct FilterBits : public Filter
+{
+    static void bits8(Mat &bits, uchar b)
+    {
+        bits.push_back(((b&1)!=0));
+        bits.push_back(((b&2)!=0));
+        bits.push_back(((b&4)!=0));
+        bits.push_back(((b&8)!=0));
+        bits.push_back(((b&16)!=0));
+        bits.push_back(((b&32)!=0));
+        bits.push_back(((b&64)!=0));
+        bits.push_back(((b&128)!=0));
+    }
+    static void bits4(Mat &bits, uchar b)
+    {
+        bits.push_back((((b&1 )^(b&2  ))!=0));
+        bits.push_back((((b&4 )^(b&8  ))!=0));
+        bits.push_back((((b&16)^(b&32 ))!=0));
+        bits.push_back((((b&64)^(b&128))!=0));
+    }
+    static void bits2(Mat &bits, uchar b)
+    {
+        bits.push_back(((((b&1 )^(b&2 ))^((b&4 )^(b&8  )))!=0));
+        bits.push_back(((((b&16)^(b&32))^((b&64)^(b&128)))!=0));
+    }
+    typedef void (*bitfun)(Mat &bits, uchar b);
+    bitfun bits_;
+
+    int fac;
+    FilterBits(int nb=8, int f=255) 
+        : fac(f) 
+    {
+        switch(nb)
+        {
+        default:
+        case 8: bits_ = bits8; break;
+        case 4: bits_ = bits4; break;
+        case 2: bits_ = bits2; break;
+        }
+    }
+
+    virtual int filter(const Mat &feature, Mat &dest) const
+    {
+        CV_Assert(feature.type()==CV_8U);
+        Mat bits;
+        for (size_t i=0; i<feature.total(); i++)
+        {
+            bits_(bits, feature.at<uchar>(i));
+        }
+        dest = bits.reshape(1, feature.rows);
+        return 0;
+    }
+};
+
+
 struct FilterWalshHadamard : public Filter
 {
     int keep;
@@ -184,6 +244,9 @@ Ptr<Filter> createFilter(int filt)
         case FIL_DCT12:    return makePtr<FilterDct>(12000); break;
         case FIL_DCT16:    return makePtr<FilterDct>(16000); break;
         case FIL_DCT24:    return makePtr<FilterDct>(24000); break;
+        case FIL_BITS8:    return makePtr<FilterBits>(8); break;
+        case FIL_BITS4:    return makePtr<FilterBits>(4); break;
+        case FIL_BITS2:    return makePtr<FilterBits>(2); break;
 //        default: cerr << "Filter " << filt << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Filter>();

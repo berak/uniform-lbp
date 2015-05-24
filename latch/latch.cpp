@@ -226,6 +226,8 @@ void compute(cv::InputArray image, std::vector<cv::KeyPoint>& keypoints, cv::Out
         PROFILEX("Latch::blur");
     	cv::GaussianBlur(image, grayImage, cv::Size(3, 3), 2, 2);
     }
+
+    KeyPointsFilter::runByImageBorder(keypoints, image.size(), PATCH_SIZE / 2 + half_ssd_size);
 	descriptors.create((int)keypoints.size(), N, CV_8U);
 
 	pixelTests(N, grayImage, keypoints, descriptors, sampling_points, half_ssd_size);

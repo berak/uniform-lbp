@@ -12,7 +12,7 @@ it all builds on top of opencv30 .
 
 4 projects in here:
 * online.cpp : realtime webcam app with online training
-* duel.cpp : shootout of different (identification) pipeline combinations
+* duel.cpp : shootout of different (identification) pipeline combinations (see below)
 * fr_lfw_benchmark.cpp: the opencv (verification) lfw benchmark (from contrib/datasets)
 * frontalize.cpp: 3d/2d frontal face alignment lib/standalone tool (using [dlib](http://sourceforge.net/projects/dclib/files/dlib/) landmarks)
 
@@ -56,6 +56,7 @@ WAVENET  none   SVM_LIN       18432    738      3    0.996 2563.668  * 9 [6 28][
 LATCH    none   SVM_POL        1568    721     20    0.973  134.163
 LATCH    none   PCA_LDA        1568    725     16    0.978  202.412
 LATCH    none   PCA_LDA        1800    726     15    0.980  128.738  * ssd=1 step=4 bytes=8 
+LATCH2   none   PCA_LDA        5120    727     14    0.981  699.934  * ssd=5 bytes=256
 -------------------------------------------------------------------
 data/yale:              10 fold, 15 classes, 165 images, retina
 -------------------------------------------------------------------
@@ -90,7 +91,7 @@ PCANET   none   SVM_LIN       18432    292      8    0.973  875.066   * wave 9 [
 RANDNET  none   SVM_LIN        3072    289     11    0.963 1025.370
 RANDNET  none   SVM_LIN       98304    292      8    0.973 1896.199
 LATCH    none   SVM_POL        1568    293      7    0.977   53.987   * N=8, PS=4
-
+LATCH2   none   PCA_LDA        5120    295      5    0.983  268.179   * ssd=5 bytes=256
 -------------------------------------------------------------------
 lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina
 -------------------------------------------------------------------
@@ -153,6 +154,7 @@ RANDNET  none   SVM_LIN        3072    874     76    0.920 2506.335
 WAVENET  none   SVM_LIN       18432    893     57    0.940 3232.364
 LATCH    none   SVM_POL        1568    847    103    0.892  170.802
 LATCH    none   PCA_LDA        1568    883     67    0.929  318.049
+LATCH2   none   PCA_LDA        5120    903     47    0.951 1004.513
 -------------------------------------------------------------------
 data/f94gender:         10 fold, 2 classes, 484 images, retina
 -------------------------------------------------------------------
