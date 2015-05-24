@@ -161,6 +161,9 @@ namespace TextureFeature
         FIL_BITS2,
         FIL_BITS4,
         FIL_BITS8,
+        FIL_KMEANS16,
+        FIL_KMEANS64,
+        FIL_KMEANS256,
         FIL_MAX
     };
     static const char *FILS[] = {
@@ -181,6 +184,9 @@ namespace TextureFeature
         "BITS2",
         "BITS4",
         "BITS8",
+        "KMEANS16",
+        "KMEANS64",
+        "KMEANS256",
         0
     };
     enum CLA {
@@ -218,7 +224,6 @@ namespace TextureFeature
         "N_L2SQR",
         "N_L1",
         "N_HAM",
-       // "N_MIN",
         "H_HELL",
         "H_CHI",
         "COSINE",

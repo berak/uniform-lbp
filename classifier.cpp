@@ -161,8 +161,6 @@ struct ClassifierCosine : public ClassifierNearest
 
 
 
-
-
 static int unique(const Mat &labels, set<int> &classes)
 {
     for (size_t i=0; i<labels.total(); ++i)
@@ -446,6 +444,7 @@ struct ClassifierMLP : Classifier
         return 1;
     }
 };
+
 
 //------->8-----------------------------------------------------------------------
 //

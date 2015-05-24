@@ -201,17 +201,20 @@ struct FilterPow : public Filter
     {
         src.convertTo(dest, CV_32F);
         cv::pow(dest,P,dest);
-       // cv::pow(cv::abs(dest),P,dest);
         return 0;
     }
 };
 
-struct FilterSqrt : public Filter
+struct FilterKMeans : public Filter
 {
+    double K;
+    FilterKMeans(double k=10) : K(k) {}
     virtual int filter(const Mat &src, Mat &dest) const
     {
-        src.convertTo(dest, CV_32F);
-        cv::sqrt(dest,dest);
+        Mat labels,cent,srcf=src.reshape(1,src.total());
+        srcf.convertTo(srcf,CV_32F);
+        kmeans(srcf, K, labels, TermCriteria(), 3, KMEANS_PP_CENTERS, dest);
+        dest=dest.reshape(1,1);
         return 0;
     }
 };
@@ -233,7 +236,7 @@ Ptr<Filter> createFilter(int filt)
         case FIL_NONE:     break; 
         case FIL_HELL:     return makePtr<FilterHellinger>(); break;
         case FIL_POW:      return makePtr<FilterPow>(); break;
-        case FIL_SQRT:     return makePtr<FilterSqrt>(); break;
+        case FIL_SQRT:     return makePtr<FilterPow>(0.5f); break;
         case FIL_WHAD4:    return makePtr<FilterWalshHadamard>(4000); break;
         case FIL_WHAD8:    return makePtr<FilterWalshHadamard>(8000); break;
         case FIL_RP:       return makePtr<FilterRandomProjection>(8000); break;
@@ -247,6 +250,9 @@ Ptr<Filter> createFilter(int filt)
         case FIL_BITS8:    return makePtr<FilterBits>(8); break;
         case FIL_BITS4:    return makePtr<FilterBits>(4); break;
         case FIL_BITS2:    return makePtr<FilterBits>(2); break;
+        case FIL_KMEANS16: return makePtr<FilterKMeans>(16); break;
+        case FIL_KMEANS64: return makePtr<FilterKMeans>(64); break;
+        case FIL_KMEANS256:return makePtr<FilterKMeans>(256); break;
 //        default: cerr << "Filter " << filt << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Filter>();
