@@ -207,8 +207,8 @@ struct FilterPow : public Filter
 
 struct FilterKMeans : public Filter
 {
-    double K;
-    FilterKMeans(double k=10) : K(k) {}
+    int K;
+    FilterKMeans(int k=10) : K(k) {}
     virtual int filter(const Mat &src, Mat &dest) const
     {
         Mat labels,cent,srcf=src.reshape(1,src.total());

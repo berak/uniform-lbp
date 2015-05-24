@@ -26,7 +26,8 @@ using std::cerr;
 using std::endl;
 
 #include "texturefeature.h"
-#include "pcanet/PCANet.h"
+#include "util/pcanet/PCANet.h"
+#include "profile.h"
 #if 0
  #include "elastic/elasticparts.h"
 #endif
@@ -35,8 +36,6 @@ using std::endl;
 
 using namespace cv;
 using namespace TextureFeature;
-
-#include "latch/latch.cpp"
 
 namespace TextureFeatureImpl
 {
@@ -1421,26 +1420,24 @@ struct ExtractorPCANet : public TextureFeature::Extractor
 //
 // Gil Levi and Tal Hassner, "LATCH: Learned Arrangements of Three Patch Codes", arXiv preprint arXiv:1501.03719, 15 Jan. 2015
 //
-struct ExtractorLatch : public TextureFeature::Extractor
-{
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        int step = 4; // dense grid of ~10x10 kp.
-        vector<KeyPoint> kps;
-        for (float i=Latch::PATCH_SIZE/2; i<img.rows-Latch::PATCH_SIZE/2; i+=step)
-        {
-            for (float j=Latch::PATCH_SIZE/2; j<img.cols-Latch::PATCH_SIZE/2; j+=step)
-            {
-                kps.push_back(KeyPoint(i, j, 1));
-            }
-        }
-        Latch::compute(img, kps, features, 8, 1);
-        features = features.reshape(1,1);
-        return features.total() * features.elemSize();
-    }
-};
-
-
+//struct ExtractorLatch : public TextureFeature::Extractor
+//{
+//    virtual int extract(const Mat &img, Mat &features) const
+//    {
+//        int step = 4; // dense grid of ~10x10 kp.
+//        vector<KeyPoint> kps;
+//        for (float i=Latch::PATCH_SIZE/2; i<img.rows-Latch::PATCH_SIZE/2; i+=step)
+//        {
+//            for (float j=Latch::PATCH_SIZE/2; j<img.cols-Latch::PATCH_SIZE/2; j+=step)
+//            {
+//                kps.push_back(KeyPoint(i, j, 1));
+//            }
+//        }
+//        Latch::compute(img, kps, features, 8, 1);
+//        features = features.reshape(1,1);
+//        return features.total() * features.elemSize();
+//    }
+//};
 struct ExtractorLatch2 : public TextureFeature::Extractor
 {
     struct LocalLatch
@@ -1620,7 +1617,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
         //case EXT_PNET:     return makePtr< PNet>();  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
-        case EXT_LATCH:    return makePtr< ExtractorLatch >();  break; //return makePtr< GenericExtractor<ExtractorLatch,GriddedHist> >(ExtractorLatch(), GriddedHist());
+        //case EXT_LATCH:    return makePtr< ExtractorLatch >();  break; //return makePtr< GenericExtractor<ExtractorLatch,GriddedHist> >(ExtractorLatch(), GriddedHist());
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }

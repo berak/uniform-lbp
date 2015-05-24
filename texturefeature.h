@@ -96,7 +96,7 @@ namespace TextureFeature
         EXT_WAVENET,
         //EXT_PNET,
         EXT_CDIKP,
-        EXT_LATCH,
+        //EXT_LATCH,
         EXT_LATCH2,
         EXT_MAX
     };
@@ -139,7 +139,7 @@ namespace TextureFeature
         "WAVENET",
         //"PNET",
         "CDIKP",
-        "LATCH",
+        //"LATCH",
         "LATCH2",
         0
     };

@@ -422,7 +422,7 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
             //TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_HELL, TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_BGC1_P,  TextureFeature::FIL_WHAD8, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_LATCH,   TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
+            TextureFeature::EXT_LATCH2,   TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_HDGRAD, TextureFeature::FIL_DCT12,  TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_HDLBP,  TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_HDLBP,  TextureFeature::FIL_DCT6,  TextureFeature::CL_PCA_LDA,
