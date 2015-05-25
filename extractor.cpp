@@ -629,6 +629,7 @@ struct LandMarks
 #else // fixed manmade landmarks
 struct LandMarks
 {
+    LandMarks(int) {}
     int extract(const Mat &img, vector<Point> &kp) const
     {
         kp.push_back(Point(15,19));    kp.push_back(Point(75,19));
@@ -637,7 +638,7 @@ struct LandMarks
         kp.push_back(Point(38,35));    kp.push_back(Point(52,35));
         kp.push_back(Point(30,39));    kp.push_back(Point(60,39));
         kp.push_back(Point(19,39));    kp.push_back(Point(71,39));
-        kp.push_back(Point(10,38));    kp.push_back(Point(79,38));
+        kp.push_back(Point(12,38));    kp.push_back(Point(77,38));
         kp.push_back(Point(40,64));    kp.push_back(Point(50,64));
         kp.push_back(Point(31,75));    kp.push_back(Point(59,75));
         kp.push_back(Point(32,49));    kp.push_back(Point(59,49));
