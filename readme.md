@@ -92,6 +92,8 @@ RANDNET  none   SVM_LIN        3072    289     11    0.963 1025.370
 RANDNET  none   SVM_LIN       98304    292      8    0.973 1896.199
 LATCH    none   SVM_POL        1568    293      7    0.977   53.987   * N=8, PS=4
 LATCH2   none   PCA_LDA        5120    295      5    0.983  268.179   * ssd=5 bytes=256
+DAISY    none   PCA_LDA       64800    295      5    0.983   68.231
+
 -------------------------------------------------------------------
 lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina
 -------------------------------------------------------------------
@@ -152,9 +154,10 @@ GaborGB  none   PCA_LDA       36864    918     32    0.966  328.633
 PCANET   none   SVM_LIN        3072    880     70    0.926 1683.532
 RANDNET  none   SVM_LIN        3072    874     76    0.920 2506.335
 WAVENET  none   SVM_LIN       18432    893     57    0.940 3232.364
-LATCH    none   SVM_POL        1568    847    103    0.892  170.802
 LATCH    none   PCA_LDA        1568    883     67    0.929  318.049
 LATCH2   none   PCA_LDA        5120    903     47    0.951 1004.513
+DAISY    none   PCA_LDA       64800    902     48    0.949  422.905
+
 -------------------------------------------------------------------
 data/f94gender:         10 fold, 2 classes, 484 images, retina
 -------------------------------------------------------------------

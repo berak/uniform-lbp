@@ -10,7 +10,7 @@
 // if not present, fall back to a precalculated
 // 'one-size-fits-all' set of points(based on the mean lfw image)
 //
-#define HAVE_DLIB
+//#define HAVE_DLIB
 //#undef HAVE_DLIB
 
 #ifdef HAVE_DLIB
@@ -27,6 +27,7 @@ using std::endl;
 
 #include "texturefeature.h"
 #include "util/pcanet/PCANet.h"
+#include "util/daisy/daisy.hpp"
 #include "profile.h"
 #if 0
  #include "elastic/elasticparts.h"
@@ -1452,7 +1453,8 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
 
     LandMarks land;
 
-    ExtractorLatch2()
+    ExtractorLatch2() 
+        : land(12)
     {
         feature_bytes = 96;
         half_ssd_size = 5;
@@ -1531,16 +1533,16 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
             pixelTests(i, feature_bytes, pts[i], blurImage, features, half_ssd_size);
         }
 
-        static int debugK=0;
-        if ((++debugK % 5) == 1)
-        {
-            for (size_t i=0; i<latches.size(); i++)
-            {
-                rectangle(blurImage, Rect(pts[i].x-patch_size, pts[i].y-patch_size, 2*patch_size, 2*patch_size), Scalar(64), 2);
-            }
-            imshow("J",blurImage);
-            waitKey(1);
-        }
+        //static int debugK=0;
+        //if ((++debugK % 5) == 1)
+        //{
+        //    for (size_t i=0; i<latches.size(); i++)
+        //    {
+        //        rectangle(blurImage, Rect(pts[i].x-patch_size, pts[i].y-patch_size, 2*patch_size, 2*patch_size), Scalar(64), 2);
+        //    }
+        //    imshow("J",blurImage);
+        //    waitKey(1);
+        //}
 
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
@@ -1556,7 +1558,7 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
         for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
         {
             LocalLatch latch;
-           // (*it)["kp"] >> latch.keypoint;
+            // (*it)["kp"] >> latch.keypoint;
             (*it)["pt"] >> latch.points;
             latches.push_back(latch);
         }
@@ -1565,6 +1567,29 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
 };
 
 
+struct ExtractorDaisy : public TextureFeature::Extractor
+{
+    Ptr<xfeatures2d::DAISY> daisy;
+    ExtractorDaisy() : daisy(xfeatures2d::DAISY::create()) {}
+
+    virtual int extract(const Mat &img, Mat &features) const
+    {
+        int step = 9; // dense grid of ~10x10 kp.
+        int patch_size=15;
+        vector<KeyPoint> kps;
+        for (float i=patch_size; i<img.rows-patch_size; i+=step)
+        {
+            for (float j=patch_size; j<img.cols-patch_size; j+=step)
+            {
+                kps.push_back(KeyPoint(i, j, 1));
+            }
+        }
+        daisy->compute(img,kps,features);
+
+        features = features.reshape(1,1);
+        return features.total() * features.elemSize();
+    }
+};
 
 
 } // TextureFeatureImpl
@@ -1619,6 +1644,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         //case EXT_LATCH:    return makePtr< ExtractorLatch >();  break; //return makePtr< GenericExtractor<ExtractorLatch,GriddedHist> >(ExtractorLatch(), GriddedHist());
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
+        case EXT_DAISY:    return makePtr< ExtractorDaisy >();  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Extractor>();

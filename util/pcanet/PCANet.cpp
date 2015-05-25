@@ -181,18 +181,6 @@ void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSi
             cv::copyMakeBorder(inImg[i], img, mag, mag, mag, mag, cv::BORDER_CONSTANT, cv::Scalar(0));
         }
         cv::Mat temp3 = reduceMean(img, patchSize);
-#ifdef HAVE_UMAT
-        cv::UMat tu; temp3.copyTo(tu);
-        for (int j=0; j<numFilters; j++)
-        {
-            PROFILEX("pca_mult");
-            cv::UMat temp,fu; filters.row(j).copyTo(fu);
-            cv::gemm(fu, tu, 1,cv::UMat(), 0,temp);
-            temp = temp.reshape(0, inImg[i].cols);
-            cv::Mat z; cv::transpose(temp, z);
-            outImg.push_back(z);
-        }
-#else
         for (int j=0; j<numFilters; j++)
         {
             PROFILEX("pca_mult");
@@ -200,7 +188,6 @@ void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSi
             temp = temp.reshape(0, inImg[i].cols);
             outImg.push_back(temp.t());
         }
-#endif
     }
 }
 

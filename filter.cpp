@@ -22,26 +22,26 @@ struct FilterBits : public Filter
 {
     static void bits8(Mat &bits, uchar b)
     {
-        bits.push_back(((b&1)!=0));
-        bits.push_back(((b&2)!=0));
-        bits.push_back(((b&4)!=0));
-        bits.push_back(((b&8)!=0));
-        bits.push_back(((b&16)!=0));
-        bits.push_back(((b&32)!=0));
-        bits.push_back(((b&64)!=0));
-        bits.push_back(((b&128)!=0));
+        bits.push_back(fac*((b&1)!=0));
+        bits.push_back(fac*((b&2)!=0));
+        bits.push_back(fac*((b&4)!=0));
+        bits.push_back(fac*((b&8)!=0));
+        bits.push_back(fac*((b&16)!=0));
+        bits.push_back(fac*((b&32)!=0));
+        bits.push_back(fac*((b&64)!=0));
+        bits.push_back(fac*((b&128)!=0));
     }
     static void bits4(Mat &bits, uchar b)
     {
-        bits.push_back((((b&1 )^(b&2  ))!=0));
-        bits.push_back((((b&4 )^(b&8  ))!=0));
-        bits.push_back((((b&16)^(b&32 ))!=0));
-        bits.push_back((((b&64)^(b&128))!=0));
+        bits.push_back(fac*(((b&1 )^(b&2  ))!=0));
+        bits.push_back(fac*(((b&4 )^(b&8  ))!=0));
+        bits.push_back(fac*(((b&16)^(b&32 ))!=0));
+        bits.push_back(fac*(((b&64)^(b&128))!=0));
     }
     static void bits2(Mat &bits, uchar b)
     {
-        bits.push_back(((((b&1 )^(b&2 ))^((b&4 )^(b&8  )))!=0));
-        bits.push_back(((((b&16)^(b&32))^((b&64)^(b&128)))!=0));
+        bits.push_back(fac*((((b&1 )^(b&2 ))^((b&4 )^(b&8  )))!=0));
+        bits.push_back(fac*((((b&16)^(b&32))^((b&64)^(b&128)))!=0));
     }
     typedef void (*bitfun)(Mat &bits, uchar b);
     bitfun bits_;
@@ -205,19 +205,19 @@ struct FilterPow : public Filter
     }
 };
 
-struct FilterKMeans : public Filter
-{
-    int K;
-    FilterKMeans(int k=10) : K(k) {}
-    virtual int filter(const Mat &src, Mat &dest) const
-    {
-        Mat labels,cent,srcf=src.reshape(1,src.total());
-        srcf.convertTo(srcf,CV_32F);
-        kmeans(srcf, K, labels, TermCriteria(), 3, KMEANS_PP_CENTERS, dest);
-        dest=dest.reshape(1,1);
-        return 0;
-    }
-};
+//struct FilterKMeans : public Filter
+//{
+//    int K;
+//    FilterKMeans(int k=10) : K(k) {}
+//    virtual int filter(const Mat &src, Mat &dest) const
+//    {
+//        Mat labels,cent,srcf=src.reshape(1,src.total());
+//        srcf.convertTo(srcf,CV_32F);
+//        kmeans(srcf, K, labels, TermCriteria(), 3, KMEANS_PP_CENTERS, dest);
+//        dest=dest.reshape(1,1);
+//        return 0;
+//    }
+//};
 
 
 
@@ -250,9 +250,9 @@ Ptr<Filter> createFilter(int filt)
         case FIL_BITS8:    return makePtr<FilterBits>(8); break;
         case FIL_BITS4:    return makePtr<FilterBits>(4); break;
         case FIL_BITS2:    return makePtr<FilterBits>(2); break;
-        case FIL_KMEANS16: return makePtr<FilterKMeans>(16); break;
-        case FIL_KMEANS64: return makePtr<FilterKMeans>(64); break;
-        case FIL_KMEANS256:return makePtr<FilterKMeans>(256); break;
+        //case FIL_KMEANS16: return makePtr<FilterKMeans>(16); break;
+        //case FIL_KMEANS64: return makePtr<FilterKMeans>(64); break;
+        //case FIL_KMEANS256:return makePtr<FilterKMeans>(256); break;
 //        default: cerr << "Filter " << filt << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Filter>();

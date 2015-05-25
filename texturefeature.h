@@ -98,6 +98,7 @@ namespace TextureFeature
         EXT_CDIKP,
         //EXT_LATCH,
         EXT_LATCH2,
+        EXT_DAISY,
         EXT_MAX
     };
     static const char *EXS[] = {
@@ -141,6 +142,7 @@ namespace TextureFeature
         "CDIKP",
         //"LATCH",
         "LATCH2",
+        "DAISY",
         0
     };
     enum FIL {
@@ -161,9 +163,9 @@ namespace TextureFeature
         FIL_BITS2,
         FIL_BITS4,
         FIL_BITS8,
-        FIL_KMEANS16,
-        FIL_KMEANS64,
-        FIL_KMEANS256,
+        //FIL_KMEANS16,
+        //FIL_KMEANS64,
+        //FIL_KMEANS256,
         FIL_MAX
     };
     static const char *FILS[] = {
@@ -184,9 +186,9 @@ namespace TextureFeature
         "BITS2",
         "BITS4",
         "BITS8",
-        "KMEANS16",
-        "KMEANS64",
-        "KMEANS256",
+        //"KMEANS16",
+        //"KMEANS64",
+        //"KMEANS256",
         0
     };
     enum CLA {

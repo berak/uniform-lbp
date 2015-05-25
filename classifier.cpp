@@ -147,18 +147,6 @@ struct ClassifierCosine : public ClassifierNearest
         return cosdistance(testFeature, trainFeature);
     }
 };
-//
-//struct ClassifierMahalanobis : public ClassifierNearest
-//{
-//    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
-//    {
-//        Mat c[2] = {testFeature,trainFeature},covar,icovar,mean;
-//        calcCovarMatrix(c,2,covar,mean,COVAR_NORMAL);
-//        invert(covar,icovar, DECOMP_SVD);
-//        return cv::Mahalanobis(testFeature, trainFeature, icovar);
-//    }
-//};
-
 
 
 static int unique(const Mat &labels, set<int> &classes)
@@ -169,8 +157,9 @@ static int unique(const Mat &labels, set<int> &classes)
 }
 
 
-
+// outsourced to svmkernel.cpp
 extern Ptr<ml::SVM::Kernel> customKernel(int id);
+
 //
 // single svm, multi class.
 //
