@@ -22,33 +22,31 @@ struct FilterBits : public Filter
 {
     static void bits8(Mat &bits, uchar b)
     {
-        bits.push_back(fac*((b&1)!=0));
-        bits.push_back(fac*((b&2)!=0));
-        bits.push_back(fac*((b&4)!=0));
-        bits.push_back(fac*((b&8)!=0));
-        bits.push_back(fac*((b&16)!=0));
-        bits.push_back(fac*((b&32)!=0));
-        bits.push_back(fac*((b&64)!=0));
-        bits.push_back(fac*((b&128)!=0));
+        bits.push_back(((b&1)!=0));
+        bits.push_back(((b&2)!=0));
+        bits.push_back(((b&4)!=0));
+        bits.push_back(((b&8)!=0));
+        bits.push_back(((b&16)!=0));
+        bits.push_back(((b&32)!=0));
+        bits.push_back(((b&64)!=0));
+        bits.push_back(((b&128)!=0));
     }
     static void bits4(Mat &bits, uchar b)
     {
-        bits.push_back(fac*(((b&1 )^(b&2  ))!=0));
-        bits.push_back(fac*(((b&4 )^(b&8  ))!=0));
-        bits.push_back(fac*(((b&16)^(b&32 ))!=0));
-        bits.push_back(fac*(((b&64)^(b&128))!=0));
+        bits.push_back((((b&1 )^(b&2  ))!=0));
+        bits.push_back((((b&4 )^(b&8  ))!=0));
+        bits.push_back((((b&16)^(b&32 ))!=0));
+        bits.push_back((((b&64)^(b&128))!=0));
     }
     static void bits2(Mat &bits, uchar b)
     {
-        bits.push_back(fac*((((b&1 )^(b&2 ))^((b&4 )^(b&8  )))!=0));
-        bits.push_back(fac*((((b&16)^(b&32))^((b&64)^(b&128)))!=0));
+        bits.push_back(((((b&1 )^(b&2 ))^((b&4 )^(b&8  )))!=0));
+        bits.push_back(((((b&16)^(b&32))^((b&64)^(b&128)))!=0));
     }
     typedef void (*bitfun)(Mat &bits, uchar b);
     bitfun bits_;
 
-    int fac;
-    FilterBits(int nb=8, int f=255) 
-        : fac(f) 
+    FilterBits(int nb=8) 
     {
         switch(nb)
         {
