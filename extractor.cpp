@@ -612,7 +612,7 @@ struct LandMarks
 {
     Ptr<ElasticParts> elastic;
 
-    LandMarks()
+    LandMarks(int off=0)
     {
         elastic = ElasticParts::createDiscriminative();
         elastic->read("data/disc.xml.gz");
@@ -629,7 +629,7 @@ struct LandMarks
 #else // fixed manmade landmarks
 struct LandMarks
 {
-    LandMarks(int) {}
+    LandMarks(int off=0) {}
     int extract(const Mat &img, vector<Point> &kp) const
     {
         kp.push_back(Point(15,19));    kp.push_back(Point(75,19));
