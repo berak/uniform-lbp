@@ -53,6 +53,7 @@ PCASIFT  none   PCA_LDA       25600    695     46    0.938  696.151
 PCANET   none   SVM_LIN        3072    730     11    0.985 1306.950
 RANDNET  none   SVM_LIN        3072    728     13    0.982 2424.438
 WAVENET  none   SVM_LIN       18432    738      3    0.996 2563.668  * 9 [6 28][6 28]
+PCANET   none   SVM_INT2      24576    737      4    0.995 3312.173  * SS_2D
 LATCH    none   SVM_POL        1568    721     20    0.973  134.163
 LATCH    none   PCA_LDA        1568    725     16    0.978  202.412
 LATCH    none   PCA_LDA        1800    726     15    0.980  128.738  * ssd=1 step=4 bytes=8 
@@ -88,6 +89,7 @@ PCANET   none   SVM_LIN        3072    289     11    0.963  822.886   *    11 [4
 PCANET   none   SVM_LIN       98304    291      9    0.970 1903.782   *    11 [8 28][8 28]
 PCANET   DCT8   SVM_LIN       32000    292      8    0.973 1897.975   *     9 [8 28][8 28]
 PCANET   none   SVM_LIN       18432    292      8    0.973  875.066   * wave 9 [6 28][6 28]
+PCANET   none   SVM_INT2      24576    296      4    0.987 1490.884   * SS_2D learned filters
 RANDNET  none   SVM_LIN        3072    289     11    0.963 1025.370
 RANDNET  none   SVM_LIN       98304    292      8    0.973 1896.199
 LATCH    none   SVM_POL        1568    293      7    0.977   53.987   * N=8, PS=4

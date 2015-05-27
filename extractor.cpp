@@ -1025,13 +1025,10 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
 
     ExtractorGfttFeature2d(Ptr<Feature2D> f)
         : f2d(f)
-    {
-    }
+    {}
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-       // PROFILEX("extract");
-
         vector<Point> pt;
         land.extract(img,pt);
 
@@ -1046,23 +1043,8 @@ struct ExtractorGfttFeature2d : public TextureFeature::Extractor
             kp.push_back(KeyPoint(p.x,p.y+w,w*2,8));
             kp.push_back(KeyPoint(p.x-w,p.y,w*2,8));
             kp.push_back(KeyPoint(p.x+w,p.y,w*2,8));
-            //kp.push_back(KeyPoint(p.x-w,p.y-w/2,w*2));
-            //kp.push_back(KeyPoint(p.x-w,p.y+w/2,w*2));
-            //kp.push_back(KeyPoint(p.x+w,p.y-w/2,w*2));
-            //kp.push_back(KeyPoint(p.x+w,p.y+w/2,w*2));
         }
         f2d->compute(img, kp, features);
-        //Mat f2;
-        //for (size_t i=0; i< features.rows; i++)
-        //{
-        //    Mat f = features.row(i)(Rect(32,0,64,1)).clone().reshape(1,64);
-        //    f.push_back(kp[i].pt.x / img.cols - 0.5f);
-        //    f.push_back(kp[i].pt.y / img.rows - 0.5f);
-        //    f2.push_back(f);
-        //}
-        // resize(features,features,Size(),0.5,1.0);                  // not good.
-        // features = features(Rect(64,0,64,features.rows)).clone();  // amazing.
-        //features = features.reshape(1,1);
         normalize(features.reshape(1,1), features);
         return features.total() * features.elemSize();
     }
@@ -1293,15 +1275,6 @@ struct HighDimGrad : public TextureFeature::Extractor
     HighDimGrad()
         : grad(18,2,8)
     {
-        //FileStorage fs("data/hd_pcagrad.xml.gz",FileStorage::READ);
-        //CV_Assert(fs.isOpened());
-        //FileNode pnodes = fs["hd_pcasift"];
-        //int i=0;
-        //for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
-        //{
-        //    pca[i++].read(*it);
-        //}
-        //fs.release();
     }
     virtual int extract(const Mat &img, Mat &features) const
     {
@@ -1310,21 +1283,13 @@ struct HighDimGrad : public TextureFeature::Extractor
         CV_Assert(pt.size()==20);
 
         Mat histo;
-        //float scales[] = {1.0f, 1.7f, 2.5f};
-        // for (int i=0; i<3; i++)
+        for (size_t k=0; k<pt.size(); k++)
         {
-            //Mat ims;
-            //float s=scales[i];
-            //resize(img,ims,Size(),s,s);
-            for (size_t k=0; k<pt.size(); k++)
-            {
-                Mat h;
-                Mat patch; 
-                getRectSubPix(img,Size(32,32),pt[k],patch);
-                grad.extract(patch, h);
-                histo.push_back(h.reshape(1,1));
-                //histo.push_back(pca[k].project(h.reshape(1,1)));
-            }
+            Mat h;
+            Mat patch; 
+            getRectSubPix(img,Size(32,32),pt[k],patch);
+            grad.extract(patch, h);
+            histo.push_back(h.reshape(1,1));
         }
         features = histo.reshape(1,1);
         return features.total() * features.elemSize();
@@ -1422,37 +1387,17 @@ struct ExtractorPCANet : public TextureFeature::Extractor
 //
 // Gil Levi and Tal Hassner, "LATCH: Learned Arrangements of Three Patch Codes", arXiv preprint arXiv:1501.03719, 15 Jan. 2015
 //
-//struct ExtractorLatch : public TextureFeature::Extractor
-//{
-//    virtual int extract(const Mat &img, Mat &features) const
-//    {
-//        int step = 4; // dense grid of ~10x10 kp.
-//        vector<KeyPoint> kps;
-//        for (float i=Latch::PATCH_SIZE/2; i<img.rows-Latch::PATCH_SIZE/2; i+=step)
-//        {
-//            for (float j=Latch::PATCH_SIZE/2; j<img.cols-Latch::PATCH_SIZE/2; j+=step)
-//            {
-//                kps.push_back(KeyPoint(i, j, 1));
-//            }
-//        }
-//        Latch::compute(img, kps, features, 8, 1);
-//        features = features.reshape(1,1);
-//        return features.total() * features.elemSize();
-//    }
-//};
+// slightly modified version, that
+// uses n locally trained latches
 struct ExtractorLatch2 : public TextureFeature::Extractor
 {
-    struct LocalLatch
-    {
-        //Point2f keypoint;
-        Mat_<int> points;
-    };
-    vector<LocalLatch> latches;
+    LandMarks land;
+    vector<Mat_<int>> latches;
+
     int feature_bytes;
     int half_ssd_size;
     int patch_size;
 
-    LandMarks land;
 
     ExtractorLatch2() 
         : land(12)
@@ -1463,17 +1408,15 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
         load("data/latch.xml.gz");
     }
 
-    static bool calculateSums(int count, const Point &pt, const LocalLatch &latch, const Mat &grayImage, int half_ssd_size)
+    static bool calculateSums(int count, const Point &pt, const Mat_<int> &points, const Mat &grayImage, int half_ssd_size)
     {
         PROFILEX("Latch::calculateSums");
-	    int ax = latch.points(count)     + (int)(pt.x + 0.5);
-	    int ay = latch.points(count + 1) + (int)(pt.y + 0.5);
-
-	    int	bx = latch.points(count + 2) + (int)(pt.x + 0.5);
-	    int	by = latch.points(count + 3) + (int)(pt.y + 0.5);
-
-	    int cx = latch.points(count + 4) + (int)(pt.x + 0.5);
-	    int cy = latch.points(count + 5) + (int)(pt.y + 0.5);
+	    int ax = points(count)     + (int)(pt.x + 0.5);
+	    int ay = points(count + 1) + (int)(pt.y + 0.5);
+	    int	bx = points(count + 2) + (int)(pt.x + 0.5);
+	    int	by = points(count + 3) + (int)(pt.y + 0.5);
+	    int cx = points(count + 4) + (int)(pt.x + 0.5);
+	    int cy = points(count + 5) + (int)(pt.y + 0.5);
 
 	    int suma = 0, sumc = 0;
 
@@ -1501,14 +1444,14 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
     {
         PROFILEX("Latch::pixelTests");
 	    int count = 0;
-        const LocalLatch &latch = latches[i];
+        const Mat_<int> &points = latches[i];
 	    uchar* desc = descriptors.ptr(i);
 	    for (int ix=0; ix<N; ix++)
         {
 		    desc[ix] = 0;
 		    for (int j=7; j>=0; j--)
             {
-			    bool bit = calculateSums(count, pt, latch, grayImage, half_ssd_size);
+			    bool bit = calculateSums(count, pt, points, grayImage, half_ssd_size);
 			    desc[ix] += (uchar)(bit << j);
 
                 count += 6;
@@ -1558,10 +1501,9 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
         FileNode pnodes = fs["latches"];
         for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
         {
-            LocalLatch latch;
-            // (*it)["kp"] >> latch.keypoint;
-            (*it)["pt"] >> latch.points;
-            latches.push_back(latch);
+            Mat_<int> points;
+            (*it)["pt"] >> points;
+            latches.push_back(points);
         }
         fs.release();
     }
