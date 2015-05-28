@@ -166,7 +166,9 @@ cv::Mat pcaFilterBank(const vector<cv::Mat> &images, int patchSize, int numFilte
     return filters;
 }
 
-
+//
+// only used for pca-training
+//
 void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSize, int numFilters, const cv::Mat &filters, int threadnum)
 {
     PROFILE;
@@ -219,51 +221,6 @@ cv::Mat PCANet::extract(const cv::Mat &img) const
 }
 
 
-cv::Mat PCANet::trainPCA(vector<cv::Mat> &images, bool extract_feature)
-{
-    PROFILE;
-    assert(stages.size() == numStages);
-    int64 e1 = cv::getTickCount();
-
-    vector<cv::Mat>feat(images), post;
-    for (int i=0; i<(numStages - 1); i++)
-    {
-        stages[i].filters = pcaFilterBank(feat, patchSize, stages[i].numFilters);
-        pcaStage(feat, post, patchSize, stages[i].numFilters, stages[i].filters, 1);
-        feat.clear();
-        cv::swap(feat,post);
-    }
-    Stage &lastStage = stages[numStages - 1];
-    lastStage.filters = pcaFilterBank(feat, patchSize, lastStage.numFilters);
-
-    int64 e2 = cv::getTickCount();
-    double time = (e2 - e1) / cv::getTickFrequency();
-    cout << "\n Train     time: " << time << endl;
-
-    cv::Mat features;
-    if (extract_feature)
-    {
-        size_t feat0Size = images.size();
-        images.clear();
-
-        vector<cv::Mat>::const_iterator first = feat.begin();
-        vector<cv::Mat>::const_iterator last  = feat.begin();
-        for (size_t i=0; i<feat0Size; i++)
-        {
-            vector<cv::Mat> subInImg(first + i * lastStage.numFilters, last + (i + 1) * lastStage.numFilters);
-
-            vector<cv::Mat> feat2;
-            pcaStage(subInImg, feat2, patchSize, lastStage.numFilters, lastStage.filters, 1);
-
-            cv::Mat hashing = hashingHist(feat2);
-            features.push_back(hashing);
-        }
-        cout << "\n Extraction time: " << ((cv::getTickCount() - e2) / cv::getTickFrequency()) << endl;
-    }
-    return features;
-}
-
-
 cv::Mat PCANet::hashingHist(const vector<cv::Mat> &images) const
 {
     PROFILE;
@@ -306,6 +263,51 @@ cv::Mat PCANet::hashingHist(const vector<cv::Mat> &images) const
     }
 
     return bhist.reshape(1,1); 
+}
+
+
+cv::Mat PCANet::trainPCA(vector<cv::Mat> &images, bool extract_feature)
+{
+    PROFILE;
+    assert(stages.size() == numStages);
+    int64 e1 = cv::getTickCount();
+
+    vector<cv::Mat>feat(images), post;
+    for (int i=0; i<(numStages - 1); i++)
+    {
+        stages[i].filters = pcaFilterBank(feat, patchSize, stages[i].numFilters);
+        pcaStage(feat, post, patchSize, stages[i].numFilters, stages[i].filters, 1);
+        feat.clear();
+        cv::swap(feat,post);
+    }
+    Stage &lastStage = stages[numStages - 1];
+    lastStage.filters = pcaFilterBank(feat, patchSize, lastStage.numFilters);
+
+    int64 e2 = cv::getTickCount();
+    double time = (e2 - e1) / cv::getTickFrequency();
+    cout << "\n Train     time: " << time << endl;
+
+    cv::Mat features;
+    if (extract_feature)
+    {
+        size_t feat0Size = images.size();
+        images.clear();
+
+        vector<cv::Mat>::const_iterator first = feat.begin();
+        vector<cv::Mat>::const_iterator last  = feat.begin();
+        for (size_t i=0; i<feat0Size; i++)
+        {
+            vector<cv::Mat> subInImg(first + i * lastStage.numFilters, last + (i + 1) * lastStage.numFilters);
+
+            vector<cv::Mat> feat2;
+            pcaStage(subInImg, feat2, patchSize, lastStage.numFilters, lastStage.filters, 1);
+
+            cv::Mat hashing = hashingHist(feat2);
+            features.push_back(hashing);
+        }
+        cout << "\n Extraction time: " << ((cv::getTickCount() - e2) / cv::getTickFrequency()) << endl;
+    }
+    return features;
 }
 
 
@@ -363,35 +365,6 @@ bool PCANet::save(const cv::String &fn) const
     return true;
 }
 
-cv::Mat PCANet::filterVis() const
-{
-    int maxFilters=0;
-    for (int i=0; i<numStages; i++)
-    {
-        maxFilters = std::max(stages[i].numFilters, maxFilters);
-    }
-    cv::Mat fils;
-    for (int i=0; i<numStages; i++)
-    {
-        cv::Mat f; stages[i].filters.convertTo(f,CV_8U,128,128);
-        cv::Mat res;        
-        for (int j=0; j<maxFilters; j++)
-        {
-            cv::Mat r;
-            if (j<stages[i].numFilters)
-                r = f.row(j).clone().reshape(1,patchSize);
-            else
-                r = cv::Mat(patchSize,patchSize,CV_8U,cv::Scalar(0));
-            cv::Mat rb;
-            cv::copyMakeBorder(r,rb,1,1,1,1,cv::BORDER_CONSTANT);
-            if (j==0) res=rb;
-            else cv::hconcat(res,rb,res);
-        }
-        fils.push_back(res);
-    }
-    return fils;
-}
-
 
 bool PCANet::load(const cv::String &fn)
 {
@@ -419,6 +392,36 @@ bool PCANet::load(const cv::String &fn)
     fs["ProjVecLDA"] >> projVecLDA;
     fs.release();
     return true;
+}
+
+
+cv::Mat PCANet::filterVis() const
+{
+    int maxFilters=0;
+    for (int i=0; i<numStages; i++)
+    {
+        maxFilters = std::max(stages[i].numFilters, maxFilters);
+    }
+    cv::Mat fils;
+    for (int i=0; i<numStages; i++)
+    {
+        cv::Mat f; stages[i].filters.convertTo(f,CV_8U,128,128);
+        cv::Mat res;        
+        for (int j=0; j<maxFilters; j++)
+        {
+            cv::Mat r;
+            if (j<stages[i].numFilters)
+                r = f.row(j).clone().reshape(1,patchSize);
+            else
+                r = cv::Mat(patchSize,patchSize,CV_8U,cv::Scalar(0));
+            cv::Mat rb;
+            cv::copyMakeBorder(r,rb,1,1,1,1,cv::BORDER_CONSTANT);
+            if (j==0) res=rb;
+            else cv::hconcat(res,rb,res);
+        }
+        fils.push_back(res);
+    }
+    return fils;
 }
 
 

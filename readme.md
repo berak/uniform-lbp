@@ -154,6 +154,7 @@ GradMagP WHAD8  PCA_LDA       32000    911     39    0.959  260.980
 PCASIFT  none   PCA_LDA       25600    915     35    0.963 1021.913
 GaborGB  none   PCA_LDA       36864    918     32    0.966  328.633
 PCANET   none   SVM_LIN        3072    880     70    0.926 1683.532
+PCANET   none   SVM_INT2      24576    900     50    0.947 3919.794 * SS_2D_nuclear 6 filters 11x11
 RANDNET  none   SVM_LIN        3072    874     76    0.920 2506.335
 WAVENET  none   SVM_LIN       18432    893     57    0.940 3232.364
 LATCH    none   PCA_LDA        1568    883     67    0.929  318.049

@@ -128,7 +128,16 @@ static Mat tan_triggs_preprocessing(InputArray src, float alpha=0.1, float tau=1
 }
 
 
-
+//Mat whitening(const Mat &in)
+//{
+//    Mat in_f; in.convertTo(in_f, CV_32F);
+//    PCA p(in_f * in_f.t(), Mat(), -1);
+//    for (int i=0; i<p.eigenvectors.rows; i++)
+//    {
+//        p.eigenvalues.row(i) /= sqrt(p.eigenvalues.at<float>(i));
+//    }
+//    return p.project(in_f);
+//}
 
 Preprocessor::Preprocessor(int mode, int crop, int retsize)
     : preproc(mode)
@@ -165,6 +174,7 @@ Mat Preprocessor::process(const Mat &imgin)  const
         case 3: retina->run(imgt); retina->getParvo(imgout); break;
         case 4: cv::normalize(tan_triggs_preprocessing(imgt), imgout, 0, 255, NORM_MINMAX, CV_8UC1); break;
         case 5: imgt.convertTo(imgout,CV_32F,1,1); log(imgout,imgout); imgout.convertTo(imgout,CV_8U);break; // logscale
+        //case 6: imgout = whitening(imgin); break;
         //case 6: radonTransform<uchar>(imgt,imgout); imgout.convertTo(imgout,CV_8U); break;
         //case 7: imgout = CSDNFilter(imgt); break;
         //case 8: imgout = DoGFilter(imgt); break;
