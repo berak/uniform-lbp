@@ -10,12 +10,18 @@ struct PNet : public Extractor
         vector<cv::Mat> filters;
         void convolute(const cv::Mat &im_in, vector<cv::Mat> &im_out) const
         {
-            Scalar m,s; meanStdDev(im_in, m, s);
             for (size_t i=0; i<filters.size(); i++)
             {
                 cv::Mat r;
-                //sepFilter2D(im_in - m, r, CV_32F, filters[i].row(filters[i].cols/2), filters[i].col(filters[i].rows/2));
-                filter2D(im_in - m, r, CV_32F, filters[i]);
+                sepFilter2D(im_in, r, CV_32F, filters[i].row(0), filters[i].col(0));
+                //sepFilter2D(im_in, r, CV_32F, filters[i].row(filters[i].cols/2), filters[i].col(filters[i].rows/2));
+
+                //Point anchor(filters[i].cols -filters[i].cols/2 - 1, filters[i].rows - filters[i].rows/2 - 1);
+                //Mat filflip;
+                //flip(filters[i],filflip,-1);
+                //filter2D(im_in, r, CV_32F, filflip, anchor);
+
+                //filter2D(im_in, r, CV_32F, filters[i]);
                 im_out.push_back(r);
             }
         }
@@ -90,10 +96,11 @@ struct PNet : public Extractor
 
     PNet(const cv::String &fn)
         : stages(2)
-        , hgrid(2)
-        , hsize(32)
+        //, hgrid(2)
+        //, hsize(16)
     {
         load(fn);
+        hsize = 1 << stages[1].filters.size();
     }
     
 
@@ -110,10 +117,50 @@ struct PNet : public Extractor
     //    return (bhist * (p/s));
     //}
 
+
+    cv::Mat bsxfun_times(cv::Mat &bhist, int numFilters) const
+    {
+        PROFILE;
+        int row = bhist.rows;
+        int col = bhist.cols;
+
+        vector<float> sum(col,0);
+
+        for (int i = 0; i<row; i++)
+        {
+            const float *pb = bhist.ptr<float>(i);
+            for (int j = 0; j<col; j++)
+            {
+                sum[j] += pb[j];
+            }
+        }
+        //cerr << "sum1" << endl << Mat(sum).t() << endl;
+
+        float p = pow(2.0f, numFilters);
+        for (int i = 0; i<col; i++)
+        {
+            sum[i] = p / sum[i];
+        }
+
+        //cerr << "sum2" << endl << Mat(sum).t() << endl;
+        for (int i = 0; i<row; i++)
+        {
+            float *pb = bhist.ptr<float>(i);
+            for (int j=0; j<col; j++)
+            {
+                pb[j] *= sum[j];
+            }
+        }
+
+        //cerr << "sum3" << endl << bhist << endl;
+        return bhist;
+    }
+
+
     cv::Mat bhist(const cv::Mat &in, int numFilters) const
     {
         cv::Mat his;
-        float range[] = {0.0f, 1.0f};
+        float range[] = {0.0f, hsize};
         const float *histRange = {range};
         int sw = in.cols/hgrid;
         int sh = in.rows/hgrid;
@@ -123,12 +170,16 @@ struct PNet : public Extractor
             {
                 cv::Mat h, patch(in, Range(j*sh, (j+1)*sh), Range(i*sw, (i+1)*sw));
                 calcHist(&in, 1, 0, cv::Mat(), h, 1, &hsize, &histRange, true, false);
-                normalize(h,h);
+                //normalize(h,h);
                 //h = bsxfun(h, numFilters);
-                his.push_back(h);
+                his.push_back(h.reshape(1,1));
             }
         }
-        return his.reshape(1,1);
+       // cerr << "in" << endl << his << endl;
+        Mat h = bsxfun_times(Mat(his.t()), numFilters);
+       // cerr << "out" << endl << h << endl;
+        return h.reshape(1,1);
+        //return his.reshape(1,1);
     }
 
 
@@ -137,7 +188,12 @@ struct PNet : public Extractor
         cv::Mat imf;
         img.convertTo(imf,CV_32F);
 
-        vector<cv::Mat> conv(1,imf), ctmp, pool;
+        Scalar m,s; meanStdDev(imf, m, s);
+        Mat white = imf;
+        white -= m[0];
+        white /= s[0];
+
+        vector<cv::Mat> conv(1,white), ctmp, pool;
         for (size_t i=0; i<stages.size(); i++)
         {
             stages[i].convolute(conv, ctmp);
@@ -151,7 +207,8 @@ struct PNet : public Extractor
         cv::Mat r;
         for (size_t i=0; i<pool.size(); i++)
         {
-            cv::Mat c; normalize(pool[i], c, 1, 0, NORM_MINMAX);
+           // cv::Mat c; normalize(pool[i], c, 1, 0, NORM_MINMAX);
+            cv::Mat c = pool[i];
             cv::Mat h = bhist(c, last.filters.size());
             r.push_back(h);
         }

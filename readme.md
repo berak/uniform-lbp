@@ -52,7 +52,7 @@ GaborGB  none   PCA_LDA       36864    732      9    0.988  179.415
 PCASIFT  none   PCA_LDA       25600    695     46    0.938  696.151
 PCANET   none   SVM_LIN        3072    730     11    0.985 1306.950
 RANDNET  none   SVM_LIN        3072    728     13    0.982 2424.438
-WAVENET  none   SVM_LIN       18432    738      3    0.996 2563.668  * 9 [6 28][6 28]
+WAVENET  none   SVM_LIN       18432    738      3    0.996 2563.668  * 9 [6 28][6 28] (pure luck, i guess)
 PCANET   none   SVM_INT2      24576    737      4    0.995 3312.173  * SS_2D
 LATCH    none   SVM_POL        1568    721     20    0.973  134.163
 LATCH    none   PCA_LDA        1568    725     16    0.978  202.412

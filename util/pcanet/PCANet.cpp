@@ -1,7 +1,7 @@
 #include "PCANet.h"
 
-#if 0
- #include "../profile.h"
+#if 1
+ #include "../../profile.h"
 #else
  #define PROFILE
  #define PROFILEX
@@ -111,24 +111,30 @@ cv::Mat reduceMean(const cv::Mat &image, int patchSize)
     vector<int> blockSize(2, patchSize);
     vector<int> stepSize(2, 1);
     cv::Mat temp = im2col(image, blockSize, stepSize);
-
-    cv::Mat mean;
-    {
-        PROFILEX("reduce");
-        cv::reduce(temp, mean, 0, cv::REDUCE_AVG);
-    }
-
-    cv::Mat res;
-    for (int i=0; i<temp.rows; i++)
-    {
-        PROFILEX("reduce_sub");
-        cv::Mat temp2 = (temp.row(i) - mean.row(0));
-        res.push_back(temp2.row(0));
-    }
-    return res;
+    return temp;
+    //cv::Mat mean;
+    //{
+    //    PROFILEX("reduce");
+    //    cv::reduce(temp, mean, 0, cv::REDUCE_AVG);
+    //}
+    ////cv::Scalar m,s; cv::meanStdDev(temp, m, s);
+    ////cv::Mat white = temp;
+    ////white -= m[0];
+    ////white /= s[0];
+    //cv::Mat res;
+    //for (int i=0; i<temp.rows; i++)
+    //{
+    //    PROFILEX("reduce_sub");
+    //    cv::Mat temp2 = (temp.row(i) - mean.row(0));
+    //    res.push_back(temp2.row(0));
+    //}
+    //return res;
 }
 
 
+//
+// only used for pca-training
+//
 cv::Mat pcaFilterBank(const vector<cv::Mat> &images, int patchSize, int numFilters)
 {
     PROFILE;
@@ -166,30 +172,36 @@ cv::Mat pcaFilterBank(const vector<cv::Mat> &images, int patchSize, int numFilte
     return filters;
 }
 
-//
-// only used for pca-training
-//
 void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSize, int numFilters, const cv::Mat &filters, int threadnum)
 {
     PROFILE;
     int img_length = inImg.size();
     int mag = (patchSize - 1) / 2;
-    cv::Mat img;
 
     for (int i=0; i<img_length; i++)
     {
-        {
-            PROFILEX("pca_border");
-            cv::copyMakeBorder(inImg[i], img, mag, mag, mag, mag, cv::BORDER_CONSTANT, cv::Scalar(0));
-        }
-        cv::Mat temp3 = reduceMean(img, patchSize);
+        const cv::Mat &img = inImg[i];
         for (int j=0; j<numFilters; j++)
         {
             PROFILEX("pca_mult");
-            cv::Mat temp = filters.row(j) * temp3;
-            temp = temp.reshape(0, inImg[i].cols);
-            outImg.push_back(temp.t());
+            cv::Mat tf = filters.row(j).reshape(1,patchSize);
+            cv::Mat temp;
+            filter2D(img, temp, CV_32F, tf);
+            //sepFilter2D(img, temp, CV_32F, tf.row(0), tf.col(0));
+            outImg.push_back(temp);
         }
+        //{
+        //    PROFILEX("pca_border");
+        //    cv::copyMakeBorder(inImg[i], img, mag, mag, mag, mag, cv::BORDER_CONSTANT, cv::Scalar(0));
+        //}
+        //cv::Mat temp3 = reduceMean(img, patchSize);
+        //for (int j=0; j<numFilters; j++)
+        //{
+        //    PROFILEX("pca_mult");
+        //    cv::Mat temp = filters.row(j) * temp3;
+        //    temp = temp.reshape(0, inImg[i].cols);
+        //    outImg.push_back(temp.t());
+        //}
     }
 }
 
@@ -197,6 +209,7 @@ void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSi
 cv::Mat PCANet::extract(const cv::Mat &img) const
 {
     PROFILEX("extract");
+
     vector<cv::Mat>feat(1,img), post;
 
     for (int i=0; i<numStages; i++)

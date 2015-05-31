@@ -253,6 +253,12 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
 
         cls->train(trainFeatures, trainLabels);
 
+//        FileStorage fs(format("pnet%d.xml.gz",f),FileStorage::WRITE);
+////        cls->save(fs);
+//        fs << "labels" << trainLabels;
+//        fs << "features" << trainFeatures;
+//        fs.release();
+
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
         for (int i=0; i<testFeatures.rows; i++)
         {
@@ -332,9 +338,9 @@ int main(int argc, const char *argv[])
             "{ minp m         |10    | minimal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |38     | extractor  enum }"
+            "{ ext e          |33    | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
-            "{ cls c          |22     | classifier enum }"
+            "{ cls c          |12    | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
             "{ crop C         |80     | crop outer pixels }"

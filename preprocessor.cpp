@@ -147,7 +147,7 @@ Preprocessor::Preprocessor(int mode, int crop, int retsize)
     , retina(bioinspired::createRetina(Size(retsize,retsize)))
 {
     //// (realistic setup)
-    bioinspired::Retina::RetinaParameters ret_params;
+    bioinspired::RetinaParameters ret_params;
     ret_params.OPLandIplParvo.horizontalCellsGain = 0.7f;
     ret_params.OPLandIplParvo.photoreceptorsLocalAdaptationSensitivity = 0.39f;
     ret_params.OPLandIplParvo.ganglionCellsSensitivity = 0.39f;
