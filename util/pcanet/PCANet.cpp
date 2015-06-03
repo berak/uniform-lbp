@@ -181,6 +181,10 @@ void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSi
     for (int i=0; i<img_length; i++)
     {
         const cv::Mat &img = inImg[i];
+        //cv::Scalar m,s; cv::meanStdDev(img, m, s);
+        //cv::Mat white = img.clone();
+        //white -= m[0];
+        //white /= s[0];
         for (int j=0; j<numFilters; j++)
         {
             PROFILEX("pca_mult");
@@ -214,16 +218,12 @@ cv::Mat PCANet::extract(const cv::Mat &img) const
 
     for (int i=0; i<numStages; i++)
     {
-        PROFILEX("extract_stages");
         pcaStage(feat, post, patchSize, stages[i].numFilters, stages[i].filters, 1);
         feat.clear();
         cv::swap(feat,post);
     }
-    cv::Mat hashing;
-    {
-        PROFILEX("extract_hash");
-        hashing = hashingHist(feat);
-    }
+
+    cv::Mat hashing = hashingHist(feat);
 
     if ((!projVecPCA.empty()) && (!projVecLDA.empty()))
     {

@@ -1388,6 +1388,7 @@ struct ExtractorPCANet : public TextureFeature::Extractor
 //
 // slightly modified version, that
 // uses n locally trained latches
+//
 struct ExtractorLatch2 : public TextureFeature::Extractor
 {
     LandMarks land;
@@ -1463,10 +1464,7 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
     {
         PROFILEX("Latch::extract");
         Mat blurImage;
-        {
-            PROFILEX("Latch::blur");
-    	    GaussianBlur(image, blurImage, cv::Size(3, 3), 2, 2);
-        }
+   	    GaussianBlur(image, blurImage, cv::Size(3, 3), 2, 2);
 	    features.create((int)latches.size(), feature_bytes, CV_8U);
 
         vector<Point> pts;
@@ -1536,7 +1534,7 @@ struct ExtractorDaisy : public TextureFeature::Extractor
 
 } // TextureFeatureImpl
 
-#include "util/pcanet/PNet.cpp"
+//#include "util/pcanet/PNet.cpp"
 
 namespace TextureFeature
 {

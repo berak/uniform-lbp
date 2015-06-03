@@ -217,6 +217,17 @@ struct FilterPow : public Filter
 //    }
 //};
 
+struct FilterMeanStdev : public Filter
+{
+    virtual int filter(const Mat &src, Mat &dest) const
+    {
+        cv::Scalar m,s; cv::meanStdDev(src, m, s);
+        dest = src.clone();
+        dest -= m[0];
+        dest /= s[0];
+        return 0;
+    }
+};
 
 
 } // TextureFeatureImpl
@@ -248,6 +259,7 @@ Ptr<Filter> createFilter(int filt)
         case FIL_BITS8:    return makePtr<FilterBits>(8); break;
         case FIL_BITS4:    return makePtr<FilterBits>(4); break;
         case FIL_BITS2:    return makePtr<FilterBits>(2); break;
+        case FIL_MEAN:     return makePtr<FilterMeanStdev>(); break;
         //case FIL_KMEANS16: return makePtr<FilterKMeans>(16); break;
         //case FIL_KMEANS64: return makePtr<FilterKMeans>(64); break;
         //case FIL_KMEANS256:return makePtr<FilterKMeans>(256); break;
