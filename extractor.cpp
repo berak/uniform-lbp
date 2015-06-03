@@ -1580,8 +1580,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_PCANET:   return makePtr< ExtractorPCANet >("data/pcanet.xml");  break;
         case EXT_WAVENET:  return makePtr< ExtractorPCANet >("data/wavenet.xml");  break;
         case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
-        case EXT_PNET:     return makePtr< PNet>("data/pcanet.xml");  break;
-        //case EXT_PNET:     return makePtr< PNet>();  break;
+        //case EXT_PNET:     return makePtr< PNet>("data/pcanet.xml");  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         //case EXT_LATCH:    return makePtr< ExtractorLatch >();  break; //return makePtr< GenericExtractor<ExtractorLatch,GriddedHist> >(ExtractorLatch(), GriddedHist());
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;

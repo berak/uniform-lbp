@@ -172,6 +172,11 @@ cv::Mat pcaFilterBank(const vector<cv::Mat> &images, int patchSize, int numFilte
     return filters;
 }
 
+
+//
+// swapping the im2col -> gemm approach for filter2D()
+//   gives like a 30 times speedup, yet looses some bits of accuracy.
+//
 void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSize, int numFilters, const cv::Mat &filters, int threadnum)
 {
     PROFILE;
@@ -181,17 +186,12 @@ void pcaStage(const vector<cv::Mat> &inImg, vector<cv::Mat> &outImg, int patchSi
     for (int i=0; i<img_length; i++)
     {
         const cv::Mat &img = inImg[i];
-        //cv::Scalar m,s; cv::meanStdDev(img, m, s);
-        //cv::Mat white = img.clone();
-        //white -= m[0];
-        //white /= s[0];
         for (int j=0; j<numFilters; j++)
         {
             PROFILEX("pca_mult");
             cv::Mat tf = filters.row(j).reshape(1,patchSize);
             cv::Mat temp;
             filter2D(img, temp, CV_32F, tf);
-            //sepFilter2D(img, temp, CV_32F, tf.row(0), tf.col(0));
             outImg.push_back(temp);
         }
         //{
