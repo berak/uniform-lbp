@@ -219,6 +219,7 @@ namespace TextureFeature
         CL_PCA,
         CL_PCA_LDA,
         CL_MLP,
+        CL_KNN,
         //CL_RTREE,
         //CL_MAHALANOBIS,
         CL_MAX
@@ -248,6 +249,7 @@ namespace TextureFeature
         "PCA",
         "PCA_LDA",
         "MLP",
+        "KNN",
         //"RTREE",
         //"MAHALANOB",
         0

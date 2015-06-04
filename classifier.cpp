@@ -6,6 +6,7 @@ using namespace std;
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/ml.hpp>
+#include <opencv2/flann/miniflann.hpp>
 using namespace cv;
 
 #include "texturefeature.h"
@@ -435,6 +436,70 @@ struct ClassifierMLP : Classifier
 };
 
 
+struct ClassifierKNN : Classifier
+{
+    cv::Ptr<cv::flann::Index> bin_index;
+    cv::Ptr<cv::flann::Index> flt_index;
+    Mat_<int> labels;
+
+    int majority(const Mat_<int> &ind) const
+    {
+        map<int,int> maj;
+        for (size_t i=0; i<ind.total(); i++)
+        {
+            int id = labels(ind(i));
+            if (maj.find(id) == maj.end())
+                maj[id] = 0;
+            maj[id] ++;
+        }
+        int maxv=0;
+        int maxi=0;
+        map<int,int>::iterator it = maj.begin();
+        for (; it != maj.end(); it++)
+        {
+            if (it->second > maxv)
+            {
+                maxv = it->second;
+                maxi = it->first;
+            }
+        }
+        return maxi;
+    }
+
+    virtual int train(const Mat &trainData, const Mat &trainLabels)
+    {
+        if (trainData.type() == CV_8U)
+        {
+            bin_index = makePtr<cv::flann::Index>(trainData, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_HAMMING);
+        }
+        else
+        {
+            flt_index = makePtr<cv::flann::Index>(trainData, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_L2);
+        }
+        labels = trainLabels;
+        return 1;
+    }
+    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
+    {
+        int K=5;
+        cv::flann::SearchParams params;
+        cv::Mat dists;
+        cv::Mat indices;
+        if (testFeature.type() == CV_8U)
+        {
+            bin_index->knnSearch(testFeature, indices, dists, K, params);
+        }
+        else
+        {
+            flt_index->knnSearch(testFeature, indices, dists, K, params);
+        }
+        int hit = majority(indices);
+        //int hit = labels(indices.at<int>(0));
+        results = (Mat_<float>(1,1) << hit);
+        return 1;
+    }
+};
+
 //------->8-----------------------------------------------------------------------
 //
 // while for the identification task, we train a classifier on image features,
@@ -677,6 +742,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
         case CL_MLP:       return makePtr<ClassifierMLP>(); break;
+        case CL_KNN:       return makePtr<ClassifierKNN>(); break;
         //case CL_MAHALANOBIS: return makePtr<ClassifierMahalanobis>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }

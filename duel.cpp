@@ -338,9 +338,9 @@ int main(int argc, const char *argv[])
             "{ minp m         |10    | minimal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |33    | extractor  enum }"
+            "{ ext e          |8    | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
-            "{ cls c          |12    | classifier enum }"
+            "{ cls c          |24    | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
             "{ crop C         |80     | crop outer pixels }"
@@ -391,7 +391,7 @@ int main(int argc, const char *argv[])
     if (all)
     {
         cout << "-------------------------------------------------------------------" << endl;
-        cout << "[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]" << endl;
+        cout << "[extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]" << endl;
     }
 
     if ( ! all )

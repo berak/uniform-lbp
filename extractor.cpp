@@ -1562,8 +1562,8 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_COMB_P:   return makePtr< CombinedExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_COMB_G:   return makePtr< CombinedExtractor<GfttGrid> >(GfttGrid()); break;
         case EXT_Dct:      return makePtr< ExtractorDct >(); break;
-        case EXT_Orb:      return makePtr< ExtractorORBGrid >();  break;
-        case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(20); break;
+        case EXT_Orb:      return makePtr< ExtractorORBGrid >(20);  break;
+        case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(32); break;
         case EXT_Sift_G:   return makePtr< ExtractorGfttFeature2d >(xfeatures2d::SIFT::create()); break;
         case EXT_Grad:     return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist());  break;
         case EXT_Grad_G:   return makePtr< GenericExtractor<FeatureGrad,GfttGrid> >(FeatureGrad(),GfttGrid()); break;
