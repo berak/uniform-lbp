@@ -438,11 +438,10 @@ struct ClassifierMLP : Classifier
 
 struct ClassifierKNN : Classifier
 {
-    cv::Ptr<cv::flann::Index> bin_index;
-    cv::Ptr<cv::flann::Index> flt_index;
+    cv::Ptr<cv::flann::Index> index;
     Mat_<int> labels;
 
-    int majority(const Mat_<int> &ind) const
+    static int majority(const Mat_<int> &ind, const Mat_<int> &labels) // re-used in verifier
     {
         map<int,int> maj;
         for (size_t i=0; i<ind.total(); i++)
@@ -466,36 +465,32 @@ struct ClassifierKNN : Classifier
         return maxi;
     }
 
-    virtual int train(const Mat &trainData, const Mat &trainLabels)
+    static cv::Ptr<cv::flann::Index> train_index(const Mat &trainData)
     {
         if (trainData.type() == CV_8U)
         {
-            bin_index = makePtr<cv::flann::Index>(trainData, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_HAMMING);
+            return makePtr<cv::flann::Index>(trainData, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_HAMMING);
         }
-        else
-        {
-            flt_index = makePtr<cv::flann::Index>(trainData, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_L2);
-        }
+        return makePtr<cv::flann::Index>(trainData, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_L2);
+    }
+
+    virtual int train(const Mat &trainData, const Mat &trainLabels)
+    {
+        index  = train_index(trainData);
         labels = trainLabels;
         return 1;
     }
+
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
         int K=5;
         cv::flann::SearchParams params;
         cv::Mat dists;
         cv::Mat indices;
-        if (testFeature.type() == CV_8U)
-        {
-            bin_index->knnSearch(testFeature, indices, dists, K, params);
-        }
-        else
-        {
-            flt_index->knnSearch(testFeature, indices, dists, K, params);
-        }
-        int hit = majority(indices);
-        //int hit = labels(indices.at<int>(0));
-        results = (Mat_<float>(1,1) << hit);
+        index->knnSearch(testFeature, indices, dists, K, params);
+
+        results = (Mat_<float>(1,1) << majority(indices, labels));
+        //results = (Mat_<float>(1,1) << labels(indices.at<int>(0)));
         return 1;
     }
 };
@@ -595,28 +590,33 @@ struct VerifierCosine : VerifierNearest
 //
 struct PairDistance
 {
-    int dist_flag;
-
-    PairDistance(int df=2)
-        : dist_flag(df)
-    {}
-
+    //
+    // xor for binary, L2 for float
+    //
     Mat distance_mat(const Mat &a, const Mat &b) const
     {
         Mat d;
-        switch(dist_flag)
+        switch(a.type())
         {
-            case 0: absdiff(a,b,d); break;
-            case 1: d = a-b; multiply(d,d,d,1,CV_32F); break;
-            case 2: d = a-b; multiply(d,d,d,1,CV_32F); cv::sqrt(d,d); break;
-            case 3: d = a^b; break;
+            case CV_8U: 
+                d = a^b; 
+                break;
+            default: 
+                d = a-b; 
+                multiply(d,d,d,1,CV_32F); 
+                cv::sqrt(d,d); 
+                break;
         }
         return d;
     }
 
+    //
+    // make a 'distance' mat from 2 features, 
+    // and binary(-1,1) labels
+    //
     void train_pre(const Mat &features, const Mat &labels, Mat &distances, Mat &binlabels)
     {
-        Mat trainData = tofloat(features.reshape(1, labels.rows));
+        Mat trainData = (features.reshape(1, labels.rows));
 
         for (size_t i=0; i<labels.total()-1; i+=2)
         {
@@ -636,14 +636,10 @@ struct VerifierPairDistance : public TextureFeature::Verifier, PairDistance
 {
     Ptr<ml::StatModel> model;
 
-    VerifierPairDistance(int df=2)
-        : PairDistance(df)
-    {}
-
     virtual int train(const Mat &features, const Mat &labels)
     {      
         Mat distances, binlabels;
-        train_pre(features, labels, distances, binlabels);
+        train_pre(tofloat(features), labels, distances, binlabels);
 
         model->clear();
         return model->train(ml::TrainData::create(distances, ml::ROW_SAMPLE, binlabels));
@@ -666,8 +662,7 @@ struct VerifierSVM : public VerifierPairDistance
 {
     Ptr<ml::SVM::Kernel> krnl;
 
-    VerifierSVM(int ktype=ml::SVM::LINEAR, int distFlag=2)
-        : VerifierPairDistance(distFlag)
+    VerifierSVM(int ktype=ml::SVM::LINEAR)
     {
         Ptr<ml::SVM> svm = ml::SVM::create();
         svm->setType(ml::SVM::NU_SVC);
@@ -688,22 +683,52 @@ struct VerifierSVM : public VerifierPairDistance
 };
 
 
-//
-//struct VerifierRTree : public VerifierPairDistance
-//{
-//    VerifierRTree() 
-//    {
-//        Ptr<ml::Boost> cl = ml::Boost::create();
-//        //Ptr<ml::RTrees> cl = ml::RTrees::create();
-//        //cl->setMaxCategories(2);
-//        //cl->setMaxDepth(2);
-//        //cl->setMinSampleCount(2);
-//        //cl->setCVFolds(0);
-//        model = cl;
-//    }
-//};
-//
 
+struct VerifierRTree : public VerifierPairDistance
+{
+    VerifierRTree() 
+    {
+        Ptr<ml::Boost> cl = ml::Boost::create();
+        //Ptr<ml::RTrees> cl = ml::RTrees::create();
+        //cl->setMaxCategories(2);
+        //cl->setMaxDepth(2);
+        //cl->setMinSampleCount(2);
+        //cl->setCVFolds(1);
+        model = cl;
+    }
+};
+
+
+struct VerifierKNN : public TextureFeature::Verifier, PairDistance
+{
+    cv::Ptr<cv::flann::Index> index;
+    Mat_<int> labels;
+    Mat features;
+
+    virtual int train(const Mat &trainData, const Mat &trainLabels)
+    {
+        Mat distances, binlabels;
+        train_pre(trainData, trainLabels, distances, binlabels);
+
+        index = ClassifierKNN::train_index(distances);
+
+        labels = binlabels;
+        features = distances; // need a copy here, because flann tries to run away with mat.data pointer !!!
+        return 1;
+    }
+
+    virtual bool same(const Mat &a, const Mat &b) const
+    {
+        int K=5;
+        cv::flann::SearchParams params;
+        cv::Mat dists;
+        cv::Mat indices;
+        index->knnSearch(distance_mat(a,b), indices, dists, K, params);
+
+        int hit = ClassifierKNN::majority(indices, labels);
+        return hit > 0;
+    }
+};
 
 
 } // TextureFeatureImpl
@@ -731,7 +756,6 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_POL:   return makePtr<ClassifierSVM>(int(cv::ml::SVM::POLY)); break;
         case CL_SVM_INT:   return makePtr<ClassifierSVM>(int(cv::ml::SVM::INTER)); break;
         case CL_SVM_INT2:  return makePtr<ClassifierSVM>(-5); break;
-        case CL_SVM_INT2X: return makePtr<ClassifierSVM>(-5,3); break;
         case CL_SVM_HEL:   return makePtr<ClassifierSVM>(-1); break;
         case CL_SVM_HELSQ: return makePtr<ClassifierSVM>(-2); break;
         case CL_SVM_LOW:   return makePtr<ClassifierSVM>(-6); break;
@@ -765,7 +789,6 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_POL:   return makePtr<VerifierSVM>(int(cv::ml::SVM::POLY)); break;
         case CL_SVM_INT:   return makePtr<VerifierSVM>(int(cv::ml::SVM::INTER)); break;
         case CL_SVM_INT2:  return makePtr<VerifierSVM>(-5); break;
-        case CL_SVM_INT2X: return makePtr<VerifierSVM>(-5, 3); break;
         case CL_SVM_HEL:   return makePtr<VerifierSVM>(-1); break;
         case CL_SVM_HELSQ: return makePtr<VerifierSVM>(-2); break;
         case CL_SVM_LOW:   return makePtr<VerifierSVM>(-6); break;
@@ -773,7 +796,8 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_KMOD:  return makePtr<VerifierSVM>(-8); break;
         case CL_SVM_CAUCHY:return makePtr<VerifierSVM>(-9); break;
         case CL_COSINE:    return makePtr<VerifierCosine>(); break;
-        //case CL_RTREE:     return makePtr<VerifierRTree>(); break;
+        case CL_KNN:       return makePtr<VerifierKNN>(); break;
+        case CL_RTREE:     return makePtr<VerifierRTree>(); break;
 
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
     }

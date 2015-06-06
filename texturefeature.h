@@ -208,7 +208,6 @@ namespace TextureFeature
         CL_SVM_RBF,
         CL_SVM_INT,
         CL_SVM_INT2, // custom 
-        CL_SVM_INT2X, // custom 
         CL_SVM_HEL,  // custom
         CL_SVM_HELSQ,  // custom
         CL_SVM_LOW,  // custom
@@ -220,7 +219,7 @@ namespace TextureFeature
         CL_PCA_LDA,
         CL_MLP,
         CL_KNN,
-        //CL_RTREE,
+        CL_RTREE,
         //CL_MAHALANOBIS,
         CL_MAX
     };
@@ -238,7 +237,6 @@ namespace TextureFeature
         "SVM_RBF",
         "SVM_INT",
         "SVM_INT2",
-        "SVM_INT2X",
         "SVM_HEL",
         "SVM_HELSQ",
         "SVM_LOW",
@@ -250,7 +248,7 @@ namespace TextureFeature
         "PCA_LDA",
         "MLP",
         "KNN",
-        //"RTREE",
+        "RTREE",
         //"MAHALANOB",
         0
     };

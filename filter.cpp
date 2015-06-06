@@ -222,7 +222,7 @@ struct FilterMeanStdev : public Filter
     virtual int filter(const Mat &src, Mat &dest) const
     {
         cv::Scalar m,s; cv::meanStdDev(src, m, s);
-        dest = src.clone();
+        dest  = src.clone();
         dest -= m[0];
         dest /= s[0];
         return 0;

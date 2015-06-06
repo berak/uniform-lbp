@@ -58,6 +58,7 @@ LATCH    none   SVM_POL        1568    721     20    0.973  134.163
 LATCH    none   PCA_LDA        1568    725     16    0.978  202.412
 LATCH    none   PCA_LDA        1800    726     15    0.980  128.738  * ssd=1 step=4 bytes=8 
 LATCH2   none   PCA_LDA        5120    727     14    0.981  699.934  * ssd=5 bytes=256
+
 -------------------------------------------------------------------
 data/yale:              10 fold, 15 classes, 165 images, retina
 -------------------------------------------------------------------
@@ -95,6 +96,36 @@ RANDNET  none   SVM_LIN       98304    292      8    0.973 1896.199
 LATCH    none   SVM_POL        1568    293      7    0.977   53.987   * N=8, PS=4
 LATCH2   none   PCA_LDA        5120    295      5    0.983  268.179   * ssd=5 bytes=256
 DAISY    none   PCA_LDA       64800    295      5    0.983   68.231
+
+-------------------------------------------------------------------
+data/yale_crop:         10 fold, 15 classes, 165 images, retina
+-------------------------------------------------------------------
+[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]
+Pixels   none   N_L2          12100    280     20    0.933    1.195
+Pixels   none   SVM_POL       12100    293      7    0.977    6.421
+Pixels   none   PCA_LDA       12100    295      5    0.983   24.136
+Lbp      none   H_CHI         65536    288     12    0.960    7.699
+Lbp      DCT8   PCA_LDA       32000    295      5    0.983   18.980
+Lbp_P    DCT8   PCA_LDA       32000    295      5    0.983   27.468
+Lbpu_P   DCT8   PCA_LDA       32000    295      5    0.983   19.987
+MTS_P    none   PCA_LDA       11136    295      5    0.983    9.065
+COMB_P   none   PCA_LDA       66816    294      6    0.980   41.924
+COMB_P   HELL   SVM_INT2      66816    292      8    0.973   27.169
+TpLbp_P  DCT8   PCA_LDA       32000    292      8    0.973   28.746
+FpLbp_P  none   PCA_LDA       11136    295      5    0.983    9.020
+FpLbp_P  HELL   SVM_INT2      11136    293      7    0.977    3.174
+LATCH2   none   PCA_LDA        5120    289     11    0.963  267.458
+HDGRAD   DCT12  PCA_LDA       48000    296      4    0.987   64.147
+HDLBP    DCT6   PCA_LDA       24000    294      6    0.980   66.411
+HDLBP_PCA none   PCA_LDA      51200    295      5    0.983  160.765
+Sift     DCT12  PCA_LDA       48000    295      5    0.983  212.618
+Sift     HELL   SVM_INT2     492032    291      9    0.970  328.427
+Grad_P   none   PCA_LDA       32016    291      9    0.970   18.854
+GradMag  none   PCA_LDA       23552    295      5    0.983   15.507
+GradMagP WHAD8  PCA_LDA       32000    292      8    0.973   22.403
+PCASIFT  none   PCA_LDA       25600    294      6    0.980  253.712
+GaborGB  none   PCA_LDA       36864    294      6    0.980   37.232
+WAVENET  none   SVM_LIN       13824    283     17    0.943   75.294
 
 -------------------------------------------------------------------
 lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina
