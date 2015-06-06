@@ -46,7 +46,7 @@ double ct(int64 t)
 //   + img2
 //   + img3
 // ...
-// 
+//
 // you can pass like 'images/*.png', too!
 //
 int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &labels, size_t maxim, int minp=10, int maxp=10)
@@ -297,15 +297,15 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
 
 double runtest(int ext, int fil, int cls, const vector<Mat> &images, const vector<int> &labels, const vector< vector<int> > &persons, size_t fold=10)
 {
-    string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::FILS[fil], TextureFeature::CLS[cls]); 
-    //try 
+    string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::FILS[fil], TextureFeature::CLS[cls]);
+    //try
     {
-        runtest(name,  
-            TextureFeature::createExtractor(ext),  
+        runtest(name,
+            TextureFeature::createExtractor(ext),
             TextureFeature::createFilter(fil),
             TextureFeature::createClassifier(cls),
-            images,labels,persons, fold); 
-    } 
+            images,labels,persons, fold);
+    }
     //catch(...)
     //{
     //    cerr << name << " failed!" << endl;
@@ -346,7 +346,7 @@ int main(int argc, const char *argv[])
             "{ crop C         |80     | crop outer pixels }"
             "{ path p         |data/yale_crop.txt|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
             //"{ path p         |lfw3d_9000/*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
- 
+
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
     if (parser.has("help") || path=="true")

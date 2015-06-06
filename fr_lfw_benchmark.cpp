@@ -95,7 +95,7 @@ void printOptions()
 
 
 
-class MyFace 
+class MyFace
 {
     Ptr<TextureFeature::Extractor> ext;
     Ptr<TextureFeature::Filter>  fil;
@@ -121,7 +121,7 @@ public:
             ver = TextureFeature::createVerifier(clsfy);
     }
 
-    virtual int addTraining(const Mat & img, int label) 
+    virtual int addTraining(const Mat & img, int label)
     {
         Mat feat1;
         ext->extract(pre.process(img), feat1);
@@ -136,7 +136,7 @@ public:
         //features.push_back(fr); // damn memory problems
         if ( features.empty() )
         {
-            features = Mat(nimg, feat1.total(), feat1.type()); 
+            features = Mat(nimg, feat1.total(), feat1.type());
         }
         feat1.copyTo(features.row(labels.rows));
         labels.push_back(label);

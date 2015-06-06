@@ -4,7 +4,6 @@
 #include "opencv2/opencv.hpp"
 
 
-
 //
 // use dlib's implementation for facial landmarks,
 // if not present, fall back to a precalculated
@@ -361,7 +360,7 @@ struct FeatureFPLbp
  * \author Brendan Klare \cite bklare
  * \author Josh Klontz \cite jklontz
  */
-struct LTPTransform 
+struct LTPTransform
 {
     unsigned short lut[8][3];
     int radius;
@@ -373,7 +372,7 @@ struct LTPTransform
     {
         unsigned short cnt = 0;
         for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 3; j++) 
+            for (int j = 0; j < 3; j++)
                 lut[i][j] = cnt++;
             cnt++;  //we skip the 4th number (only three patterns)
         }
@@ -388,9 +387,9 @@ struct LTPTransform
 
         const float *p = (const float*)m.ptr();
         float diff;
-        for (int r=radius; r<m.rows-radius; r++) 
+        for (int r=radius; r<m.rows-radius; r++)
         {
-            for (int c=radius; c<m.cols-radius; c++) 
+            for (int c=radius; c<m.cols-radius; c++)
             {
                 const float cval  = (p[(r+0*radius)*m.cols+c+0*radius]);
 
@@ -573,8 +572,8 @@ struct LandMarks
     dlib::shape_predictor sp;
 
     int offset;
-    LandMarks(int off=0) 
-        : offset(off) 
+    LandMarks(int off=0)
+        : offset(off)
     {   // it's only 95mb...
         dlib::deserialize("data/shape_predictor_68_face_landmarks.dat") >> sp;
     }
@@ -1285,7 +1284,7 @@ struct HighDimGrad : public TextureFeature::Extractor
         for (size_t k=0; k<pt.size(); k++)
         {
             Mat h;
-            Mat patch; 
+            Mat patch;
             getRectSubPix(img,Size(32,32),pt[k],patch);
             grad.extract(patch, h);
             histo.push_back(h.reshape(1,1));
@@ -1298,8 +1297,8 @@ struct HighDimGrad : public TextureFeature::Extractor
 
 
 //
-// CDIKP: A Highly-Compact Local Feature Descriptor  
-//        Yun-Ta Tsai, Quan Wang, Suya You 
+// CDIKP: A Highly-Compact Local Feature Descriptor
+//        Yun-Ta Tsai, Quan Wang, Suya You
 //
 struct ExtractorCDIKP : public TextureFeature::Extractor
 {
@@ -1334,7 +1333,7 @@ struct ExtractorCDIKP : public TextureFeature::Extractor
     }
     virtual int extract(const Mat &img, Mat &features) const
     {
-        Mat fI; 
+        Mat fI;
         img.convertTo(fI,CV_32F);
         Mat dx,dy;
         Sobel(fI,dx,CV_32F,1,0);
@@ -1375,7 +1374,7 @@ struct ExtractorPCANet : public TextureFeature::Extractor
         Mat img;
         if (I.type() != CV_32F)
             I.convertTo(img,CV_32F);
-        else 
+        else
             img = I;
         features = pnet.extract(img);
         return features.total() * features.elemSize();
@@ -1399,7 +1398,7 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
     int patch_size;
 
 
-    ExtractorLatch2() 
+    ExtractorLatch2()
         : land(12)
     {
         feature_bytes = 96;
@@ -1489,7 +1488,7 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
         return features.total() * features.elemSize();
     }
 
-    void load(const String &fn)  
+    void load(const String &fn)
     {
         FileStorage fs(fn, FileStorage::READ);
         fs["patch"] >> patch_size;

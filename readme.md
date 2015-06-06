@@ -18,6 +18,36 @@ it all builds on top of opencv30 .
 
 ------------------------------------------------------
 
+face3> duel -o
+
+[extractors]  :
+
+    Pixels( 0)       Lbp( 1)     Lbp_P( 2)    Lbpu_P( 3)       Ltp( 4)
+     TPLbp( 5)   TpLbp_P( 6)   TpLbp_G( 7)     FPLbp( 8)   FpLbp_P( 9)
+       MTS(10)     MTS_P(11)      BGC1(12)    BGC1_P(13)      COMB(14)
+    COMB_P(15)    COMB_G(16)  GaborLBP(17)   GaborGB(18)       Dct(19)
+       Orb(20)      Sift(21)    Sift_G(22)      Grad(23)    Grad_G(24)
+    Grad_P(25)   GradMag(26)  GradMagP(27)   GradBin(28)    HDGRAD(29)
+     HDLBP(30) HDLBP_PCA(31)   PCASIFT(32)    PCANET(33)   RANDNET(34)
+   WAVENET(35)     CDIKP(36)    LATCH2(37)     DAISY(38)
+
+[filters] :
+
+      none( 0)      HELL( 1)       POW( 2)      SQRT( 3)     WHAD4( 4)
+     WHAD8( 5)        RP( 6)      DCT2( 7)      DCT4( 8)      DCT6( 9)
+      DCT8(10)     DCT12(11)     DCT16(12)     DCT24(13)     BITS2(14)
+     BITS4(15)     BITS8(16)      MEAN(17)
+
+[classifiers] :
+
+      N_L2( 0)   N_L2SQR( 1)      N_L1( 2)     N_HAM( 3)    H_HELL( 4)
+     H_CHI( 5)    COSINE( 6)     KLDIV( 7)   SVM_LIN( 8)   SVM_POL( 9)
+   SVM_RBF(10)   SVM_INT(11)  SVM_INT2(12)   SVM_HEL(13) SVM_HELSQ(14)
+   SVM_LOW(15)   SVM_LOG(16)  SVM_KMOD(17)SVM_CAUCHY(18) SVM_MULTI(19)
+       PCA(20)   PCA_LDA(21)       MLP(22)       KNN(23)     
+
+------------------------------------------------------
+
 #### some results:
 
 ------------------------------------------------------

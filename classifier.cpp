@@ -118,7 +118,7 @@ struct ClassifierNearestFloat : public ClassifierNearest
 //
 struct ClassifierHist : public ClassifierNearestFloat
 {
-    ClassifierHist(int flag=HISTCMP_CHISQR) 
+    ClassifierHist(int flag=HISTCMP_CHISQR)
         : ClassifierNearestFloat(flag)
     {}
 
@@ -255,7 +255,7 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
 
             Mat slabels; // you against all others, that's the only difference.
             for ( size_t j=0; j<labels.total(); ++j)
-                slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 ); 
+                slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 );
             svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
             svms.push_back(svm);
         }
@@ -397,7 +397,7 @@ struct ClassifierMLP : Classifier
 
     void setup(int ni, int no)
     {
-        ann = ml::ANN_MLP::create(); 
+        ann = ml::ANN_MLP::create();
         Mat_<int> layers(4,1);
         layers(0) = ni;
         layers(1) = no*2;
@@ -418,7 +418,7 @@ struct ClassifierMLP : Classifier
         {
             setup(trainData.cols, C);
         }
-    
+
         Mat trainClasses = Mat::zeros(trainLabels.total(), C, CV_32FC1);
         for(int i=0; i < trainClasses.rows; i++)
         {
@@ -598,20 +598,20 @@ struct PairDistance
         Mat d;
         switch(a.type())
         {
-            case CV_8U: 
-                d = a^b; 
+            case CV_8U:
+                d = a^b;
                 break;
-            default: 
-                d = a-b; 
-                multiply(d,d,d,1,CV_32F); 
-                cv::sqrt(d,d); 
+            default:
+                d = a-b;
+                multiply(d,d,d,1,CV_32F);
+                cv::sqrt(d,d);
                 break;
         }
         return d;
     }
 
     //
-    // make a 'distance' mat from 2 features, 
+    // make a 'distance' mat from 2 features,
     // and binary(-1,1) labels
     //
     void train_pre(const Mat &features, const Mat &labels, Mat &distances, Mat &binlabels)
@@ -637,7 +637,7 @@ struct VerifierPairDistance : public TextureFeature::Verifier, PairDistance
     Ptr<ml::StatModel> model;
 
     virtual int train(const Mat &features, const Mat &labels)
-    {      
+    {
         Mat distances, binlabels;
         train_pre(tofloat(features), labels, distances, binlabels);
 
@@ -672,7 +672,7 @@ struct VerifierSVM : public VerifierPairDistance
             ktype=-1;
             svm->setCustomKernel(krnl);
         }
-        svm->setKernel(ktype); 
+        svm->setKernel(ktype);
         svm->setDegree(3.52);
         svm->setGamma(4.29);
         svm->setNu(0.52);
@@ -686,7 +686,7 @@ struct VerifierSVM : public VerifierPairDistance
 
 struct VerifierRTree : public VerifierPairDistance
 {
-    VerifierRTree() 
+    VerifierRTree()
     {
         Ptr<ml::Boost> cl = ml::Boost::create();
         //Ptr<ml::RTrees> cl = ml::RTrees::create();

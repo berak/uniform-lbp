@@ -1,4 +1,3 @@
-
 #include <opencv2/imgproc.hpp>
 using namespace cv;
 
@@ -46,7 +45,7 @@ struct FilterBits : public Filter
     typedef void (*bitfun)(Mat &bits, uchar b);
     bitfun bits_;
 
-    FilterBits(int nb=8) 
+    FilterBits(int nb=8)
     {
         switch(nb)
         {
@@ -242,7 +241,7 @@ Ptr<Filter> createFilter(int filt)
 {
     switch(filt)
     {
-        case FIL_NONE:     break; 
+        case FIL_NONE:     break;
         case FIL_HELL:     return makePtr<FilterHellinger>(); break;
         case FIL_POW:      return makePtr<FilterPow>(); break;
         case FIL_SQRT:     return makePtr<FilterPow>(0.5f); break;
