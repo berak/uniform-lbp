@@ -1392,7 +1392,7 @@ struct ExtractorPCANet : public TextureFeature::Extractor
 struct ExtractorLatch2 : public TextureFeature::Extractor
 {
     LandMarks land;
-    vector<Mat_<int>> latches;
+    vector< Mat_<int> > latches;
 
     int feature_bytes;
     int half_ssd_size;
