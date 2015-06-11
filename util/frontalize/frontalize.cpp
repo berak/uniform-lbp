@@ -12,7 +12,7 @@ using namespace cv; // this has to go later than the dlib includes
 #include <vector>
 using namespace std;
 
-#include "../profile.h"
+#include "../../profile.h"
 #include "frontalizer.h"
 
 

@@ -767,7 +767,6 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
         case CL_MLP:       return makePtr<ClassifierMLP>(); break;
         case CL_KNN:       return makePtr<ClassifierKNN>(); break;
-        //case CL_MAHALANOBIS: return makePtr<ClassifierMahalanobis>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();

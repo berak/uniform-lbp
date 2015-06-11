@@ -94,9 +94,7 @@ namespace TextureFeature
         EXT_PCANET,
         EXT_RANDNET,
         EXT_WAVENET,
-        //EXT_PNET,
         EXT_CDIKP,
-        //EXT_LATCH,
         EXT_LATCH2,
         EXT_DAISY,
         EXT_MAX
@@ -138,9 +136,7 @@ namespace TextureFeature
         "PCANET",
         "RANDNET",
         "WAVENET",
-        //"PNET",
         "CDIKP",
-        //"LATCH",
         "LATCH2",
         "DAISY",
         0
@@ -164,9 +160,6 @@ namespace TextureFeature
         FIL_BITS4,
         FIL_BITS8,
         FIL_MEAN,
-        //FIL_KMEANS16,
-        //FIL_KMEANS64,
-        //FIL_KMEANS256,
         FIL_MAX
     };
     static const char *FILS[] = {
@@ -188,9 +181,6 @@ namespace TextureFeature
         "BITS4",
         "BITS8",
         "MEAN",
-        //"KMEANS16",
-        //"KMEANS64",
-        //"KMEANS256",
         0
     };
     enum CLA {
@@ -220,7 +210,6 @@ namespace TextureFeature
         CL_MLP,
         CL_KNN,
         CL_RTREE,
-        //CL_MAHALANOBIS,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -249,7 +238,6 @@ namespace TextureFeature
         "MLP",
         "KNN",
         "RTREE",
-        //"MAHALANOB",
         0
     };
 

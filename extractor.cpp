@@ -26,6 +26,7 @@ using std::endl;
 
 #include "texturefeature.h"
 #include "util/pcanet/PCANet.h"
+//#include "util/codebook/codebook.hpp"
 #include "profile.h"
 #if 0
  #include "elastic/elasticparts.h"
@@ -1530,6 +1531,20 @@ struct ExtractorDaisy : public TextureFeature::Extractor
     }
 };
 
+//struct ExtractorCodeBook : public TextureFeature::Extractor
+//{
+//    Ptr<codebook::CodeBook> cb;
+//    ExtractorCodeBook(int k=5, int t=0, int a=2) 
+//        : cb(codebook::create(k,t,a)) 
+//    {}
+//
+//    virtual int extract(const Mat &img, Mat &features) const
+//    {
+//        bool ok = cb->extract(img,features);
+//        features = features.reshape(1,1);
+//        return features.total() * features.elemSize();
+//    }
+//};
 
 } // TextureFeatureImpl
 

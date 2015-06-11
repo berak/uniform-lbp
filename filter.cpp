@@ -202,19 +202,6 @@ struct FilterPow : public Filter
     }
 };
 
-//struct FilterKMeans : public Filter
-//{
-//    int K;
-//    FilterKMeans(int k=10) : K(k) {}
-//    virtual int filter(const Mat &src, Mat &dest) const
-//    {
-//        Mat labels,cent,srcf=src.reshape(1,src.total());
-//        srcf.convertTo(srcf,CV_32F);
-//        kmeans(srcf, K, labels, TermCriteria(), 3, KMEANS_PP_CENTERS, dest);
-//        dest=dest.reshape(1,1);
-//        return 0;
-//    }
-//};
 
 struct FilterMeanStdev : public Filter
 {
@@ -259,9 +246,6 @@ Ptr<Filter> createFilter(int filt)
         case FIL_BITS4:    return makePtr<FilterBits>(4); break;
         case FIL_BITS2:    return makePtr<FilterBits>(2); break;
         case FIL_MEAN:     return makePtr<FilterMeanStdev>(); break;
-        //case FIL_KMEANS16: return makePtr<FilterKMeans>(16); break;
-        //case FIL_KMEANS64: return makePtr<FilterKMeans>(64); break;
-        //case FIL_KMEANS256:return makePtr<FilterKMeans>(256); break;
 //        default: cerr << "Filter " << filt << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Filter>();
