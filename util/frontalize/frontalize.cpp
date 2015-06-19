@@ -12,7 +12,6 @@ using namespace cv; // this has to go later than the dlib includes
 #include <vector>
 using namespace std;
 
-#include "../../profile.h"
 #include "frontalizer.h"
 
 
@@ -41,8 +40,6 @@ struct FrontalizerImpl : public Frontalizer
         , symBlend(symBlend)
         , DEBUG_IMAGES(debug_images)
     {
-        PROFILEX("Frontalizer")
-
         // model is rotated 90° already, but still in col-major, right hand coords
         FileStorage fs("data/mdl.yml.gz", FileStorage::READ);
         fs["mdl"] >> mdl;
@@ -76,7 +73,6 @@ struct FrontalizerImpl : public Frontalizer
     //
     Mat pnp(const Size &s, vector<Point2d> &pts2d) const
     {
-        PROFILEX("pnp")
         // camMatrix based on img size
         int max_d = std::max(s.width,s.height);
 	    Mat camMatrix = (Mat_<double>(3,3) <<
@@ -104,7 +100,6 @@ struct FrontalizerImpl : public Frontalizer
     //! expects grayscale img
     void getkp2d(const Mat &I, vector<Point2d> &pts2d, const Rect &r) const
     {
-        PROFILEX("getkp2d");
         dlib::rectangle rec(r.x, r.y, r.x+r.width, r.y+r.height);
         dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(I), rec);
 
@@ -129,8 +124,6 @@ struct FrontalizerImpl : public Frontalizer
     //
     Mat project3d(const Mat & test) const
     {
-        PROFILEX("project3d");
-
         int mid = mdl.cols/2;
         int midi = test.cols/2;
         Rect R(mid-crop/2,mid-crop/2,crop,crop);
@@ -149,7 +142,6 @@ struct FrontalizerImpl : public Frontalizer
         Mat_<uchar> counts(mdl.size(),0);
 	    for (int i=R.y; i<R.y+R.height; i++)
         {
-            PROFILEX("proj_1");
 	        for (int j=R.x; j<R.x+R.width; j++)
             {
                 Mat1d p = project_vec(KP, i, j);
@@ -168,7 +160,6 @@ struct FrontalizerImpl : public Frontalizer
         Mat_<uchar> counts1(mdl.size(),0);
 	    for (int i=R.y; i<R.y+R.height; i++)
         {
-            PROFILEX("proj_2");
 	        for (int j=R.x; j<R.x+R.width; j++)
             {
                 Mat1d p = project_vec(KP, i, j);
@@ -194,8 +185,6 @@ struct FrontalizerImpl : public Frontalizer
         Mat_<uchar> sym = test2.clone();
         if (abs(sleft-sright)>symThresh)
         {
-            PROFILEX("proj_3");
-
             // make weights
             counts1.convertTo(weights,CV_64F);
 
@@ -253,8 +242,6 @@ struct FrontalizerImpl : public Frontalizer
     //
     Mat align2d(const Mat &img) const
     {
-        PROFILEX("align2d");
-
         Mat test;
         resize(img, test, Size(250,250), INTER_CUBIC);
 
@@ -306,7 +293,6 @@ struct FrontalizerImpl : public Frontalizer
 
 int main(int argc, const char *argv[])
 {
-    PROFILE;
     const char *keys =
             "{ help h usage ? |      | show this message }"
             "{ write w        |true | (over)write images (else just show them) }"
@@ -316,12 +302,7 @@ int main(int argc, const char *argv[])
             "{ crop c         |110   | crop size }"
             "{ sym s          |9000  | threshold for soft sym }"
             "{ blend b        |0.7   | blend factor for soft sym }"
-            "{ path p         |Aberdeen/*.jpg| path to data folder}"
-//            "{ path p         |e:/MEDIA/faces/faces96/*.jpg| path to data folder}"
-//            "{ path p         |e:/MEDIA/faces/tv/*.png| path to data folder}"
-//            "{ path p         |e:/MEDIA/faces/orl_faces/*.pgm| path to data folder}"
-//            "{ path p         |e:/MEDIA/faces/faces94/male/*.jpg| path to data folder}"
-//            "{ path p         |lfw-deepfunneled/*.jpg| path to data folder}"
+            "{ path p         |lfw-deepfunneled/*.jpg| path to data folder}"
             "{ cascade C      |E:\\code\\opencv\\data\\haarcascades\\|\n     path to haarcascades folder}"
             "{ dlibpath d     |data/shape_predictor_68_face_landmarks.dat|\n     path to dlib landmarks model}";
 
@@ -387,7 +368,6 @@ int main(int argc, const char *argv[])
                 cascp.detectMultiScale(in, rects, 1.3, 4);
                 if (rects.size() > 0)
                 {
-                    cerr << "profile_l" << endl;
                     in = in(rects[0]);
                 }
                 else
@@ -396,7 +376,6 @@ int main(int argc, const char *argv[])
                     cascp.detectMultiScale(in, rects, 1.3, 4);
                     if (rects.size() > 0)
                     {
-                        cerr << "profile_r" << endl;
                         in = in(rects[0]);
                     }
                 }
