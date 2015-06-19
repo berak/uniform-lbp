@@ -912,7 +912,6 @@ struct ExtractorGaborGradBin : public ExtractorGradBin
     }
 };
 
-
 //
 // concat histograms from lbp-like features generated from a bank of gabor filtered images
 //   ( due to memory restrictions, it can't use plain lbp(64k),

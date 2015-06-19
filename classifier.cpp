@@ -382,14 +382,45 @@ struct ClassifierPCA_LDA : public ClassifierPCA
         gemm(pca.eigenvectors, leigen, 1.0, Mat(), 0.0, eigenvectors, GEMM_1_T);
 
         // step four, keep labels and projected dataset:
-        features.release(); // TODO: pre-allocate, push_back() is giving ugly mem-spikes !
-        for (int i=0; i<trainData.rows; i++)
-            features.push_back(project(trainData.row(i)));
+        features = project(trainData);
+        //features.release(); // TODO: pre-allocate, push_back() is giving ugly mem-spikes !
+        //for (int i=0; i<trainData.rows; i++)
+        //    features.push_back(project(trainData.row(i)));
         labels = trainLabels;
         return 1;
     }
 };
 
+struct ClassifierLDA : public ClassifierNearestFloat
+{
+    Ptr<LDA> lda;
+    Mat mean; 
+
+    virtual int train(const Mat &trainData, const Mat &trainLabels)
+    {
+        set<int> classes;
+        int C = TextureFeatureImpl::unique(trainLabels,classes);
+        int N = trainData.rows;
+        int num_components = (C-1);
+
+        lda.release();
+        lda = makePtr<LDA>(num_components);
+        lda->compute(trainData, trainLabels);
+
+        //reduce(trainData,mean,0,cv::REDUCE_AVG,CV_64F);
+
+        //Mat projected = LDA::subspaceProject(lda->eigenvectors(), mean, trainData);
+        Mat projected = lda->project(trainData);
+        return ClassifierNearestFloat::train(projected, trainLabels);
+    }
+
+    virtual int predict(const Mat &a, Mat &res) const
+    {
+        Mat pa = lda->project(tofloat(a));
+        //Mat pa = LDA::subspaceProject(lda->eigenvectors(), mean, tofloat(a));
+        return ClassifierNearestFloat::predict(pa, res);
+    }
+};
 
 struct ClassifierMLP : Classifier
 {
@@ -765,6 +796,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
+        case CL_LDA:       return makePtr<ClassifierLDA>(); break;
         case CL_MLP:       return makePtr<ClassifierMLP>(); break;
         case CL_KNN:       return makePtr<ClassifierKNN>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);

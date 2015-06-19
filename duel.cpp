@@ -338,9 +338,9 @@ int main(int argc, const char *argv[])
             "{ minp m         |10    | minimal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |8    | extractor  enum }"
-            "{ fil f          |0     | filter   enum }"
-            "{ cls c          |24    | classifier enum }"
+            "{ ext e          |10    | extractor  enum }"
+            "{ fil f          |8     | filter   enum }"
+            "{ cls c          |22    | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
             "{ crop C         |80     | crop outer pixels }"
@@ -432,7 +432,7 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_HDGRAD, TextureFeature::FIL_DCT12,  TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_HDLBP,  TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_HDLBP,  TextureFeature::FIL_DCT6,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_HDLBP_PCA,  TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_HDLBP_PCA,  TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_Sift,   TextureFeature::FIL_DCT12, TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_Sift,   TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_Sift,   TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_HEL,
@@ -448,6 +448,7 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_PCASIFT, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_GaborGB, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_WAVENET, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_LIN,
+            TextureFeature::EXT_PCANET, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_INT2,
 
 
             -1,-1,-1
