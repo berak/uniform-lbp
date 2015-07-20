@@ -4,6 +4,7 @@
 #include "opencv2/opencv.hpp"
 
 
+
 //
 // use dlib's implementation for facial landmarks,
 // if not present, fall back to a precalculated
@@ -17,21 +18,21 @@
  #include <dlib/opencv/cv_image.h>
 #endif
 
+#include "texturefeature.h"
+#include "util/pcanet/PCANet.h"
+#include "util/pcanet/Net.h"
+//#include "util/codebook/codebook.hpp"
+#include "profile.h"
+#if 0
+ #include "util/elastic/elasticparts.h"
+#endif
+
 
 #include <vector>
 using std::vector;
 #include <iostream>
 using std::cerr;
 using std::endl;
-
-#include "texturefeature.h"
-#include "util/pcanet/PCANet.h"
-//#include "util/codebook/codebook.hpp"
-#include "profile.h"
-#if 0
- #include "elastic/elasticparts.h"
-#endif
-
 
 
 using namespace cv;
@@ -1268,7 +1269,6 @@ struct HighDimGrad : public TextureFeature::Extractor
 {
     LandMarks land;
     ExtractorGradBin grad;
-    PCA pca[20];
 
     HighDimGrad()
         : grad(18,2,8)
@@ -1377,6 +1377,22 @@ struct ExtractorPCANet : public TextureFeature::Extractor
         else
             img = I;
         features = pnet.extract(img);
+        return features.total() * features.elemSize();
+    }
+};
+
+
+struct ExtractorPNet : public TextureFeature::Extractor
+{
+    Ptr<PNet> pnet;
+    ExtractorPNet(const cv::String &path)
+        : pnet(loadNet(path))
+    {
+    }
+
+    virtual int extract(const Mat &I, Mat &features) const
+    {
+        features = pnet->extract(I);
         return features.total() * features.elemSize();
     }
 };
@@ -1590,6 +1606,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
         case EXT_HDLBP_PCA:return makePtr< HighDimLbpPCA >();  break;
         case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
+        case EXT_PNET:     return makePtr< ExtractorPNet >("data/pnet.xml");  break;
         case EXT_PCANET:   return makePtr< ExtractorPCANet >("data/pcanet.xml");  break;
         case EXT_WAVENET:  return makePtr< ExtractorPCANet >("data/wavenet.xml");  break;
         case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
