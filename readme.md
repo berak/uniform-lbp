@@ -89,7 +89,7 @@ LATCH    none   PCA_LDA        1568    725     16    0.978  202.412
 LATCH    none   PCA_LDA        1800    726     15    0.980  128.738  * ssd=1 step=4 bytes=8 
 LATCH2   none   PCA_LDA        5120    727     14    0.981  699.934  * ssd=5 bytes=256
 PNET     none   SVM_INT2      24576    739      2    0.997  241.797  * pca/gabor
-
+PNET     none   SVM_INT2      23040    740      1    0.999  135.627  * pca[7,5] gabor[9, 5, 1.73f, 1.0f]
 -------------------------------------------------------------------
 data/yale:              10 fold, 15 classes, 165 images, retina
 -------------------------------------------------------------------
@@ -157,8 +157,8 @@ GradMagP WHAD8  PCA_LDA       32000    292      8    0.973   22.403
 PCASIFT  none   PCA_LDA       25600    294      6    0.980  253.712
 GaborGB  none   PCA_LDA       36864    294      6    0.980   37.232
 WAVENET  none   SVM_LIN       13824    283     17    0.943   75.294
-PNET     none   SVM_INT2      24576    294      6    0.980   97.420  * pca/gabor
-
+PNET     none   SVM_POL       23040    296      4    0.987   51.674  * pca[7,5] gabor[9, 5, 1.73f, 1.0f]
+s
 -------------------------------------------------------------------
 lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina
 -------------------------------------------------------------------
@@ -188,6 +188,7 @@ GradMagP WHAD8  PCA_LDA       32000    905     45    0.953  259.194
 GaborGB  none   PCA_LDA       36864    890     60    0.937  315.207
 PCASIFT  none   PCA_LDA       25600    884     66    0.931 1069.912
 LATCH    none   SVM_POL        1568    813    137    0.856  173.486
+PNET     none   SVM_INT2      23040    893     57    0.940  176.526
 
 -------------------------------------------------------------------
 lfw-3daligned:            10 fold, 50 classes, 500 images, retina
@@ -217,13 +218,14 @@ GradMagP WHAD8  PCA_LDA       32000    911     39    0.959  260.980
 PCASIFT  none   PCA_LDA       25600    915     35    0.963 1021.913
 GaborGB  none   PCA_LDA       36864    918     32    0.966  328.633
 PCANET   none   SVM_LIN        3072    880     70    0.926 1683.532
-PCANET   none   SVM_INT2      24576    900     50    0.947 3919.794 * SS_2D_nuclear 6 filters 11x11
+PCANET   none   SVM_INT2      24576    900     50    0.947 3919.794  * SS_2D_nuclear 6 filters 11x11
 RANDNET  none   SVM_LIN        3072    874     76    0.920 2506.335
 WAVENET  none   SVM_LIN       18432    893     57    0.940 3232.364
 LATCH    none   PCA_LDA        1568    883     67    0.929  318.049
 LATCH2   none   PCA_LDA        5120    903     47    0.951 1004.513
 DAISY    none   PCA_LDA       64800    902     48    0.949  422.905
-PNET     none   SVM_INT2      24576    894     56    0.941  317.521 * pca/gabor
+PNET     none   SVM_INT2      23040    912     38    0.960  181.208  * pca[7,5] gabor[9, 5, 1.73f, 1.0f]
+
 -------------------------------------------------------------------
 data/f94gender:         10 fold, 2 classes, 484 images, retina
 -------------------------------------------------------------------
