@@ -210,7 +210,7 @@ int main(int argc, const char *argv[])
     // feel free to swap parts here, it's intended for that..
     FaceRec reco(TextureFeature::EXT_BGC1_P,
                  TextureFeature::FIL_DCT8,
-                 TextureFeature::CL_PCA_LDA);
+                 TextureFeature::CL_SVM_LIN);
     reco.train(imgpath);
 
     String save_model = "face.yml.gz";

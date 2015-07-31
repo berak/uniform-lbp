@@ -6,7 +6,7 @@ but meanwhile it morphed into a testbed for comparing preprocessing/extraction/c
 it all builds on top of opencv30 .
 
      the pipeline is:
-        (preprocessing) -> filter -> reductor -> classifier (or verifier)
+        (preprocessing) -> extractor -> filter -> classifier (or verifier)
 
 -----------------------------------------------------
 
@@ -28,15 +28,15 @@ face3> duel -o
     COMB_P(15)    COMB_G(16)  GaborLBP(17)   GaborGB(18)       Dct(19)
        Orb(20)      Sift(21)    Sift_G(22)      Grad(23)    Grad_G(24)
     Grad_P(25)   GradMag(26)  GradMagP(27)   GradBin(28)    HDGRAD(29)
-     HDLBP(30) HDLBP_PCA(31)   PCASIFT(32)    PCANET(33)   RANDNET(34)
-   WAVENET(35)     CDIKP(36)    LATCH2(37)     DAISY(38)
+     HDLBP(30) HDLBP_PCA(31)   PCASIFT(32)      PNET(33)    PCANET(34)
+   RANDNET(35)   WAVENET(36)     CDIKP(37)    LATCH2(38)     DAISY(39)
 
 [filters] :
 
-      none( 0)      HELL( 1)       POW( 2)      SQRT( 3)     WHAD4( 4)
-     WHAD8( 5)        RP( 6)      DCT2( 7)      DCT4( 8)      DCT6( 9)
-      DCT8(10)     DCT12(11)     DCT16(12)     DCT24(13)     BITS2(14)
-     BITS4(15)     BITS8(16)      MEAN(17)
+      none( 0)      HELL( 1)       POW( 2)      SQRT( 3)     WHAD_( 4)
+     WHAD4( 5)     WHAD8( 6)        RP( 7)      DCT_( 8)      DCT2( 9)
+      DCT4(10)      DCT6(11)      DCT8(12)     DCT12(13)     DCT16(14)
+     DCT24(15)     BITS2(16)     BITS4(17)     BITS8(18)      MEAN(19)
 
 [classifiers] :
 
@@ -44,8 +44,9 @@ face3> duel -o
      H_CHI( 5)    COSINE( 6)     KLDIV( 7)   SVM_LIN( 8)   SVM_POL( 9)
    SVM_RBF(10)   SVM_INT(11)  SVM_INT2(12)   SVM_HEL(13) SVM_HELSQ(14)
    SVM_LOW(15)   SVM_LOG(16)  SVM_KMOD(17)SVM_CAUCHY(18) SVM_MULTI(19)
-       PCA(20)   PCA_LDA(21)       MLP(22)       KNN(23)     
-
+       PCA(20)   PCA_LDA(21)       LDA(22)       MLP(23)       KNN(24)
+     RTREE(25)
+     
 ------------------------------------------------------
 
 #### some results:
@@ -90,46 +91,9 @@ LATCH    none   PCA_LDA        1800    726     15    0.980  128.738  * ssd=1 ste
 LATCH2   none   PCA_LDA        5120    727     14    0.981  699.934  * ssd=5 bytes=256
 PNET     none   SVM_INT2      24576    739      2    0.997  241.797  * pca/gabor
 PNET     none   SVM_INT2      23040    740      1    0.999  135.627  * pca[7,5] gabor[9, 5, 1.73f, 1.0f]
--------------------------------------------------------------------
-data/yale:              10 fold, 15 classes, 165 images, retina
--------------------------------------------------------------------
-[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]
-Pixels   none   N_L2           8100    290     10    0.967    0.814
-Pixels   none   SVM_POL        8100    289     11    0.963    3.533
-Pixels   none   PCA_LDA        8100    295      5    0.983   17.799
-Lbp      DCT8   PCA_LDA       32000    288     12    0.960   18.678
-Lbp_P    DCT8   PCA_LDA       32000    289     11    0.963   26.318
-Lbpu_P   DCT8   PCA_LDA       32000    288     12    0.960   19.230
-MTS_P    none   PCA_LDA       11136    287     13    0.957    8.502
-COMB_P   none   PCA_LDA       33408    288     12    0.960   20.700
-COMB_P   HELL   SVM_INT2      33408    282     18    0.940    9.881
-TpLbp_P  DCT8   PCA_LDA       32000    287     13    0.957   27.119
-FpLbp_P  none   PCA_LDA       11136    287     13    0.957    8.521
-FpLbp_P  HELL   SVM_INT2      11136    279     21    0.930    2.789
-HDGRAD   DCT12  PCA_LDA       48000    269     31    0.897   70.254
-HDLBP    DCT6   PCA_LDA       24000    262     38    0.873   56.433
-HDLBP_PCA none  PCA_LDA       51200    271     29    0.903  149.460
-Sift     DCT12  PCA_LDA       48000    296      4    0.987  147.285
-Sift     HELL   SVM_INT2     184832    291      9    0.970  153.513
-Grad_P   none   PCA_LDA       32016    287     13    0.957   18.161
-GradBin  DCT4   PCA_LDA       16000    288     12    0.960   13.073
-GradMag  none   PCA_LDA       23552    291      9    0.970   14.966
-GradMagP WHAD8  PCA_LDA       32000    287     13    0.957   21.069
-PCASIFT  none   PCA_LDA       25600    280     20    0.933  277.623
-GaborGB  none   PCA_LDA       36864    289     11    0.963   31.939
-PCANET   none   SVM_LIN        3072    289     11    0.963  822.886   *    11 [4 28][4 23]
-PCANET   none   SVM_LIN       98304    291      9    0.970 1903.782   *    11 [8 28][8 28]
-PCANET   DCT8   SVM_LIN       32000    292      8    0.973 1897.975   *     9 [8 28][8 28]
-PCANET   none   SVM_LIN       18432    292      8    0.973  875.066   * wave 9 [6 28][6 28]
-PCANET   none   SVM_INT2      24576    296      4    0.987 1490.884   * SS_2D learned filters
-RANDNET  none   SVM_LIN        3072    289     11    0.963 1025.370
-RANDNET  none   SVM_LIN       98304    292      8    0.973 1896.199
-LATCH    none   SVM_POL        1568    293      7    0.977   53.987   * N=8, PS=4
-LATCH2   none   PCA_LDA        5120    295      5    0.983  268.179   * ssd=5 bytes=256
-DAISY    none   PCA_LDA       64800    295      5    0.983   68.231
 
 -------------------------------------------------------------------
-data/yale_crop:         10 fold, 15 classes, 165 images, retina
+data/yale_crop:         10 fold, 15 classes, 165 images, retina       (2d/3d aligned)
 -------------------------------------------------------------------
 [extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]
 Pixels   none   N_L2          12100    280     20    0.933    1.195
@@ -158,7 +122,7 @@ PCASIFT  none   PCA_LDA       25600    294      6    0.980  253.712
 GaborGB  none   PCA_LDA       36864    294      6    0.980   37.232
 WAVENET  none   SVM_LIN       13824    283     17    0.943   75.294
 PNET     none   SVM_POL       23040    296      4    0.987   51.674  * pca[7,5] gabor[9, 5, 1.73f, 1.0f]
-s
+
 -------------------------------------------------------------------
 lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina
 -------------------------------------------------------------------

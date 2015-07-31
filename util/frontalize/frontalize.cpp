@@ -6,7 +6,7 @@
 #include <dlib/opencv/cv_image.h>
 //using namespace dlib; // ** don't ever try to**
 
-using namespace cv; // this has to go later than the dlib includes
+using namespace cv; // this has to go below the dlib includes
 
 #include <iostream>
 #include <vector>
@@ -25,9 +25,9 @@ struct FrontalizerImpl : public Frontalizer
 {
     const dlib::shape_predictor &sp;
     const bool DEBUG_IMAGES;
-    const double symBlend;
-    const int symThresh;
-    const int crop;
+    const double symBlend; // weight factor for symmetry blending
+    const int symThresh;   // threshold for symmetry blending 
+    const int crop;        // (square) cropped size
 
     Mat mdl;
     Mat_<double> eyemask;
@@ -57,7 +57,6 @@ struct FrontalizerImpl : public Frontalizer
         vector<Point2d> pts2d;
         Mat meanI = imread("data/reference_320_320.png", 0);
         getkp2d(meanI, pts2d, Rect(80,80, 160,160));
-
 
         // get 3d reference points from model
         for(size_t k=0; k<pts2d.size(); k++)
@@ -295,9 +294,9 @@ int main(int argc, const char *argv[])
 {
     const char *keys =
             "{ help h usage ? |      | show this message }"
-            "{ write w        |true | (over)write images (else just show them) }"
-            "{ facedet f      |true | do a 2d face detection/crop(first) }"
-            "{ align2d a      |true | do a 2d eye alignment(first) }"
+            "{ write w        |true  | (over)write images (else just show them) }"
+            "{ facedet f      |true  | do a 2d face detection/crop(first) }"
+            "{ align2d a      |true  | do a 2d eye alignment(first) }"
             "{ project3d P    |true  | do 3d projection }"
             "{ crop c         |110   | crop size }"
             "{ sym s          |9000  | threshold for soft sym }"
