@@ -26,7 +26,7 @@ struct FrontalizerImpl : public Frontalizer
     const dlib::shape_predictor &sp;
     const bool DEBUG_IMAGES;
     const double symBlend; // weight factor for symmetry blending
-    const int symThresh;   // threshold for symmetry blending 
+    const int symThresh;   // threshold for symmetry blending
     const int crop;        // (square) cropped size
 
     Mat mdl;
@@ -261,7 +261,7 @@ struct FrontalizerImpl : public Frontalizer
         Point2f center(test.cols/2, test.rows/2);
         Mat rot = getRotationMatrix2D(center, degree, scale);
         cerr << rot << endl;
-        //rot.at<float>(1,2) += eye_l.y - 
+
         warpAffine(test, res, rot, Size(), INTER_CUBIC, BORDER_CONSTANT, Scalar(127));
 
         if (DEBUG_IMAGES)

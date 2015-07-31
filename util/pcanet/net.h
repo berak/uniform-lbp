@@ -4,7 +4,7 @@
 
 struct PNet
 {
-    virtual cv::Mat extract(const cv::Mat &img) const = 0;
+    virtual cv::Mat extract(const cv::Mat &img) const = 0; //that's all it needs here.
 };
 
 cv::Ptr<PNet> loadNet(const String &fn);

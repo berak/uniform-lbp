@@ -18,6 +18,7 @@ it all builds on top of opencv30 .
 
 ------------------------------------------------------
 
+<pre>
 face3> duel -o
 
 [extractors]  :
@@ -46,7 +47,9 @@ face3> duel -o
    SVM_LOW(15)   SVM_LOG(16)  SVM_KMOD(17)SVM_CAUCHY(18) SVM_MULTI(19)
        PCA(20)   PCA_LDA(21)       LDA(22)       MLP(23)       KNN(24)
      RTREE(25)
-     
+
+</pre>
+
 ------------------------------------------------------
 
 #### some results:
