@@ -1425,7 +1425,6 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
 
     static bool calculateSums(int count, const Point &pt, const Mat_<int> &points, const Mat &grayImage, int half_ssd_size)
     {
-        PROFILEX("Latch::calculateSums");
 	    int ax = points(count)     + (int)(pt.x + 0.5);
 	    int ay = points(count + 1) + (int)(pt.y + 0.5);
 	    int	bx = points(count + 2) + (int)(pt.x + 0.5);
@@ -1457,7 +1456,6 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
 
     void pixelTests(int i, int N, const Point &pt, const Mat &grayImage, Mat &descriptors, int half_ssd_size) const
     {
-        PROFILEX("Latch::pixelTests");
 	    int count = 0;
         const Mat_<int> &points = latches[i];
 	    uchar* desc = descriptors.ptr(i);
@@ -1477,7 +1475,6 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
 
     virtual int extract(const Mat &image, Mat &features) const
     {
-        PROFILEX("Latch::extract");
         Mat blurImage;
    	    GaussianBlur(image, blurImage, cv::Size(3, 3), 2, 2);
 	    features.create((int)latches.size(), feature_bytes, CV_8U);
@@ -1488,17 +1485,6 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
         {
             pixelTests(i, feature_bytes, pts[i], blurImage, features, half_ssd_size);
         }
-
-        //static int debugK=0;
-        //if ((++debugK % 5) == 1)
-        //{
-        //    for (size_t i=0; i<latches.size(); i++)
-        //    {
-        //        rectangle(blurImage, Rect(pts[i].x-patch_size, pts[i].y-patch_size, 2*patch_size, 2*patch_size), Scalar(64), 2);
-        //    }
-        //    imshow("J",blurImage);
-        //    waitKey(1);
-        //}
 
         features = features.reshape(1,1);
         return features.total() * features.elemSize();
@@ -1546,24 +1532,10 @@ struct ExtractorDaisy : public TextureFeature::Extractor
     }
 };
 
-//struct ExtractorCodeBook : public TextureFeature::Extractor
-//{
-//    Ptr<codebook::CodeBook> cb;
-//    ExtractorCodeBook(int k=5, int t=0, int a=2) 
-//        : cb(codebook::create(k,t,a)) 
-//    {}
-//
-//    virtual int extract(const Mat &img, Mat &features) const
-//    {
-//        bool ok = cb->extract(img,features);
-//        features = features.reshape(1,1);
-//        return features.total() * features.elemSize();
-//    }
-//};
 
 } // TextureFeatureImpl
 
-//#include "util/pcanet/PNet.cpp"
+extern Ptr<TextureFeature::Extractor> createFisherVector(const String &fn);
 
 namespace TextureFeature
 {
@@ -1615,6 +1587,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         //case EXT_LATCH:    return makePtr< ExtractorLatch >();  break; //return makePtr< GenericExtractor<ExtractorLatch,GriddedHist> >(ExtractorLatch(), GriddedHist());
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
         case EXT_DAISY:    return makePtr< ExtractorDaisy >();  break;
+        case EXT_FISH:     return createFisherVector("data/fisher.xml.gz"); break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Extractor>();

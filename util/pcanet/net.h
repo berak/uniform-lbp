@@ -4,6 +4,8 @@
 
 struct PNet
 {
+    virtual ~PNet() {}
+
     virtual cv::Mat extract(const cv::Mat &img) const = 0; //that's all it needs here.
 };
 

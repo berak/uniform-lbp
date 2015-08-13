@@ -98,6 +98,7 @@ namespace TextureFeature
         EXT_CDIKP,
         EXT_LATCH2,
         EXT_DAISY,
+        EXT_FISH,
         EXT_MAX
     };
     static const char *EXS[] = {
@@ -141,6 +142,7 @@ namespace TextureFeature
         "CDIKP",
         "LATCH2",
         "DAISY",
+        "FISH",
         0
     };
     enum FIL {
