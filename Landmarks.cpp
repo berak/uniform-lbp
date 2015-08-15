@@ -115,6 +115,8 @@ struct LandMarks : Landmarks
 };
 #endif
 
+cv::Ptr<Landmarks> createLandmarks() { return cv::makePtr<LandMarks>(); }
+
 
 //
 // 64 hardcoded, precalculated gftt keypoints from the 90x90 cropped mean lfw2 img
@@ -156,10 +158,6 @@ void gftt64(const cv::Mat &img, std::vector<cv::KeyPoint> &kp)
         }
     }
 }
-
-
-
-cv::Ptr<Landmarks> createLandmarks() { return cv::makePtr<LandMarks>(); }
 
 
 

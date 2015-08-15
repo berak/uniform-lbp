@@ -183,7 +183,7 @@ int main(int argc, const char *argv[])
     string cp("0");
     if (argc > 1) cp=argv[1];
 
-    string imgpath("persons");
+    string imgpath("data/persons");
     if (argc > 2) imgpath=argv[2];
 
     std::string cascade_path("E:\\code\\opencv\\data\\haarcascades\\haarcascade_frontalface_alt.xml");
@@ -208,10 +208,11 @@ int main(int argc, const char *argv[])
     cerr << "capture(" << cp << ") : " << cap.isOpened() << endl;
 
     // feel free to swap parts here, it's intended for that..
-    FaceRec reco(TextureFeature::EXT_BGC1_P,
-                 TextureFeature::FIL_DCT8,
+    FaceRec reco(TextureFeature::EXT_PNET,
+                 TextureFeature::FIL_NONE,
                  TextureFeature::CL_SVM_LIN);
-    reco.train(imgpath);
+    int n = reco.train(imgpath);
+    cerr << n << endl;
 
     String save_model = "face.yml.gz";
     // alternatively, load a serialized model.

@@ -6,10 +6,10 @@
 
 
 #include "texturefeature.h"
-#include "util/pcanet/PCANet.h"
-#include "util/pcanet/Net.h"
 #include "profile.h"
 #include "landmarks.h"
+#include "util/pcanet/PCANet.h"
+#include "util/pcanet/Net.h"
 
 
 #include <vector>
@@ -24,7 +24,6 @@ using namespace TextureFeature;
 
 namespace TextureFeatureImpl
 {
-
 
 //
 // this is the most simple one.
@@ -543,14 +542,6 @@ struct PyramidGrid
 };
 
 
-
-//
-// various attempts to gather landmarks for sampling
-//
-
-
-
-
 struct GfttGrid
 {
     int gr;
@@ -560,7 +551,6 @@ struct GfttGrid
     {
         vector<KeyPoint> kp;
         gftt64(feature,kp);
-        //gftt96(kp);
         //kp_manual(kp);
 
         histo.release();
