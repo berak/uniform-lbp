@@ -276,17 +276,25 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
         for (size_t j=0; j<svms.size(); ++j)
         {
             Mat r;
-            //svms[j]->predict(query, r, ml::StatModel::RAW_OUTPUT);
             svms[j]->predict(query, r);
             float p = r.at<float>(0);
-            //float p = r.at<float>(0);
-            //if (p < 0 && abs(p) < m)
             if (p > 0)
             {
                 m = p;
                 mi = float(j);
                 break;
             }
+            //
+            // see: https://github.com/berak/uniform-lbp/issues/2
+            // (unfortunately, no improvement visible)
+            //
+            //svms[j]->predict(query, r, ml::StatModel::RAW_OUTPUT);
+            //float p = r.at<float>(0);
+            //if (p < 0 && abs(p) < m)
+            //{
+            //    m = abs(p);
+            //    mi = float(j);
+            //}
         }
         res = (Mat_<float>(1,2) << mi, m);
         return res.rows;
