@@ -1,6 +1,5 @@
 #include "landmarks.h"
 
-
 //
 // use dlib's implementation for facial landmarks,
 // if not present, fall back to a precalculated
