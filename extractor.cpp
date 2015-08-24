@@ -3,14 +3,12 @@
 #include "opencv2/xfeatures2d.hpp"
 #include "opencv2/opencv.hpp"
 
-
-
 #include "texturefeature.h"
-#include "profile.h"
+#include "util/pcanet/net.h"
 #include "landmarks.h"
-#include "util/pcanet/PCANet.h"
-#include "util/pcanet/Net.h"
-
+#if 0
+ #include "profile.h"
+#endif
 
 #include <vector>
 using std::vector;
