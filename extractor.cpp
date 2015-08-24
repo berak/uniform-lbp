@@ -1,4 +1,3 @@
-#include "opencv2/core/core_c.h"
 #include "opencv2/core/utility.hpp"
 #include "opencv2/xfeatures2d.hpp"
 #include "opencv2/opencv.hpp"
