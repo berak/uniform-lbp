@@ -92,13 +92,13 @@ namespace TextureFeature
         EXT_HDLBP_PCA,
         EXT_PCASIFT,
         EXT_PNET,
-        EXT_PCANET,
+        //EXT_PCANET,
         EXT_RANDNET,
         EXT_WAVENET,
         EXT_CDIKP,
         EXT_LATCH2,
         EXT_DAISY,
-        EXT_FISH,
+        //EXT_FISH,
         EXT_MAX
     };
     static const char *EXS[] = {
@@ -136,13 +136,13 @@ namespace TextureFeature
         "HDLBP_PCA",
         "PCASIFT",
         "PNET",
-        "PCANET",
+        //"PCANET",
         "RANDNET",
         "WAVENET",
         "CDIKP",
         "LATCH2",
         "DAISY",
-        "FISH",
+        //"FISH",
         0
     };
     enum FIL {

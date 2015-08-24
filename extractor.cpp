@@ -1197,25 +1197,25 @@ struct ExtractorCDIKP : public TextureFeature::Extractor
 // use an off-line trained pca filterbank
 // (can't use the lda pass here, due to restrictions of my stupid framework)
 //
-struct ExtractorPCANet : public TextureFeature::Extractor
-{
-    PCANet pnet;
-    ExtractorPCANet(const cv::String path)
-    {
-        pnet.load(path);
-    }
-
-    virtual int extract(const Mat &I, Mat &features) const
-    {
-        Mat img;
-        if (I.type() != CV_32F)
-            I.convertTo(img,CV_32F);
-        else
-            img = I;
-        features = pnet.extract(img);
-        return features.total() * features.elemSize();
-    }
-};
+//struct ExtractorPCANet : public TextureFeature::Extractor
+//{
+//    PCANet pnet;
+//    ExtractorPCANet(const cv::String path)
+//    {
+//        pnet.load(path);
+//    }
+//
+//    virtual int extract(const Mat &I, Mat &features) const
+//    {
+//        Mat img;
+//        if (I.type() != CV_32F)
+//            I.convertTo(img,CV_32F);
+//        else
+//            img = I;
+//        features = pnet.extract(img);
+//        return features.total() * features.elemSize();
+//    }
+//};
 
 
 struct ExtractorPNet : public TextureFeature::Extractor
@@ -1415,15 +1415,15 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_HDLBP_PCA:return makePtr< HighDimLbpPCA >();  break;
         case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
         case EXT_PNET:     return makePtr< ExtractorPNet >("data/pnet.xml");  break;
-        case EXT_PCANET:   return makePtr< ExtractorPCANet >("data/pcanet.xml");  break;
-        case EXT_WAVENET:  return makePtr< ExtractorPCANet >("data/wavenet.xml");  break;
-        case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
+        //case EXT_PCANET:   return makePtr< ExtractorPCANet >("data/pcanet.xml");  break;
+        //case EXT_WAVENET:  return makePtr< ExtractorPCANet >("data/wavenet.xml");  break;
+        //case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
         //case EXT_PNET:     return makePtr< PNet>("data/pcanet.xml");  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         //case EXT_LATCH:    return makePtr< ExtractorLatch >();  break; //return makePtr< GenericExtractor<ExtractorLatch,GriddedHist> >(ExtractorLatch(), GriddedHist());
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
         case EXT_DAISY:    return makePtr< ExtractorDaisy >();  break;
-        case EXT_FISH:     return createFisherVector("data/fisher.xml.gz"); break;
+        //case EXT_FISH:     return createFisherVector("data/fisher.xml.gz"); break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Extractor>();

@@ -94,8 +94,6 @@ int readdir(String dirpath, std::vector<std::string> &names, std::vector<int> &l
         tlabels.push_back(label);
         nimgs ++;
     }
-    //for ( int i=0; i<labels.size(); i++)
-    //    cerr << labels[i] << " " << names[i] << endl;
 
     return label;
 }
@@ -253,12 +251,6 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
 
         cls->train(trainFeatures, trainLabels);
 
-//        FileStorage fs(format("pnet%d.xml.gz",f),FileStorage::WRITE);
-////        cls->save(fs);
-//        fs << "labels" << trainLabels;
-//        fs << "features" << trainFeatures;
-//        fs.release();
-
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
         for (int i=0; i<testFeatures.rows; i++)
         {
@@ -298,18 +290,11 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
 double runtest(int ext, int fil, int cls, const vector<Mat> &images, const vector<int> &labels, const vector< vector<int> > &persons, size_t fold=10)
 {
     string name = format( "%-8s %-6s %-9s", TextureFeature::EXS[ext], TextureFeature::FILS[fil], TextureFeature::CLS[cls]);
-    //try
-    {
-        runtest(name,
-            TextureFeature::createExtractor(ext),
-            TextureFeature::createFilter(fil),
-            TextureFeature::createClassifier(cls),
-            images,labels,persons, fold);
-    }
-    //catch(...)
-    //{
-    //    cerr << name << " failed!" << endl;
-    //}
+    runtest(name,
+        TextureFeature::createExtractor(ext),
+        TextureFeature::createFilter(fil),
+        TextureFeature::createClassifier(cls),
+        images,labels,persons, fold);
     return 0;
 }
 
@@ -322,8 +307,6 @@ void printOptions()
     for (size_t i=0; i<TextureFeature::FIL_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::FILS[i],i); }
     cerr << endl << endl << "[classifiers] :" << endl;
     for (size_t i=0; i<TextureFeature::CL_MAX; ++i)  {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::CLS[i],i);  }
-    //cerr << endl << endl <<  "[preproc] :" << endl;
-    //for (size_t i=0; i<TextureFeature::PRE_MAX; ++i) {  if(i%5==0) cerr << endl; cerr << format("%10s(%2d)",TextureFeature::PPS[i],i);  }
     cerr << endl;
 }
 
@@ -338,9 +321,9 @@ int main(int argc, const char *argv[])
             "{ minp m         |10    | minimal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |40    | extractor  enum }"
+            "{ ext e          |0     | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
-            "{ cls c          |8    | classifier enum }"
+            "{ cls c          |19    | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
             "{ crop C         |80     | crop outer pixels }"
@@ -447,9 +430,9 @@ int main(int argc, const char *argv[])
             //TextureFeature::EXT_GradMag_P,TextureFeature::FIL_DCT8,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_PCASIFT, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_GaborGB, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_WAVENET, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_LIN,
-            TextureFeature::EXT_PCANET, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_INT2,
-
+            //TextureFeature::EXT_WAVENET, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_LIN,
+            //TextureFeature::EXT_PCANET,  TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_INT2,
+            TextureFeature::EXT_PNET,    TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
 
             -1,-1,-1
         };

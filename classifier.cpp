@@ -250,13 +250,14 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
             svm->setDegree(0.8);
             svm->setGamma(1.0);
             svm->setCoef0(0.0);
-            svm->setNu(0.5);
+            svm->setNu(0.05);
             svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 1000, 1e-6));
 
             Mat slabels; // you against all others, that's the only difference.
             for ( size_t j=0; j<labels.total(); ++j)
                 slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 );
-            svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
+            bool ok = svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
+            CV_Assert(ok); 
             svms.push_back(svm);
         }
         return trainData.rows;
@@ -270,17 +271,21 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
         // predict per-class, return best(largest) result
         // hrmm, this assumes, the labels are [0..N]
         //
-        float m = -1.0f;
+        float m = 100.0f;
         float mi = 0.0f;
         for (size_t j=0; j<svms.size(); ++j)
         {
             Mat r;
+            //svms[j]->predict(query, r, ml::StatModel::RAW_OUTPUT);
             svms[j]->predict(query, r);
             float p = r.at<float>(0);
-            if (p > m)
+            //float p = r.at<float>(0);
+            //if (p < 0 && abs(p) < m)
+            if (p > 0)
             {
                 m = p;
                 mi = float(j);
+                break;
             }
         }
         res = (Mat_<float>(1,2) << mi, m);
