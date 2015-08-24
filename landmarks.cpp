@@ -1,5 +1,7 @@
 #include "landmarks.h"
 
+using namespace cv;
+using namespace std;
 //
 // use dlib's implementation for facial landmarks,
 // if not present, fall back to a precalculated
@@ -76,7 +78,7 @@ struct LandMarks : Landmarks
 struct LandMarks : Landmarks
 {
     LandMarks(int off=0) {}
-    int extract(const Mat &img, vector<Point> &kp) const
+    int extract(const cv::Mat &img, std::vector<cv::Point> &kp) const
     {
         kp.push_back(Point(15,19));    kp.push_back(Point(75,19));
         kp.push_back(Point(29,20));    kp.push_back(Point(61,20));
