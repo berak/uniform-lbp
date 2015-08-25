@@ -863,9 +863,9 @@ int main()
     if (1)
     {
         cerr << "train " << images.size() << endl;
-        net.addStage(makePtr<PcaProjection>(7, 3));
-        //net.addStage(makePtr<GaborProjection>(9, 3, 0.373f, -1.0f)); // gabor kernels need to be odd
-        net.addStage(makePtr<ConvLearn>(11, 5));
+        net.addStage(makePtr<PcaProjection>(7, 5));
+        net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
+        //net.addStage(makePtr<ConvLearn>(11, 5));
         net.addStage(makePtr<Hashing>(5, 18));
         net.train(images);
         net.save("my.xml");

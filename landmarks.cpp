@@ -1,7 +1,5 @@
 #include "landmarks.h"
 
-using namespace cv;
-using namespace std;
 //
 // use dlib's implementation for facial landmarks,
 // if not present, fall back to a precalculated
@@ -58,7 +56,7 @@ struct LandMarks : Landmarks
 #include "util/elastic/elasticparts.h"
 struct LandMarks : Landmarks
 {
-    Ptr<ElasticParts> elastic;
+    cv::Ptr<ElasticParts> elastic;
 
     LandMarks(int off=0)
     {
@@ -68,7 +66,7 @@ struct LandMarks : Landmarks
         //elastic->read("data/parts.xml.gz");
     }
 
-    int extract(const Mat &img, vector<Point> &kp) const
+    int extract(const cv::Mat &img, std::vector<cv::Point> &kp) const
     {
         elastic->getPoints(img, kp);
         return (int)kp.size();
@@ -80,16 +78,16 @@ struct LandMarks : Landmarks
     LandMarks(int off=0) {}
     int extract(const cv::Mat &img, std::vector<cv::Point> &kp) const
     {
-        kp.push_back(Point(15,19));    kp.push_back(Point(75,19));
-        kp.push_back(Point(29,20));    kp.push_back(Point(61,20));
-        kp.push_back(Point(36,24));    kp.push_back(Point(54,24));
-        kp.push_back(Point(38,35));    kp.push_back(Point(52,35));
-        kp.push_back(Point(30,39));    kp.push_back(Point(60,39));
-        kp.push_back(Point(19,39));    kp.push_back(Point(71,39));
-        kp.push_back(Point(12,38));    kp.push_back(Point(77,38));
-        kp.push_back(Point(40,64));    kp.push_back(Point(50,64));
-        kp.push_back(Point(31,75));    kp.push_back(Point(59,75));
-        kp.push_back(Point(32,49));    kp.push_back(Point(59,49));
+        kp.push_back(cv::Point(15,19));    kp.push_back(cv::Point(75,19));
+        kp.push_back(cv::Point(29,20));    kp.push_back(cv::Point(61,20));
+        kp.push_back(cv::Point(36,24));    kp.push_back(cv::Point(54,24));
+        kp.push_back(cv::Point(38,35));    kp.push_back(cv::Point(52,35));
+        kp.push_back(cv::Point(30,39));    kp.push_back(cv::Point(60,39));
+        kp.push_back(cv::Point(19,39));    kp.push_back(cv::Point(71,39));
+        kp.push_back(cv::Point(12,38));    kp.push_back(cv::Point(77,38));
+        kp.push_back(cv::Point(40,64));    kp.push_back(cv::Point(50,64));
+        kp.push_back(cv::Point(31,75));    kp.push_back(cv::Point(59,75));
+        kp.push_back(cv::Point(32,49));    kp.push_back(cv::Point(59,49));
 
         //kp.push_back(Point(15,19));    kp.push_back(Point(75,19));
         //kp.push_back(Point(29,20));    kp.push_back(Point(61,20));
@@ -101,7 +99,7 @@ struct LandMarks : Landmarks
         //kp.push_back(Point(40,64));    kp.push_back(Point(50,64));
         //kp.push_back(Point(31,75));    kp.push_back(Point(59,75));
         //kp.push_back(Point(27,81));    kp.push_back(Point(63,81));
-        if (img.size() != Size(90,90))
+        if (img.size() != cv::Size(90,90))
         {
             float scale_x=float(img.cols)/90;
             float scale_y=float(img.rows)/90;
@@ -126,29 +124,29 @@ void gftt64(const cv::Mat &img, std::vector<cv::KeyPoint> &kp)
 {
     using namespace cv;
     static const float kpsize = 16.0f;
-    kp.push_back(KeyPoint(14.f, 33.f, kpsize));        kp.push_back(KeyPoint(29.f, 77.f, kpsize));        kp.push_back(KeyPoint(55.f, 60.f, kpsize));
-    kp.push_back(KeyPoint(63.f, 76.f, kpsize));        kp.push_back(KeyPoint(76.f, 32.f, kpsize));        kp.push_back(KeyPoint(35.f, 60.f, kpsize));
-    kp.push_back(KeyPoint(69.f, 21.f, kpsize));        kp.push_back(KeyPoint(45.f, 30.f, kpsize));        kp.push_back(KeyPoint(27.f, 31.f, kpsize));
-    kp.push_back(KeyPoint(64.f, 26.f, kpsize));        kp.push_back(KeyPoint(21.f, 22.f, kpsize));        kp.push_back(KeyPoint(25.f, 27.f, kpsize));
-    kp.push_back(KeyPoint(69.f, 31.f, kpsize));        kp.push_back(KeyPoint(54.f, 81.f, kpsize));        kp.push_back(KeyPoint(62.f, 30.f, kpsize));
-    kp.push_back(KeyPoint(20.f, 32.f, kpsize));        kp.push_back(KeyPoint(52.f, 33.f, kpsize));        kp.push_back(KeyPoint(37.f, 32.f, kpsize));
-    kp.push_back(KeyPoint(38.f, 81.f, kpsize));        kp.push_back(KeyPoint(36.f, 82.f, kpsize));        kp.push_back(KeyPoint(32.f, 31.f, kpsize));
-    kp.push_back(KeyPoint(78.f, 17.f, kpsize));        kp.push_back(KeyPoint(59.f, 24.f, kpsize));        kp.push_back(KeyPoint(30.f, 24.f, kpsize));
-    kp.push_back(KeyPoint(11.f, 18.f, kpsize));        kp.push_back(KeyPoint(13.f, 17.f, kpsize));        kp.push_back(KeyPoint(56.f, 30.f, kpsize));
-    kp.push_back(KeyPoint(73.f, 15.f, kpsize));        kp.push_back(KeyPoint(19.f, 15.f, kpsize));        kp.push_back(KeyPoint(57.f, 53.f, kpsize));
-    kp.push_back(KeyPoint(33.f, 54.f, kpsize));        kp.push_back(KeyPoint(34.f, 52.f, kpsize));        kp.push_back(KeyPoint(49.f, 25.f, kpsize));
-    kp.push_back(KeyPoint(66.f, 33.f, kpsize));        kp.push_back(KeyPoint(55.f, 49.f, kpsize));        kp.push_back(KeyPoint(61.f, 33.f, kpsize));
-    kp.push_back(KeyPoint(39.f, 29.f, kpsize));        kp.push_back(KeyPoint(60.f, 46.f, kpsize));        kp.push_back(KeyPoint(40.f, 26.f, kpsize));
-    kp.push_back(KeyPoint(41.f, 76.f, kpsize));        kp.push_back(KeyPoint(50.f, 76.f, kpsize));        kp.push_back(KeyPoint(53.f, 41.f, kpsize));
-    kp.push_back(KeyPoint(44.f, 23.f, kpsize));        kp.push_back(KeyPoint(29.f, 60.f, kpsize));        kp.push_back(KeyPoint(54.f, 54.f, kpsize));
-    kp.push_back(KeyPoint(30.f, 47.f, kpsize));        kp.push_back(KeyPoint(45.f, 50.f, kpsize));        kp.push_back(KeyPoint(83.f, 35.f, kpsize));
-    kp.push_back(KeyPoint(36.f, 54.f, kpsize));        kp.push_back(KeyPoint(13.f, 46.f, kpsize));        kp.push_back(KeyPoint(36.f, 44.f, kpsize));
-    kp.push_back(KeyPoint(83.f, 38.f, kpsize));        kp.push_back(KeyPoint(49.f, 53.f, kpsize));        kp.push_back(KeyPoint(33.f, 83.f, kpsize));
-    kp.push_back(KeyPoint(17.f, 88.f, kpsize));        kp.push_back(KeyPoint(31.f, 63.f, kpsize));        kp.push_back(KeyPoint(13.f, 27.f, kpsize));
-    kp.push_back(KeyPoint(50.f, 62.f, kpsize));        kp.push_back(KeyPoint(11.f, 43.f, kpsize));        kp.push_back(KeyPoint(45.f, 55.f, kpsize));
-    kp.push_back(KeyPoint(45.f, 56.f, kpsize));        kp.push_back(KeyPoint(79.f, 43.f, kpsize));        kp.push_back(KeyPoint(74.f, 88.f, kpsize));
-    kp.push_back(KeyPoint(41.f, 62.f, kpsize));
-    if (img.size() != Size(90,90))
+    kp.push_back(cv::KeyPoint(14.f, 33.f, kpsize));        kp.push_back(cv::KeyPoint(29.f, 77.f, kpsize));        kp.push_back(cv::KeyPoint(55.f, 60.f, kpsize));
+    kp.push_back(cv::KeyPoint(63.f, 76.f, kpsize));        kp.push_back(cv::KeyPoint(76.f, 32.f, kpsize));        kp.push_back(cv::KeyPoint(35.f, 60.f, kpsize));
+    kp.push_back(cv::KeyPoint(69.f, 21.f, kpsize));        kp.push_back(cv::KeyPoint(45.f, 30.f, kpsize));        kp.push_back(cv::KeyPoint(27.f, 31.f, kpsize));
+    kp.push_back(cv::KeyPoint(64.f, 26.f, kpsize));        kp.push_back(cv::KeyPoint(21.f, 22.f, kpsize));        kp.push_back(cv::KeyPoint(25.f, 27.f, kpsize));
+    kp.push_back(cv::KeyPoint(69.f, 31.f, kpsize));        kp.push_back(cv::KeyPoint(54.f, 81.f, kpsize));        kp.push_back(cv::KeyPoint(62.f, 30.f, kpsize));
+    kp.push_back(cv::KeyPoint(20.f, 32.f, kpsize));        kp.push_back(cv::KeyPoint(52.f, 33.f, kpsize));        kp.push_back(cv::KeyPoint(37.f, 32.f, kpsize));
+    kp.push_back(cv::KeyPoint(38.f, 81.f, kpsize));        kp.push_back(cv::KeyPoint(36.f, 82.f, kpsize));        kp.push_back(cv::KeyPoint(32.f, 31.f, kpsize));
+    kp.push_back(cv::KeyPoint(78.f, 17.f, kpsize));        kp.push_back(cv::KeyPoint(59.f, 24.f, kpsize));        kp.push_back(cv::KeyPoint(30.f, 24.f, kpsize));
+    kp.push_back(cv::KeyPoint(11.f, 18.f, kpsize));        kp.push_back(cv::KeyPoint(13.f, 17.f, kpsize));        kp.push_back(cv::KeyPoint(56.f, 30.f, kpsize));
+    kp.push_back(cv::KeyPoint(73.f, 15.f, kpsize));        kp.push_back(cv::KeyPoint(19.f, 15.f, kpsize));        kp.push_back(cv::KeyPoint(57.f, 53.f, kpsize));
+    kp.push_back(cv::KeyPoint(33.f, 54.f, kpsize));        kp.push_back(cv::KeyPoint(34.f, 52.f, kpsize));        kp.push_back(cv::KeyPoint(49.f, 25.f, kpsize));
+    kp.push_back(cv::KeyPoint(66.f, 33.f, kpsize));        kp.push_back(cv::KeyPoint(55.f, 49.f, kpsize));        kp.push_back(cv::KeyPoint(61.f, 33.f, kpsize));
+    kp.push_back(cv::KeyPoint(39.f, 29.f, kpsize));        kp.push_back(cv::KeyPoint(60.f, 46.f, kpsize));        kp.push_back(cv::KeyPoint(40.f, 26.f, kpsize));
+    kp.push_back(cv::KeyPoint(41.f, 76.f, kpsize));        kp.push_back(cv::KeyPoint(50.f, 76.f, kpsize));        kp.push_back(cv::KeyPoint(53.f, 41.f, kpsize));
+    kp.push_back(cv::KeyPoint(44.f, 23.f, kpsize));        kp.push_back(cv::KeyPoint(29.f, 60.f, kpsize));        kp.push_back(cv::KeyPoint(54.f, 54.f, kpsize));
+    kp.push_back(cv::KeyPoint(30.f, 47.f, kpsize));        kp.push_back(cv::KeyPoint(45.f, 50.f, kpsize));        kp.push_back(cv::KeyPoint(83.f, 35.f, kpsize));
+    kp.push_back(cv::KeyPoint(36.f, 54.f, kpsize));        kp.push_back(cv::KeyPoint(13.f, 46.f, kpsize));        kp.push_back(cv::KeyPoint(36.f, 44.f, kpsize));
+    kp.push_back(cv::KeyPoint(83.f, 38.f, kpsize));        kp.push_back(cv::KeyPoint(49.f, 53.f, kpsize));        kp.push_back(cv::KeyPoint(33.f, 83.f, kpsize));
+    kp.push_back(cv::KeyPoint(17.f, 88.f, kpsize));        kp.push_back(cv::KeyPoint(31.f, 63.f, kpsize));        kp.push_back(cv::KeyPoint(13.f, 27.f, kpsize));
+    kp.push_back(cv::KeyPoint(50.f, 62.f, kpsize));        kp.push_back(cv::KeyPoint(11.f, 43.f, kpsize));        kp.push_back(cv::KeyPoint(45.f, 55.f, kpsize));
+    kp.push_back(cv::KeyPoint(45.f, 56.f, kpsize));        kp.push_back(cv::KeyPoint(79.f, 43.f, kpsize));        kp.push_back(cv::KeyPoint(74.f, 88.f, kpsize));
+    kp.push_back(cv::KeyPoint(41.f, 62.f, kpsize));
+    if (img.size() != cv::Size(90,90))
     {
         float scale_x=float(img.cols)/90;
         float scale_y=float(img.rows)/90;
