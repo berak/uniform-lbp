@@ -103,20 +103,20 @@ int main(int argc, char** argv)
 
         // Train RBM
         cout << "Training RBM" << endl;
-        const int epochs = 6;
+        const int epochs = 10;
         artelab::RBMglu::TrainParams params;
-        params.learning_rate = 0.02f;
+        params.learning_rate = 0.05f;
         params.batch_size = 10;
         params.momentum = 0.5f;
         params.iterations = train.rows / params.batch_size * epochs;
         params.weight_decay = artelab::RBMglu::TrainParams::L2_WEIGHT_DECAY;
         params.wd_delta = 0.0002f;
         
-        const int num_hid = (8 * train.cols) / 10;
+        const int num_hid = (15 * train.cols) / 10;
         artelab::RBMglu rbm = artelab::RBMglu(train.cols, num_hid);
         rbm.set_seed(345)
            .set_datasets(train)
-           .set_step_type(artelab::RBM::BATCH)
+           .set_step_type(artelab::RBM::EPOCHS)
            .set_train_params(params);
         
         cout << rbm.description() << endl << endl;
@@ -133,11 +133,17 @@ int main(int argc, char** argv)
 
             if ((mset < 0.0001f) || (epoch >= epochs))
                 break;
-            
-            float decay = 0.95f;
-            params.learning_rate *= decay;
-           // params.momentum *= (decay);
-            rbm.set_train_params(params);
+
+            if (epoch==5)
+            {
+                params.learning_rate = 0.01f;
+                params.momentum = 0.9f;
+                rbm.set_train_params(params);
+            }
+            //float decay = 0.95f;
+            //params.learning_rate *= decay;
+            //params.momentum *= (1.0f/decay);
+            //rbm.set_train_params(params);
         }
         artelab::show_bases(&rbm, cv::Size(PSIZE,PSIZE));
         rbm.save(cv::format("rbm_%d.xml", k));
