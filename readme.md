@@ -125,6 +125,7 @@ PCASIFT  none   PCA_LDA       25600    294      6    0.980  253.712
 GaborGB  none   PCA_LDA       36864    294      6    0.980   37.232
 WAVENET  none   SVM_LIN       13824    283     17    0.943   75.294
 PNET     none   SVM_POL       23040    296      4    0.987   51.674  * pca[7,5] gabor[9, 5, 1.73f, 1.0f]
+CDIKP    DCT8   SVM_INT2      32000    297      3    0.990   34.882
 
 -------------------------------------------------------------------
 lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina

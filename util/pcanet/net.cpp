@@ -254,6 +254,72 @@ struct FilterBank : Stage
     virtual String info() const { return type() + format("[%d,%d]", patchSize, numFilters); }
 };
 
+struct Learner : FilterBank
+{
+    int ngens;
+
+    Learner() {}
+    Learner(int patchSize, int numFilters, int ngens=1200)
+        : FilterBank(patchSize, numFilters)
+        , ngens(ngens)
+    {}
+    Mat correlate(const Mat &src,const Mat &f, bool full=false) const
+    {
+        Point anchor(-1, -1);
+        Mat dst, fil;
+        if (full)
+        {
+            cv::flip(f, fil, -1);
+            anchor = Point(f.cols - f.cols/2 - 1, f.rows - f.rows/2 - 1);
+        }
+        else
+        {
+            fil = f;
+        }
+        filter2D(src, dst, CV_32F, fil, anchor);
+        cv::normalize(dst, dst, 1);
+        return dst;
+    }
+
+
+    virtual bool train(const vector<Mat> &images)
+    {
+        Mat grads(numFilters,patchSize*patchSize, CV_32F, 0.0f);
+        filters = cv::Mat(numFilters, patchSize*patchSize, CV_32F);
+        randu(filters,-1,1);
+        for (int g=0; g<ngens; g++)
+        {
+            // sample
+            int idx = theRNG().uniform(0,images.size());
+            Mat im;
+            normalize(images[idx],im,1,0,NORM_L2,CV_32F);
+
+            // reconstruct
+            Mat recon(im.size(), CV_32F, 0.0f);
+            for (size_t i=0; i<numFilters; ++i)
+            {
+                Mat r = correlate(im, filter(i),false);
+                r = correlate(r, filter(i),true);
+                accumulate(r, recon);
+            }
+            recon /= double(filters.rows);
+
+            // update grads and filters
+            Mat residual = im - recon;
+            normalize(residual, residual);            
+            for (int f=0; f<filters.rows; ++f)
+            {
+                Mat &g = grads.row(f);
+                g -= 0.006 * correlate(filter(f), residual, false).reshape(1,1);
+                filters.row(f) += g * 0.04f;
+            }       
+            cerr << "gen " << g << '\r';
+        }
+        return false;
+    }
+    virtual String type() const { return "Learner"; }
+};
+
 
 struct Oszillator : FilterBank
 {
@@ -340,242 +406,6 @@ struct WaveProjection : Oszillator
 };
 
 
-//
-////
-//// WIP ...
-////
-//
-//
-//
-//static double meanval(vector<double> &v, double cur)
-//{
-//    v.pop_back();
-//    v.insert(v.begin(),cur);
-//    double s = cv::sum(cv::abs(cv::Mat(v)))[0];
-//    return s / v.size();
-//}
-//static void correlate_valid(const Mat &src, const Mat &kernel, Mat &dst)
-//{
-//    //cv::Mat tmp_dst;
-//    cv::filter2D(src, dst, -1, kernel);
-//    // incr deals with even-sized filters
-//    //unsigned int incr = (kernel.rows%2==0) ? 1 : 0;
-//    //dst = tmp_dst(cv::Range(kernel.rows/2,src.cols-kernel.rows/2+incr),
-//    //              cv::Range(kernel.rows/2,src.cols-kernel.rows/2+incr));
-//}
-//
-//static void convolve_full(const cv::Mat& src,const cv::Mat& kernel,cv::Mat& dst)
-//{
-//    cv::Mat flipped_kernel(kernel.rows,kernel.cols,CV_32FC1);
-//    cv::flip(kernel,flipped_kernel,-1);
-//
-//    cv::Mat framed_src(src.rows+2*(kernel.rows-1),2*(src.rows+kernel.rows-1),CV_32FC1);
-//    cv::copyMakeBorder(src,framed_src,kernel.rows-1,kernel.rows-1,kernel.cols-1,kernel.cols-1,cv::BORDER_REFLECT101);
-//
-//    correlate_valid(framed_src,flipped_kernel,dst);
-//}
-//struct ConvLearn : FilterBank
-//{
-//
-//    ConvLearn() {}
-//    ConvLearn(int patchSize, int numFilters)
-//        : FilterBank(patchSize, numFilters)
-//    {}
-//
-//    virtual bool train(const vector<Mat> &images)
-//    {
-//        const int maxIterations = 3000;
-//        const int numGDCoeffSteps = 8;
-//        const float eta_coeffs  = 0.00133f;  // Step size for the gradient descent on the feature maps
-//        const float eta_filters = 0.193f;   // Step size for the gradient descent on the filters
-//        const float lambda_learn = 0.1f;    // Regularization parameter
-//        const float learn_err = 5.0f;        // stop distance
-//        const float xi_filters = 30000.0f;
-//        bool penalize_similar_filters = true;
-//        vector<double> _means(20); // debug
-//
-//        filters = cv::Mat(numFilters, patchSize*patchSize, CV_32F, 0.0f);
-//        //randu(filters, -1.0f, 1.0f);
-//        randu(filters, 0.0f, 1.0f);
-//        cv::Mat fold = filters.clone();
-//
-//        // Create the vector of filter gradients that will be used throughout the optimization process
-//        std::vector<cv::Mat> filters_gradient;
-//        for (int i=0; i<numFilters; ++i)
-//        {
-//            cv::Mat tmp_gradient(patchSize,patchSize,CV_32FC1,cv::Scalar(0));
-//            filters_gradient.push_back(tmp_gradient);
-//        }
-//
-//        std::vector<cv::Mat> feature_maps(numFilters);
-//        int iter=0;
-//        for (; iter<maxIterations; ++iter)
-//        {
-//            cv::Mat sample = images[theRNG().uniform(0,images.size())];
-//            cv::Range ry(patchSize, sample.rows - patchSize);
-//            cv::Range rx(patchSize, sample.cols - patchSize);
-//            cv::Mat sample_roi = sample(ry,rx);
-//            cv::Mat bin;// = sample_roi *0.05;
-//            normalize(sample_roi, bin, 25.0f);
-//            // compute feature maps:
-//            for (int f=0; f<numFilters; ++f)
-//            {
-//                filters_gradient[f] = 0;
-//                correlate_valid(bin, filter(f), feature_maps[f]);
-//            }
-//            // Refine feature maps
-//            for (int j=0; j<numGDCoeffSteps; ++j)
-//            {
-//                cv::Mat reconstruction = compute_reconstruction(feature_maps);
-//                cv::Mat residual = bin - reconstruction;
-//                cv::Mat fm_gradient;
-//                for (int f=0; f<numFilters; ++f)
-//                {
-//                    convolve_full(residual, filter(f), fm_gradient);
-//                    ISTA(feature_maps[f], fm_gradient, eta_coeffs, lambda_learn);
-//                }
-//            }
-//
-//            // compute filter gradients:
-//            cv::Mat reconstruction = compute_reconstruction(feature_maps);
-//            cv::Mat residual = bin - reconstruction;
-//
-//            cv::Mat gram_matrix;
-//            if (penalize_similar_filters)
-//            {
-//                gram_matrix = cv::Mat(numFilters, numFilters, CV_32FC1, cv::Scalar(0));
-//                for (int r=0; r<numFilters-1; ++r)
-//                {
-//                    float *Mr = gram_matrix.ptr< float >(r);
-//                    for (int c=r+1; c<numFilters;++c)
-//                    {
-//                        float *Mc = gram_matrix.ptr< float >(c);
-//                        Mr[c] = (float)filters.row(r).dot(filters.row(c));
-//                        Mc[r] = Mr[c];
-//                    }
-//                }
-//            }
-//
-//            //cerr << format("%4d : ",iter);
-//            for (int f=0; f<numFilters; ++f)
-//            {
-//                cv::Mat &fm = feature_maps[f];
-//                int x = patchSize + fm.cols/4 + theRNG().uniform(0, patchSize);
-//                int y = patchSize + fm.rows/4 + theRNG().uniform(0, patchSize);
-//                //int x = theRNG().uniform(patchSize, fm.cols-patchSize*2);
-//                //int y = theRNG().uniform(patchSize, fm.rows-patchSize*2);
-//
-//                cv::Mat fm_roi = fm(cv::Range(x, x + patchSize), cv::Range(y, y + patchSize));
-//                //cv::Mat fm_roi = fm(cv::Range(1, fm_size - 1), cv::Range(1, fm_size - 1));
-//                cv::Mat grad;
-//                correlate_valid(fm_roi, residual, grad);
-//
-//                if (penalize_similar_filters)
-//                {
-//                    cv::Mat fbprod_penalty(patchSize, patchSize, CV_32FC1, cv::Scalar(0));
-//                    float *Mr = gram_matrix.ptr<float>(f);
-//                    for (int c=0; c<numFilters; ++c)
-//                    {
-//                        if (c != f)
-//                        {
-//                            fbprod_penalty += Mr[c] * filter(c);
-//                        }
-//                    }
-//                    grad -= fbprod_penalty * xi_filters;
-//                    //cerr << format("%3.1f ",norm(fbprod_penalty * xi_filters));
-//                }
-//                normalize(grad, grad, 1, 0, NORM_L1);
-//                filters_gradient[f] += grad * eta_filters;
-//            }
-//            //cerr << endl;
-//
-//            // update the filters:
-//            for (int f=0; f<numFilters; ++f)
-//            {
-//                Mat &fil = filter(f);
-//                fil += filters_gradient[f];
-//                cv::normalize(fil,fil);
-//            }
-//            //cerr << endl;
-//            double dist = sum(residual)[0];
-//            double mv = meanval(_means, dist);
-//            if (mv < learn_err)
-//            {
-//                cerr << iter << "final residual " << dist << "\tmean " << mv << endl;
-//                break;
-//            }
-//            if (iter%_means.size() == 0)
-//            {
-//                double fd = norm(fold,filters);
-//                cerr << iter << "\tresidual " << dist << "\tmean " << mv<< "\tfd " << fd << endl;
-//            }
-//
-//            //store(iter);
-//            imshow("bin",bin);
-//            filterVis("fil");
-//            filterVis("grad",filters_gradient);
-//            filterVis("maps",feature_maps);
-//        }
-//        store(iter);
-//        return true;
-//    }
-//
-//    void store(int iter)
-//    {
-//        cv::FileStorage fs(cv::format("conv_%d.xml",iter), cv::FileStorage::WRITE);
-//        FilterBank::save(fs);
-//        fs.release();
-//    }
-//
-//    void ISTA(cv::Mat &src, const cv::Mat &gradient, float GD_step, float reg_param) const
-//    {
-//        for (int r=0; r<src.rows; ++r)
-//        {
-//            float *M_src = src.ptr<float>(r);
-//            const float *M_grad = gradient.ptr<float>(r);
-//            for (int c=0; c<src.cols; ++c)
-//            {
-//                // x - \eta \grad(g)
-//                M_src[c] += GD_step*M_grad[c];
-//
-//                // Thresholding step
-//                if (M_src[c] >= reg_param)
-//                {
-//                    M_src[c] -= reg_param;
-//                }
-//                else
-//                {
-//                    if (M_src[c] <= -reg_param)
-//                        M_src[c] += reg_param;
-//                    else
-//                        M_src[c] = 0;
-//                }
-//            }
-//        }
-//    }
-//
-    //cv::Mat compute_reconstruction(const vector<cv::Mat> &feature_maps) const
-    //{
-    //    cv::Mat reconstruction;//(sample_size, sample_size, CV_32FC1, cv::Scalar(0));
-    //    cv::Mat tmp_reconstruction;
-    //    //cv::Mat tmp_reconstruction_roi;
-    //    for (int f=0; f<numFilters; ++f)
-    //    {
-    //        correlate_valid(feature_maps[f], filter(f), tmp_reconstruction);
-    //        //tmp_reconstruction_roi = tmp_reconstruction(cv::Range(1, tmp_reconstruction.rows - 1),
-    //        //                                            cv::Range(1, tmp_reconstruction.cols - 1));
-    //        if (reconstruction.empty())
-    //            reconstruction = tmp_reconstruction;
-    //        else
-    //            reconstruction += tmp_reconstruction;
-    //    }
-    //    reconstruction /= ((patchSize) * (patchSize));
-    //    return(reconstruction);
-    //}
-//    virtual String type() const { return "Conv"; }
-//    virtual String info() const { return type() + format("[%d,%d]", patchSize, numFilters); }
-//};
-//
 
 //
 // 2 of those, followed by a Hashing stage, and you got PCANet.
@@ -701,6 +531,7 @@ struct Network : public PNet
         if (name=="Pca")  s = makePtr<PcaProjection>();
         if (name=="Wave")  s = makePtr<WaveProjection>();
         //if (name=="Conv")  s = makePtr<ConvLearn>();
+        if (name=="Learner")  s = makePtr<Learner>();
         if (name=="Hashing") s = makePtr<Hashing>();
 
         CV_Assert(! s.empty());
@@ -851,7 +682,7 @@ int main()
     glob(path,fn);
 
     vector<Mat> images;
-    for (size_t i=0; i<300; ++i)
+    for (size_t i=0; i<600; ++i)
     {
         size_t idx = theRNG().uniform(0,fn.size());
         Mat im = imread(fn[idx],0);
@@ -859,13 +690,17 @@ int main()
         images.push_back(im);
     }
 
+    namedWindow("filters", 0);
     Network net;
     if (1)
     {
         cerr << "train " << images.size() << endl;
-        net.addStage(makePtr<PcaProjection>(7, 5));
-        net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
+        //net.addStage(makePtr<PcaProjection>(7, 5));
+        // net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
         //net.addStage(makePtr<ConvLearn>(11, 5));
+        net.addStage(makePtr<Learner>(13, 5));
+       // net.addStage(makePtr<Learner>(7, 4));
+        net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
         net.addStage(makePtr<Hashing>(5, 18));
         net.train(images);
         net.save("my.xml");
@@ -876,7 +711,6 @@ int main()
     }
     cerr << net.ingo() << endl;
 
-    namedWindow("filters", 0);
     Mat v = net.filterVis();
     imshow("filters", v);
     imwrite("filters.png",v);

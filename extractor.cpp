@@ -58,8 +58,16 @@ struct FeatureGrad
         Sobel(I, s1, CV_32F, 1, 0);
         Sobel(I, s2, CV_32F, 0, 1);
         hal::fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
-        fI = s3 / (360/nsec);
-        fI.convertTo(fI,CV_8U);
+        s3 /= (360/nsec);
+        s3.convertTo(s4,CV_8U);
+        fI.push_back(s4);
+
+        //Sobel(I, s1, CV_32F, 2, 0);
+        //Sobel(I, s2, CV_32F, 0, 2);
+        //hal::fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
+        //s3 /= (360/nsec);
+        //s3.convertTo(s5,CV_8U);
+        //fI.push_back(s5);
 
         //magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total());
         //normalize(s3,s4,nrad);
@@ -67,7 +75,7 @@ struct FeatureGrad
         //s5 *= nsec;
         //fI += s5;
         //return nrad*nsec;
-        return nsec+1;
+        return (nsec+1); //*2;
     }
 };
 
@@ -686,10 +694,10 @@ struct ExtractorGradBin : public TextureFeature::Extractor
         s3 /= (360/nsec);
 
         hal::magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s4.ptr<float>(0), I.total());
-        normalize(s4,s4,nrad);
+        normalize(s4, s4, nrad, 0, NORM_MINMAX);
 
-        int sx = I.cols/(grid-1);
-        int sy = I.rows/(grid-1);
+        int sx = I.cols/(grid-2);
+        int sy = I.rows/(grid-2);
         int nbins = nsec*nrad;
         features = Mat(1,nbins*grid*grid,CV_32F,Scalar(0));
         for (int i=0; i<I.rows; i++)

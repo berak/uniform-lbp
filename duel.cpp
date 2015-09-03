@@ -321,14 +321,16 @@ int main(int argc, const char *argv[])
             "{ minp m         |10    | minimal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |39     | extractor  enum }"
+            "{ ext e          |39    | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
-            "{ cls c          |8    | classifier enum }"
+            "{ cls c          |9     | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
-            "{ crop C         |80     | crop outer pixels }"
-            "{ path p         |data/yale_crop.txt|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
-            //"{ path p         |lfw3d_9000/*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}";
+            "{ crop C         |80    | crop outer pixels }"
+            "{ tab T          |false | show table header }"
+            "{ path p         |data/yale_crop.txt|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}"
+            //"{ path p         |lfw3d_9000/*.jpg|\n    path to dataset,\n    txtfile or directory with 1 subdir per person\n   (trailing slash or wildcard)}"
+            ;
 
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
@@ -343,6 +345,7 @@ int main(int argc, const char *argv[])
         return -1;
     }
     int all = parser.has("all");
+    int tab = parser.has("tab");
     int ext = parser.get<int>("ext");
     int fil = parser.get<int>("fil");
     int cls = parser.get<int>("cls");
@@ -368,10 +371,10 @@ int main(int argc, const char *argv[])
     // some diagnostics:
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
     const char *pp[] = { "no preproc", "eqhist", "clahe", "retina", "tan-triggs", "logscale", 0}; //"radon","csdn","dog",0 };
-    if (all)
+    if (all || tab)
         cout << "-------------------------------------------------------------------" << endl;
     cout << format("%-24s",dbs.c_str()) << fold  << " fold, " << persons.size() << " classes, " << images.size() << " images, " << pp[pre] << endl;
-    if (all)
+    if (all || tab)
     {
         cout << "-------------------------------------------------------------------" << endl;
         cout << "[extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]" << endl;
@@ -433,6 +436,7 @@ int main(int argc, const char *argv[])
             //TextureFeature::EXT_WAVENET, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_LIN,
             //TextureFeature::EXT_PCANET,  TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_PNET,    TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
+            TextureFeature::EXT_RBM,    TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
 
             -1,-1,-1
         };

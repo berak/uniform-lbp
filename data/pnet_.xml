@@ -177,6 +177,6 @@
         -1.65863114e-003 3.03418916e-002 1.16012238e-001 1.61579832e-001
         -6.09282479e-002 -5.46372533e-001</data></Filter></_>
   <_><Type>Hashing</Type>
-    <NumFilters>4</NumFilters>
+    <NumFilters>5</NumFilters>
     <BlockSize>18</BlockSize></_></Stages>
 </opencv_storage>
