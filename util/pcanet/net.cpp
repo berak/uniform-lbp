@@ -9,7 +9,8 @@ using namespace std;
 #include "net.h"
 
 
-
+namespace util
+{
 //
 // matlab like helpers:
 //
@@ -143,6 +144,9 @@ static void randomFat(const vector<cv::Mat> &input, cv::Mat &fat)
     }
 }
 
+} // namespace util
+
+
 
 
 //
@@ -161,21 +165,47 @@ struct Stage
 };
 
 
+
+//
+// base impl class already holds 100% of the testing code,
+//   (training is left to subclasses)
+//
 struct FilterBank : Stage
 {
     int patchSize, numFilters, threadnum;
-    bool doFlip;
     Mat filters;
 
-    FilterBank() : doFlip(true){}
-    FilterBank(int patchSize, int numFilters, int threadnum=1, bool doFlip=true)
-        : patchSize(patchSize), numFilters(numFilters), threadnum(threadnum), doFlip(doFlip)
+    FilterBank() {}
+    FilterBank(int patchSize, int numFilters, int threadnum=1)
+        : patchSize(patchSize), numFilters(numFilters), threadnum(threadnum)
     {}
 
+
+    inline
     cv::Mat filter(int f) const
     {
         return filters.row(f).reshape(1, patchSize);
     }
+
+
+    Mat correlate(const Mat &src, const Mat &f, bool full_convolution=false) const
+    {
+        Point anchor(-1, -1);
+        Mat dst, fil;
+        if (full_convolution)
+        {
+            cv::flip(f, fil, -1);
+            anchor = Point(f.cols - f.cols/2 - 1, f.rows - f.rows/2 - 1);
+        }
+        else
+        {
+            fil = f;
+        }
+        filter2D(src, dst, CV_32F, fil, anchor);
+        cv::normalize(dst, dst, 1); // is this the general case ?
+        return dst;
+    }
+
 
     virtual bool process(const vector<Mat> &input, vector<Mat> &output) const
     {
@@ -183,15 +213,17 @@ struct FilterBank : Stage
         {
             for (int j=0; j<numFilters; j++)
             {
-                const cv::Mat &tf = filter(j);
-                cv::Mat temp;
-                filter2D(input[i], temp, CV_32F, tf);
-                output.push_back(temp);
+                Mat o = correlate(input[i], filter(j), false);
+                output.push_back(o);
             }
         }
         return true;
     }
 
+
+    //
+    // serialize & back
+    //
     bool save(FileStorage &fs) const
     {
         fs << "PatchSize"  << patchSize;
@@ -199,7 +231,6 @@ struct FilterBank : Stage
         fs << "Filter"     << filters;
         return true;
     }
-
     bool load(const FileNode &fn)
     {
         fn["PatchSize"]    >> patchSize;
@@ -208,27 +239,33 @@ struct FilterBank : Stage
         return true;
     }
 
+
+    //
+    // visualization code.
+    //
+    inline
+    void append(Mat &a, const Mat &b) const
+    {
+        if (a.empty()) a=b; else hconcat(a,b,a);
+    }
     void filterVisAdd(const cv::Mat &fil, cv::Mat &res) const
     {
         cv::Mat r;//=fil;
         normalize(fil,r,255,0);
         r.convertTo(r,CV_8U,2,24);
         cv::Mat rb;
-        cv::copyMakeBorder(r,rb,1,1,1,1,cv::BORDER_CONSTANT);
-        if (res.empty()) res=rb;
-        else cv::hconcat(res,rb,res);
+        cv::copyMakeBorder(r, rb,1,1,1,1, cv::BORDER_CONSTANT);
+        append(res,rb);
     }
-
     void filterVis(cv::Mat &draw) const
     {
         cv::Mat res;
         for (int j=0; j<filters.rows; j++)
         {
-            filterVisAdd(filters.row(j).clone().reshape(1,patchSize), res);
+            filterVisAdd(filters.row(j).clone().reshape(1, patchSize), res);
         }
         resize(res, draw, draw.size(), 0,0, INTER_NEAREST);
     }
-
     void filterVis(cv::String win) const
     {
         Mat draw(32,32*8,CV_8U,Scalar(0));
@@ -254,71 +291,84 @@ struct FilterBank : Stage
     virtual String info() const { return type() + format("[%d,%d]", patchSize, numFilters); }
 };
 
+
+
 struct Learner : FilterBank
 {
     int ngens;
 
     Learner() {}
-    Learner(int patchSize, int numFilters, int ngens=1200)
+    Learner(int patchSize, int numFilters, int ngens=1800)
         : FilterBank(patchSize, numFilters)
         , ngens(ngens)
     {}
-    Mat correlate(const Mat &src,const Mat &f, bool full=false) const
+
+    Mat normalize(const Mat &inp) const
     {
-        Point anchor(-1, -1);
-        Mat dst, fil;
-        if (full)
-        {
-            cv::flip(f, fil, -1);
-            anchor = Point(f.cols - f.cols/2 - 1, f.rows - f.rows/2 - 1);
-        }
-        else
-        {
-            fil = f;
-        }
-        filter2D(src, dst, CV_32F, fil, anchor);
-        cv::normalize(dst, dst, 1);
-        return dst;
+        cv::Scalar me,sd;
+        cv::meanStdDev(inp, me, sd);
+        cv::Mat im(inp - me[0]);
+        im /= sd[0];
+        return im;
     }
 
-
+    virtual bool process(const vector<Mat> &input, vector<Mat> &output) const
+    {
+        for (size_t i=0; i<input.size(); i++)
+        {
+            Mat inp = normalize(input[i]);
+            for (int j=0; j<numFilters; j++)
+            {
+                Mat o = correlate(inp, filter(j), false);
+                output.push_back(o);
+            }
+        }
+        return true;
+    }
     virtual bool train(const vector<Mat> &images)
     {
-        Mat grads(numFilters,patchSize*patchSize, CV_32F, 0.0f);
+        Mat grads(numFilters, patchSize*patchSize, CV_32F, 0.0f);
         filters = cv::Mat(numFilters, patchSize*patchSize, CV_32F);
         randu(filters,-1,1);
+        namedWindow("fil",0);
+        namedWindow("grad",0);
         for (int g=0; g<ngens; g++)
         {
-            // sample
-            int idx = theRNG().uniform(0,images.size());
-            Mat im;
-            normalize(images[idx],im,1,0,NORM_L2,CV_32F);
-
-            // reconstruct
+            // random sample:
+            int idx = theRNG().uniform(0, images.size());
+            Mat im = normalize(images[idx]);
+            //  reconstruct:
             Mat recon(im.size(), CV_32F, 0.0f);
-            for (size_t i=0; i<numFilters; ++i)
+            for (int i=0; i<numFilters; ++i)
             {
-                Mat r = correlate(im, filter(i),false);
-                r = correlate(r, filter(i),true);
+                Mat r = correlate(im, filter(i), false); // forward
+                r = correlate(r, filter(i), true);       // backward
                 accumulate(r, recon);
             }
             recon /= double(filters.rows);
-
-            // update grads and filters
+            // update grads and filters:
             Mat residual = im - recon;
-            normalize(residual, residual);            
+            cv::normalize(residual, residual);
+            Mat vfil,vgrad;
             for (int f=0; f<filters.rows; ++f)
             {
                 Mat &g = grads.row(f);
-                g -= 0.006 * correlate(filter(f), residual, false).reshape(1,1);
-                filters.row(f) += g * 0.04f;
-            }       
+                g -= 0.095 * correlate(filter(f), residual, false).reshape(1,1);
+                filters.row(f) += g * 0.003f;
+                append(vfil, filter(f));
+                append(vgrad, g.reshape(1,patchSize));
+            }
+            imshow("fil",vfil);
+            imshow("grad",vgrad);
+            waitKey(5);
             cerr << "gen " << g << '\r';
         }
         return false;
     }
     virtual String type() const { return "Learner"; }
+    virtual String info() const { return type() + format("[%d,%d,%d]", patchSize, numFilters, ngens); }
 };
+
 
 
 struct Oszillator : FilterBank
@@ -332,7 +382,7 @@ struct Oszillator : FilterBank
     {}
     bool save(FileStorage &fs) const
     {
-        fs << "Freq"   << freq;
+        fs << "Freq" << freq;
         return FilterBank::save(fs);
     }
     bool load(const FileNode &fn)
@@ -342,6 +392,8 @@ struct Oszillator : FilterBank
     }
     virtual String info() const { return type() + format("[%d,%d,%2.2f]", patchSize, numFilters, freq); }
 };
+
+
 
 struct GaborProjection : Oszillator
 {
@@ -355,7 +407,7 @@ struct GaborProjection : Oszillator
 
     virtual bool train(const vector<Mat> &images)
     {
-        int N = numFilters, K = patchSize*patchSize;
+        int N = numFilters;
         cv::Mat proj;
         for (int i=0; i<N; i++)
         {
@@ -373,8 +425,6 @@ struct GaborProjection : Oszillator
     }
     virtual String type() const { return "Gabor"; }
 };
-
-
 
 
 
@@ -420,14 +470,14 @@ struct PcaProjection : FilterBank
     virtual bool train(const vector<Mat> &images)
     {
         cv::Mat_<int> randIdx(1, images.size());
-        randomIndex(randIdx);
+        util::randomIndex(randIdx);
 
         int size = patchSize * patchSize;
         cv::Mat Rx = cv::Mat::zeros(size, size, images[0].type());
 
         for (size_t j=0; j<images.size(); j++)
         {
-            cv::Mat temp = patchImage(images[randIdx(j)], patchSize);
+            cv::Mat temp = util::patchImage(images[randIdx(j)], patchSize);
             Rx = Rx + temp * temp.t();
         }
         int count = images[0].cols * images.size();
@@ -447,8 +497,10 @@ struct PcaProjection : FilterBank
     virtual String info() const { return type() + format("[%d,%d]", patchSize, numFilters); }
 };
 
+
+
 //
-// hash input vector to a single feature
+// hash input vectors of recent stage to a single feature
 //
 struct Hashing : Stage
 {
@@ -476,9 +528,9 @@ struct Hashing : Stage
                 threshold(input[numFilters * i + j], temp, 0.0, double(1<<j), 0);
                 T += temp;
             }
-            cv::Mat t2 = im2col(T, blockSize, blockSize);
-            t2 = hist(t2, (int)(pow(2.0, numFilters)) - 1);
-            t2 = bsxfun_times(t2, numFilters);
+            cv::Mat t2 = util::im2col(T, blockSize, blockSize);
+            t2 = util::hist(t2, (int)(pow(2.0, numFilters)) - 1);
+            t2 = util::bsxfun_times(t2, numFilters);
             if (i == 0) bhist = t2;
             else hconcat(bhist, t2, bhist);
         }
@@ -522,15 +574,18 @@ struct Network : public PNet
         return layers.size();
     }
 
+    //
+    // used to deserialize (e.g. from file),
+    // basically anything is a filterbank,
+    //    (additionally params are only saved for later reconstruction)
+    //
     Ptr<Stage> addStage(const String &name)
     {
         Ptr<Stage> s;
         if (name=="FilterBank")  s = makePtr<FilterBank>();
-        //if (name=="Random")  s = makePtr<RandomProjection>();
-        if (name=="Gabor")  s = makePtr<GaborProjection>();
         if (name=="Pca")  s = makePtr<PcaProjection>();
         if (name=="Wave")  s = makePtr<WaveProjection>();
-        //if (name=="Conv")  s = makePtr<ConvLearn>();
+        if (name=="Gabor")  s = makePtr<GaborProjection>();
         if (name=="Learner")  s = makePtr<Learner>();
         if (name=="Hashing") s = makePtr<Hashing>();
 
@@ -545,12 +600,15 @@ struct Network : public PNet
 
         for (size_t i=0; i<layers.size() - 1; i++)
         {
+            // train & propagate to next stage
             layers[i]->train(feat);
-            layers[i]->process(feat,post);
+            layers[i]->process(feat, post);
 
+            //dbg/vis output:
             stageViz(post,layers[i]->type() + format("_%d",i), 10);
             cerr << "\t" << i << "\t" << layers[i]->type() << "\t" << feat.size() << "\t" << post.size() << endl;
 
+            // swap prev/cur set
             feat.clear();
             cv::swap(feat,post);
         }
@@ -663,6 +721,11 @@ struct Network : public PNet
     }
 };
 
+
+
+//
+// global factory method
+//
 cv::Ptr<PNet> loadNet(const String &fn)
 {
     cv::Ptr<Network> pn = makePtr<Network>();
@@ -672,6 +735,12 @@ cv::Ptr<PNet> loadNet(const String &fn)
 }
 
 
+
+
+
+//
+// -------------8<------------------------------------------------------------------------------
+//
 #ifdef TRAIN_STANDALONE
 
 int main()
@@ -714,7 +783,6 @@ int main()
     Mat v = net.filterVis();
     imshow("filters", v);
     imwrite("filters.png",v);
-
     int Z=23;
     cerr << "test" << endl;
     Mat im = imread(fn[Z],0);

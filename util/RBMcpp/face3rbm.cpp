@@ -27,6 +27,10 @@ cv::Mat processRect(const cv::Mat &im, cv::Point2f c)
 
     cv::resize(patch,patch,cv::Size(),1.0/fac,1.0/fac);
 
+    cv::Scalar me,sd;
+    cv::meanStdDev(patch, me, sd);
+    patch -= me[0];
+    patch /= sd[0];
     cv::Mat  m;
     cv::normalize(patch, m, 1.0, 0, cv::NORM_L2, CV_32F);
     return m;
@@ -180,6 +184,7 @@ int main(int argc, char** argv)
         cv::imshow("mean",means);
         cv::waitKey(100);
         cout << "Train data: " << train.rows << "x" << train.cols << endl;
+       
         // Train RBM
         artelab::RBMglu::TrainParams params;
         params.learning_rate = learn;
