@@ -19,6 +19,7 @@ it all builds on top of opencv30 .
 ------------------------------------------------------
 
 <pre>
+
 face3> duel -o
 
 [extractors]  :
@@ -29,8 +30,8 @@ face3> duel -o
     COMB_P(15)    COMB_G(16)  GaborLBP(17)   GaborGB(18)       Dct(19)
        Orb(20)      Sift(21)    Sift_G(22)      Grad(23)    Grad_G(24)
     Grad_P(25)   GradMag(26)  GradMagP(27)   GradBin(28)    HDGRAD(29)
-     HDLBP(30) HDLBP_PCA(31)   PCASIFT(32)      PNET(33)    PCANET(34)
-   RANDNET(35)   WAVENET(36)     CDIKP(37)    LATCH2(38)     DAISY(39)
+     HDLBP(30) HDLBP_PCA(31)   PCASIFT(32)      PNET(33)     CDIKP(34)
+    LATCH2(35)     DAISY(36)       RBM(37)
 
 [filters] :
 
@@ -57,142 +58,99 @@ face3> duel -o
 ------------------------------------------------------
 
 <pre>
--------------------------------------------------------------------
-att_faces :                10 fold, 39 classes, 390 images, retina
--------------------------------------------------------------------
-[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]
-Pixels   none   N_L2           8100    729     12    0.984    4.504
-Pixels   none   SVM_POL        8100    735      6    0.992   24.422
-Pixels   none   PCA_LDA        8100    727     14    0.981  148.070
-Lbp      DCT8   PCA_LDA       32000    738      3    0.996  125.304
-Lbp_P    DCT8   PCA_LDA       32000    736      5    0.993  140.943
-Lbpu_P   DCT8   PCA_LDA       32000    738      3    0.996  122.356
-MTS_P    none   PCA_LDA       11136    736      5    0.993   59.872
-COMB_P   none   PCA_LDA       33408    738      3    0.996  128.649
-COMB_P   HELL   SVM_INT2      33408    738      3    0.996   37.473
-TpLbp_P  DCT8   PCA_LDA       32000    737      4    0.995  141.724
-FpLbp_P  none   PCA_LDA       11136    736      5    0.993   60.904
-FpLbp_P  HELL   SVM_INT2      11136    738      3    0.996   11.355
-HDGRAD   DCT12  PCA_LDA       48000    683     58    0.922  321.115
-HDLBP    DCT6   PCA_LDA       24000    674     67    0.910  201.347
-HDLBP_PCA none  PCA_LDA       51200    677     64    0.914  444.291
-Sift     DCT12  PCA_LDA       48000    736      5    0.993  422.418
-Sift     HELL   SVM_INT2     184832    737      4    0.995  483.212
-Grad_P   none   PCA_LDA       32016    740      1    0.999  121.769
-GradBin  DCT4   PCA_LDA       16000    729     12    0.984   97.514
-GradMag  none   PCA_LDA       23552    733      8    0.989   97.937
-GradMagP WHAD8  PCA_LDA       32000    739      2    0.997  143.955
-GaborGB  none   PCA_LDA       36864    732      9    0.988  179.415
-PCASIFT  none   PCA_LDA       25600    695     46    0.938  696.151
-PCANET   none   SVM_LIN        3072    730     11    0.985 1306.950
-RANDNET  none   SVM_LIN        3072    728     13    0.982 2424.438
-WAVENET  none   SVM_LIN       18432    738      3    0.996 2563.668  * 9 [6 28][6 28] (pure luck, i guess)
-PCANET   none   SVM_INT2      24576    737      4    0.995 3312.173  * SS_2D
-LATCH    none   SVM_POL        1568    721     20    0.973  134.163
-LATCH    none   PCA_LDA        1568    725     16    0.978  202.412
-LATCH    none   PCA_LDA        1800    726     15    0.980  128.738  * ssd=1 step=4 bytes=8 
-LATCH2   none   PCA_LDA        5120    727     14    0.981  699.934  * ssd=5 bytes=256
-PNET     none   SVM_INT2      24576    739      2    0.997  241.797  * pca/gabor
-PNET     none   SVM_INT2      23040    740      1    0.999  135.627  * pca[7,5] gabor[9, 5, 1.73f, 1.0f]
 
--------------------------------------------------------------------
-data/yale_crop:         10 fold, 15 classes, 165 images, retina       (2d/3d aligned)
--------------------------------------------------------------------
-[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]
-Pixels   none   N_L2          12100    280     20    0.933    1.195
-Pixels   none   SVM_POL       12100    293      7    0.977    6.421
-Pixels   none   PCA_LDA       12100    295      5    0.983   24.136
-Lbp      none   H_CHI         65536    288     12    0.960    7.699
-Lbp      DCT8   PCA_LDA       32000    295      5    0.983   18.980
-Lbp_P    DCT8   PCA_LDA       32000    295      5    0.983   27.468
-Lbpu_P   DCT8   PCA_LDA       32000    295      5    0.983   19.987
-MTS_P    none   PCA_LDA       11136    295      5    0.983    9.065
-COMB_P   none   PCA_LDA       66816    294      6    0.980   41.924
-COMB_P   HELL   SVM_INT2      66816    292      8    0.973   27.169
-TpLbp_P  DCT8   PCA_LDA       32000    292      8    0.973   28.746
-FpLbp_P  none   PCA_LDA       11136    295      5    0.983    9.020
-FpLbp_P  HELL   SVM_INT2      11136    293      7    0.977    3.174
-LATCH2   none   PCA_LDA        5120    289     11    0.963  267.458
-HDGRAD   DCT12  PCA_LDA       48000    296      4    0.987   64.147
-HDLBP    DCT6   PCA_LDA       24000    294      6    0.980   66.411
-HDLBP_PCA none   PCA_LDA      51200    295      5    0.983  160.765
-Sift     DCT12  PCA_LDA       48000    295      5    0.983  212.618
-Sift     HELL   SVM_INT2     492032    291      9    0.970  328.427
-Grad_P   none   PCA_LDA       32016    291      9    0.970   18.854
-GradMag  none   PCA_LDA       23552    295      5    0.983   15.507
-GradMagP WHAD8  PCA_LDA       32000    292      8    0.973   22.403
-PCASIFT  none   PCA_LDA       25600    294      6    0.980  253.712
-GaborGB  none   PCA_LDA       36864    294      6    0.980   37.232
-WAVENET  none   SVM_LIN       13824    283     17    0.943   75.294
-PNET     none   SVM_POL       23040    296      4    0.987   51.674  * pca[7,5] gabor[9, 5, 1.73f, 1.0f]
-CDIKP    DCT8   SVM_INT2      32000    297      3    0.990   34.882
+(test/train times are averaged per fold)
 
--------------------------------------------------------------------
-lfw-deepfunneled/:       10 fold, 50 classes, 500 images, retina
--------------------------------------------------------------------
-[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]
-Pixels   none   N_L2           8100    681    269    0.717    7.287
-Pixels   none   SVM_POL        8100    821    129    0.864   48.634
-Pixels   none   PCA_LDA        8100    874     76    0.920  277.359
-Lbp      DCT8   PCA_LDA       32000    891     59    0.938  222.525
-Lbp_P    DCT8   PCA_LDA       32000    903     47    0.951  243.516
-Lbpu_P   DCT8   PCA_LDA       32000    905     45    0.953  222.174
-MTS_P    none   PCA_LDA       11136    891     59    0.938  119.950
-MTS_P    none   SVM_POL       11136    870     80    0.916   21.685
-COMB_P   none   PCA_LDA       33408    901     49    0.948  233.759
-COMB_P   HELL   SVM_INT2      33408    883     67    0.929   64.030
-TpLbp_P  DCT8   PCA_LDA       32000    903     47    0.951  261.289
-FpLbp_P  none   PCA_LDA       11136    891     59    0.938  124.814
-FpLbp_P  none   SVM_POL       11136    870     80    0.916   22.687
-FpLbp_P  HELL   SVM_INT2      11136    882     68    0.928   18.382
-HDGRAD   DCT12  PCA_LDA       48000    905     45    0.953  473.703
-HDLBP    WHAD8  PCA_LDA       32000    881     69    0.927  389.667
-Sift     DCT12  PCA_LDA       48000    889     61    0.936  690.112
-Sift     HELL   SVM_INT2     184832    899     51    0.946  793.148
-Grad_P   none   PCA_LDA       32016    900     50    0.947  227.527
-GradBin  DCT4   PCA_LDA       16000    891     59    0.938  190.586
-GradMag  none   PCA_LDA       23552    874     76    0.920  179.792
-GradMagP WHAD8  PCA_LDA       32000    905     45    0.953  259.194
-GaborGB  none   PCA_LDA       36864    890     60    0.937  315.207
-PCASIFT  none   PCA_LDA       25600    884     66    0.931 1069.912
-LATCH    none   SVM_POL        1568    813    137    0.856  173.486
-PNET     none   SVM_INT2      23040    893     57    0.940  176.526
+------------------------------------------------------------------------------
+att_faces :10 fold, 39 classes, 390 images, retina
+------------------------------------------------------------------------------
+[extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
+Pixels   none   N_L2          12100    727     14    0.981    0.000    0.653
+Pixels   none   SVM_POL       12100    735      6    0.992    3.900    0.690
+Pixels   none   PCA_LDA       12100    725     16    0.978   16.518    0.221
+Lbp      none   H_CHI         65536    728     13    0.982    0.001    4.142
+Lbp      DCT8   PCA_LDA       32000    736      5    0.993   11.501    0.351
+Lbp_P    DCT8   PCA_LDA       32000    738      3    0.996   11.952    0.353
+Lbpu_P   DCT8   PCA_LDA       32000    737      4    0.995   12.686    0.478
+MTS_P    none   PCA_LDA       11136    737      4    0.995    5.941    0.047
+COMB_P   none   PCA_LDA       66816    738      3    0.996   18.738    0.321
+COMB_P   HELL   SVM_INT2      66816    737      4    0.995    8.735    0.973
+TpLbp_P  DCT8   PCA_LDA       32000    737      4    0.995   12.186    0.375
+FpLbp_P  none   PCA_LDA       11136    737      4    0.995    6.088    0.052
+FpLbp_P  HELL   SVM_INT2      11136    737      4    0.995    0.698    0.152
+HDGRAD   DCT12  PCA_LDA       48000    689     52    0.930   16.050    0.238
+HDLBP    DCT6   PCA_LDA       24000    684     57    0.923    9.584    0.178
+Sift     DCT12  PCA_LDA       48000    731     10    0.987   17.828    0.220
+Sift     HELL   SVM_INT2     492032    736      5    0.993   85.713   10.116
+Grad_P   none   PCA_LDA       32016    738      3    0.996   12.195    0.356
+GradMag  none   PCA_LDA       23552    732      9    0.988   10.617    0.206
+GradMagP WHAD8  PCA_LDA       32000    740      1    0.999   14.221    0.375
+PCASIFT  none   PCA_LDA       25600    691     50    0.933   12.157    0.193
+GaborGB  none   PCA_LDA       36864    735      6    0.992   15.227    0.424
+PNET     HELL   SVM_POL       23040    739      2    0.997    2.274    0.328
+RBM      none   PCA_LDA       24560    647     94    0.873    6.930    0.170
+CDIKP    DCT8   SVM_INT2      32000    733      8    0.989    2.122    0.393
+PNET     none   SVM_INT2      23040    740      1    0.999    1.500    0.286
 
--------------------------------------------------------------------
-lfw-3daligned:            10 fold, 50 classes, 500 images, retina
--------------------------------------------------------------------
-[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]
-Pixels   none   N_L2           8100    765    185    0.805   10.365
-Pixels   none   SVM_POL        8100    859     91    0.904   45.358
-Pixels   none   PCA_LDA        8100    886     64    0.933  277.845
-Lbp      DCT8   PCA_LDA       32000    911     39    0.959  220.734
-Lbp_P    DCT8   PCA_LDA       32000    915     35    0.963  245.080
-Lbpu_P   DCT8   PCA_LDA       32000    918     32    0.966  222.277
-MTS_P    none   PCA_LDA       11136    905     45    0.953  119.736
-COMB_P   DCT12  PCA_LDA       48000    920     30    0.968  291.551
-COMB_P   HELL   SVM_INT2      33408    903     47    0.951   58.985
-TpLbp_P  DCT8   PCA_LDA       32000    902     48    0.949  247.495
-FpLbp_P  none   PCA_LDA       11136    905     45    0.953  119.186
-FpLbp_P  HELL   SVM_INT2      11136    902     48    0.949   17.610
-HDGRAD   DCT12  PCA_LDA       48000    929     21    0.978  486.974
-HDLBP    DCT6   PCA_LDA       24000    914     36    0.962  310.240
-HDLBP_PCA none  PCA_LDA       51200    923     27    0.972  637.759
-Sift     DCT12  PCA_LDA       48000    912     38    0.960  661.536
-Sift     HELL   SVM_INT2     184832    912     38    0.960  746.856
-Grad_P   none   PCA_LDA       32016    915     35    0.963  215.729
-GradBin  DCT4   PCA_LDA       16000    920     30    0.968  190.996
-GradMag  none   PCA_LDA       23552    911     39    0.959  179.856
-GradMagP WHAD8  PCA_LDA       32000    911     39    0.959  260.980
-PCASIFT  none   PCA_LDA       25600    915     35    0.963 1021.913
-GaborGB  none   PCA_LDA       36864    918     32    0.966  328.633
-PCANET   none   SVM_LIN        3072    880     70    0.926 1683.532
-PCANET   none   SVM_INT2      24576    900     50    0.947 3919.794  * SS_2D_nuclear 6 filters 11x11
-RANDNET  none   SVM_LIN        3072    874     76    0.920 2506.335
-WAVENET  none   SVM_LIN       18432    893     57    0.940 3232.364
-LATCH    none   PCA_LDA        1568    883     67    0.929  318.049
-LATCH2   none   PCA_LDA        5120    903     47    0.951 1004.513
-DAISY    none   PCA_LDA       64800    902     48    0.949  422.905
-PNET     none   SVM_INT2      23040    912     38    0.960  181.208  * pca[7,5] gabor[9, 5, 1.73f, 1.0f]
+------------------------------------------------------------------------------
+yale_cropped:         10 fold, 15 classes, 165 images, retina
+------------------------------------------------------------------------------
+[extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
+Pixels   none   N_L2          12100    280     20    0.933    0.000    0.113
+Pixels   none   SVM_POL       12100    293      7    0.977    0.599    0.109
+Pixels   none   PCA_LDA       12100    295      5    0.983    2.463    0.028
+Lbp      none   H_CHI         65536    288     12    0.960    0.001    0.661
+Lbp      DCT8   PCA_LDA       32000    295      5    0.983    1.687    0.021
+Lbp_P    DCT8   PCA_LDA       32000    295      5    0.983    1.777    0.021
+Lbpu_P   DCT8   PCA_LDA       32000    295      5    0.983    1.663    0.022
+MTS_P    none   PCA_LDA       11136    295      5    0.983    0.827    0.010
+COMB_P   none   PCA_LDA       66816    294      6    0.980    3.154    0.036
+COMB_P   HELL   SVM_INT2      66816    292      8    0.973    1.563    0.195
+TpLbp_P  DCT8   PCA_LDA       32000    292      8    0.973    1.742    0.024
+FpLbp_P  none   PCA_LDA       11136    295      5    0.983    0.820    0.009
+FpLbp_P  HELL   SVM_INT2      11136    293      7    0.977    0.118    0.026
+HDGRAD   DCT12  PCA_LDA       48000    297      3    0.990    2.713    0.027
+HDLBP    DCT6   PCA_LDA       24000    294      6    0.980    1.433    0.015
+Sift     DCT12  PCA_LDA       48000    295      5    0.983    2.514    0.028
+Sift     HELL   SVM_INT2     492032    291      9    0.970   13.427    1.590
+Grad_P   none   PCA_LDA       32016    291      9    0.970    1.719    0.024
+GradMag  none   PCA_LDA       23552    295      5    0.983    1.384    0.019
+GradMagP WHAD8  PCA_LDA       32000    292      8    0.973    1.798    0.021
+PCASIFT  none   PCA_LDA       25600    294      6    0.980    1.562    0.015
+GaborGB  none   PCA_LDA       36864    295      5    0.983    2.022    0.026
+RBM      none   PCA_LDA       16320    286     14    0.953    0.877    0.011
+PNET     none   SVM_POL       23040    296      4    0.987    0.345    0.055 * Pca[5,5] Gabor[9,5,1.73] Hashing[5,18]
+CDIKP    DCT8   SVM_INT2      32000    297      3    0.990    0.387    0.070
+
+------------------------------------------------------------------------------
+lfw-3daligned:         10 fold, 50 classes, 500 images, retina
+------------------------------------------------------------------------------
+[extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
+Pixels   none   N_L2          12100    761    189    0.801    0.000    1.051
+Pixels   none   SVM_POL       12100    857     93    0.902    6.899    1.100
+Pixels   none   PCA_LDA       12100    887     63    0.934   30.615    0.317
+Lbp      none   H_CHI         65536    805    145    0.847    0.002    6.347
+Lbp      DCT8   PCA_LDA       32000    913     37    0.961   20.844    0.546
+Lbp_P    DCT8   PCA_LDA       32000    909     41    0.957   20.667    0.543
+Lbpu_P   DCT8   PCA_LDA       32000    910     40    0.958   20.499    0.572
+MTS_P    none   PCA_LDA       11136    914     36    0.962   11.007    0.093
+COMB_P   none   PCA_LDA       66816    919     31    0.967   32.167    0.429
+COMB_P   HELL   SVM_INT2      66816    906     44    0.954   13.080    1.476
+TpLbp_P  DCT8   PCA_LDA       32000    912     38    0.960   21.198    0.569
+FpLbp_P  none   PCA_LDA       11136    914     36    0.962   11.214    0.093
+FpLbp_P  HELL   SVM_INT2      11136    902     48    0.949    1.108    0.234
+HDGRAD   DCT12  PCA_LDA       48000    925     25    0.974   31.121    0.378
+HDLBP    DCT6   PCA_LDA       24000    922     28    0.971   17.716    0.243
+Sift     DCT12  PCA_LDA       48000    912     38    0.960   30.303    0.301
+Sift     HELL   SVM_INT2     492032    913     37    0.961  122.865   14.067
+Grad_P   none   PCA_LDA       32016    915     35    0.963   20.595    0.550
+GradMag  none   PCA_LDA       23552    900     50    0.947   17.282    0.239
+GradMagP WHAD8  PCA_LDA       32000    917     33    0.965   24.676    0.550
+PCASIFT  none   PCA_LDA       25600    919     31    0.967   23.822    0.304
+GaborGB  none   PCA_LDA       36864    906     44    0.954   28.726    0.640
+PNET     none   SVM_POL       23040    908     42    0.956    3.625    0.530
+RBM      none   PCA_LDA       24560    850    100    0.895   12.319    0.257
+CDIKP    DCT8   SVM_INT2      32000    898     52    0.945    3.602    0.658
 
 -------------------------------------------------------------------
 data/f94gender:         10 fold, 2 classes, 484 images, retina

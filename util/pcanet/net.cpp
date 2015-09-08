@@ -325,6 +325,7 @@ struct Learner : FilterBank
         }
         return true;
     }
+
     virtual bool train(const vector<Mat> &images)
     {
         Mat grads(numFilters, patchSize*patchSize, CV_32F, 0.0f);

@@ -238,19 +238,21 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
     // each test is confused on its own over a lot of folds..
     Mat confusion = Mat::zeros(persons.size(),persons.size(),CV_32F);
 
-    int64 t0=getTickCount();
+    int64 t_train=0, t_test=0;
     int fsiz=0;
     for (size_t f=0; f<fold; f++)
     {
-        int64 t1 = cv::getTickCount();
         Mat trainFeatures, trainLabels;
         Mat testFeatures,  testLabels;
 
         fsiz = crossfoldData(ext,fil,trainFeatures,trainLabels,testFeatures,testLabels,images,labels,persons,f,fold);
         trainFeatures = trainFeatures.reshape(1, trainLabels.rows);
 
+        int64 t0 = cv::getTickCount();
         cls->train(trainFeatures, trainLabels);
+        t_train += (getTickCount() - t0);
 
+        int64 t1=getTickCount();
         Mat conf = Mat::zeros(confusion.size(), CV_32F);
         for (int i=0; i<testFeatures.rows; i++)
         {
@@ -268,6 +270,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
             conf.at<float>(ground, pred) ++;
         }
         confusion += conf;
+        t_test += (getTickCount() - t1);
 
         double all = sum(confusion)[0];
         double neg = all - sum(confusion.diag())[0];
@@ -280,9 +283,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
     double all = sum(confusion)[0];
     double neg = all - sum(confusion.diag())[0];
     double err = double(neg)/all;
-    int64 t1=getTickCount() - t0;
-    double t(t1/getTickFrequency());
-    cout << format("%-28s %6d %6d %6d %8.3f %8.3f",name.c_str(), fsiz, int(all-neg), int(neg), (1.0-err), t) << endl;
+    cout << format("%-28s %6d %6d %6d %8.3f %8.3f %8.3f",name.c_str(), fsiz, int(all-neg), int(neg), (1.0-err), ct(t_train)/fold, ct(t_test)/fold) << endl;
     if (debug) cout << "confusion" << endl << confusion(Range(0,min(20,confusion.rows)), Range(0,min(20,confusion.cols))) << endl;
     return err;
 }
@@ -372,12 +373,12 @@ int main(int argc, const char *argv[])
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
     const char *pp[] = { "no preproc", "eqhist", "clahe", "retina", "tan-triggs", "logscale", 0}; //"radon","csdn","dog",0 };
     if (all || tab)
-        cout << "-------------------------------------------------------------------" << endl;
+        cout << "------------------------------------------------------------------------------" << endl;
     cout << format("%-24s",dbs.c_str()) << fold  << " fold, " << persons.size() << " classes, " << images.size() << " images, " << pp[pre] << endl;
     if (all || tab)
     {
-        cout << "-------------------------------------------------------------------" << endl;
-        cout << "[extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]" << endl;
+        cout << "------------------------------------------------------------------------------" << endl;
+        cout << "[extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]" << endl;
     }
 
     if ( ! all )
@@ -414,8 +415,8 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
             //TextureFeature::EXT_FPLBP_P, TextureFeature::FIL_HELL, TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_BGC1_P,  TextureFeature::FIL_WHAD8, TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_LATCH2,   TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
-            TextureFeature::EXT_HDGRAD, TextureFeature::FIL_DCT12,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_LATCH2,   TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA, // crash
+            TextureFeature::EXT_HDGRAD, TextureFeature::FIL_DCT12,  TextureFeature::CL_PCA_LDA, 
             //TextureFeature::EXT_HDLBP,  TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_HDLBP,  TextureFeature::FIL_DCT6,  TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_HDLBP_PCA,  TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
@@ -435,8 +436,9 @@ int main(int argc, const char *argv[])
             TextureFeature::EXT_GaborGB, TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             //TextureFeature::EXT_WAVENET, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_LIN,
             //TextureFeature::EXT_PCANET,  TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_INT2,
-            TextureFeature::EXT_PNET,    TextureFeature::FIL_HELL,  TextureFeature::CL_SVM_INT2,
+            TextureFeature::EXT_PNET,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
             TextureFeature::EXT_RBM,    TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
+            TextureFeature::EXT_CDIKP,  TextureFeature::FIL_DCT8,  TextureFeature::CL_SVM_INT2,
 
             -1,-1,-1
         };

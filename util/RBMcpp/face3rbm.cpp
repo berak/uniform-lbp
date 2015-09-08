@@ -2,7 +2,7 @@
 // (ab)using: https://github.com/SimoneAlbertini/RBMcpp
 //
 #include <opencv2/opencv.hpp>
-//#include "../../landmarks.h"
+#include "../../landmarks.h"
 #include "../../texturefeature.h"
 #include "../../profile.h"
 
@@ -15,7 +15,7 @@ using std::cout;
 using std::endl;
 using std::vector;
 
-int PSIZE = 26;
+int PSIZE = 16;
 
 cv::Mat processRect(const cv::Mat &im, cv::Point2f c)
 {
@@ -36,34 +36,34 @@ cv::Mat processRect(const cv::Mat &im, cv::Point2f c)
     return m;
 }
 
-
-// big static patches for now.
-struct Facemarks
-{
-    enum { SIZE=5 };
-
-    vector<cv::Point> p;
-
-    Facemarks()
-    {
-        p.push_back(cv::Point(25,25));
-        p.push_back(cv::Point(85,25));
-        p.push_back(cv::Point(55,55));
-        p.push_back(cv::Point(35,75));
-        p.push_back(cv::Point(75,75));
-    }
-    int extract(const cv::Mat &img, std::vector<cv::Point> &kp) const
-    {
-        kp=p;
-        return SIZE;
-    }
-};
-cv::Ptr<Facemarks> _createLandmarks() { return cv::makePtr<Facemarks>(); }
+//
+//// big static patches for now.
+//struct Facemarks
+//{
+//    enum { SIZE=5 };
+//
+//    vector<cv::Point> p;
+//
+//    Facemarks()
+//    {
+//        p.push_back(cv::Point(25,25));
+//        p.push_back(cv::Point(85,25));
+//        p.push_back(cv::Point(55,55));
+//        p.push_back(cv::Point(35,75));
+//        p.push_back(cv::Point(75,75));
+//    }
+//    int extract(const cv::Mat &img, std::vector<cv::Point> &kp) const
+//    {
+//        kp=p;
+//        return SIZE;
+//    }
+//};
+//cv::Ptr<Facemarks> _createLandmarks() { return cv::makePtr<Facemarks>(); }
 
 struct RBMExtractor : public TextureFeature::Extractor
 {
-    artelab::RBMglu rbm[Facemarks::SIZE]; // one rbm per landmark
-    cv::Ptr<Facemarks> land;
+    artelab::RBMglu rbm[20]; // one rbm per landmark
+    cv::Ptr<Landmarks> land;
 
     RBMExtractor(const cv::String & xmlpath)
     {
@@ -83,7 +83,7 @@ struct RBMExtractor : public TextureFeature::Extractor
         }
         fs.release();
 
-        land = _createLandmarks();
+        land = createLandmarks();
     }
 
     virtual int extract(const cv::Mat &img, cv::Mat &features) const
@@ -124,7 +124,7 @@ int concatenate()
     cv::FileStorage fw("rbm.xml.gz", cv::FileStorage::WRITE);
     fw << "PSIZE" << PSIZE;
     fw << "RBMS" << "[";
-    for (int i=0; i<Facemarks::SIZE; i++)
+    for (int i=0; i<20; i++)
     {
         artelab::RBMglu rbm(cv::format("rbm_%d.xml",i), 0);
         rbm.write(fw);
@@ -153,14 +153,14 @@ int main(int argc, char** argv)
 
     if (argc>5) PSIZE = atoi(argv[5]);
 
-    cv::Ptr<Facemarks> land = _createLandmarks();
+    cv::Ptr<Landmarks> land = createLandmarks();
 
     cv::String path("e:/code/opencv_p/face3/data/lfw3d_9000/*.jpg");
     vector<cv::String> fn;
     cv::glob(path,fn,true);
     std::cerr << fn.size() << " files, " << epochs << " epochs, " << eta << " eta, " << PSIZE << " patchsize." << std::endl;
     cv::namedWindow("mean",0);
-    for (int k=start; k<Facemarks::SIZE; ++k)
+    for (int k=start; k<20; ++k)
     {
         PROFILEX("per_landmark");
         cv::Mat means(PSIZE,PSIZE,CV_32F,0.0f);
@@ -194,7 +194,7 @@ int main(int argc, char** argv)
         params.weight_decay = artelab::RBMglu::TrainParams::L2_WEIGHT_DECAY;
         params.wd_delta = 0.002f;
         
-        const int num_hid = (8 * train.cols) / 10;
+        const int num_hid = (12 * train.cols) / 10;
         artelab::RBMglu rbm = artelab::RBMglu(train.cols, num_hid);
         rbm.set_seed(345)
            .set_datasets(train)
