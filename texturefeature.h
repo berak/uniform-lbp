@@ -99,7 +99,7 @@ namespace TextureFeature
         EXT_LATCH2,
         EXT_DAISY,
         //EXT_FISH,
-        EXT_RBM,
+        //EXT_RBM,
         EXT_MAX
     };
     static const char *EXS[] = {
@@ -144,7 +144,7 @@ namespace TextureFeature
         "LATCH2",
         "DAISY",
         //"FISH",
-        "RBM",
+        //"RBM",
         0
     };
     enum FIL {

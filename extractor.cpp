@@ -1377,7 +1377,7 @@ struct ExtractorDaisy : public TextureFeature::Extractor
 } // TextureFeatureImpl
 
 //extern Ptr<TextureFeature::Extractor> createFisherVector(const String &fn);
-extern Ptr<TextureFeature::Extractor> createRBMExtractor(const String &fn);
+//extern Ptr<TextureFeature::Extractor> createRBMExtractor(const String &fn);
 
 namespace TextureFeature
 {
@@ -1430,7 +1430,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
         case EXT_DAISY:    return makePtr< ExtractorDaisy >();  break;
         //case EXT_FISH:     return createFisherVector("data/fisher.xml.gz"); break;
-        case EXT_RBM:     return createRBMExtractor("data/rbm.xml.gz"); break;
+        //case EXT_RBM:     return createRBMExtractor("data/rbm.xml.gz"); break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Extractor>();

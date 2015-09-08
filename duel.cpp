@@ -437,7 +437,7 @@ int main(int argc, const char *argv[])
             //TextureFeature::EXT_WAVENET, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_LIN,
             //TextureFeature::EXT_PCANET,  TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_INT2,
             TextureFeature::EXT_PNET,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_POL,
-            TextureFeature::EXT_RBM,    TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
+            //TextureFeature::EXT_RBM,    TextureFeature::FIL_NONE,  TextureFeature::CL_PCA_LDA,
             TextureFeature::EXT_CDIKP,  TextureFeature::FIL_DCT8,  TextureFeature::CL_SVM_INT2,
 
             -1,-1,-1
