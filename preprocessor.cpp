@@ -179,8 +179,8 @@ Mat Preprocessor::process(const Mat &imgin)  const
             break;
         case 3:
             retina->clearBuffers();  //https://github.com/berak/uniform-lbp/issues/3
-            retina->run(imgt);
-            retina->getParvo(imgout);
+            retina->run(imgt);            
+            retina->getParvo(imgout); 
             break;
         case 4:
             cv::normalize(tan_triggs_preprocessing(imgt), imgout, 0, 255, NORM_MINMAX, CV_8UC1);
