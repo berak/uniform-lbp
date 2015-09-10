@@ -119,7 +119,7 @@ GradMagP WHAD8  PCA_LDA       32000    292      8    0.973    1.798    0.021
 PCASIFT  none   PCA_LDA       25600    294      6    0.980    1.562    0.015
 GaborGB  none   PCA_LDA       36864    295      5    0.983    2.022    0.026
 RBM      none   PCA_LDA       16320    286     14    0.953    0.877    0.011
-PNET     none   SVM_POL       23040    296      4    0.987    0.345    0.055 * Pca[5,5] Gabor[9,5,1.73] Hashing[5,18]
+PNET     none   SVM_INT2      23040    296      4    0.987    0.261    0.049 * Pca[5,5] Gabor[9,5,1.73] Hashing[5,18]
 CDIKP    DCT8   SVM_INT2      32000    297      3    0.990    0.387    0.070
 
 ------------------------------------------------------------------------------
@@ -148,36 +148,37 @@ GradMag  none   PCA_LDA       23552    900     50    0.947   17.282    0.239
 GradMagP WHAD8  PCA_LDA       32000    917     33    0.965   24.676    0.550
 PCASIFT  none   PCA_LDA       25600    919     31    0.967   23.822    0.304
 GaborGB  none   PCA_LDA       36864    906     44    0.954   28.726    0.640
-PNET     none   SVM_POL       23040    908     42    0.956    3.625    0.530
+PNET     none   SVM_INT2      23040    914     36    0.962    2.467    0.471
 RBM      none   PCA_LDA       24560    850    100    0.895   12.319    0.257
 CDIKP    DCT8   SVM_INT2      32000    898     52    0.945    3.602    0.658
 
--------------------------------------------------------------------
-data/f94gender:         10 fold, 2 classes, 484 images, retina
--------------------------------------------------------------------
-[extra] [redu] [class]     [f_bytes]  [hit]  [miss]  [acc]   [time]
-Pixels   none   N_L2          12100    445     45    0.908    6.271
-Pixels   none   SVM_POL       12100    467     23    0.953   13.195
-Pixels   none   PCA_LDA       12100    466     24    0.951  406.137
-Lbp      none   H_CHI         65536    407     83    0.831   42.218
-Lbp      DCT8   PCA_LDA       32000    468     22    0.955  257.919
-Lbp_P    DCT8   PCA_LDA       32000    470     20    0.959  271.282
-Lbpu_P   DCT8   PCA_LDA       32000    472     18    0.963  248.733
-MTS_P    none   PCA_LDA       11136    462     28    0.943  149.284
-COMB_P   none   PCA_LDA       66816    466     24    0.951  392.213
-COMB_P   HELL   SVM_INT2      66816    466     24    0.951   88.184
-TpLbp_P  DCT8   PCA_LDA       32000    469     21    0.957  256.392
-FpLbp_P  none   PCA_LDA       11136    462     28    0.943  138.421
-FpLbp_P  HELL   SVM_INT2      11136    451     39    0.920   13.367
-HDGRAD   DCT12  PCA_LDA       48000    426     64    0.869  467.374
-HDLBP    DCT6   PCA_LDA       24000    412     78    0.841  358.071
-HDLBP_PCA none   PCA_LDA      51200    428     62    0.873  706.529
-Sift     DCT12  PCA_LDA       48000    448     42    0.914  790.889
-Sift     HELL   SVM_INT2     184832    456     34    0.931  510.964
-Grad_P   none   PCA_LDA       32016    468     22    0.955  231.309
-GaborGB  none   PCA_LDA       36864    454     36    0.927  366.183
-CDIKP    DCT8   PCA_LDA       32000    444     46    0.906  427.614
-WAVENET  none   SVM_LIN       13824    452     38    0.922 2517.690
-
+------------------------------------------------------------------------------
+data/f94gender:         10 fold, 2 classes, 484 images, retina -C=20
+------------------------------------------------------------------------------
+[extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
+Pixels   none   N_L2          12100    451     39    0.920    0.000    0.582
+Pixels   none   SVM_POL       12100    470     20    0.959    0.812    0.078
+Pixels   none   PCA_LDA       12100    469     21    0.957   36.485    0.015
+Lbp      none   H_CHI         65536    415     75    0.847    0.002    3.588
+Lbp      DCT8   PCA_LDA       32000    462     28    0.943   23.177    0.014
+Lbp_P    DCT8   PCA_LDA       32000    469     21    0.957   23.816    0.012
+Lbpu_P   DCT8   PCA_LDA       32000    470     20    0.959   22.598    0.012
+MTS_P    none   PCA_LDA       11136    466     24    0.951   13.030    0.010
+COMB_P   none   PCA_LDA       66816    461     29    0.941   34.749    0.015
+COMB_P   HELL   SVM_INT2      66816    453     37    0.924    4.769    0.518
+TpLbp_P  DCT8   PCA_LDA       32000    461     29    0.941   21.830    0.013
+FpLbp_P  none   PCA_LDA       11136    466     24    0.951   13.423    0.009
+FpLbp_P  HELL   SVM_INT2      11136    464     26    0.947    0.697    0.076
+HDGRAD   DCT12  PCA_LDA       48000    428     62    0.873   35.177    0.014
+HDLBP    DCT6   PCA_LDA       24000    418     72    0.853   19.763    0.011
+Sift     DCT12  PCA_LDA       48000    419     71    0.855   36.414    0.019
+Sift     HELL   SVM_INT2     492032    458     32    0.935   35.789    3.982
+Grad_P   none   PCA_LDA       32016    466     24    0.951   22.314    0.012
+GradMag  none   PCA_LDA       23552    432     58    0.882   20.626    0.014
+GradMagP WHAD8  PCA_LDA       32000    470     20    0.959   28.271    0.012
+PCASIFT  none   PCA_LDA       25600    447     43    0.912   27.907    0.015
+GaborGB  none   PCA_LDA       36864    477     13    0.973   30.597    0.017
+PNET     none   SVM_POL       23040    469     21    0.957    0.642    0.063
+CDIKP    DCT8   SVM_INT2      32000    443     47    0.904    1.571    0.178
 
 </pre>

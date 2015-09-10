@@ -1083,7 +1083,7 @@ struct HighDimPCASift : public TextureFeature::Extractor
                 Mat h;
                 for (int o=0; o<noff; o++)
                 {
-                    kp.push_back(KeyPoint(pt[k].x*s + off[o*2]*gr, pt[k].y*s + off[o*2+1]*gr,gr));
+                    kp.push_back(KeyPoint(pt[k].x*s + off[o*2]*gr, pt[k].y*s + off[o*2+1]*gr, float(gr)));
                 }
                 sift->compute(imgs,kp,h);
                 for (size_t j=0; j<kp.size(); j++)
@@ -1198,30 +1198,6 @@ struct ExtractorCDIKP : public TextureFeature::Extractor
 };
 
 
-//
-// use an off-line trained pca filterbank
-// (can't use the lda pass here, due to restrictions of my stupid framework)
-//
-//struct ExtractorPCANet : public TextureFeature::Extractor
-//{
-//    PCANet pnet;
-//    ExtractorPCANet(const cv::String path)
-//    {
-//        pnet.load(path);
-//    }
-//
-//    virtual int extract(const Mat &I, Mat &features) const
-//    {
-//        Mat img;
-//        if (I.type() != CV_32F)
-//            I.convertTo(img,CV_32F);
-//        else
-//            img = I;
-//        features = pnet.extract(img);
-//        return features.total() * features.elemSize();
-//    }
-//};
-
 
 struct ExtractorPNet : public TextureFeature::Extractor
 {
@@ -1249,11 +1225,9 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
 {
     Ptr<Landmarks> land;
     vector< Mat_<int> > latches;
-
     int feature_bytes;
     int half_ssd_size;
     int patch_size;
-
 
     ExtractorLatch2()
         : land(createLandmarks())
@@ -1272,21 +1246,17 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
 	    int	by = points(count + 3) + (int)(pt.y + 0.5);
 	    int cx = points(count + 4) + (int)(pt.x + 0.5);
 	    int cy = points(count + 5) + (int)(pt.y + 0.5);
-
 	    int suma = 0, sumc = 0;
-
         int K = half_ssd_size;
 	    for (int iy = -K; iy <= K; iy++)
 	    {
 		    const uchar * Mi_a = grayImage.ptr<uchar>(ay + iy);
 		    const uchar * Mi_b = grayImage.ptr<uchar>(by + iy);
 		    const uchar * Mi_c = grayImage.ptr<uchar>(cy + iy);
-
 		    for (int ix = -K; ix <= K; ix++)
 		    {
 			    double difa = Mi_a[ax + ix] - Mi_b[bx + ix];
 			    suma += (int)((difa)*(difa));
-
 			    double difc = Mi_c[cx + ix] - Mi_b[bx + ix];
 			    sumc += (int)((difc)*(difc));
 		    }
@@ -1307,7 +1277,6 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
             {
 			    bool bit = calculateSums(count, pt, points, grayImage, half_ssd_size);
 			    desc[ix] += (uchar)(bit << j);
-
                 count += 6;
 		    }
 	    }
@@ -1359,11 +1328,11 @@ struct ExtractorDaisy : public TextureFeature::Extractor
         int step = 9; // dense grid of ~10x10 kp.
         int patch_size=15;
         vector<KeyPoint> kps;
-        for (float i=patch_size; i<img.rows-patch_size; i+=step)
+        for (int i=patch_size; i<img.rows-patch_size; i+=step)
         {
-            for (float j=patch_size; j<img.cols-patch_size; j+=step)
+            for (int j=patch_size; j<img.cols-patch_size; j+=step)
             {
-                kps.push_back(KeyPoint(i, j, 1));
+                kps.push_back(KeyPoint(float(i), float(j), 1));
             }
         }
         daisy->compute(img,kps,features);
@@ -1421,16 +1390,9 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_HDLBP_PCA:return makePtr< HighDimLbpPCA >();  break;
         case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
         case EXT_PNET:     return makePtr< ExtractorPNet >("data/pnet.xml");  break;
-        //case EXT_PCANET:   return makePtr< ExtractorPCANet >("data/pcanet.xml");  break;
-        //case EXT_WAVENET:  return makePtr< ExtractorPCANet >("data/wavenet.xml");  break;
-        //case EXT_RANDNET:  return makePtr< ExtractorPCANet >("data/randnet.xml");  break;
-        //case EXT_PNET:     return makePtr< PNet>("data/pcanet.xml");  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
-        //case EXT_LATCH:    return makePtr< ExtractorLatch >();  break; //return makePtr< GenericExtractor<ExtractorLatch,GriddedHist> >(ExtractorLatch(), GriddedHist());
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
         case EXT_DAISY:    return makePtr< ExtractorDaisy >();  break;
-        //case EXT_FISH:     return createFisherVector("data/fisher.xml.gz"); break;
-        //case EXT_RBM:     return createRBMExtractor("data/rbm.xml.gz"); break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Extractor>();

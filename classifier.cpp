@@ -1,7 +1,6 @@
 #include <set>
 using namespace std;
 
-//#define HAVE_SSE
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -10,7 +9,6 @@ using namespace std;
 using namespace cv;
 
 #include "texturefeature.h"
-//#include "pcanet/PCANet.h"
 
 using namespace TextureFeature;
 
@@ -257,7 +255,7 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
             for ( size_t j=0; j<labels.total(); ++j)
                 slabels.push_back( (*it == labels.at<int>(j)) ? 1 : -1 );
             bool ok = svm->train(trainData , ml::ROW_SAMPLE , slabels); // same data, different labels.
-            CV_Assert(ok); 
+            CV_Assert(ok);
             svms.push_back(svm);
         }
         return trainData.rows;
@@ -268,8 +266,8 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
     {
         Mat query = tofloat(src);
         //
-        // predict per-class, return best(largest) result
-        // hrmm, this assumes, the labels are [0..N]
+        // predict per-class, return first positive result
+        // hrmm, this assumes, the labels are ordered [0..N]
         //
         float m = 100.0f;
         float mi = 0.0f;
@@ -305,7 +303,7 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
 //
 // 'Eigenfaces'
 //
-struct ClassifierPCA : public ClassifierNearestFloat
+struct ClassifierPCA : public ClassifierNearestFloat  //ClassifierCosine
 {
     Mat eigenvectors;
     Mat mean;
@@ -331,15 +329,14 @@ struct ClassifierPCA : public ClassifierNearestFloat
         transpose(pca.eigenvectors, eigenvectors);
         mean = pca.mean.reshape(1,1);
         labels = trainLabels;
-        features.release();
-        for (int i=0; i<trainData.rows; i++)
-            features.push_back(project(trainData.row(i)));
+        features = project(trainData);
         return 1;
     }
 
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
         return ClassifierNearestFloat::predict(project(tofloat(testFeature)), results);
+        //return ClassifierCosine::predict(project(tofloat(testFeature)), results);
     }
 
     // Serialize
@@ -396,9 +393,6 @@ struct ClassifierPCA_LDA : public ClassifierPCA
 
         // step four, keep labels and projected dataset:
         features = project(trainData);
-        //features.release(); // TODO: pre-allocate, push_back() is giving ugly mem-spikes !
-        //for (int i=0; i<trainData.rows; i++)
-        //    features.push_back(project(trainData.row(i)));
         labels = trainLabels;
         return 1;
     }
@@ -407,7 +401,7 @@ struct ClassifierPCA_LDA : public ClassifierPCA
 struct ClassifierLDA : public ClassifierNearestFloat
 {
     Ptr<LDA> lda;
-    Mat mean; 
+    Mat mean;
 
     virtual int train(const Mat &trainData, const Mat &trainLabels)
     {
@@ -422,7 +416,6 @@ struct ClassifierLDA : public ClassifierNearestFloat
 
         //reduce(trainData,mean,0,cv::REDUCE_AVG,CV_64F);
 
-        //Mat projected = LDA::subspaceProject(lda->eigenvectors(), mean, trainData);
         Mat projected = lda->project(trainData);
         return ClassifierNearestFloat::train(projected, trainLabels);
     }
@@ -430,7 +423,6 @@ struct ClassifierLDA : public ClassifierNearestFloat
     virtual int predict(const Mat &a, Mat &res) const
     {
         Mat pa = lda->project(tofloat(a));
-        //Mat pa = LDA::subspaceProject(lda->eigenvectors(), mean, tofloat(a));
         return ClassifierNearestFloat::predict(pa, res);
     }
 };
@@ -790,7 +782,6 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_NORM_L2SQR:return makePtr<ClassifierNearest>(NORM_L2SQR); break;
         case CL_NORM_L1:   return makePtr<ClassifierNearest>(NORM_L1); break;
         case CL_NORM_HAM:  return makePtr<ClassifierNearest>(NORM_HAMMING2); break;
-       // case CL_NORM_MIN:  return makePtr<ClassifierNearest>(NORM_INF); break;
         case CL_HIST_HELL: return makePtr<ClassifierHist>(HISTCMP_HELLINGER); break;
         case CL_HIST_CHI:  return makePtr<ClassifierHist>(HISTCMP_CHISQR); break;
         case CL_KLDIV:     return makePtr<ClassifierHist>(HISTCMP_KL_DIV); break;
@@ -812,6 +803,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_LDA:       return makePtr<ClassifierLDA>(); break;
         case CL_MLP:       return makePtr<ClassifierMLP>(); break;
         case CL_KNN:       return makePtr<ClassifierKNN>(); break;
+        //case CL_RTREE:     return makePtr<ClassifierRTree>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();

@@ -172,12 +172,12 @@ struct Stage
 //
 struct FilterBank : Stage
 {
-    int patchSize, numFilters, threadnum;
-    Mat filters;
+    int patchSize, numFilters;
+    Mat filters; // holds all filters, row-aligned.
 
     FilterBank() {}
-    FilterBank(int patchSize, int numFilters, int threadnum=1)
-        : patchSize(patchSize), numFilters(numFilters), threadnum(threadnum)
+    FilterBank(int patchSize, int numFilters)
+        : patchSize(patchSize), numFilters(numFilters)
     {}
 
 
@@ -297,7 +297,9 @@ struct Learner : FilterBank
 {
     int ngens;
 
-    Learner() {}
+    Learner()
+        : ngens(1800)
+    {}
     Learner(int patchSize, int numFilters, int ngens=1800)
         : FilterBank(patchSize, numFilters)
         , ngens(ngens)
@@ -342,7 +344,7 @@ struct Learner : FilterBank
             Mat recon(im.size(), CV_32F, 0.0f);
             for (int i=0; i<numFilters; ++i)
             {
-                Mat r = correlate(im, filter(i), false); // forward
+                Mat r = correlate(im, filter(i), true); // forward
                 r = correlate(r, filter(i), true);       // backward
                 accumulate(r, recon);
             }
@@ -350,12 +352,13 @@ struct Learner : FilterBank
             // update grads and filters:
             Mat residual = im - recon;
             cv::normalize(residual, residual);
+            resize(residual,residual,Size(2*patchSize,2*patchSize));
             Mat vfil,vgrad;
             for (int f=0; f<filters.rows; ++f)
             {
                 Mat &g = grads.row(f);
                 g -= 0.095 * correlate(filter(f), residual, false).reshape(1,1);
-                filters.row(f) += g * 0.003f;
+                filters.row(f) += g * 0.0025f;
                 append(vfil, filter(f));
                 append(vgrad, g.reshape(1,patchSize));
             }
@@ -460,6 +463,9 @@ struct WaveProjection : Oszillator
 
 //
 // 2 of those, followed by a Hashing stage, and you got PCANet.
+//
+//paper: http://arxiv.org/pdf/1404.3606v2.pdf
+//original code from: https://github.com/ldpe2g/pcanet
 //
 struct PcaProjection : FilterBank
 {
@@ -762,16 +768,17 @@ int main()
 
     namedWindow("filters", 0);
     Network net;
+    int nFilters=7;
     if (1)
     {
         cerr << "train " << images.size() << endl;
-        //net.addStage(makePtr<PcaProjection>(7, 5));
+        net.addStage(makePtr<PcaProjection>(7, nFilters));
         // net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
-        //net.addStage(makePtr<ConvLearn>(11, 5));
-        net.addStage(makePtr<Learner>(13, 5));
-       // net.addStage(makePtr<Learner>(7, 4));
-        net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
-        net.addStage(makePtr<Hashing>(5, 18));
+        //net.addStage(makePtr<Learner>(11, 6));
+        net.addStage(makePtr<Learner>(11, nFilters));
+        // net.addStage(makePtr<Learner>(7, 4));
+        // net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
+        net.addStage(makePtr<Hashing>(nFilters, 18));
         net.train(images);
         net.save("my.xml");
     }
@@ -804,7 +811,6 @@ int main()
     cerr << "d xx " << 1.0 - norm(res1,res2)/norm(res,res2) << endl;
 
     waitKey();
-
     return 0;
 }
 

@@ -168,12 +168,27 @@ Mat Preprocessor::process(const Mat &imgin)  const
     switch(preproc)
     {
         default:
-        case 0: imgout = precrop>0 ? imgt.clone() : imgt; break;
-        case 1: equalizeHist(imgt,imgout); break;
-        case 2: clahe->apply(imgt,imgout); break;
-        case 3: retina->run(imgt); retina->getParvo(imgout); break;
-        case 4: cv::normalize(tan_triggs_preprocessing(imgt), imgout, 0, 255, NORM_MINMAX, CV_8UC1); break;
-        case 5: imgt.convertTo(imgout,CV_32F,1,1); log(imgout,imgout); imgout.convertTo(imgout,CV_8U);break; // logscale
+        case 0:
+            imgout = precrop>0 ? imgt.clone() : imgt;
+            break;
+        case 1:
+            equalizeHist(imgt,imgout);
+            break;
+        case 2:
+            clahe->apply(imgt,imgout);
+            break;
+        case 3:
+            retina->clearBuffers();  //https://github.com/berak/uniform-lbp/issues/3
+            retina->run(imgt);
+            retina->getParvo(imgout);
+            break;
+        case 4:
+            cv::normalize(tan_triggs_preprocessing(imgt), imgout, 0, 255, NORM_MINMAX, CV_8UC1);
+            break;
+        case 5: 
+            imgt.convertTo(imgout,CV_32F,1,1);
+            log(imgout,imgout); imgout.convertTo(imgout,CV_8U);
+            break; // logscale
         //case 6: imgout = whitening(imgin); break;
         //case 6: radonTransform<uchar>(imgt,imgout); imgout.convertTo(imgout,CV_8U); break;
         //case 7: imgout = CSDNFilter(imgt); break;
