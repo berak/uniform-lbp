@@ -431,9 +431,9 @@ struct ClassifierMLP : Classifier
 {
     Ptr<ml::ANN_MLP> ann;
 
-    void setup(int ni, int no)
+    static Ptr<ml::ANN_MLP> setup(int ni, int no)
     {
-        ann = ml::ANN_MLP::create();
+        Ptr<ml::ANN_MLP> ann = ml::ANN_MLP::create();
         Mat_<int> layers(4,1);
         layers(0) = ni;
         layers(1) = no*2;
@@ -443,6 +443,7 @@ struct ClassifierMLP : Classifier
         ann->setActivationFunction(ml::ANN_MLP::SIGMOID_SYM,0,0);
         ann->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 300, 0.0001));
         ann->setTrainMethod(ml::ANN_MLP::BACKPROP, 0.0001);
+        return ann;
     }
 
     virtual int train(const Mat &trainData, const Mat &trainLabels)
@@ -450,10 +451,7 @@ struct ClassifierMLP : Classifier
         set<int> classes;
         int C = TextureFeatureImpl::unique(trainLabels, classes);
 
-        if (ann.empty())
-        {
-            setup(trainData.cols, C);
-        }
+        ann = setup(trainData.cols, C);
 
         Mat trainClasses = Mat::zeros(trainLabels.total(), C, CV_32FC1);
         for(int i=0; i < trainClasses.rows; i++)
@@ -463,6 +461,7 @@ struct ClassifierMLP : Classifier
 
         return ann->train(tofloat(trainData), ml::ROW_SAMPLE, trainClasses);
     }
+
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
         float r = ann->predict(tofloat(testFeature),results);
@@ -767,6 +766,24 @@ struct VerifierKNN : public TextureFeature::Verifier, PairDistance
 };
 
 
+// WIP !! ;(
+struct VerifierMLP : public VerifierPairDistance
+{
+    virtual int train(const Mat &trainData, const Mat &trainLabels)
+    {
+        model = ClassifierMLP::setup(trainData.rows, 2);
+
+        Mat trainClasses = Mat::zeros(trainLabels.total(), 2, CV_32FC1);
+        for(int i=0; i < trainClasses.rows; i++)
+        {
+            trainClasses.at<float>(i, trainLabels.at<int>(i)) = 1.f;
+        }
+
+        return VerifierPairDistance::train(trainData, trainClasses);
+    }
+};
+
+
 } // TextureFeatureImpl
 
 
@@ -834,6 +851,7 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_COSINE:    return makePtr<VerifierCosine>(); break;
         case CL_KNN:       return makePtr<VerifierKNN>(); break;
         case CL_RTREE:     return makePtr<VerifierRTree>(); break;
+        case CL_MLP:       return makePtr<VerifierMLP>(); break;
 
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);
     }

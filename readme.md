@@ -62,123 +62,90 @@ face3> duel -o
 (test/train times are averaged per fold)
 
 ------------------------------------------------------------------------------
-att_faces :10 fold, 39 classes, 390 images, retina
+att_faces : 10 fold, 39 classes, 390 images, retina
 ------------------------------------------------------------------------------
 [extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
-Pixels   none   N_L2          12100    727     14    0.981    0.000    0.653
-Pixels   none   SVM_POL       12100    735      6    0.992    3.900    0.690
-Pixels   none   PCA_LDA       12100    725     16    0.978   16.518    0.221
-Lbp      none   H_CHI         65536    728     13    0.982    0.001    4.142
-Lbp      DCT8   PCA_LDA       32000    736      5    0.993   11.501    0.351
-Lbp_P    DCT8   PCA_LDA       32000    738      3    0.996   11.952    0.353
-Lbpu_P   DCT8   PCA_LDA       32000    737      4    0.995   12.686    0.478
-MTS_P    none   PCA_LDA       11136    737      4    0.995    5.941    0.047
-COMB_P   none   PCA_LDA       66816    738      3    0.996   18.738    0.321
-COMB_P   HELL   SVM_INT2      66816    737      4    0.995    8.735    0.973
-TpLbp_P  DCT8   PCA_LDA       32000    737      4    0.995   12.186    0.375
-FpLbp_P  none   PCA_LDA       11136    737      4    0.995    6.088    0.052
-FpLbp_P  HELL   SVM_INT2      11136    737      4    0.995    0.698    0.152
-HDGRAD   DCT12  PCA_LDA       48000    689     52    0.930   16.050    0.238
-HDLBP    DCT6   PCA_LDA       24000    684     57    0.923    9.584    0.178
-Sift     DCT12  PCA_LDA       48000    731     10    0.987   17.828    0.220
-Sift     HELL   SVM_INT2     492032    736      5    0.993   85.713   10.116
-Grad_P   none   PCA_LDA       32016    738      3    0.996   12.195    0.356
-GradMag  none   PCA_LDA       23552    732      9    0.988   10.617    0.206
-GradMagP WHAD8  PCA_LDA       32000    740      1    0.999   14.221    0.375
-PCASIFT  none   PCA_LDA       25600    691     50    0.933   12.157    0.193
-GaborGB  none   PCA_LDA       36864    735      6    0.992   15.227    0.424
-PNET     HELL   SVM_POL       23040    739      2    0.997    2.274    0.328
-RBM      none   PCA_LDA       24560    647     94    0.873    6.930    0.170
-CDIKP    DCT8   SVM_INT2      32000    733      8    0.989    2.122    0.393
-PNET     none   SVM_INT2      23040    740      1    0.999    1.500    0.286
+Pixels   none   N_L2          12100    709     32    0.957    0.000    0.641
+Pixels   none   SVM_POL       12100    722     19    0.974    5.269    0.748
+Pixels   none   PCA_LDA       12100    689     52    0.930   16.371    0.236
+Lbp      none   H_CHI         65536    700     41    0.945   -0.001    4.261
+Lbp      none   H_HELL        65536    727     14    0.981    0.001    5.701
+Lbp      none   SVM_LIN       65536    727     14    0.981   10.661    2.792
+Lbpu_P   DCT8   SVM_LIN       32000    732      9    0.988    3.394    1.168
+MTS_P    none   SVM_INT2      11136    731     10    0.987    0.704    0.178
+COMB_P   HELL   SVM_INT2      66816    732      9    0.988    9.312    1.009
+TpLbp_P  DCT8   SVM_INT2      32000    730     11    0.985    2.399    0.483
+FpLbp_P  none   SVM_INT2      11136    731     10    0.987    0.796    0.186
+FpLbp_P  none   MLP           11136    737      4    0.995  102.610    0.162
+HDGRAD   DCT24  SVM_LIN       96000    662     79    0.893   15.342    3.709
+HDLBP    DCT24  SVM_INT2      96000    647     94    0.873   11.912    1.336
+Sift     HELL   SVM_INT2     492032    716     25    0.966  101.979   11.528
+Sift     DCT24  SVM_LIN       96000    694     47    0.937   17.222    4.562
+Grad_P   MEAN   SVM_LIN       32016    731     10    0.987    4.156    1.505
+GradMag  none   MLP           23552    694     47    0.937  165.413    0.549
+GradMagP WHAD8  SVM_LIN       32000    733      8    0.989    3.822    1.196
+PCASIFT  none   SVM_LIN       25600    658     83    0.888    2.689    1.041
+GaborGB  MEAN   SVM_LIN       36864    727     14    0.981    4.494    1.490
+PNET     none   SVM_LIN       23040    737      4    0.995    2.444    0.948
+PNET     none   MLP           23040    741      0    1.000  113.726    0.461
+CDIKP    DCT8   SVM_INT2      32000    697     44    0.941    2.438    0.487
 
 ------------------------------------------------------------------------------
-yale_cropped:         10 fold, 15 classes, 165 images, retina
+yale_cropped :         10 fold, 15 classes, 165 images, retina
 ------------------------------------------------------------------------------
 [extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
-Pixels   none   N_L2          12100    280     20    0.933    0.000    0.113
-Pixels   none   SVM_POL       12100    293      7    0.977    0.599    0.109
-Pixels   none   PCA_LDA       12100    295      5    0.983    2.463    0.028
-Lbp      none   H_CHI         65536    288     12    0.960    0.001    0.661
-Lbp      DCT8   PCA_LDA       32000    295      5    0.983    1.687    0.021
-Lbp_P    DCT8   PCA_LDA       32000    295      5    0.983    1.777    0.021
-Lbpu_P   DCT8   PCA_LDA       32000    295      5    0.983    1.663    0.022
-MTS_P    none   PCA_LDA       11136    295      5    0.983    0.827    0.010
-COMB_P   none   PCA_LDA       66816    294      6    0.980    3.154    0.036
-COMB_P   HELL   SVM_INT2      66816    292      8    0.973    1.563    0.195
-TpLbp_P  DCT8   PCA_LDA       32000    292      8    0.973    1.742    0.024
-FpLbp_P  none   PCA_LDA       11136    295      5    0.983    0.820    0.009
-FpLbp_P  HELL   SVM_INT2      11136    293      7    0.977    0.118    0.026
-HDGRAD   DCT12  PCA_LDA       48000    297      3    0.990    2.713    0.027
-HDLBP    DCT6   PCA_LDA       24000    294      6    0.980    1.433    0.015
-Sift     DCT12  PCA_LDA       48000    295      5    0.983    2.514    0.028
-Sift     HELL   SVM_INT2     492032    291      9    0.970   13.427    1.590
-Grad_P   none   PCA_LDA       32016    291      9    0.970    1.719    0.024
-GradMag  none   PCA_LDA       23552    295      5    0.983    1.384    0.019
-GradMagP WHAD8  PCA_LDA       32000    292      8    0.973    1.798    0.021
-PCASIFT  none   PCA_LDA       25600    294      6    0.980    1.562    0.015
-GaborGB  none   PCA_LDA       36864    295      5    0.983    2.022    0.026
-RBM      none   PCA_LDA       16320    286     14    0.953    0.877    0.011
-PNET     none   SVM_INT2      23040    296      4    0.987    0.261    0.049 * Pca[5,5] Gabor[9,5,1.73] Hashing[5,18]
-CDIKP    DCT8   SVM_INT2      32000    297      3    0.990    0.387    0.070
+Pixels   none   N_L2          12100    247     53    0.823    0.000    0.102
+Pixels   none   SVM_POL       12100    268     32    0.893    0.841    0.120
+Pixels   none   PCA_LDA       12100    256     44    0.853    2.388    0.037
+Lbp      none   H_CHI         65536    273     27    0.910    0.001    0.647
+Lbp      none   H_HELL        65536    293      7    0.977    0.001    1.002
+Lbp      none   SVM_LIN       65536    296      4    0.987    1.577    0.158
+Lbpu_P   DCT8   SVM_LIN       32000    296      4    0.987    0.535    0.056
+MTS_P    none   SVM_INT2      11136    294      6    0.980    0.111    0.011
+COMB_P   HELL   SVM_INT2      66816    293      7    0.977    1.321    0.144
+TpLbp_P  DCT8   SVM_INT2      32000    296      4    0.987    0.377    0.073
+FpLbp_P  none   SVM_INT2      11136    294      6    0.980    0.113    0.023
+FpLbp_P  none   MLP           11136    295      5    0.983   11.644    0.024
+HDGRAD   DCT24  SVM_LIN       96000    296      4    0.987    2.247    0.212
+HDLBP    DCT24  SVM_INT2      96000    291      9    0.970    2.222    0.246
+Sift     HELL   SVM_INT2     492032    289     11    0.963   14.645    1.683
+Sift     DCT24  SVM_LIN       96000    286     14    0.953    2.804    0.255
+Grad_P   MEAN   SVM_LIN       32016    295      5    0.983    0.674    0.080
+GradMag  none   MLP           23552    283     17    0.943   35.060    0.104
+GradMagP WHAD8  SVM_LIN       32000    296      4    0.987    0.684    0.083
+PCASIFT  none   SVM_LIN       25600    285     15    0.950    0.422    0.067
+GaborGB  MEAN   SVM_LIN       36864    293      7    0.977    0.987    0.104
+PNET     none   SVM_LIN       23040    294      6    0.980    0.430    0.069
+PNET     none   MLP           23040    297      3    0.990   18.541    0.060
+CDIKP    DCT8   SVM_INT2      32000    283     17    0.943    0.446    0.082
 
 ------------------------------------------------------------------------------
-lfw-3daligned:         10 fold, 50 classes, 500 images, retina
+lfw3d-aligned:       10 fold, 50 classes, 500 images, retina
 ------------------------------------------------------------------------------
 [extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
-Pixels   none   N_L2          12100    761    189    0.801    0.000    1.051
-Pixels   none   SVM_POL       12100    857     93    0.902    6.899    1.100
-Pixels   none   PCA_LDA       12100    887     63    0.934   30.615    0.317
-Lbp      none   H_CHI         65536    805    145    0.847    0.002    6.347
-Lbp      DCT8   PCA_LDA       32000    913     37    0.961   20.844    0.546
-Lbp_P    DCT8   PCA_LDA       32000    909     41    0.957   20.667    0.543
-Lbpu_P   DCT8   PCA_LDA       32000    910     40    0.958   20.499    0.572
-MTS_P    none   PCA_LDA       11136    914     36    0.962   11.007    0.093
-COMB_P   none   PCA_LDA       66816    919     31    0.967   32.167    0.429
-COMB_P   HELL   SVM_INT2      66816    906     44    0.954   13.080    1.476
-TpLbp_P  DCT8   PCA_LDA       32000    912     38    0.960   21.198    0.569
-FpLbp_P  none   PCA_LDA       11136    914     36    0.962   11.214    0.093
-FpLbp_P  HELL   SVM_INT2      11136    902     48    0.949    1.108    0.234
-HDGRAD   DCT12  PCA_LDA       48000    925     25    0.974   31.121    0.378
-HDLBP    DCT6   PCA_LDA       24000    922     28    0.971   17.716    0.243
-Sift     DCT12  PCA_LDA       48000    912     38    0.960   30.303    0.301
-Sift     HELL   SVM_INT2     492032    913     37    0.961  122.865   14.067
-Grad_P   none   PCA_LDA       32016    915     35    0.963   20.595    0.550
-GradMag  none   PCA_LDA       23552    900     50    0.947   17.282    0.239
-GradMagP WHAD8  PCA_LDA       32000    917     33    0.965   24.676    0.550
-PCASIFT  none   PCA_LDA       25600    919     31    0.967   23.822    0.304
-GaborGB  none   PCA_LDA       36864    906     44    0.954   28.726    0.640
-PNET     none   SVM_INT2      23040    914     36    0.962    2.467    0.471
-RBM      none   PCA_LDA       24560    850    100    0.895   12.319    0.257
-CDIKP    DCT8   SVM_INT2      32000    898     52    0.945    3.602    0.658
-
-------------------------------------------------------------------------------
-data/f94gender:         10 fold, 2 classes, 484 images, retina -C=20
-------------------------------------------------------------------------------
-[extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
-Pixels   none   N_L2          12100    451     39    0.920    0.000    0.582
-Pixels   none   SVM_POL       12100    470     20    0.959    0.812    0.078
-Pixels   none   PCA_LDA       12100    469     21    0.957   36.485    0.015
-Lbp      none   H_CHI         65536    415     75    0.847    0.002    3.588
-Lbp      DCT8   PCA_LDA       32000    462     28    0.943   23.177    0.014
-Lbp_P    DCT8   PCA_LDA       32000    469     21    0.957   23.816    0.012
-Lbpu_P   DCT8   PCA_LDA       32000    470     20    0.959   22.598    0.012
-MTS_P    none   PCA_LDA       11136    466     24    0.951   13.030    0.010
-COMB_P   none   PCA_LDA       66816    461     29    0.941   34.749    0.015
-COMB_P   HELL   SVM_INT2      66816    453     37    0.924    4.769    0.518
-TpLbp_P  DCT8   PCA_LDA       32000    461     29    0.941   21.830    0.013
-FpLbp_P  none   PCA_LDA       11136    466     24    0.951   13.423    0.009
-FpLbp_P  HELL   SVM_INT2      11136    464     26    0.947    0.697    0.076
-HDGRAD   DCT12  PCA_LDA       48000    428     62    0.873   35.177    0.014
-HDLBP    DCT6   PCA_LDA       24000    418     72    0.853   19.763    0.011
-Sift     DCT12  PCA_LDA       48000    419     71    0.855   36.414    0.019
-Sift     HELL   SVM_INT2     492032    458     32    0.935   35.789    3.982
-Grad_P   none   PCA_LDA       32016    466     24    0.951   22.314    0.012
-GradMag  none   PCA_LDA       23552    432     58    0.882   20.626    0.014
-GradMagP WHAD8  PCA_LDA       32000    470     20    0.959   28.271    0.012
-PCASIFT  none   PCA_LDA       25600    447     43    0.912   27.907    0.015
-GaborGB  none   PCA_LDA       36864    477     13    0.973   30.597    0.017
-PNET     none   SVM_POL       23040    469     21    0.957    0.642    0.063
-CDIKP    DCT8   SVM_INT2      32000    443     47    0.904    1.571    0.178
+Pixels   none   N_L2          12100    371    579    0.391    0.000    1.200
+Pixels   none   SVM_POL       12100    578    372    0.608    9.938    1.300
+Pixels   none   PCA_LDA       12100    647    303    0.681   31.688    0.319
+Lbp      none   H_CHI         65536    480    470    0.505    0.002    6.909
+Lbp      none   H_HELL        65536    590    360    0.621   -0.000    9.209
+Lbp      none   SVM_LIN       65536    693    257    0.729   19.759    6.148
+Lbpu_P   DCT8   SVM_LIN       32000    672    278    0.707    6.266    2.538
+MTS_P    none   SVM_INT2      11136    691    259    0.727    1.175    0.321
+COMB_P   HELL   SVM_INT2      66816    708    242    0.745   16.009    1.757
+TpLbp_P  DCT8   SVM_INT2      32000    705    245    0.742    4.113    0.851
+FpLbp_P  none   SVM_INT2      11136    691    259    0.727    1.166    0.291
+FpLbp_P  none   MLP           11136    745    205    0.784  193.376    0.432
+HDGRAD   DCT24  SVM_LIN       96000    810    140    0.853   31.486    9.809
+HDLBP    DCT24  SVM_INT2      96000    756    194    0.796   26.997    3.022
+Sift     HELL   SVM_INT2     492032    759    191    0.799  136.982   15.049
+Sift     DCT24  SVM_LIN       96000    732    218    0.771   26.509    8.290
+Grad_P   MEAN   SVM_LIN       32016    693    257    0.729    7.148    2.639
+GradMag  none   MLP           23552    703    247    0.740  295.474    1.147
+GradMagP WHAD8  SVM_LIN       32000    734    216    0.773    7.123    2.594
+PCASIFT  none   SVM_LIN       25600    750    200    0.789    4.883    2.089
+GaborGB  MEAN   SVM_LIN       36864    720    230    0.758    8.862    3.098
+PNET     none   SVM_LIN       23040    756    194    0.796    4.783    1.884
+PNET     none   MLP           23040    852     98    0.897  161.164    0.846
+CDIKP    DCT8   SVM_INT2      32000    658    292    0.693    4.398    0.806
 
 </pre>
