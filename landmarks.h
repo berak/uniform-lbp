@@ -16,7 +16,6 @@ struct Landmarks
 // HAVE_FACEX
 cv::Ptr<Landmarks> createLandmarks();
 
-void gftt64(const cv::Mat &img, std::vector<cv::KeyPoint> &kp);
 
 #endif // __Landmarks_onboard__
 

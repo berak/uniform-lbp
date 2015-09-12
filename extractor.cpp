@@ -547,28 +547,6 @@ struct PyramidGrid
 };
 
 
-struct GfttGrid
-{
-    int gr;
-    GfttGrid(int gr=4) : gr(gr) {} // 8x8 rect by default
-
-    void hist(const Mat &feature, Mat &histo, int histSize=256) const
-    {
-        vector<KeyPoint> kp;
-        gftt64(feature,kp);
-        //kp_manual(kp);
-
-        histo.release();
-        Rect bounds(Point(),feature.size());
-        for (size_t k=0; k<kp.size(); k++)
-        {
-            Rect part(int(kp[k].pt.x)-gr, int(kp[k].pt.y)-gr, gr*2, gr*2);
-            part &= bounds;
-            hist_patch(feature(part), histo, histSize);
-        }
-        normalize(histo.reshape(1,1),histo);
-    }
-};
 
 
 
@@ -852,39 +830,32 @@ typedef ExtractorGridFeature2d<xfeatures2d::FREAK> ExtractorFREAKGrid;
 typedef ExtractorGridFeature2d<xfeatures2d::SIFT> ExtractorSIFTGrid;
 typedef ExtractorGridFeature2d<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
 
-struct ExtractorGfttFeature2d : public TextureFeature::Extractor
+struct Patcher : public TextureFeature::Extractor
 {
-    Ptr<Feature2D> f2d;
     Ptr<Landmarks> land;
+    int patchSize;
 
-    ExtractorGfttFeature2d(Ptr<Feature2D> f)
-        : f2d(f)
-        , land(createLandmarks())
+    Patcher(int size=20) 
+        : land(createLandmarks()) 
+        , patchSize(size)
     {}
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-        vector<Point> pt;
-        land->extract(img,pt);
-
-        size_t s = pt.size();
-        float w=5;
-        vector<KeyPoint> kp;
-        for (size_t i=0; i<s; i++)
+        //PROFILEX("extract");
+        vector<Point> kp;
+        land->extract(img,kp);
+        Mat f;
+        for (size_t k=0; k<kp.size(); k++)
         {
-            Point2f p(pt[i]);
-            kp.push_back(KeyPoint(p.x,p.y,w*2,8));
-            kp.push_back(KeyPoint(p.x,p.y-w,w*2,8));
-            kp.push_back(KeyPoint(p.x,p.y+w,w*2,8));
-            kp.push_back(KeyPoint(p.x-w,p.y,w*2,8));
-            kp.push_back(KeyPoint(p.x+w,p.y,w*2,8));
+            Mat patch;
+            getRectSubPix(img, Size(patchSize,patchSize), kp[k], patch);
+            f.push_back(patch.reshape(1,1));
         }
-        f2d->compute(img, kp, features);
-        normalize(features.reshape(1,1), features);
+        features = f.reshape(1,1);
         return features.total() * features.elemSize();
     }
 };
-
 
 
 //
@@ -1361,7 +1332,6 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_LBPU_P:   return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist()); break;
         case EXT_TPLbp:    return makePtr< GenericExtractor<FeatureTPLbp,GriddedHist> >(FeatureTPLbp(), GriddedHist()); break;
         case EXT_TPLBP_P:  return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid()); break;
-        case EXT_TPLBP_G:  return makePtr< GenericExtractor<FeatureTPLbp,GfttGrid> >(FeatureTPLbp(), GfttGrid()); break;
         case EXT_FPLbp:    return makePtr< GenericExtractor<FeatureFPLbp,GriddedHist> >(FeatureFPLbp(), GriddedHist()); break;
         case EXT_FPLBP_P:  return makePtr< GenericExtractor<FeatureMTS,PyramidGrid> >(FeatureMTS(), PyramidGrid()); break;
         case EXT_MTS:      return makePtr< GenericExtractor<FeatureMTS,GriddedHist> >(FeatureMTS(), GriddedHist()); break;
@@ -1370,14 +1340,11 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_BGC1_P:   return makePtr< GenericExtractor<FeatureBGC1,PyramidGrid> >(FeatureBGC1(), PyramidGrid()); break;
         case EXT_COMB:     return makePtr< CombinedExtractor<GriddedHist> >(GriddedHist()); break;
         case EXT_COMB_P:   return makePtr< CombinedExtractor<PyramidGrid> >(PyramidGrid()); break;
-        case EXT_COMB_G:   return makePtr< CombinedExtractor<GfttGrid> >(GfttGrid()); break;
         case EXT_Dct:      return makePtr< ExtractorDct >(); break;
         case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(32); break;
-        case EXT_Sift_G:   return makePtr< ExtractorGfttFeature2d >(xfeatures2d::SIFT::create()); break;
         case EXT_Grad:     return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist());  break;
-        case EXT_Grad_G:   return makePtr< GenericExtractor<FeatureGrad,GfttGrid> >(FeatureGrad(),GfttGrid()); break;
         case EXT_Grad_P:   return makePtr< GenericExtractor<FeatureGrad,PyramidGrid> >(FeatureGrad(),PyramidGrid()); break;
-        case EXT_GradMag:  return makePtr< GradMagExtractor<GfttGrid> >(GfttGrid()); break;
+        case EXT_GradMag:  return makePtr< GradMagExtractor<GriddedHist> >(GriddedHist()); break;
         case EXT_GradMag_P:return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_GradBin:  return makePtr< ExtractorGradBin >(); break;
         case EXT_GaborLBP: return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist()); break;
@@ -1390,6 +1357,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
         case EXT_DAISY:    return makePtr< ExtractorDaisy >();  break;
+        case EXT_PATCH:    return makePtr< Patcher >();  break;
         //case EXT_RBM:      return createRBMExtractor("data/rbm.xml.gz");  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }

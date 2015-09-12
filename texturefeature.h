@@ -66,7 +66,6 @@ namespace TextureFeature
         EXT_Ltp,
         EXT_TPLbp,
         EXT_TPLBP_P,
-        EXT_TPLBP_G,
         EXT_FPLbp,
         EXT_FPLBP_P,
         EXT_MTS,
@@ -75,14 +74,11 @@ namespace TextureFeature
         EXT_BGC1_P,
         EXT_COMB,
         EXT_COMB_P,
-        EXT_COMB_G,
         EXT_GaborLBP,
         EXT_GaborGB,
         EXT_Dct,
         EXT_Sift,
-        EXT_Sift_G,
         EXT_Grad,
-        EXT_Grad_G,
         EXT_Grad_P,
         EXT_GradMag,
         EXT_GradMag_P,
@@ -95,6 +91,7 @@ namespace TextureFeature
         EXT_CDIKP,
         EXT_LATCH2,
         EXT_DAISY,
+        EXT_PATCH,
         EXT_MAX
     };
     static const char *EXS[] = {
@@ -106,7 +103,6 @@ namespace TextureFeature
         "Ltp",
         "TPLbp",
         "TpLbp_P",
-        "TpLbp_G",
         "FPLbp",
         "FpLbp_P",
         "MTS",
@@ -115,14 +111,11 @@ namespace TextureFeature
         "BGC1_P",
         "COMB",
         "COMB_P",
-        "COMB_G",
         "GaborLBP",
         "GaborGB",
         "Dct",
         "Sift",
-        "Sift_G",
         "Grad",
-        "Grad_G",
         "Grad_P",
         "GradMag",
         "GradMagP",
@@ -135,10 +128,12 @@ namespace TextureFeature
         "CDIKP",
         "LATCH2",
         "DAISY",
+        "PATCH",
         0
     };
     enum FIL {
         FIL_NONE,
+        FIL_MEAN,
         FIL_HELL,
         FIL_POW,
         FIL_SQRT,
@@ -154,11 +149,11 @@ namespace TextureFeature
         FIL_DCT12,
         FIL_DCT16,
         FIL_DCT24,
-        FIL_MEAN,
         FIL_MAX
     };
     static const char *FILS[] = {
         "none",
+        "MEAN",
         "HELL",
         "POW",
         "SQRT",
@@ -174,7 +169,6 @@ namespace TextureFeature
         "DCT12",
         "DCT16",
         "DCT24",
-        "MEAN",
         0
     };
     enum CLA {
