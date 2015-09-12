@@ -726,76 +726,6 @@ struct ExtractorGaborGradBin : public ExtractorGradBin
     }
 };
 
-//
-// concat histograms from lbp-like features generated from a bank of gabor filtered images
-//   ( due to memory restrictions, it can't use plain lbp(64k),
-//     but has to inherit the 2nd best bed (combined(12k)) )
-//
-template <typename Grid>
-struct ExtractorGabor : public CombinedExtractor<Grid>
-{
-    Size kernel_size;
-
-    ExtractorGabor(const Grid &grid, int kernel_siz=8)
-        : CombinedExtractor<Grid>(grid)
-        , kernel_size(kernel_siz, kernel_siz)
-    {}
-
-    void gabor(const Mat &src_f, Mat &features,double sigma, double theta, double lambda, double gamma, double psi) const
-    {
-        Mat dest,dest8u,his;
-        cv::filter2D(src_f, dest, CV_32F, getGaborKernel(kernel_size, sigma,theta, lambda, gamma, psi));
-        dest.convertTo(dest8u, CV_8U);
-        CombinedExtractor<Grid>::extract(dest8u, his);
-        features.push_back(his.reshape(1, 1));
-    }
-
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        Mat src_f;
-        img.convertTo(src_f, CV_32F, 1.0/255.0);
-        gabor(src_f, features, 8,4,90,15,0);
-        gabor(src_f, features, 8,4,45,30,1);
-        gabor(src_f, features, 8,4,45,45,0);
-        gabor(src_f, features, 8,4,90,60,1);
-        features = features.reshape(1,1);
-        return features.total() * features.elemSize();
-    }
-};
-
-
-
-//
-// grid it into 8x8 image patches, do a dct on each,
-//  concat downsampled 4x4(topleft) result to feature vector.
-//
-struct ExtractorDct : public TextureFeature::Extractor
-{
-    int grid;
-
-    ExtractorDct() : grid(8) {}
-
-    virtual int extract( const Mat &img, Mat &features ) const
-    {
-        Mat src;
-        img.convertTo(src,CV_32F,1.0/255.0);
-        for(int i=0; i<src.rows-grid; i+=grid)
-        {
-            for(int j=0; j<src.cols-grid; j+=grid)
-            {
-                Mat d;
-                dct(src(Rect(i,j,grid,grid)),d);
-                // downsampling is just a ROI operation here, still we need a clone()
-                Mat e = d(Rect(0,0,grid/2,grid/2)).clone();
-                features.push_back(e.reshape(1,1));
-            }
-        }
-        features = features.reshape(1,1);
-        return features.total() * features.elemSize();
-    }
-};
-
-
 
 template < class Descriptor >
 struct ExtractorGridFeature2d : public TextureFeature::Extractor
@@ -1340,14 +1270,12 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_BGC1_P:   return makePtr< GenericExtractor<FeatureBGC1,PyramidGrid> >(FeatureBGC1(), PyramidGrid()); break;
         case EXT_COMB:     return makePtr< CombinedExtractor<GriddedHist> >(GriddedHist()); break;
         case EXT_COMB_P:   return makePtr< CombinedExtractor<PyramidGrid> >(PyramidGrid()); break;
-        case EXT_Dct:      return makePtr< ExtractorDct >(); break;
         case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(32); break;
         case EXT_Grad:     return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist());  break;
         case EXT_Grad_P:   return makePtr< GenericExtractor<FeatureGrad,PyramidGrid> >(FeatureGrad(),PyramidGrid()); break;
         case EXT_GradMag:  return makePtr< GradMagExtractor<GriddedHist> >(GriddedHist()); break;
         case EXT_GradMag_P:return makePtr< GradMagExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_GradBin:  return makePtr< ExtractorGradBin >(); break;
-        case EXT_GaborLBP: return makePtr< ExtractorGabor<GriddedHist> >(GriddedHist()); break;
         case EXT_GaborGB:  return makePtr< ExtractorGaborGradBin >(); break;
         case EXT_HDGRAD:   return makePtr< HighDimGrad >();  break;
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
