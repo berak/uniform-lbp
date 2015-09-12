@@ -195,7 +195,7 @@ int main(int argc, const char *argv[])
             "{ path p         |data/lfw-deepfunneled/| path to dataset (lfw2 folder) }"
             "{ ext e          |33   | extractor enum }"
             "{ fil f          |0   | filter enum }"
-            "{ cls c          |25   | classifier enum }"
+            "{ cls c          |23   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ lab l          |0   | train / test with labels(instead of direct image compare) }"
             "{ skip s         |20  | skip imgs for train }"

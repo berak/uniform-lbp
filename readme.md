@@ -100,6 +100,7 @@ Pixels   none   PCA_LDA       12100    256     44    0.853    2.388    0.037
 Lbp      none   H_CHI         65536    273     27    0.910    0.001    0.647
 Lbp      none   H_HELL        65536    293      7    0.977    0.001    1.002
 Lbp      none   SVM_LIN       65536    296      4    0.987    1.577    0.158
+Lbpu     DCT2   MLP            8000    296      4    0.987   14.785    0.011
 Lbpu_P   DCT8   SVM_LIN       32000    296      4    0.987    0.535    0.056
 MTS_P    none   SVM_INT2      11136    294      6    0.980    0.111    0.011
 COMB_P   HELL   SVM_INT2      66816    293      7    0.977    1.321    0.144

@@ -651,7 +651,7 @@ struct PairDistance
     //
     void train_pre(const Mat &features, const Mat &labels, Mat &distances, Mat &binlabels)
     {
-        Mat trainData = (features.reshape(1, labels.rows));
+        Mat trainData = features.reshape(1, labels.rows);
 
         for (size_t i=0; i<labels.total()-1; i+=2)
         {
@@ -771,15 +771,21 @@ struct VerifierMLP : public VerifierPairDistance
 {
     virtual int train(const Mat &trainData, const Mat &trainLabels)
     {
-        model = ClassifierMLP::setup(trainData.rows, 2);
+        model = ClassifierMLP::setup(trainData.cols, 2);
 
-        Mat trainClasses = Mat::zeros(trainLabels.total(), 2, CV_32FC1);
+        Mat distances, binlabels;
+        train_pre(tofloat(trainData), trainLabels, distances, binlabels);
+
+        Mat trainClasses = Mat::zeros(binlabels.total(), 2, CV_32FC1);
         for(int i=0; i < trainClasses.rows; i++)
         {
-            trainClasses.at<float>(i, trainLabels.at<int>(i)) = 1.f;
+            if (binlabels.at<int>(i) > 0)
+                trainClasses.at<float>(i,1) = 1.f;
+            else
+                trainClasses.at<float>(i,0) = 1.f;
         }
 
-        return VerifierPairDistance::train(trainData, trainClasses);
+        return model->train(ml::TrainData::create(distances, ml::ROW_SAMPLE, trainClasses));
     }
 };
 

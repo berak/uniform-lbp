@@ -61,6 +61,7 @@ namespace TextureFeature
         EXT_Pixels,
         EXT_Lbp,
         EXT_LBP_P,
+        EXT_LBPU,
         EXT_LBPU_P,
         EXT_Ltp,
         EXT_TPLbp,
@@ -78,7 +79,6 @@ namespace TextureFeature
         EXT_GaborLBP,
         EXT_GaborGB,
         EXT_Dct,
-        EXT_Orb,
         EXT_Sift,
         EXT_Sift_G,
         EXT_Grad,
@@ -100,6 +100,7 @@ namespace TextureFeature
     static const char *EXS[] = {
         "Pixels",
         "Lbp",
+        "Lbpu",
         "Lbp_P",
         "Lbpu_P",
         "Ltp",
@@ -118,7 +119,6 @@ namespace TextureFeature
         "GaborLBP",
         "GaborGB",
         "Dct",
-        "Orb",
         "Sift",
         "Sift_G",
         "Grad",
@@ -154,9 +154,6 @@ namespace TextureFeature
         FIL_DCT12,
         FIL_DCT16,
         FIL_DCT24,
-        FIL_BITS2,
-        FIL_BITS4,
-        FIL_BITS8,
         FIL_MEAN,
         FIL_MAX
     };
@@ -177,9 +174,6 @@ namespace TextureFeature
         "DCT12",
         "DCT16",
         "DCT24",
-        "BITS2",
-        "BITS4",
-        "BITS8",
         "MEAN",
         0
     };

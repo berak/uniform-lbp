@@ -1,12 +1,41 @@
 #include "landmarks.h"
 
+
+#define HAVE_FACEX
+#ifdef HAVE_FACEX
+
+#include "util/faceX/face_x.h"
+
+struct LandMarks : Landmarks
+{
+    FaceX face_x;
+	LandMarks() : face_x("util/faceX/model.xml.gz") {}
+		
+    virtual int extract(const cv::Mat &img, std::vector<cv::Point> &pt) const
+	{
+        static int lut[20] = {
+            0,2,4, 5,7,9,  // eyebrows
+            19,22, 25,28,  // eyecorners
+            11,13,14,      // nose
+            16,18,31,37,42,38,49 // mouth
+        };
+        std::vector<cv::Point2d> landmarks = face_x.Alignment(img, cv::Rect(0,0,img.cols,img.rows));
+        pt.clear();
+        for (size_t i=0; i<20; ++i)
+		{
+            pt.push_back(cv::Point(landmarks[lut[i]]));
+		}		
+		return int(pt.size());
+	}
+};
+
 //
 // use dlib's implementation for facial landmarks,
 // if not present, fall back to a precalculated
 // 'one-size-fits-all' set of points(based on the mean lfw image)
 //
 
-#ifdef HAVE_DLIB // 20 pt subset of dlib's landmarks
+#elif HAVE_DLIB // 20 pt subset of dlib's landmarks
 //
 // 20 assorted keypoints extracted from the 68 dlib facial landmarks, based on the
 //    Kazemi_One_Millisecond_Face_2014_CVPR_paper.pdf
@@ -25,7 +54,7 @@ struct LandMarks : Landmarks
         dlib::deserialize("data/shape_predictor_68_face_landmarks.dat") >> sp;
     }
 
-    inline int crop(int v) const {return (v<offset?offset:(v>90-offset?90-offset:v)); }
+    inline int crop(int v,int M) const {return (v<offset?offset:(v>M-offset?M-offset:v)); }
     int extract(const cv::Mat &img, std::vector<cv::Point> &kp) const
     {
         dlib::rectangle rec(0,0,img.cols,img.rows);
@@ -34,7 +63,7 @@ struct LandMarks : Landmarks
         int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
         //int idx[] = {18,25, 20,24, 21,22, 27,29, 31,35, 38,43, 51, 0};
         for(int k=0; (k<40) && (idx[k]>0); k++)
-            kp.push_back(cv::Point(crop(shape.part(idx[k]).x()), crop(shape.part(idx[k]).y())));
+            kp.push_back(cv::Point(crop(shape.part(idx[k]).x(),img.cols), crop(shape.part(idx[k]).y(),img.rows)));
             //kp.push_back(Point(shape.part(idx[k]).x(), shape.part(idx[k]).y()));
         //dlib::point p1 = shape.part(31) + (shape.part(39) - shape.part(31)) * 0.5; // left of nose
         //dlib::point p2 = shape.part(35) + (shape.part(42) - shape.part(35)) * 0.5;
@@ -52,7 +81,7 @@ struct LandMarks : Landmarks
         return (int)kp.size();
     }
 };
-#elif 0 // pre-trained discriminant parts based landmarks
+#elif HAVE_ELASTIC // pre-trained discriminant parts based landmarks
 #include "util/elastic/elasticparts.h"
 struct LandMarks : Landmarks
 {

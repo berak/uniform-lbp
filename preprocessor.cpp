@@ -187,7 +187,8 @@ Mat Preprocessor::process(const Mat &imgin)  const
             break;
         case 5: 
             imgt.convertTo(imgout,CV_32F,1,1);
-            log(imgout,imgout); imgout.convertTo(imgout,CV_8U);
+            log(imgout,imgout);
+            imgout.convertTo(imgout,CV_8U);
             break; // logscale
         //case 6: imgout = whitening(imgin); break;
         //case 6: radonTransform<uchar>(imgt,imgout); imgout.convertTo(imgout,CV_8U); break;

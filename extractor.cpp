@@ -1202,10 +1202,7 @@ struct ExtractorCDIKP : public TextureFeature::Extractor
 struct ExtractorPNet : public TextureFeature::Extractor
 {
     Ptr<PNet> pnet;
-    ExtractorPNet(const cv::String &path)
-        : pnet(loadNet(path))
-    {
-    }
+    ExtractorPNet(const cv::String &path) : pnet(loadNet(path)) {}
 
     virtual int extract(const Mat &I, Mat &features) const
     {
@@ -1360,7 +1357,8 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_Ltp:      return makePtr< GenericExtractor<LTPTransform,GriddedHist> >(LTPTransform(), GriddedHist()); break;
         case EXT_Lbp:      return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist()); break;
         case EXT_LBP_P:    return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid()); break;
-        case EXT_LBPU_P:   return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid(true)); break;
+        case EXT_LBPU:     return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid(true)); break;
+        case EXT_LBPU_P:   return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist()); break;
         case EXT_TPLbp:    return makePtr< GenericExtractor<FeatureTPLbp,GriddedHist> >(FeatureTPLbp(), GriddedHist()); break;
         case EXT_TPLBP_P:  return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid()); break;
         case EXT_TPLBP_G:  return makePtr< GenericExtractor<FeatureTPLbp,GfttGrid> >(FeatureTPLbp(), GfttGrid()); break;
@@ -1374,7 +1372,6 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_COMB_P:   return makePtr< CombinedExtractor<PyramidGrid> >(PyramidGrid()); break;
         case EXT_COMB_G:   return makePtr< CombinedExtractor<GfttGrid> >(GfttGrid()); break;
         case EXT_Dct:      return makePtr< ExtractorDct >(); break;
-        case EXT_Orb:      return makePtr< ExtractorORBGrid >(20);  break;
         case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(32); break;
         case EXT_Sift_G:   return makePtr< ExtractorGfttFeature2d >(xfeatures2d::SIFT::create()); break;
         case EXT_Grad:     return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist());  break;
@@ -1393,6 +1390,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
         case EXT_DAISY:    return makePtr< ExtractorDaisy >();  break;
+        //case EXT_RBM:      return createRBMExtractor("data/rbm.xml.gz");  break;
         default: cerr << "extraction " << extract << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Extractor>();

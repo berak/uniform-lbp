@@ -504,6 +504,33 @@ struct PcaProjection : FilterBank
     virtual String info() const { return type() + format("[%d,%d]", patchSize, numFilters); }
 };
 
+struct DctProjection : FilterBank
+{
+    DctProjection() {}
+    DctProjection(int patchSize, int numFilters)
+        : FilterBank(patchSize, numFilters)
+    {}
+
+    virtual bool train(const vector<Mat> &images) 
+    { 
+        cv::Mat fat;
+        util::randomFat(images, fat);
+
+        Mat freq;
+        dct(fat, freq);
+        Mat evecs = freq(Rect(2, 2, patchSize*patchSize, numFilters));
+
+        for (int i = 0; i<numFilters; i++)
+        {
+            Mat en; 
+            normalize(evecs.row(i),en);
+            filters.push_back(en);
+        }
+        return true;
+    }
+
+    virtual String type() const { return "Dct"; }
+};
 
 
 //
@@ -591,6 +618,7 @@ struct Network : public PNet
         Ptr<Stage> s;
         if (name=="FilterBank")  s = makePtr<FilterBank>();
         if (name=="Pca")  s = makePtr<PcaProjection>();
+        if (name=="Dct")  s = makePtr<DctProjection>();
         if (name=="Wave")  s = makePtr<WaveProjection>();
         if (name=="Gabor")  s = makePtr<GaborProjection>();
         if (name=="Learner")  s = makePtr<Learner>();
@@ -772,10 +800,11 @@ int main()
     if (1)
     {
         cerr << "train " << images.size() << endl;
-        net.addStage(makePtr<PcaProjection>(7, nFilters));
+        //net.addStage(makePtr<PcaProjection>(7, nFilters));
         // net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
         //net.addStage(makePtr<Learner>(11, 6));
         net.addStage(makePtr<Learner>(11, nFilters));
+        net.addStage(makePtr<DctProjection>(7, nFilters));
         // net.addStage(makePtr<Learner>(7, 4));
         // net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
         net.addStage(makePtr<Hashing>(nFilters, 18));
