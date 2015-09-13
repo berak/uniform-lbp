@@ -24,21 +24,20 @@ face3> duel -o
 
 [extractors]  :
 
-    Pixels( 0)       Lbp( 1)     Lbp_P( 2)    Lbpu_P( 3)       Ltp( 4)
-     TPLbp( 5)   TpLbp_P( 6)   TpLbp_G( 7)     FPLbp( 8)   FpLbp_P( 9)
+    Pixels( 0)       Lbp( 1)      Lbpu( 2)     Lbp_P( 3)    Lbpu_P( 4)
+       Ltp( 5)     TPLbp( 6)   TpLbp_P( 7)     FPLbp( 8)   FpLbp_P( 9)
        MTS(10)     MTS_P(11)      BGC1(12)    BGC1_P(13)      COMB(14)
-    COMB_P(15)    COMB_G(16)  GaborLBP(17)   GaborGB(18)       Dct(19)
-       Orb(20)      Sift(21)    Sift_G(22)      Grad(23)    Grad_G(24)
-    Grad_P(25)   GradMag(26)  GradMagP(27)   GradBin(28)    HDGRAD(29)
-     HDLBP(30) HDLBP_PCA(31)   PCASIFT(32)      PNET(33)     CDIKP(34)
-    LATCH2(35)     DAISY(36)       RBM(37)
+    COMB_P(15)   GaborGB(16)      Sift(17)      Grad(18)    Grad_P(19)
+   GradMag(20)  GradMagP(21)   GradBin(22)    HDGRAD(23)     HDLBP(24)
+ HDLBP_PCA(25)   PCASIFT(26)      PNET(27)     CDIKP(28)    LATCH2(29)
+     DAISY(30)     PATCH(31)
 
 [filters] :
 
-      none( 0)      HELL( 1)       POW( 2)      SQRT( 3)     WHAD_( 4)
-     WHAD4( 5)     WHAD8( 6)        RP( 7)      DCT_( 8)      DCT2( 9)
-      DCT4(10)      DCT6(11)      DCT8(12)     DCT12(13)     DCT16(14)
-     DCT24(15)     BITS2(16)     BITS4(17)     BITS8(18)      MEAN(19)
+      none( 0)      MEAN( 1)      HELL( 2)       POW( 3)      SQRT( 4)
+     WHAD_( 5)     WHAD4( 6)     WHAD8( 7)        RP( 8)      DCT_( 9)
+      DCT2(10)      DCT4(11)      DCT6(12)      DCT8(13)     DCT12(14)
+     DCT16(15)     DCT24(16)
 
 [classifiers] :
 
@@ -48,7 +47,7 @@ face3> duel -o
    SVM_LOW(15)   SVM_LOG(16)  SVM_KMOD(17)SVM_CAUCHY(18) SVM_MULTI(19)
        PCA(20)   PCA_LDA(21)       LDA(22)       MLP(23)       KNN(24)
      RTREE(25)
-
+     
 </pre>
 
 ------------------------------------------------------

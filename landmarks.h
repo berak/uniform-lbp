@@ -10,10 +10,13 @@ struct Landmarks
     virtual int extract(const cv::Mat &img, std::vector<cv::Point> &pt) const = 0;
 };
 
+
 // define one of:
 // HAVE_ELASTIC
 // HAVE_DLIB
 // HAVE_FACEX
+// fallback are 20 static kp taken from mean lfw img.
+
 cv::Ptr<Landmarks> createLandmarks();
 
 

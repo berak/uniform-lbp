@@ -10,10 +10,10 @@
 struct LandMarks : Landmarks
 {
     FaceX face_x;
-	LandMarks() : face_x("util/faceX/model.xml.gz") {}
-		
+    LandMarks() : face_x("util/faceX/model.xml.gz") {}
+
     virtual int extract(const cv::Mat &img, std::vector<cv::Point> &pt) const
-	{
+    {
         static int lut[20] = {
             0,2,4, 5,7,9,  // eyebrows
             19,22, 25,28,  // eyecorners
@@ -23,9 +23,9 @@ struct LandMarks : Landmarks
         std::vector<cv::Point2d> landmarks = face_x.Alignment(img, cv::Rect(0,0,img.cols,img.rows));
         pt.clear();
         for (size_t i=0; i<20; ++i)
-		{
+        {
             pt.push_back(cv::Point(landmarks[lut[i]]));
-		}		
+        }
   //      cv::Mat viz; cv::cvtColor(img,viz,cv::COLOR_GRAY2BGR);
   //      for (size_t i=0; i<20; ++i)
   //      {
@@ -36,8 +36,8 @@ struct LandMarks : Landmarks
   //      }
   //      cv::imshow("viz",viz);
   //      cv::waitKey(200);
-		return int(pt.size());
-	}
+        return int(pt.size());
+    }
 };
 
 //
