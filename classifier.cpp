@@ -719,21 +719,6 @@ struct VerifierSVM : public VerifierPairDistance
 
 
 
-struct VerifierRTree : public VerifierPairDistance
-{
-    VerifierRTree()
-    {
-        Ptr<ml::Boost> cl = ml::Boost::create();
-        //Ptr<ml::RTrees> cl = ml::RTrees::create();
-        //cl->setMaxCategories(2);
-        //cl->setMaxDepth(2);
-        //cl->setMinSampleCount(2);
-        //cl->setCVFolds(1);
-        model = cl;
-    }
-};
-
-
 struct VerifierKNN : public TextureFeature::Verifier, PairDistance
 {
     cv::Ptr<cv::flann::Index> index;
@@ -809,7 +794,6 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_NORM_L2:   return makePtr<ClassifierNearest>(NORM_L2); break;
         case CL_NORM_L2SQR:return makePtr<ClassifierNearest>(NORM_L2SQR); break;
         case CL_NORM_L1:   return makePtr<ClassifierNearest>(NORM_L1); break;
-        case CL_NORM_HAM:  return makePtr<ClassifierNearest>(NORM_HAMMING2); break;
         case CL_HIST_HELL: return makePtr<ClassifierHist>(HISTCMP_HELLINGER); break;
         case CL_HIST_CHI:  return makePtr<ClassifierHist>(HISTCMP_CHISQR); break;
         case CL_KLDIV:     return makePtr<ClassifierHist>(HISTCMP_KL_DIV); break;
@@ -828,10 +812,8 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_SVM_MULTI: return makePtr<ClassifierSvmMulti>(); break;
         case CL_PCA:       return makePtr<ClassifierPCA>(); break;
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
-        case CL_LDA:       return makePtr<ClassifierLDA>(); break;
         case CL_MLP:       return makePtr<ClassifierMLP>(); break;
         case CL_KNN:       return makePtr<ClassifierKNN>(); break;
-        //case CL_RTREE:     return makePtr<ClassifierRTree>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();
@@ -845,7 +827,6 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_NORM_L2:   return makePtr<VerifierNearest>(NORM_L2); break;
         case CL_NORM_L2SQR:return makePtr<VerifierNearest>(NORM_L2SQR); break;
         case CL_NORM_L1:   return makePtr<VerifierNearest>(NORM_L1); break;
-        case CL_NORM_HAM:  return makePtr<VerifierNearest>(NORM_HAMMING2); break;
         case CL_HIST_HELL: return makePtr<VerifierHist>(HISTCMP_HELLINGER); break;
         case CL_HIST_CHI:  return makePtr<VerifierHist>(HISTCMP_CHISQR); break;
         case CL_SVM_LIN:   return makePtr<VerifierSVM>(int(cv::ml::SVM::LINEAR)); break;
@@ -861,7 +842,6 @@ Ptr<Verifier> createVerifier(int clsfy)
         case CL_SVM_CAUCHY:return makePtr<VerifierSVM>(-9); break;
         case CL_COSINE:    return makePtr<VerifierCosine>(); break;
         case CL_KNN:       return makePtr<VerifierKNN>(); break;
-        case CL_RTREE:     return makePtr<VerifierRTree>(); break;
         case CL_MLP:       return makePtr<VerifierMLP>(); break;
 
         default: cerr << "verification " << clsfy << " is not yet supported." << endl; exit(-1);

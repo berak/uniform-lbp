@@ -2,72 +2,6 @@
 #include "opencv2/opencv.hpp"
 #include <opencv2/bioinspired.hpp>
 using namespace cv;
-//Mat DoGFilter(InputArray src){
-//	
-//	Mat g1, g2, dst;
-//	GaussianBlur(src, g1, Size(5,5), 0);
-//	GaussianBlur(src, g2, Size(9,9), 0);
-//	
-//	dst = g2 - g1;
-//	normalize(dst,dst,0, 255, NORM_MINMAX, CV_8U);
-//	
-//	return dst;
-//}
-//
-//
-//Mat CSDNFilter(InputArray _src){
-//	
-//	Mat dst;
-//	Mat src = _src.getMat();
-//	src.convertTo(src, CV_32F);
-//	
-//	blur(src, dst, Size(16,16));
-//	divide(src, dst, dst);
-//	normalize(dst, dst, 0, 255, NORM_MINMAX, CV_8U);
-//	
-//	return dst; 
-//}
-//
-//template <typename _Tp> static
-//inline void radonTransform(InputArray _src, OutputArray _dst)
-//{
-//    //get matrices
-//    Mat src = _src.getMat();
-//    /// Compute a rotation matrix with respect to the center of the image
-//    Point center = Point(src.cols/2, src.rows/2);
-//    double angle = 0.0;
-//    double scale = 1;
-//    int diag = int(sqrt(double(src.rows*src.rows+src.cols*src.cols)));
-//    // allocate memory for result
-//    _dst.create(diag, 180, CV_32FC1);
-//    Mat dst = _dst.getMat();
-//    // zero
-//    dst.setTo(0);
-//    Mat rot_mat(2, 3, CV_32FC1);
-//    Mat rotate_dst;
-//    Size size = Size(diag, diag);
-//    /// Rotate the warped image
-//    //warpAffine(src, rotate_dst, rot_mat, size);
-//    for(angle=0; angle<180; angle++)
-//    {
-//        /// Get the rotation matrix with the specifications above
-//        rot_mat = getRotationMatrix2D( center, 90-angle, scale );
-//        rot_mat.at<double>(0,2) += (diag - src.cols)/2.0;
-//        rot_mat.at<double>(1,2) += (diag - src.rows)/2.0;
-//        /// Rotate the warped image
-//        warpAffine(src, rotate_dst, rot_mat, size);
-//        for(int i=0; i<diag; i++)
-//        {
-//            for(int j=0; j<diag; j++)
-//            {
-//                dst.at<float>(diag-i-1,angle) += rotate_dst.at<_Tp>(i,j);
-//            }
-//        }
-//    }
-//    normalize(dst, dst, 0, 1, NORM_MINMAX, CV_32FC1);
-//    //normalize(dst, dst, 0, 1, NORM_MINMAX, CV_32FC1);
-//}
-
 
 //
 // taken from : https://github.com/bytefish/opencv/blob/master/misc/tan_triggs.cpp
@@ -128,17 +62,6 @@ static Mat tan_triggs_preprocessing(InputArray src, float alpha=0.1, float tau=1
 }
 
 
-//Mat whitening(const Mat &in)
-//{
-//    Mat in_f; in.convertTo(in_f, CV_32F);
-//    PCA p(in_f * in_f.t(), Mat(), -1);
-//    for (int i=0; i<p.eigenvectors.rows; i++)
-//    {
-//        p.eigenvalues.row(i) /= sqrt(p.eigenvalues.at<float>(i));
-//    }
-//    return p.project(in_f);
-//}
-
 Preprocessor::Preprocessor(int mode, int crop, int retsize)
     : preproc(mode)
     , precrop(crop)
@@ -190,10 +113,6 @@ Mat Preprocessor::process(const Mat &imgin)  const
             log(imgout,imgout);
             imgout.convertTo(imgout,CV_8U);
             break; // logscale
-        //case 6: imgout = whitening(imgin); break;
-        //case 6: radonTransform<uchar>(imgt,imgout); imgout.convertTo(imgout,CV_8U); break;
-        //case 7: imgout = CSDNFilter(imgt); break;
-        //case 8: imgout = DoGFilter(imgt); break;
     }
     return imgout;
 }

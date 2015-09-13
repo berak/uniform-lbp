@@ -151,10 +151,20 @@ struct FilterMeanStdev : public Filter
 {
     virtual int filter(const Mat &src, Mat &dest) const
     {
-        cv::Scalar m,s; cv::meanStdDev(src, m, s);
-        dest  = src.clone();
-        dest -= m[0];
+        Scalar m,s; 
+        meanStdDev(src, m, s);
+        dest  = src - m[0];
         dest /= s[0];
+        return 0;
+    }
+};
+
+
+struct FilterNorm_1 : public Filter
+{
+    virtual int filter(const Mat &src, Mat &dest) const
+    {
+        normalize(src, dest, -1, 0, NORM_MINMAX, CV_32F);
         return 0;
     }
 };
@@ -173,14 +183,14 @@ Ptr<Filter> createFilter(int filt)
     switch(filt)
     {
         case FIL_NONE:     break;
+        case FIL_MEAN:     return makePtr<FilterMeanStdev>(); break;
+        case FIL_NORM_1:   return makePtr<FilterNorm_1>(); break;
         case FIL_HELL:     return makePtr<FilterHellinger>(); break;
         case FIL_POW:      return makePtr<FilterPow>(); break;
         case FIL_SQRT:     return makePtr<FilterPow>(0.5f); break;
-        case FIL_WHAD_:    return makePtr<FilterWalshHadamard>(128); break;
         case FIL_WHAD4:    return makePtr<FilterWalshHadamard>(4000); break;
         case FIL_WHAD8:    return makePtr<FilterWalshHadamard>(8000); break;
         case FIL_RP:       return makePtr<FilterRandomProjection>(8000); break;
-        case FIL_DCT_:     return makePtr<FilterDct>(128); break;
         case FIL_DCT1:     return makePtr<FilterDct>(1000); break;
         case FIL_DCT2:     return makePtr<FilterDct>(2000); break;
         case FIL_DCT4:     return makePtr<FilterDct>(4000); break;
@@ -189,7 +199,6 @@ Ptr<Filter> createFilter(int filt)
         case FIL_DCT12:    return makePtr<FilterDct>(12000); break;
         case FIL_DCT16:    return makePtr<FilterDct>(16000); break;
         case FIL_DCT24:    return makePtr<FilterDct>(24000); break;
-        case FIL_MEAN:     return makePtr<FilterMeanStdev>(); break;
 //        default: cerr << "Filter " << filt << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Filter>();

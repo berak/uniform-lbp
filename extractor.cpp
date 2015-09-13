@@ -318,16 +318,16 @@ struct FeatureFPLbp
 
 
 //
-// stolen from https://github.com/biometrics/openbr
+// LTPTransform stolen from https://github.com/biometrics/openbr
 //
-struct LTPTransform
+struct FeatureLTP
 {
     unsigned short lut[8][3];
     int radius;
     float thresholdPos;
     float thresholdNeg;
 
-    LTPTransform()
+    FeatureLTP()
         : radius(1)
         , thresholdPos(0.1f)
         , thresholdNeg(-1.0f * thresholdPos)
@@ -1085,54 +1085,54 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
 
     static bool calculateSums(int count, const Point &pt, const Mat_<int> &points, const Mat &grayImage, int half_ssd_size)
     {
-	    int ax = points(count)     + (int)(pt.x + 0.5);
-	    int ay = points(count + 1) + (int)(pt.y + 0.5);
-	    int	bx = points(count + 2) + (int)(pt.x + 0.5);
-	    int	by = points(count + 3) + (int)(pt.y + 0.5);
-	    int cx = points(count + 4) + (int)(pt.x + 0.5);
-	    int cy = points(count + 5) + (int)(pt.y + 0.5);
-	    int suma = 0, sumc = 0;
+        int ax = points(count)     + (int)(pt.x + 0.5);
+        int ay = points(count + 1) + (int)(pt.y + 0.5);
+        int    bx = points(count + 2) + (int)(pt.x + 0.5);
+        int    by = points(count + 3) + (int)(pt.y + 0.5);
+        int cx = points(count + 4) + (int)(pt.x + 0.5);
+        int cy = points(count + 5) + (int)(pt.y + 0.5);
+        int suma = 0, sumc = 0;
         int K = half_ssd_size;
-	    for (int iy = -K; iy <= K; iy++)
-	    {
-		    const uchar * Mi_a = grayImage.ptr<uchar>(ay + iy);
-		    const uchar * Mi_b = grayImage.ptr<uchar>(by + iy);
-		    const uchar * Mi_c = grayImage.ptr<uchar>(cy + iy);
-		    for (int ix = -K; ix <= K; ix++)
-		    {
-			    double difa = Mi_a[ax + ix] - Mi_b[bx + ix];
-			    suma += (int)((difa)*(difa));
-			    double difc = Mi_c[cx + ix] - Mi_b[bx + ix];
-			    sumc += (int)((difc)*(difc));
-		    }
-	    }
+        for (int iy = -K; iy <= K; iy++)
+        {
+            const uchar * Mi_a = grayImage.ptr<uchar>(ay + iy);
+            const uchar * Mi_b = grayImage.ptr<uchar>(by + iy);
+            const uchar * Mi_c = grayImage.ptr<uchar>(cy + iy);
+            for (int ix = -K; ix <= K; ix++)
+            {
+                double difa = Mi_a[ax + ix] - Mi_b[bx + ix];
+                suma += (int)((difa)*(difa));
+                double difc = Mi_c[cx + ix] - Mi_b[bx + ix];
+                sumc += (int)((difc)*(difc));
+            }
+        }
         return (suma < sumc);
     }
 
 
     void pixelTests(int i, int N, const Point &pt, const Mat &grayImage, Mat &descriptors, int half_ssd_size) const
     {
-	    int count = 0;
+        int count = 0;
         const Mat_<int> &points = latches[i];
-	    uchar* desc = descriptors.ptr(i);
-	    for (int ix=0; ix<N; ix++)
+        uchar* desc = descriptors.ptr(i);
+        for (int ix=0; ix<N; ix++)
         {
-		    desc[ix] = 0;
-		    for (int j=7; j>=0; j--)
+            desc[ix] = 0;
+            for (int j=7; j>=0; j--)
             {
-			    bool bit = calculateSums(count, pt, points, grayImage, half_ssd_size);
-			    desc[ix] += (uchar)(bit << j);
+                bool bit = calculateSums(count, pt, points, grayImage, half_ssd_size);
+                desc[ix] += (uchar)(bit << j);
                 count += 6;
-		    }
-	    }
+            }
+        }
     }
 
 
     virtual int extract(const Mat &image, Mat &features) const
     {
         Mat blurImage;
-   	    GaussianBlur(image, blurImage, cv::Size(3, 3), 2, 2);
-	    features.create((int)latches.size(), feature_bytes, CV_8U);
+           GaussianBlur(image, blurImage, cv::Size(3, 3), 2, 2);
+        features.create((int)latches.size(), feature_bytes, CV_8U);
 
         vector<Point> pts;
         land->extract(image, pts);
@@ -1202,7 +1202,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
     switch(int(extract))
     {
         case EXT_Pixels:   return makePtr< ExtractorPixels >(); break;
-        case EXT_Ltp:      return makePtr< GenericExtractor<LTPTransform,GriddedHist> >(LTPTransform(), GriddedHist()); break;
+        case EXT_Ltp:      return makePtr< GenericExtractor<FeatureLTP,GriddedHist> >(FeatureLTP(), GriddedHist()); break;
         case EXT_Lbp:      return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist()); break;
         case EXT_LBP_P:    return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid()); break;
         case EXT_LBPU:     return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(true)); break;
