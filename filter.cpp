@@ -181,6 +181,7 @@ Ptr<Filter> createFilter(int filt)
         case FIL_WHAD8:    return makePtr<FilterWalshHadamard>(8000); break;
         case FIL_RP:       return makePtr<FilterRandomProjection>(8000); break;
         case FIL_DCT_:     return makePtr<FilterDct>(128); break;
+        case FIL_DCT1:     return makePtr<FilterDct>(1000); break;
         case FIL_DCT2:     return makePtr<FilterDct>(2000); break;
         case FIL_DCT4:     return makePtr<FilterDct>(4000); break;
         case FIL_DCT6:     return makePtr<FilterDct>(6000); break;

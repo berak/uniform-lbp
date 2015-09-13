@@ -275,7 +275,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
         double all = sum(confusion)[0];
         double neg = all - sum(confusion.diag())[0];
         double err = double(neg)/all;
-        cout << format("%-23s %-2d %6d %6d %6d %8.3f %8.3f %8.3f",name.c_str(), (f+1), fsiz, int(all-neg), int(neg), (1.0-err), ct(t_train)/f, ct(t_test)/f) << '\r';
+        cout << format("%-23s %-2d %6d %6d %6d %8.3f %8.3f %8.3f",name.c_str(), (f+1), fsiz, int(all-neg), int(neg), (1.0-err), ct(t_train)/(f+1), ct(t_test)/(f+1)) << '\r';
     }
 
 
@@ -322,9 +322,9 @@ int main(int argc, const char *argv[])
             "{ minp m         |10    | minimal img count per person (when reading folders) }"
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
-            "{ ext e          |0    | extractor  enum }"
+            "{ ext e          |18    | extractor  enum }"
             "{ fil f          |0     | filter   enum }"
-            "{ cls c          |21     | classifier enum }"
+            "{ cls c          |0     | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
             "{ crop C         |80    | crop outer pixels }"
@@ -335,7 +335,7 @@ int main(int argc, const char *argv[])
 
     CommandLineParser parser(argc, argv, keys);
     string path(parser.get<string>("path"));
-    if (parser.has("help") || path=="true")
+    if (parser.has("help") || path.empty())
     {
         parser.printMessage();
         return -1;
@@ -371,7 +371,7 @@ int main(int argc, const char *argv[])
 
     // some diagnostics:
     String dbs = db_path.substr(0,db_path.find_last_of('.')) + ":";
-    const char *pp[] = { "no preproc", "eqhist", "clahe", "retina", "tan-triggs", "logscale", 0}; //"radon","csdn","dog",0 };
+    const char *pp[] = { "no preproc", "eqhist", "clahe", "retina", "tan-triggs", "logscale", 0};
     if (all || tab)
         cout << "------------------------------------------------------------------------------" << endl;
     cout << format("%-24s",dbs.c_str()) << fold  << " fold, " << persons.size() << " classes, " << images.size() << " images, " << pp[pre] << endl;

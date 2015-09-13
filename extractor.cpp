@@ -27,18 +27,10 @@ namespace TextureFeatureImpl
 //
 struct ExtractorPixels : public TextureFeature::Extractor
 {
-    int resw,resh;
-
-    ExtractorPixels(int resw=0,int resh=0): resw(resw), resh(resh) {}
-
     // TextureFeature::Extractor
     virtual int extract(const Mat &img, Mat &features) const
     {
-        if (resw>0 && resh>0)
-            resize(img, features, Size(resw,resh));
-        else
-            features = img;
-        features = features.reshape(1,1);
+        features = img.reshape(1,1);
         return features.total() * features.elemSize();
     }
 };
@@ -49,32 +41,18 @@ struct ExtractorPixels : public TextureFeature::Extractor
 //
 struct FeatureGrad
 {
-    int nsec,nrad;
-    FeatureGrad(int nsec=45, int nrad=8) : nsec(nsec), nrad(nrad) {}
+    int nsec;
+    FeatureGrad(int nsec=45) : nsec(nsec) {}
 
     int operator() (const Mat &I, Mat &fI) const
     {
-        Mat s1, s2, s3(I.size(), CV_32F), s4, s5;
+        Mat s1, s2, s3(I.size(), CV_32F);
         Sobel(I, s1, CV_32F, 1, 0);
         Sobel(I, s2, CV_32F, 0, 1);
         hal::fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
         s3 /= (360/nsec);
-        s3.convertTo(s4,CV_8U);
-        fI.push_back(s4);
-
-        //Sobel(I, s1, CV_32F, 2, 0);
-        //Sobel(I, s2, CV_32F, 0, 2);
-        //hal::fastAtan2(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total(), true);
-        //s3 /= (360/nsec);
-        //s3.convertTo(s5,CV_8U);
-        //fI.push_back(s5);
-
-        //magnitude(s1.ptr<float>(0), s2.ptr<float>(0), s3.ptr<float>(0), I.total());
-        //normalize(s3,s4,nrad);
-        //s4.convertTo(s5,CV_8U);
-        //s5 *= nsec;
-        //fI += s5;
-        //return nrad*nsec;
+        fI = s3;
+        //s3.convertTo(fI,CV_8U);
         return (nsec+1); //*2;
     }
 };
@@ -342,23 +320,18 @@ struct FeatureFPLbp
 //
 // stolen from https://github.com/biometrics/openbr
 //
-// (.. would there be a license issue here ?)
-//
-/*!
- * \ingroup transforms
- * \brief Tan, Xiaoyang, and Bill Triggs. "Enhanced local texture feature sets for face recognition under difficult lighting conditions." Analysis and Modeling of Faces and Gestures. Springer Berlin Heidelberg, 2007. 168-182.
- * \author Brendan Klare \cite bklare
- * \author Josh Klontz \cite jklontz
- */
 struct LTPTransform
 {
     unsigned short lut[8][3];
     int radius;
-    float threshold;
+    float thresholdPos;
+    float thresholdNeg;
 
     LTPTransform()
         : radius(1)
-        , threshold(0.1f)
+        , thresholdPos(0.1f)
+        , thresholdNeg(-1.0f * thresholdPos)
+
     {
         unsigned short cnt = 0;
         for (int i = 0; i < 8; i++) {
@@ -370,58 +343,27 @@ struct LTPTransform
 
     int operator() (const Mat &I, Mat &fI) const
     {
-        Mat m; I.convertTo(m, CV_32F); CV_Assert(m.isContinuous() && (m.channels() == 1));
+        CV_Assert(I.isContinuous() && (I.channels() == 1));
 
-        Mat n(m.rows, m.cols, CV_16U, Scalar(0));
-        float thresholdNeg = -1.0f * threshold; //compute once (can move to init)
+        Mat_<float>  m(I); 
+        Mat_<ushort> n(m.size());
+        n = 0;
 
         const float *p = (const float*)m.ptr();
-        float diff;
         for (int r=radius; r<m.rows-radius; r++)
         {
             for (int c=radius; c<m.cols-radius; c++)
             {
-                const float cval  = (p[(r+0*radius)*m.cols+c+0*radius]);
-
-                diff = p[(r-1*radius)*m.cols+c-1*radius] - cval;
-                if      (diff > threshold)      n.at<unsigned short>(r,c) = lut[0][0];
-                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) = lut[0][1];
-                else                            n.at<unsigned short>(r,c) = lut[0][2];
-
-                diff = p[(r-1*radius)*m.cols+c+0*radius] - cval;
-                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[1][0];
-                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[1][1];
-                else                            n.at<unsigned short>(r,c) += lut[1][2];
-
-                diff = p[(r-1*radius)*m.cols+c+1*radius] - cval;
-                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[2][0];
-                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[2][1];
-                else                            n.at<unsigned short>(r,c) += lut[2][2];
-
-                diff = p[(r+0*radius)*m.cols+c+1*radius] - cval;
-                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[3][0];
-                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[3][1];
-                else                            n.at<unsigned short>(r,c) += lut[3][2];
-
-                diff = p[(r+1*radius)*m.cols+c+1*radius] - cval;
-                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[4][0];
-                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[4][1];
-                else                            n.at<unsigned short>(r,c) += lut[4][2];
-
-                diff = p[(r+1*radius)*m.cols+c+0*radius] - cval;
-                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[5][0];
-                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[5][1];
-                else                            n.at<unsigned short>(r,c) += lut[5][2];
-
-                diff = p[(r+1*radius)*m.cols+c-1*radius] - cval;
-                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[6][0];
-                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[6][1];
-                else                            n.at<unsigned short>(r,c) += lut[6][2];
-
-                diff = p[(r+0*radius)*m.cols+c-1*radius] - cval;
-                if      (diff > threshold)      n.at<unsigned short>(r,c) += lut[7][0];
-                else if (diff < thresholdNeg)   n.at<unsigned short>(r,c) += lut[7][1];
-                else                            n.at<unsigned short>(r,c) += lut[7][2];
+                const float cval = p[r * m.cols + c];
+                static const int off[8][2] = {-1,-1, -1,0, -1,1, 0,1, 1,1, 1,0, 1,-1, 0,-1};
+                for (int li=0; li<8; li++)
+                {   // walk neighbours:
+                    int y = r + off[li][0] * radius;
+                    int x = c + off[li][1] * radius;
+                    float diff = p[y * m.cols + x] - cval;
+                    n(r,c) += (diff > thresholdPos) ? lut[li][0] :
+                              (diff < thresholdNeg) ? lut[li][1] : lut[li][2];
+                }
             }
         }
         fI = n;
@@ -482,10 +424,12 @@ static void hist_patch_uniform(const Mat_<uchar> &fI, Mat &histo)
 //
 struct GriddedHist
 {
+    bool uniform;
     int GRIDX,GRIDY;
 
-    GriddedHist(int gridx=8, int gridy=8)
-        : GRIDX(gridx)
+    GriddedHist(bool uniform=false, int gridx=8, int gridy=8)
+        : uniform(uniform)
+        , GRIDX(gridx)
         , GRIDY(gridy)
     {}
 
@@ -499,7 +443,10 @@ struct GriddedHist
             for (int j=0; j<GRIDY; j++)
             {
                 Mat patch(feature, Range(j*sh,(j+1)*sh), Range(i*sw,(i+1)*sw));
-                hist_patch(patch, histo, histSize);
+                if (uniform && histSize==256)
+                    hist_patch_uniform(patch, histo);
+                else
+                    hist_patch(patch, histo, histSize);
             }
         }
         normalize(histo.reshape(1,1),histo);
@@ -517,7 +464,7 @@ struct PyramidGrid
 
     PyramidGrid(bool uniform=false): uniform(uniform) {}
 
-    void hist_level(const Mat &feature, Mat &histo, int GRIDX, int GRIDY,int histSize=256) const
+    void hist_level(const Mat &feature, Mat &histo, int GRIDX, int GRIDY, int histSize=256) const
     {
         int sw = feature.cols/GRIDX;
         int sh = feature.rows/GRIDY;
@@ -1258,12 +1205,12 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_Ltp:      return makePtr< GenericExtractor<LTPTransform,GriddedHist> >(LTPTransform(), GriddedHist()); break;
         case EXT_Lbp:      return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist()); break;
         case EXT_LBP_P:    return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid()); break;
-        case EXT_LBPU:     return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid(true)); break;
-        case EXT_LBPU_P:   return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist()); break;
+        case EXT_LBPU:     return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(true)); break;
+        case EXT_LBPU_P:   return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid(true)); break;
         case EXT_TPLbp:    return makePtr< GenericExtractor<FeatureTPLbp,GriddedHist> >(FeatureTPLbp(), GriddedHist()); break;
         case EXT_TPLBP_P:  return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid()); break;
         case EXT_FPLbp:    return makePtr< GenericExtractor<FeatureFPLbp,GriddedHist> >(FeatureFPLbp(), GriddedHist()); break;
-        case EXT_FPLBP_P:  return makePtr< GenericExtractor<FeatureMTS,PyramidGrid> >(FeatureMTS(), PyramidGrid()); break;
+        case EXT_FPLBP_P:  return makePtr< GenericExtractor<FeatureFPLbp,PyramidGrid> >(FeatureFPLbp(), PyramidGrid()); break;
         case EXT_MTS:      return makePtr< GenericExtractor<FeatureMTS,GriddedHist> >(FeatureMTS(), GriddedHist()); break;
         case EXT_MTS_P:    return makePtr< GenericExtractor<FeatureMTS,PyramidGrid> >(FeatureMTS(), PyramidGrid()); break;
         case EXT_BGC1:     return makePtr< GenericExtractor<FeatureBGC1,GriddedHist> >(FeatureBGC1(), GriddedHist()); break;

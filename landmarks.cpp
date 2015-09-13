@@ -1,7 +1,7 @@
 #include "landmarks.h"
 
 //#define HAVE_ELASTIC
-#define HAVE_FACEX
+//#define HAVE_FACEX
 
 #ifdef HAVE_FACEX
 
@@ -17,6 +17,7 @@ struct LandMarks : Landmarks
 
     virtual int extract(const cv::Mat &img, std::vector<cv::Point> &pt) const
     {
+        // originally: 51 landmarks.
         static int lut[20] = {
             0,2,4, 5,7,9,  // eyebrows
             19,22, 25,28,  // eyecorners
@@ -76,23 +77,10 @@ struct LandMarks : Landmarks
         dlib::full_object_detection shape = sp(dlib::cv_image<uchar>(img), rec);
 
         int idx[] = {17,26, 19,24, 21,22, 36,45, 39,42, 38,43, 31,35, 51,33, 48,54, 57,27, 0};
-        //int idx[] = {18,25, 20,24, 21,22, 27,29, 31,35, 38,43, 51, 0};
-        for(int k=0; (k<40) && (idx[k]>0); k++)
-            kp.push_back(cv::Point(crop(shape.part(idx[k]).x(),img.cols), crop(shape.part(idx[k]).y(),img.rows)));
-            //kp.push_back(Point(shape.part(idx[k]).x(), shape.part(idx[k]).y()));
-        //dlib::point p1 = shape.part(31) + (shape.part(39) - shape.part(31)) * 0.5; // left of nose
-        //dlib::point p2 = shape.part(35) + (shape.part(42) - shape.part(35)) * 0.5;
-        //dlib::point p3 = shape.part(36) + (shape.part(39) - shape.part(36)) * 0.5; // left eye center
-        //dlib::point p4 = shape.part(42) + (shape.part(45) - shape.part(42)) * 0.5; // right eye center
-        //dlib::point p5 = shape.part(31) + (shape.part(48) - shape.part(31)) * 0.5; // betw.mouth&nose
-        //dlib::point p6 = shape.part(35) + (shape.part(54) - shape.part(35)) * 0.5; // betw.mouth&nose
-        //kp.push_back(Point(p1.x(), p1.y()));
-        //kp.push_back(Point(p2.x(), p2.y()));
-        //kp.push_back(Point(p3.x(), p3.y()));
-        //kp.push_back(Point(p4.x(), p4.y()));
-        //kp.push_back(Point(p5.x(), p5.y()));
-        //kp.push_back(Point(p6.x(), p6.y()));
 
+        for(int k=0; (k<40) && (idx[k]>0); k++)
+            kp.push_back(cv::Point(crop(shape.part(idx[k]).x(),img.cols),
+                                   crop(shape.part(idx[k]).y(),img.rows)));
         return (int)kp.size();
     }
 };
@@ -137,16 +125,6 @@ struct LandMarks : Landmarks
         kp.push_back(cv::Point(31,75));    kp.push_back(cv::Point(59,75));
         kp.push_back(cv::Point(32,49));    kp.push_back(cv::Point(59,49));
 
-        //kp.push_back(Point(15,19));    kp.push_back(Point(75,19));
-        //kp.push_back(Point(29,20));    kp.push_back(Point(61,20));
-        //kp.push_back(Point(36,24));    kp.push_back(Point(54,24));
-        //kp.push_back(Point(38,35));    kp.push_back(Point(52,35));
-        //kp.push_back(Point(30,39));    kp.push_back(Point(60,39));
-        //kp.push_back(Point(19,39));    kp.push_back(Point(71,39));
-        //kp.push_back(Point(8 ,38));    kp.push_back(Point(82,38));
-        //kp.push_back(Point(40,64));    kp.push_back(Point(50,64));
-        //kp.push_back(Point(31,75));    kp.push_back(Point(59,75));
-        //kp.push_back(Point(27,81));    kp.push_back(Point(63,81));
         if (img.size() != cv::Size(90,90))
         {
             float scale_x=float(img.cols)/90;

@@ -436,8 +436,8 @@ struct ClassifierMLP : Classifier
         Ptr<ml::ANN_MLP> ann = ml::ANN_MLP::create();
         Mat_<int> layers(4,1);
         layers(0) = ni;
-        layers(1) = no*2;
-        layers(2) = no*8;
+        layers(1) = no>2 ? no*2 : 128;
+        layers(2) = no>2 ? no*8 : 8;
         layers(3) = no;
         ann->setLayerSizes(layers);
         ann->setActivationFunction(ml::ANN_MLP::SIGMOID_SYM,0,0);
@@ -771,21 +771,26 @@ struct VerifierMLP : public VerifierPairDistance
 {
     virtual int train(const Mat &trainData, const Mat &trainLabels)
     {
-        model = ClassifierMLP::setup(trainData.cols, 2);
+        model = ClassifierMLP::setup(trainData.cols, 1);
 
         Mat distances, binlabels;
         train_pre(tofloat(trainData), trainLabels, distances, binlabels);
 
-        Mat trainClasses = Mat::zeros(binlabels.total(), 2, CV_32FC1);
+        Mat trainClasses = Mat::zeros(binlabels.total(), 1, CV_32FC1);
         for(int i=0; i < trainClasses.rows; i++)
         {
             if (binlabels.at<int>(i) > 0)
-                trainClasses.at<float>(i,1) = 1.f;
-            else
                 trainClasses.at<float>(i,0) = 1.f;
         }
 
         return model->train(ml::TrainData::create(distances, ml::ROW_SAMPLE, trainClasses));
+    }
+    virtual bool same(const Mat &a, const Mat &b) const
+    {
+        Mat res;
+        model->predict(distance_mat(tofloat(a), tofloat(b)), res);
+        float r = res.at<float>(0);
+        return  r > 0.5f;
     }
 };
 
