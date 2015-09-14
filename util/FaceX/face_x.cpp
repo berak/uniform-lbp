@@ -28,13 +28,6 @@ THE SOFTWARE.
 #include <stdexcept>
 #include <cassert>
 
-#if DO_PROFILE
- #include "profile.h"
-#else
- #define PROFILEX
- #define PROFILE
-#endif
-
 using namespace std;
 
 
@@ -45,7 +38,6 @@ using namespace std;
 
 void Transform::Apply(vector<cv::Point2d> &x, bool need_translation) const
 {
-    PROFILE;
     for (size_t i=0; i<x.size(); i++)
     {
         cv::Point2d &p = x[i];
@@ -62,7 +54,6 @@ void Transform::Apply(vector<cv::Point2d> &x, bool need_translation) const
 
 Transform Procrustes(const vector<cv::Point2d> &x, const vector<cv::Point2d> &y)
 {
-    PROFILE;
     assert(x.size() == y.size());
     int landmark_count = x.size();
     double X1 = 0, X2 = 0, Y1 = 0, Y2 = 0, Z = 0, W = landmark_count;
@@ -99,7 +90,6 @@ Transform Procrustes(const vector<cv::Point2d> &x, const vector<cv::Point2d> &y)
 vector<cv::Point2d> ShapeAdjustment(const vector<cv::Point2d> &shape,
     const vector<cv::Point2d> &offset)
 {
-    PROFILE;
     assert(shape.size() == offset.size());
     vector<cv::Point2d> result(shape.size());
     for (size_t i = 0; i < shape.size(); ++i)
@@ -110,7 +100,6 @@ vector<cv::Point2d> ShapeAdjustment(const vector<cv::Point2d> &shape,
 vector<cv::Point2d> MapShape(cv::Rect original_face_rect,
     const vector<cv::Point2d> original_landmarks, cv::Rect new_face_rect)
 {
-    PROFILE;
     vector<cv::Point2d> result;
     for (size_t i=0; i<original_landmarks.size(); ++i)
     {
@@ -133,7 +122,6 @@ vector<cv::Point2d> MapShape(cv::Rect original_face_rect,
 
 void Fern::ApplyMini(cv::Mat features, std::vector<double> &coeffs)const
 {
-    //PROFILE;
     int outputs_index = 0;
     for (size_t i = 0; i < features_index.size(); ++i)
     {
@@ -150,7 +138,6 @@ void Fern::ApplyMini(cv::Mat features, std::vector<double> &coeffs)const
 
 void Fern::read(const cv::FileNode &fn)
 {
-    PROFILE;
     thresholds.clear();
     features_index.clear();
     outputs_mini.clear();
@@ -195,7 +182,6 @@ void read(const cv::FileNode& node, Fern &f, const Fern&)
 vector<cv::Point2d> Regressor::Apply(const Transform &t,
     cv::Mat image, const std::vector<cv::Point2d> &init_shape) const
 {
-    PROFILE;
     cv::Mat pixels_val(1, pixels_.size(), CV_64FC1);
     vector<cv::Point2d> offsets(pixels_.size());
     for (size_t j = 0; j < pixels_.size(); ++j)
@@ -216,22 +202,10 @@ vector<cv::Point2d> Regressor::Apply(const Transform &t,
     for (size_t i = 0; i < ferns_.size(); ++i)
         ferns_[i].ApplyMini(pixels_val, coeffs);
 
-    cv::Mat result_mat;// = cv::Mat::zeros(init_shape.size() * 2, 1, CV_64FC1);
-    {
-        PROFILEX("Apply_4");
-        result_mat = base_ * cv::Mat(coeffs);
-        //for (int i = 0; i < base_.cols; ++i)
-           // result_mat += coeffs[i] * base_.col(i);
-        //Mat c(coeffs),c2;
-        //c = c.reshape(1,1);
-        //repeat(c,base_.rows,1,c2); // the 1st row of coeffs all the way down
-        //Mat m2;
-        //multiply(base_,c2,m2); // giant per element mul
-        //reduce(m2,result_mat,1,REDUCE_SUM); //sum up the cols
-    }
+    cv::Mat result_mat = base_ * cv::Mat(coeffs);
+
     vector<cv::Point2d> result(init_shape.size());
     {
-        PROFILEX("Apply_5");
         for (size_t i = 0; i < result.size(); ++i)
         {
             result[i].x = result_mat.at<double>(i * 2);
@@ -243,7 +217,6 @@ vector<cv::Point2d> Regressor::Apply(const Transform &t,
 
 void Regressor::read(const cv::FileNode &fn)
 {
-    PROFILE;
     pixels_.clear();
     ferns_.clear();
     cv::FileNode pixels_node = fn["pixels"];
@@ -279,7 +252,6 @@ void read(const cv::FileNode& node, Regressor& r, const Regressor&)
 
 FaceX::FaceX(const string & filename)
 {
-    PROFILE;
     cv::FileStorage model_file;
     model_file.open(filename, cv::FileStorage::READ);
     if (!model_file.isOpened())
@@ -304,7 +276,6 @@ FaceX::FaceX(const string & filename)
 
 vector<cv::Point2d> FaceX::Alignment(cv::Mat image, cv::Rect face_rect) const
 {
-    PROFILEX("Alignment_rect");
     vector<vector<double>> all_results(test_init_shapes_[0].size() * 2);
     for (size_t i = 0; i < test_init_shapes_.size(); ++i)
     {
@@ -344,7 +315,6 @@ vector<cv::Point2d> FaceX::Alignment(cv::Mat image, cv::Rect face_rect) const
 vector<cv::Point2d> FaceX::Alignment(cv::Mat image,
     vector<cv::Point2d> initial_landmarks) const
 {
-    PROFILEX("Alignment_landmarks");
     vector<vector<double>> all_results(test_init_shapes_[0].size() * 2);
     for (size_t i = 0; i < test_init_shapes_.size(); ++i)
     {

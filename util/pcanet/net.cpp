@@ -796,15 +796,16 @@ int main()
 
     namedWindow("filters", 0);
     Network net;
-    int nFilters=7;
+    int nFilters=5;
     if (1)
     {
         cerr << "train " << images.size() << endl;
         //net.addStage(makePtr<PcaProjection>(7, nFilters));
         // net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
-        //net.addStage(makePtr<Learner>(11, 6));
-        net.addStage(makePtr<Learner>(11, nFilters));
-        net.addStage(makePtr<DctProjection>(7, nFilters));
+        net.addStage(makePtr<Learner>(11, 3));
+        net.addStage(makePtr<Learner>(7, nFilters));
+        net.addStage(makePtr<WaveProjection>(7, nFilters));
+        //net.addStage(makePtr<DctProjection>(7, nFilters));
         // net.addStage(makePtr<Learner>(7, 4));
         // net.addStage(makePtr<GaborProjection>(9, 5, 0.373f, -1.0f)); // gabor kernels need to be odd
         net.addStage(makePtr<Hashing>(nFilters, 18));

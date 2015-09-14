@@ -191,7 +191,6 @@ namespace TextureFeature
         CL_PCA_LDA,
         CL_MLP,
         CL_KNN,
-        CL_RTREE,
         CL_MAX
     };
     static const char *CLS[] = {

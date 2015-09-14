@@ -329,8 +329,8 @@ struct FeatureLTP
 
     FeatureLTP()
         : radius(1)
-        , thresholdPos(0.1f)
-        , thresholdNeg(-1.0f * thresholdPos)
+        , thresholdPos( 0.1f)
+        , thresholdNeg(-0.1f)
 
     {
         unsigned short cnt = 0;
@@ -719,7 +719,6 @@ struct Patcher : public TextureFeature::Extractor
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-        //PROFILEX("extract");
         vector<Point> kp;
         land->extract(img,kp);
         Mat f;
@@ -747,7 +746,6 @@ struct HighDimLbp : public TextureFeature::Extractor
     HighDimLbp() : land(createLandmarks()) {}
     virtual int extract(const Mat &img, Mat &features) const
     {
-        //PROFILEX("extract");
         int gr=10; // 10 used in paper
         vector<Point> kp;
         land->extract(img,kp);
@@ -804,32 +802,10 @@ struct HighDimLbpPCA : public TextureFeature::Extractor
             pca[i++].read(*it);
         }
         fs.release();
-
-        //FILE * f = fopen("data/pca.hdlbpu.bin","rb");
-        //CV_Assert(f!=0);
-        //for (int i=0; i<20; i++)
-        //{
-        //    read_pca(pca[i],f);
-        //}
-        //fclose(f);
     }
-    //void read_pca(PCA &pca, FILE *f)
-    //{
-    //    int mr,mc;
-    //    fread(&mr, sizeof(int), 1, f);
-    //    fread(&mc, sizeof(int), 1, f);
-    //    pca.mean.create(mr,mc,CV_32F);
-    //    fread(pca.mean.ptr<float>(), mc*mr, 1, f);
-    //    int er, ec;
-    //    fread(&er, sizeof(int), 1, f);
-    //    fread(&ec, sizeof(int), 1, f);
-    //    pca.eigenvectors.create(er,ec,CV_32F);
-    //    fread(pca.eigenvectors.ptr<float>(), 1, ec*er, f);
-    //}
 
     virtual int extract(const Mat &img, Mat &features) const
     {
-        //PROFILEX("extract");
         int gr=10; // 10 used in paper
         vector<Point> kp;
         land->extract(img,kp);
@@ -1109,7 +1085,6 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
         return (suma < sumc);
     }
 
-
     void pixelTests(int i, int N, const Point &pt, const Mat &grayImage, Mat &descriptors, int half_ssd_size) const
     {
         int count = 0;
@@ -1126,7 +1101,6 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
             }
         }
     }
-
 
     virtual int extract(const Mat &image, Mat &features) const
     {
