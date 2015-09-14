@@ -356,9 +356,9 @@ struct Learner : FilterBank
             Mat vfil,vgrad;
             for (int f=0; f<filters.rows; ++f)
             {
-                Mat &g = grads.row(f);
-                g -= 0.095 * correlate(filter(f), residual, false).reshape(1,1);
-                filters.row(f) += g * 0.0025f;
+                Mat grad = grads.row(f);
+                grad -= 0.095 * correlate(filter(f), residual, false).reshape(1,1);
+                filters.row(f) += grad * 0.0025f;
                 append(vfil, filter(f));
                 append(vgrad, g.reshape(1,patchSize));
             }
@@ -706,8 +706,8 @@ struct Network : public PNet
         int step = draw.rows / nStages;
         for (int i=0; i<nStages; i++)
         {
-            Rect r(0, i*step, draw.cols, step);
-            Ptr<FilterBank> fb = layers[i].dynamicCast<FilterBank>();
+            cv::Rect r(0, i*step, draw.cols, step);
+            cv::Ptr<FilterBank> fb = layers[i].dynamicCast<FilterBank>();
             if (!fb.empty())
                 fb->filterVis(draw(r));
         }
