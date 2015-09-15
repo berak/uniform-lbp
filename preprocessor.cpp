@@ -92,7 +92,7 @@ Mat Preprocessor::process(const Mat &imgin)  const
     {
         default:
         case 0:
-            imgout = precrop>0 ? imgt.clone() : imgt;
+            imgout = precrop>0 ? imgt.clone() : imgt;  // why the clone again ?
             break;
         case 1:
             equalizeHist(imgt,imgout);

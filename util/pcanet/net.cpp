@@ -360,7 +360,7 @@ struct Learner : FilterBank
                 grad -= 0.095 * correlate(filter(f), residual, false).reshape(1,1);
                 filters.row(f) += grad * 0.0025f;
                 append(vfil, filter(f));
-                append(vgrad, g.reshape(1,patchSize));
+                append(vgrad, grad.reshape(1,patchSize));
             }
             imshow("fil",vfil);
             imshow("grad",vgrad);

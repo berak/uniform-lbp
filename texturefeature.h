@@ -130,7 +130,6 @@ namespace TextureFeature
     enum FIL {
         FIL_NONE,
         FIL_MEAN,
-        FIL_NORM_1,
         FIL_HELL,
         FIL_POW,
         FIL_SQRT,
@@ -150,7 +149,6 @@ namespace TextureFeature
     static const char *FILS[] = {
         "none",
         "MEAN",
-        "NORM-1"
         "HELL",
         "POW",
         "SQRT",
@@ -191,6 +189,7 @@ namespace TextureFeature
         CL_PCA_LDA,
         CL_MLP,
         CL_KNN,
+        //CL_MAHALANOBIS,
         CL_MAX
     };
     static const char *CLS[] = {
@@ -217,6 +216,7 @@ namespace TextureFeature
         "PCA_LDA",
         "MLP",
         "KNN",
+        //"MAHALANOBIS",
         0
     };
 

@@ -160,15 +160,6 @@ struct FilterMeanStdev : public Filter
 };
 
 
-struct FilterNorm_1 : public Filter
-{
-    virtual int filter(const Mat &src, Mat &dest) const
-    {
-        normalize(src, dest, -1, 0, NORM_MINMAX, CV_32F);
-        return 0;
-    }
-};
-
 
 } // TextureFeatureImpl
 
@@ -184,7 +175,6 @@ Ptr<Filter> createFilter(int filt)
     {
         case FIL_NONE:     break;
         case FIL_MEAN:     return makePtr<FilterMeanStdev>(); break;
-        case FIL_NORM_1:   return makePtr<FilterNorm_1>(); break;
         case FIL_HELL:     return makePtr<FilterHellinger>(); break;
         case FIL_POW:      return makePtr<FilterPow>(); break;
         case FIL_SQRT:     return makePtr<FilterPow>(0.5f); break;

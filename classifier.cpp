@@ -40,20 +40,28 @@ struct ClassifierNearest : public TextureFeature::Classifier
         return norm(testFeature, trainFeature, flag);
     }
 
-    // TextureFeature::Classifier
-    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
+    template <typename Dist>
+    static void nearest(const cv::Mat &testFeature, const cv::Mat &features, int &best, double &mind, const Dist &dis)
     {
-        double mind=DBL_MAX;
-        int best = -1;
+        mind=DBL_MAX;
+        best = -1;
         for (int r=0; r<features.rows; r++)
         {
-            double d = distance(testFeature, features.row(r));
+            double d = dis.distance(testFeature, features.row(r));
             if (d < mind)
             {
                 mind = d;
                 best = r;
             }
         }
+    }
+    // TextureFeature::Classifier
+    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
+    {
+        int best = -1;
+        double mind=DBL_MAX;
+        nearest(testFeature, features, best, mind, *this);
+
         int found = best>-1 ? labels.at<int>(best) : -1;
         results.push_back(float(found));
         results.push_back(float(mind));
@@ -366,8 +374,11 @@ struct ClassifierPCA : public ClassifierNearestFloat  //ClassifierCosine
 //
 struct ClassifierPCA_LDA : public ClassifierPCA
 {
-    ClassifierPCA_LDA(int num_components=0)
+    bool useL2;
+    Mat icovar;
+    ClassifierPCA_LDA(int num_components=0, bool useL2=false)
         : ClassifierPCA(num_components)
+        , useL2(useL2)
     {}
 
     virtual int train(const Mat &trainData, const Mat &trainLabels)
@@ -394,6 +405,36 @@ struct ClassifierPCA_LDA : public ClassifierPCA
         // step four, keep labels and projected dataset:
         features = project(trainData);
         labels = trainLabels;
+
+        // if we use Mahalanobis, precalculate the inverse covariance matrix:
+        if (!useL2)
+        {
+            Mat _covar, _mean;
+            calcCovarMatrix(features, _covar, _mean, CV_COVAR_NORMAL|CV_COVAR_ROWS, CV_32F);
+            _covar /= (features.rows-1);
+            invert(_covar, icovar, DECOMP_SVD);
+        }
+
+        return 1;
+    }
+
+    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
+    {
+        return Mahalanobis(testFeature, trainFeature, icovar);
+    }
+
+    virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
+    {
+        Mat q = project(tofloat(testFeature));
+
+        if (useL2)
+            return ClassifierNearestFloat::predict(q, results);
+
+        // else use Mahalanobis
+        int minId = -1;
+        double minDist = 999999999;
+        nearest(q, features, minId,minDist, *this);
+        results = (Mat_<float>(1,3) << float(labels.at<int>(minId)), float(minDist), float(minId));
         return 1;
     }
 };
@@ -670,6 +711,9 @@ struct PairDistance
 struct VerifierPairDistance : public TextureFeature::Verifier, PairDistance
 {
     Ptr<ml::StatModel> model;
+    float thresh; // prediction threshold for binary response
+
+    VerifierPairDistance(float t=0.0f) : thresh(t) {}
 
     virtual int train(const Mat &features, const Mat &labels)
     {
@@ -684,8 +728,7 @@ struct VerifierPairDistance : public TextureFeature::Verifier, PairDistance
     {
         Mat res;
         model->predict(distance_mat(tofloat(a), tofloat(b)), res);
-        int r = res.at<int>(0);
-        return  r > 0;
+        return (res.at<float>(0) > thresh);
     }
 };
 
@@ -754,6 +797,8 @@ struct VerifierKNN : public TextureFeature::Verifier, PairDistance
 // WIP !! ;(
 struct VerifierMLP : public VerifierPairDistance
 {
+    VerifierMLP() : VerifierPairDistance(0.5f) {}
+
     virtual int train(const Mat &trainData, const Mat &trainLabels)
     {
         model = ClassifierMLP::setup(trainData.cols, 1);
@@ -769,13 +814,6 @@ struct VerifierMLP : public VerifierPairDistance
         }
 
         return model->train(ml::TrainData::create(distances, ml::ROW_SAMPLE, trainClasses));
-    }
-    virtual bool same(const Mat &a, const Mat &b) const
-    {
-        Mat res;
-        model->predict(distance_mat(tofloat(a), tofloat(b)), res);
-        float r = res.at<float>(0);
-        return  r > 0.5f;
     }
 };
 
@@ -814,6 +852,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
         case CL_MLP:       return makePtr<ClassifierMLP>(); break;
         case CL_KNN:       return makePtr<ClassifierKNN>(); break;
+        // case CL_MAHALANOBIS:return makePtr<ClassifierMahalanobis>(); break;
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();

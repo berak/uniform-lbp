@@ -66,7 +66,8 @@ att_faces : 10 fold, 39 classes, 390 images, retina
 [extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
 Pixels   none   N_L2          12100    709     32    0.957    0.000    0.641
 Pixels   none   SVM_POL       12100    722     19    0.974    5.269    0.748
-Pixels   none   PCA_LDA       12100    689     52    0.930   16.371    0.236
+Pixels   none   PCA_LDA       12100    689     52    0.930   16.371    0.236 * L2
+Pixels   none   PCA_LDA       12100    696     45    0.939   15.927    0.284 * mahalanobis
 Lbp      none   H_CHI         65536    700     41    0.945   -0.001    4.261
 Lbp      none   H_HELL        65536    727     14    0.981    0.001    5.701
 Lbp      none   SVM_LIN       65536    727     14    0.981   10.661    2.792
@@ -97,7 +98,8 @@ yale_cropped :         10 fold, 15 classes, 165 images, retina
 [extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
 Pixels   none   N_L2          12100    247     53    0.823    0.000    0.102
 Pixels   none   SVM_POL       12100    268     32    0.893    0.841    0.120
-Pixels   none   PCA_LDA       12100    256     44    0.853    2.388    0.037
+Pixels   none   PCA_LDA       12100    256     44    0.853    2.388    0.037 * L2
+Pixels   none   PCA_LDA       12100    268     32    0.893    2.321    0.029 * mahalanobis
 Lbp      none   H_CHI         65536    273     27    0.910    0.001    0.647
 Lbp      none   H_HELL        65536    293      7    0.977    0.001    1.002
 Lbp      none   SVM_LIN       65536    296      4    0.987    1.577    0.158
@@ -129,7 +131,8 @@ lfw3d-aligned:       10 fold, 50 classes, 500 images, retina
 [extra] [filt] [class]     [f_bytes]  [hit]  [miss]  [acc]  [t_train] [t_test]
 Pixels   none   N_L2          12100    371    579    0.391    0.000    1.200
 Pixels   none   SVM_POL       12100    578    372    0.608    9.938    1.300
-Pixels   none   PCA_LDA       12100    647    303    0.681   31.688    0.319
+Pixels   none   PCA_LDA       12100    647    303    0.681   31.688    0.319 * L2
+Pixels   none   PCA_LDA       12100    667    283    0.702   30.349    0.485 * mahalanobis
 Lbp      none   H_CHI         65536    480    470    0.505    0.002    6.909
 Lbp      none   H_HELL        65536    590    360    0.621   -0.000    9.209
 Lbp      none   SVM_LIN       65536    693    257    0.729   19.759    6.148
