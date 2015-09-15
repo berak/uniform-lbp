@@ -111,7 +111,7 @@ public:
 
     MyFace(int extract=0, int filt=0, int clsfy=0, int preproc=0, int crop=0, const String &train="dev",int skip=1, bool lab=false)
         : pre(preproc,crop)
-        , nimg(train=="dev"?4400/skip:10800/skip)
+        , nimg(train=="dev"?((4400/skip)^0x1):(10800/skip)^0x01)
     {
         ext = TextureFeature::createExtractor(extract);
         fil = TextureFeature::createFilter(filt);
@@ -121,26 +121,30 @@ public:
             ver = TextureFeature::createVerifier(clsfy);
     }
 
-    virtual int addTraining(const Mat & img, int label)
+    Mat extract(const Mat & a) const
     {
         Mat feat1;
-        ext->extract(pre.process(img), feat1);
+        ext->extract(pre.process(a), feat1);
 
-        Mat fr = feat1.reshape(1,1);
-        //if (fr.type() != CV_32F)
-        //    fr.convertTo(fr,CV_32F);
+        if (feat1.type() != CV_32F)
+            feat1.convertTo(feat1,CV_32F);
+        return feat1.reshape(1,1);
+    }
 
+    virtual int addTraining(const Mat & img, int label)
+    {
+        Mat feat = extract(img);
         if (! fil.empty())
-            fil->filter(fr,fr);
-
-        //features.push_back(fr); // damn memory problems
+        {
+            fil->filter(feat,feat);
+        }
         if ( features.empty() )
         {
-            features = Mat(nimg, feat1.total(), feat1.type());
+            features = Mat(nimg, feat.total(), feat.type());
         }
-        feat1.copyTo(features.row(labels.rows));
+        feat.copyTo(features.row(labels.rows));
         labels.push_back(label);
-        cerr << fr.cols << " i_" << labels.rows << "\r";
+        cerr << feat.cols << " i_" << labels.rows << "\r";
         return labels.rows;
     }
     virtual bool train()
@@ -151,7 +155,7 @@ public:
         if (!cls.empty())
             ok = cls->train(features, labels.reshape(1,features.rows));
         if (!ver.empty())
-            ok = ver->train(features, labels.reshape(1,features.rows));
+            ok = ver->train(features, labels/*.reshape(1,features.rows)*/);
         //cerr << "done training." << endl;
         CV_Assert(ok);
         features.release();
@@ -160,13 +164,8 @@ public:
     }
     virtual int same(const Mat & a, const Mat &b) const
     {
-        Mat feat1, feat2;
-        ext->extract(pre.process(a), feat1);
-        //if (feat1.type() != CV_32F)
-        //    feat1.convertTo(feat1,CV_32F);
-        ext->extract(pre.process(b), feat2);
-        //if (feat2.type() != CV_32F)
-        //    feat2.convertTo(feat2,CV_32F);
+        Mat feat1 = extract(a);
+        Mat feat2 = extract(b);
 
         if (! fil.empty())
         {
@@ -193,12 +192,12 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ opts o         |    | show extractor / filter / verifier options }"
             "{ path p         |data/lfw-deepfunneled/| path to dataset (lfw2 folder) }"
-            "{ ext e          |33   | extractor enum }"
+            "{ ext e          |27   | extractor enum }"
             "{ fil f          |0   | filter enum }"
-            "{ cls c          |23   | classifier enum }"
+            "{ cls c          |21   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ lab l          |0   | train / test with labels(instead of direct image compare) }"
-            "{ skip s         |20  | skip imgs for train }"
+            "{ skip s         |80  | skip imgs for train }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
@@ -234,7 +233,8 @@ int main(int argc, const char *argv[])
 
     if (trainMethod == "dev") // train on personsDevTrain.txt
     {
-        for (unsigned int i=0; i<dataset->getTrain().size(); i+=skip)
+        int n = int(dataset->getTrain().size())-skip;
+        for (int i=0; i<n; i+=skip)
         {
             FR_lfwObj *example = static_cast<FR_lfwObj *>(dataset->getTrain()[i].get());
 

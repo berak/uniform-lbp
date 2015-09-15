@@ -240,52 +240,6 @@ struct FilterBank : Stage
     }
 
 
-    //
-    // visualization code.
-    //
-    inline
-    void append(Mat &a, const Mat &b) const
-    {
-        if (a.empty()) a=b; else hconcat(a,b,a);
-    }
-    void filterVisAdd(const cv::Mat &fil, cv::Mat &res) const
-    {
-        cv::Mat r;//=fil;
-        normalize(fil,r,255,0);
-        r.convertTo(r,CV_8U,2,24);
-        cv::Mat rb;
-        cv::copyMakeBorder(r, rb,1,1,1,1, cv::BORDER_CONSTANT);
-        append(res,rb);
-    }
-    void filterVis(cv::Mat &draw) const
-    {
-        cv::Mat res;
-        for (int j=0; j<filters.rows; j++)
-        {
-            filterVisAdd(filters.row(j).clone().reshape(1, patchSize), res);
-        }
-        resize(res, draw, draw.size(), 0,0, INTER_NEAREST);
-    }
-    void filterVis(cv::String win) const
-    {
-        Mat draw(32,32*8,CV_8U,Scalar(0));
-        filterVis(draw);
-        imshow(win,draw);
-        waitKey(1);
-    }
-    void filterVis(cv::String win, const vector<cv::Mat> &_filters) const
-    {
-        Mat draw(32,32*8,CV_8U,Scalar(0));
-        cv::Mat res;
-        for (size_t j=0; j<_filters.size(); j++)
-        {
-            filterVisAdd(_filters[j], res);
-        }
-        resize(res, draw, draw.size(), 0,0, INTER_NEAREST);
-        imshow(win,draw);
-        waitKey(1);
-    }
-
 
     virtual String type() const { return "FilterBank"; }
     virtual String info() const { return type() + format("[%d,%d]", patchSize, numFilters); }
@@ -333,8 +287,6 @@ struct Learner : FilterBank
         Mat grads(numFilters, patchSize*patchSize, CV_32F, 0.0f);
         filters = cv::Mat(numFilters, patchSize*patchSize, CV_32F);
         randu(filters,-1,1);
-        namedWindow("fil",0);
-        namedWindow("grad",0);
         for (int g=0; g<ngens; g++)
         {
             // random sample:
@@ -353,18 +305,12 @@ struct Learner : FilterBank
             Mat residual = im - recon;
             cv::normalize(residual, residual);
             resize(residual,residual,Size(2*patchSize,2*patchSize));
-            Mat vfil,vgrad;
             for (int f=0; f<filters.rows; ++f)
             {
                 Mat grad = grads.row(f);
                 grad -= 0.095 * correlate(filter(f), residual, false).reshape(1,1);
                 filters.row(f) += grad * 0.0025f;
-                append(vfil, filter(f));
-                append(vgrad, grad.reshape(1,patchSize));
             }
-            imshow("fil",vfil);
-            imshow("grad",vgrad);
-            waitKey(5);
             cerr << "gen " << g << '\r';
         }
         return false;
@@ -639,8 +585,8 @@ struct Network : public PNet
             layers[i]->train(feat);
             layers[i]->process(feat, post);
 
-            //dbg/vis output:
-            stageViz(post,layers[i]->type() + format("_%d",i), 10);
+            ////dbg/vis output:
+            //stageViz(post,layers[i]->type() + format("_%d",i), 10);
             cerr << "\t" << i << "\t" << layers[i]->type() << "\t" << feat.size() << "\t" << post.size() << endl;
 
             // swap prev/cur set
@@ -699,51 +645,6 @@ struct Network : public PNet
         return true;
     }
 
-    cv::Mat filterVis() const
-    {
-        int nStages = layers.size() - 1;
-        cv::Mat draw(400,400,CV_8U,Scalar(0));
-        int step = draw.rows / nStages;
-        for (int i=0; i<nStages; i++)
-        {
-            cv::Rect r(0, i*step, draw.cols, step);
-            cv::Ptr<FilterBank> fb = layers[i].dynamicCast<FilterBank>();
-            if (!fb.empty())
-                fb->filterVis(draw(r));
-        }
-        return draw;
-    }
-
-    void prepVis(const cv::Mat &img, cv::Mat &res) const
-    {
-        cv::Mat r;
-        cv::resize(img,r,Size(50,50));
-        cv::normalize(r,r,255,0);
-        r.convertTo(r,CV_8U,3,32);
-        cv::Mat rb;
-        cv::copyMakeBorder(r,rb,1,1,1,1,cv::BORDER_CONSTANT);
-        if (res.empty()) res=rb;
-        else cv::hconcat(res,rb,res);
-    }
-
-    void imgVis(const vector<cv::Mat> &img, cv::Mat &draw, int n=8) const
-    {
-        cv::Mat res;
-        n = (n < int(img.size())) ? n : int(img.size());
-        for (int j=0; j<n; j++)
-        {
-            prepVis(img[j],res);
-        }
-        res.copyTo(draw);
-    }
-
-    void stageViz(const vector<cv::Mat> &img, const cv::String &title, int delay) const
-    {
-        cv::Mat draw(32,15*32,CV_8U,cv::Scalar(0));
-        imgVis(img,draw,15);
-        imshow(title,draw);
-        waitKey(delay);
-    }
 
     cv::String ingo()
     {

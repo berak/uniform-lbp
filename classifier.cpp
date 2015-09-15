@@ -307,6 +307,10 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
     }
 };
 
+struct PPCA
+{
+};
+
 //
 //
 // 'Eigenfaces'
@@ -676,6 +680,7 @@ struct PairDistance
         {
             case CV_8U:
                 d = a^b;
+                d.convertTo(d,CV_32F);
                 break;
             default:
                 d = a-b;
@@ -692,12 +697,11 @@ struct PairDistance
     //
     void train_pre(const Mat &features, const Mat &labels, Mat &distances, Mat &binlabels)
     {
-        Mat trainData = features.reshape(1, labels.rows);
-
         for (size_t i=0; i<labels.total()-1; i+=2)
         {
             int j = i+1;
-            distances.push_back(distance_mat(trainData.row(i), trainData.row(j)));
+            Mat d = distance_mat(features.row(i), features.row(j));
+            distances.push_back(d);
 
             int l = (labels.at<int>(i) == labels.at<int>(j)) ? 1 : -1;
             binlabels.push_back(l);
@@ -718,7 +722,7 @@ struct VerifierPairDistance : public TextureFeature::Verifier, PairDistance
     virtual int train(const Mat &features, const Mat &labels)
     {
         Mat distances, binlabels;
-        train_pre(tofloat(features), labels, distances, binlabels);
+        train_pre(features, labels, distances, binlabels);
 
         model->clear();
         return model->train(ml::TrainData::create(distances, ml::ROW_SAMPLE, binlabels));
@@ -727,7 +731,7 @@ struct VerifierPairDistance : public TextureFeature::Verifier, PairDistance
     virtual bool same(const Mat &a, const Mat &b) const
     {
         Mat res;
-        model->predict(distance_mat(tofloat(a), tofloat(b)), res);
+        model->predict(distance_mat(a, b), res);
         return (res.at<float>(0) > thresh);
     }
 };
@@ -852,7 +856,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_PCA_LDA:   return makePtr<ClassifierPCA_LDA>(); break;
         case CL_MLP:       return makePtr<ClassifierMLP>(); break;
         case CL_KNN:       return makePtr<ClassifierKNN>(); break;
-        // case CL_MAHALANOBIS:return makePtr<ClassifierMahalanobis>(); break;
+
         default: cerr << "classification " << clsfy << " is not yet supported." << endl; exit(-1);
     }
     return Ptr<Classifier>();
