@@ -88,7 +88,7 @@ namespace TextureFeature
         EXT_PNET,
         EXT_CDIKP,
         EXT_LATCH2,
-        EXT_DAISY,
+        //EXT_DAISY,
         EXT_PATCH,
         EXT_MAX
     };
@@ -123,7 +123,7 @@ namespace TextureFeature
         "PNET",
         "CDIKP",
         "LATCH2",
-        "DAISY",
+        //"DAISY",
         "PATCH",
         0
     };
