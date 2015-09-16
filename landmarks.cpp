@@ -30,16 +30,6 @@ struct LandMarks : Landmarks
         {
             pt.push_back(cv::Point(landmarks[lut[i]]));
         }
-  //      cv::Mat viz; cv::cvtColor(img,viz,cv::COLOR_GRAY2BGR);
-  //      for (size_t i=0; i<20; ++i)
-  //      {
-  //          cv::Point2d p = landmarks[lut[i]];
-  //          cv::circle(viz,p,2,cv::Scalar(0,0,200),1);
-  //          int w=12,h=12; // half size
-  //          cv::rectangle(viz,cv::Rect(p.x-w,p.y-h,2*w,2*h),cv::Scalar(0,200,0),1);
-  //      }
-  //      cv::imshow("viz",viz);
-  //      cv::waitKey(200);
         return int(pt.size());
     }
 };

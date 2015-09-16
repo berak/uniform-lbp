@@ -290,17 +290,6 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
                 mi = float(j);
                 break;
             }
-            //
-            // see: https://github.com/berak/uniform-lbp/issues/2
-            // (unfortunately, no improvement visible)
-            //
-            //svms[j]->predict(query, r, ml::StatModel::RAW_OUTPUT);
-            //float p = r.at<float>(0);
-            //if (p < 0 && abs(p) < m)
-            //{
-            //    m = abs(p);
-            //    mi = float(j);
-            //}
         }
         res = (Mat_<float>(1,2) << mi, m);
         return res.rows;
@@ -315,7 +304,7 @@ struct PPCA
 //
 // 'Eigenfaces'
 //
-struct ClassifierPCA : public ClassifierNearestFloat  //ClassifierCosine
+struct ClassifierPCA : public ClassifierNearestFloat
 {
     Mat eigenvectors;
     Mat mean;
@@ -348,7 +337,6 @@ struct ClassifierPCA : public ClassifierNearestFloat  //ClassifierCosine
     virtual int predict(const cv::Mat &testFeature, cv::Mat &results) const
     {
         return ClassifierNearestFloat::predict(project(tofloat(testFeature)), results);
-        //return ClassifierCosine::predict(project(tofloat(testFeature)), results);
     }
 
     // Serialize
@@ -378,11 +366,11 @@ struct ClassifierPCA : public ClassifierNearestFloat  //ClassifierCosine
 //
 struct ClassifierPCA_LDA : public ClassifierPCA
 {
-    bool useL2;
+    bool useMahalanobis;
     Mat icovar;
-    ClassifierPCA_LDA(int num_components=0, bool useL2=false)
+    ClassifierPCA_LDA(int num_components=0, bool useMahalanobis=true)
         : ClassifierPCA(num_components)
-        , useL2(useL2)
+        , useMahalanobis(useMahalanobis)
     {}
 
     virtual int train(const Mat &trainData, const Mat &trainLabels)
@@ -410,8 +398,8 @@ struct ClassifierPCA_LDA : public ClassifierPCA
         features = project(trainData);
         labels = trainLabels;
 
-        // if we use Mahalanobis, precalculate the inverse covariance matrix:
-        if (!useL2)
+        // while we're at it, precalculate the inverse covariance matrix:
+        if (useMahalanobis)
         {
             Mat _covar, _mean;
             calcCovarMatrix(features, _covar, _mean, CV_COVAR_NORMAL|CV_COVAR_ROWS, CV_32F);
@@ -431,13 +419,12 @@ struct ClassifierPCA_LDA : public ClassifierPCA
     {
         Mat q = project(tofloat(testFeature));
 
-        if (useL2)
+        if (! useMahalanobis) // fall back to plain L2 norm
             return ClassifierNearestFloat::predict(q, results);
 
-        // else use Mahalanobis
         int minId = -1;
         double minDist = 999999999;
-        nearest(q, features, minId,minDist, *this);
+        nearest(q, features, minId, minDist, *this);
         results = (Mat_<float>(1,3) << float(labels.at<int>(minId)), float(minDist), float(minId));
         return 1;
     }

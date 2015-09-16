@@ -186,7 +186,7 @@ int main(int argc, const char *argv[])
     string imgpath("data/persons");
     if (argc > 2) imgpath=argv[2];
 
-    std::string cascade_path("E:\\code\\opencv\\data\\haarcascades\\haarcascade_frontalface_alt.xml");
+    std::string cascade_path("data/haarcascade_frontalface_alt2.xml");
     if (argc > 3) cascade_path=argv[3];
 
     if (argc == 1)
@@ -210,7 +210,7 @@ int main(int argc, const char *argv[])
     // feel free to swap parts here, it's intended for that..
     FaceRec reco(TextureFeature::EXT_PNET,
                  TextureFeature::FIL_NONE,
-                 TextureFeature::CL_SVM_LIN);
+                 TextureFeature::CL_MLP);
     int n = reco.train(imgpath);
     cerr << n << endl;
 
