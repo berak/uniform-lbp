@@ -673,39 +673,39 @@ struct ExtractorGaborGradBin : public ExtractorGradBin
     }
 };
 
-
-template < class Descriptor >
-struct ExtractorGridFeature2d : public TextureFeature::Extractor
-{
-    int grid;
-
-    ExtractorGridFeature2d(int g=10) : grid(g) {}
-
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        float gw = float(img.cols) / grid;
-        float gh = float(img.rows) / grid;
-        vector<KeyPoint> kp;
-        for (float i=gh/2; i<img.rows-gh; i+=gh)
-        {
-            for (float j=gw/2; j<img.cols-gw; j+=gw)
-            {
-                KeyPoint k(j, i, gh);
-                kp.push_back(k);
-            }
-        }
-        Ptr<Feature2D> f2d = Descriptor::create();
-        f2d->compute(img, kp, features);
-
-        features = features.reshape(1,1);
-        return features.total() * features.elemSize();
-    }
-};
-typedef ExtractorGridFeature2d<ORB> ExtractorORBGrid;
-typedef ExtractorGridFeature2d<BRISK> ExtractorBRISKGrid;
-typedef ExtractorGridFeature2d<xfeatures2d::FREAK> ExtractorFREAKGrid;
-typedef ExtractorGridFeature2d<xfeatures2d::SIFT> ExtractorSIFTGrid;
-typedef ExtractorGridFeature2d<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
+//
+//template < class Descriptor >
+//struct ExtractorGridFeature2d : public TextureFeature::Extractor
+//{
+//    int grid;
+//
+//    ExtractorGridFeature2d(int g=10) : grid(g) {}
+//
+//    virtual int extract(const Mat &img, Mat &features) const
+//    {
+//        float gw = float(img.cols) / grid;
+//        float gh = float(img.rows) / grid;
+//        vector<KeyPoint> kp;
+//        for (float i=gh/2; i<img.rows-gh; i+=gh)
+//        {
+//            for (float j=gw/2; j<img.cols-gw; j+=gw)
+//            {
+//                KeyPoint k(j, i, gh);
+//                kp.push_back(k);
+//            }
+//        }
+//        Ptr<Feature2D> f2d = Descriptor::create();
+//        f2d->compute(img, kp, features);
+//
+//        features = features.reshape(1,1);
+//        return features.total() * features.elemSize();
+//    }
+//};
+//typedef ExtractorGridFeature2d<ORB> ExtractorORBGrid;
+//typedef ExtractorGridFeature2d<BRISK> ExtractorBRISKGrid;
+//typedef ExtractorGridFeature2d<xfeatures2d::FREAK> ExtractorFREAKGrid;
+//typedef ExtractorGridFeature2d<xfeatures2d::SIFT> ExtractorSIFTGrid;
+//typedef ExtractorGridFeature2d<xfeatures2d::BriefDescriptorExtractor> ExtractorBRIEFGrid;
 
 struct Patcher : public TextureFeature::Extractor
 {
@@ -852,79 +852,79 @@ struct HighDimLbpPCA : public TextureFeature::Extractor
     }
 };
 
-
-struct HighDimPCASift : public TextureFeature::Extractor
-{
-    Ptr<Landmarks> land;
-    Ptr<Feature2D> sift;
-    PCA pca[20];
-
-    HighDimPCASift()
-        : sift(xfeatures2d::SIFT::create())
-        , land(createLandmarks())
-    {
-        FileStorage fs("data/hd_pcasift_20.xml.gz",FileStorage::READ);
-        CV_Assert(fs.isOpened());
-        FileNode pnodes = fs["hd_pcasift"];
-        int i=0;
-        for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
-        {
-            pca[i++].read(*it);
-        }
-        fs.release();
-    }
-    virtual int extract(const Mat &img, Mat &features) const
-    {
-        int gr=5; // 10 used in paper
-        vector<Point> pt;
-        land->extract(img,pt);
-        CV_Assert(pt.size()==20);
-
-        Mat histo;
-        float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
-        float offsets_16[] = {
-            -1.5f,-1.5f, -0.5f,-1.5f, 0.5f,-1.5f, 1.5f,-1.5f,
-            -1.5f,-0.5f, -0.5f,-0.5f, 0.5f,-0.5f, 1.5f,-0.5f,
-            -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
-            -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
-        };
-        float offsets_9[] = {
-            -1.f,-1.f, 0.f,-1.f, 1.f,-1.f,
-            -1.f, 0.f, 0.f, 0.f, 1.f, 0.f,
-            -1.f, 1.f, 0.f, 1.f, 1.f, 1.f,
-        };
-        int noff = 16;
-        float *off = offsets_16;
-//        for (int i=0; i<5; i++)
-        {
-            float s = 1.0f;//scale[i];
-            Mat f1,f2,imgs;
-            resize(img,imgs,Size(),s,s);
-
-            for (size_t k=0; k<pt.size(); k++)
-            {
-                vector<KeyPoint> kp;
-                Mat h;
-                for (int o=0; o<noff; o++)
-                {
-                    kp.push_back(KeyPoint(pt[k].x*s + off[o*2]*gr, pt[k].y*s + off[o*2+1]*gr, float(gr)));
-                }
-                sift->compute(imgs,kp,h);
-                for (size_t j=0; j<kp.size(); j++)
-                {
-                    Mat hx = h.row(j).t();
-                    hx.push_back(float(kp[j].pt.x/img.cols - 0.5));
-                    hx.push_back(float(kp[j].pt.y/img.rows - 0.5));
-                    Mat hy = pca[k].project(hx.reshape(1,1));
-                    histo.push_back(hy);
-                }
-            }
-        }
-        features = histo.reshape(1,1);
-        return features.total() * features.elemSize();
-    }
-};
-
+//
+//struct HighDimPCASift : public TextureFeature::Extractor
+//{
+//    Ptr<Landmarks> land;
+//    Ptr<Feature2D> sift;
+//    PCA pca[20];
+//
+//    HighDimPCASift()
+//        : sift(xfeatures2d::SIFT::create())
+//        , land(createLandmarks())
+//    {
+//        FileStorage fs("data/hd_pcasift_20.xml.gz",FileStorage::READ);
+//        CV_Assert(fs.isOpened());
+//        FileNode pnodes = fs["hd_pcasift"];
+//        int i=0;
+//        for (FileNodeIterator it=pnodes.begin(); it!=pnodes.end(); ++it)
+//        {
+//            pca[i++].read(*it);
+//        }
+//        fs.release();
+//    }
+//    virtual int extract(const Mat &img, Mat &features) const
+//    {
+//        int gr=5; // 10 used in paper
+//        vector<Point> pt;
+//        land->extract(img,pt);
+//        CV_Assert(pt.size()==20);
+//
+//        Mat histo;
+//        float scale[] = {0.75f, 1.06f, 1.5f, 2.2f, 3.0f}; // http://bcsiriuschen.github.io/High-Dimensional-LBP/
+//        float offsets_16[] = {
+//            -1.5f,-1.5f, -0.5f,-1.5f, 0.5f,-1.5f, 1.5f,-1.5f,
+//            -1.5f,-0.5f, -0.5f,-0.5f, 0.5f,-0.5f, 1.5f,-0.5f,
+//            -1.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 1.5f, 0.5f,
+//            -1.5f, 1.5f, -0.5f, 1.5f, 0.5f, 1.5f, 1.5f, 1.5f
+//        };
+//        float offsets_9[] = {
+//            -1.f,-1.f, 0.f,-1.f, 1.f,-1.f,
+//            -1.f, 0.f, 0.f, 0.f, 1.f, 0.f,
+//            -1.f, 1.f, 0.f, 1.f, 1.f, 1.f,
+//        };
+//        int noff = 16;
+//        float *off = offsets_16;
+////        for (int i=0; i<5; i++)
+//        {
+//            float s = 1.0f;//scale[i];
+//            Mat f1,f2,imgs;
+//            resize(img,imgs,Size(),s,s);
+//
+//            for (size_t k=0; k<pt.size(); k++)
+//            {
+//                vector<KeyPoint> kp;
+//                Mat h;
+//                for (int o=0; o<noff; o++)
+//                {
+//                    kp.push_back(KeyPoint(pt[k].x*s + off[o*2]*gr, pt[k].y*s + off[o*2+1]*gr, float(gr)));
+//                }
+//                sift->compute(imgs,kp,h);
+//                for (size_t j=0; j<kp.size(); j++)
+//                {
+//                    Mat hx = h.row(j).t();
+//                    hx.push_back(float(kp[j].pt.x/img.cols - 0.5));
+//                    hx.push_back(float(kp[j].pt.y/img.rows - 0.5));
+//                    Mat hy = pca[k].project(hx.reshape(1,1));
+//                    histo.push_back(hy);
+//                }
+//            }
+//        }
+//        features = histo.reshape(1,1);
+//        return features.total() * features.elemSize();
+//    }
+//};
+//
 
 
 struct HighDimGrad : public TextureFeature::Extractor
@@ -1191,7 +1191,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_BGC1_P:   return makePtr< GenericExtractor<FeatureBGC1,PyramidGrid> >(FeatureBGC1(), PyramidGrid()); break;
         case EXT_COMB:     return makePtr< CombinedExtractor<GriddedHist> >(GriddedHist()); break;
         case EXT_COMB_P:   return makePtr< CombinedExtractor<PyramidGrid> >(PyramidGrid()); break;
-        case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(32); break;
+        //case EXT_Sift:     return makePtr< ExtractorSIFTGrid >(32); break;
         case EXT_Grad:     return makePtr< GenericExtractor<FeatureGrad,GriddedHist> >(FeatureGrad(),GriddedHist());  break;
         case EXT_Grad_P:   return makePtr< GenericExtractor<FeatureGrad,PyramidGrid> >(FeatureGrad(),PyramidGrid()); break;
         case EXT_GradMag:  return makePtr< GradMagExtractor<GriddedHist> >(GriddedHist()); break;
@@ -1201,7 +1201,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_HDGRAD:   return makePtr< HighDimGrad >();  break;
         case EXT_HDLBP:    return makePtr< HighDimLbp >();  break;
         case EXT_HDLBP_PCA:return makePtr< HighDimLbpPCA >();  break;
-        case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
+        //case EXT_PCASIFT:  return makePtr< HighDimPCASift >();  break;
         case EXT_PNET:     return makePtr< ExtractorPNet >("data/pnet.xml");  break;
         case EXT_CDIKP:    return makePtr< ExtractorCDIKP >();  break;
         case EXT_LATCH2:   return makePtr< ExtractorLatch2 >();  break;
