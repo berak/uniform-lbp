@@ -323,7 +323,7 @@ int main(int argc, const char *argv[])
             "{ maxp M         |10    | maximal img count per person (-1==read_all)}"
             "{ maxim I        |500   | maximal img count overall }"
             "{ ext e          |0    | extractor  enum }"
-            "{ fil f          |0     | filter   enum }"
+            "{ fil f          |2     | filter   enum }"
             "{ cls c          |20     | classifier enum }"
             "{ all a          |false | run a hardcoded list of tests }"
             "{ pre P          |3     | preprocessing }"
@@ -344,7 +344,7 @@ int main(int argc, const char *argv[])
     {
         printOptions();
         return -1;
-    }
+    } 
     int all = parser.has("all");
     int tab = parser.has("tab");
     int ext = parser.get<int>("ext");

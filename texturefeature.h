@@ -130,6 +130,7 @@ namespace TextureFeature
     enum FIL {
         FIL_NONE,
         FIL_MEAN,
+        FIL_NORM,
         FIL_HELL,
         FIL_POW,
         FIL_SQRT,
@@ -149,6 +150,7 @@ namespace TextureFeature
     static const char *FILS[] = {
         "none",
         "MEAN",
+        "NORM",
         "HELL",
         "POW",
         "SQRT",

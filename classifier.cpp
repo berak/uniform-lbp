@@ -366,8 +366,9 @@ struct ClassifierPCA : public ClassifierNearestFloat
 //
 struct ClassifierPCA_LDA : public ClassifierPCA
 {
-    bool useMahalanobis;
     Mat icovar;
+    bool useMahalanobis;
+
     ClassifierPCA_LDA(int num_components=0, bool useMahalanobis=true)
         : ClassifierPCA(num_components)
         , useMahalanobis(useMahalanobis)
