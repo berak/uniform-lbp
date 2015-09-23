@@ -44,7 +44,7 @@ struct FrontalizerImpl : public Frontalizer
         FileStorage fs("data/mdl.yml.gz", FileStorage::READ);
         if (! fs.isOpened())
         {
-            cerr << "mdl.yml.gz could not be loaded !" << endl;
+            cerr << "data/mdl.yml.gz could not be loaded !" << endl;
         }
         fs["mdl"] >> mdl;
         fs["eyemask"] >> eyemask;
@@ -62,7 +62,7 @@ struct FrontalizerImpl : public Frontalizer
         Mat meanI = imread("data/reference_320_320.png", 0);
         if (meanI.empty())
         {
-            cerr << "reference_320_320.png could not be loaded !" << endl;
+            cerr << "data/reference_320_320.png could not be loaded !" << endl;
         }
         getkp2d(meanI, pts2d, Rect(80,80, 160,160));
 
@@ -338,12 +338,12 @@ int main(int argc, const char *argv[])
     CascadeClassifier casc(casc_path + "haarcascade_frontalface_alt.xml");
     if (casc.empty())
     {
-        cerr << "haarcascade_frontalface_alt.xml not found" << endl;
+        cerr << casc_path << "haarcascade_frontalface_alt.xml not found" << endl;
     }
     CascadeClassifier cascp(casc_path + "haarcascade_profileface.xml");
     if (cascp.empty())
     {
-        cerr << "haarcascade_profileface.xml not found" << endl;
+        cerr << casc_path << "haarcascade_profileface.xml not found" << endl;
     }
     //
     // !!!
