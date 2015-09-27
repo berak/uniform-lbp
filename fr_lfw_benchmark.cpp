@@ -192,12 +192,12 @@ int main(int argc, const char *argv[])
             "{ help h usage ? |    | show this message }"
             "{ opts o         |    | show extractor / filter / verifier options }"
             "{ path p         |data/lfw-deepfunneled/| path to dataset (lfw2 folder) }"
-            "{ ext e          |27   | extractor enum }"
+            "{ ext e          |0   | extractor enum }"
             "{ fil f          |0   | filter enum }"
-            "{ cls c          |21   | classifier enum }"
+            "{ cls c          |0   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
-            "{ lab l          |0   | train / test with labels(instead of direct image compare) }"
-            "{ skip s         |80  | skip imgs for train }"
+            "{ lab l          |    | train / test with labels(instead of direct image compare) }"
+            "{ skip s         |20  | skip imgs for train }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 
