@@ -303,7 +303,7 @@ int main(int argc, const char *argv[])
         double acc = double(correct[1]+correct[0])/((curr.size()/skip));
         double tpr = double(correct[1])/(correct[1]+incorrect[1]);
         double fpr = double(incorrect[0])/(correct[0]+incorrect[0]);
-        fprintf(stderr, "%4u %2.3f/%-2.3f  %2.3f                        \n", j, tpr,fpr,acc );
+        fprintf(stdout, "%4u %2.3f/%-2.3f  %2.3f                        \n", j, tpr,fpr,acc );
         p_acc.push_back(acc);
         p_tpr.push_back(tpr);
         p_fpr.push_back(fpr);
