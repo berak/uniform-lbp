@@ -275,7 +275,7 @@ double runtest(string name, Ptr<Extractor> ext, Ptr<Filter> fil, Ptr<Classifier>
         double all = sum(confusion)[0];
         double neg = all - sum(confusion.diag())[0];
         double err = double(neg)/all;
-        cout << format("%-23s %-2d %6d %6d %6d %8.3f %8.3f %8.3f",name.c_str(), (f+1), fsiz, int(all-neg), int(neg), (1.0-err), ct(t_train)/(f+1), ct(t_test)/(f+1)) << '\r';
+        cerr << format("%-23s %-2d %6d %6d %6d %8.3f %8.3f %8.3f",name.c_str(), (f+1), fsiz, int(all-neg), int(neg), (1.0-err), ct(t_train)/(f+1), ct(t_test)/(f+1)) << '\r';
     }
 
 

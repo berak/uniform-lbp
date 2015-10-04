@@ -221,7 +221,7 @@ int main(int argc, const char *argv[])
     int crp = parser.get<int>("crop");
     int skip = parser.get<int>("skip");
     string trainMethod(parser.get<string>("train"));
-    cout << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << trainMethod << (lab?" c":" v") << endl;
+    cerr << TextureFeature::EXS[ext] << " " << TextureFeature::FILS[fil] << " " << TextureFeature::CLS[cls] << " " << crp << " " << trainMethod << (lab?" c":" v") << endl;
 
     int64 t0 = getTickCount();
     Ptr<MyFace> model = makePtr<MyFace>(ext,fil,cls,pre,crp,trainMethod,skip,lab);
@@ -303,7 +303,7 @@ int main(int argc, const char *argv[])
         double acc = double(correct[1]+correct[0])/((curr.size()/skip));
         double tpr = double(correct[1])/(correct[1]+incorrect[1]);
         double fpr = double(incorrect[0])/(correct[0]+incorrect[0]);
-        printf("%4u %2.3f/%-2.3f  %2.3f                        \n", j, tpr,fpr,acc );
+        fprintf(stderr, "%4u %2.3f/%-2.3f  %2.3f                        \n", j, tpr,fpr,acc );
         p_acc.push_back(acc);
         p_tpr.push_back(tpr);
         p_fpr.push_back(fpr);
@@ -328,13 +328,13 @@ int main(int argc, const char *argv[])
     double se = sigma/sqrt(double(p_acc.size()));
 
     int64 t1 = getTickCount();
-    cerr << format("%-8s",TextureFeature::EXS[ext])  << " ";
-    cerr << format("%-7s",TextureFeature::FILS[fil]) << " ";
-    cerr << format("%-7s",TextureFeature::CLS[cls])  << " ";
-    //cerr << format("%-8s",TextureFeature::PPS[pre])  << " ";
-    cerr << format("%-5s",trainMethod.c_str()) << "\t";
-    //cerr << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
-    cerr << format("%3.4f/%-3.4f %3.4f/%-3.4f %3.4f",  mu_acc, se, mu_tpr, mu_fpr, ((t1-t0)/getTickFrequency())) << endl;
+    cout << format("%-9s",TextureFeature::EXS[ext]) << " ";
+    cout << format("%-7s",TextureFeature::FILS[fil]) << " ";
+    cout << format("%-7s",TextureFeature::CLS[cls])  << " ";
+    //cout << format("%-8s",TextureFeature::PPS[pre])  << " ";
+    cout << format("%-5s",trainMethod.c_str()) << "\t";
+    //cout << format("%2d %d %-6s",crp ,flp, trainMethod.c_str()) << "\t";
+    cout << format("%3.4f/%-3.4f %3.4f/%-3.4f %3.4f",  mu_acc, se, mu_tpr, mu_fpr, ((t1-t0)/getTickFrequency())) << endl;
 
     return 0;
 }

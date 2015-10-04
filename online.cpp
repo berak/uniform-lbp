@@ -183,7 +183,7 @@ int main(int argc, const char *argv[])
     string cp("0");
     if (argc > 1) cp=argv[1];
 
-    string imgpath("data/persons");
+    string imgpath("data\\persons");
     if (argc > 2) imgpath=argv[2];
 
     std::string cascade_path("data/haarcascade_frontalface_alt2.xml");
@@ -296,6 +296,7 @@ int main(int argc, const char *argv[])
                     path += n;
                     String cmdline = "mkdir ";
                     cmdline += path;
+                    cerr << cmdline << endl;
                     system(cmdline.c_str()); // lame, but portable..
                     for (size_t i=0; i<images.size(); i++)
                     {
