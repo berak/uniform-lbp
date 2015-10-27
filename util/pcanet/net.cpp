@@ -14,7 +14,7 @@ namespace util
 //
 // matlab like helpers:
 //
-static cv::Mat bsxfun_times(cv::Mat &bhist, int numFilters)
+static Mat bsxfun_times(Mat &bhist, int numFilters)
 {
     int row = bhist.rows;
     int col = bhist.cols;
@@ -50,10 +50,10 @@ static cv::Mat bsxfun_times(cv::Mat &bhist, int numFilters)
 
 
 
-static cv::Mat hist(const cv::Mat &mat, int range)
+static Mat hist(const Mat &mat, int range)
 {
-    cv::Mat mt = mat.t();
-    cv::Mat hist = cv::Mat::zeros(mt.rows, range + 1, CV_32F);
+    Mat mt = mat.t();
+    Mat hist = Mat::zeros(mt.rows, range + 1, CV_32F);
 
     for (int i=0; i<mt.rows; i++)
     {
@@ -70,7 +70,7 @@ static cv::Mat hist(const cv::Mat &mat, int range)
 }
 
 
-static cv::Mat im2col(const cv::Mat &images, const vector<int> &blockSize, const vector<int> &stepSize)
+static Mat im2col(const Mat &images, const vector<int> &blockSize, const vector<int> &stepSize)
 {
     const int ROW_DIM = 0;
     const int COL_DIM = 1;
@@ -78,7 +78,7 @@ static cv::Mat im2col(const cv::Mat &images, const vector<int> &blockSize, const
     int col_diff = images.cols - blockSize[COL_DIM];
     int r_row = blockSize[ROW_DIM] * blockSize[COL_DIM];
     int r_col = (row_diff / stepSize[ROW_DIM] + 1) * (col_diff / stepSize[COL_DIM] + 1);
-    cv::Mat outBlocks(r_col, r_row, images.type());
+    Mat outBlocks(r_col, r_row, images.type());
 
     int blocknum = 0;
     for (int j=0; j<=col_diff; j+=stepSize[COL_DIM])
@@ -104,37 +104,37 @@ static cv::Mat im2col(const cv::Mat &images, const vector<int> &blockSize, const
 }
 
 
-static cv::Mat patchImage(const cv::Mat &image, int patchSize, bool reduceMean=false)
+static Mat patchImage(const Mat &image, int patchSize, bool reduceMean=false)
 {
     vector<int> blockSize(2, patchSize);
     vector<int> stepSize(2, 1);
-    cv::Mat temp = im2col(image, blockSize, stepSize);
+    Mat temp = im2col(image, blockSize, stepSize);
     if (! reduceMean)
         return temp;
 
-    cv::Mat mean;
-    cv::reduce(temp, mean, 0, cv::REDUCE_AVG);
-    cv::Mat res;
+    Mat mean;
+    reduce(temp, mean, 0, REDUCE_AVG);
+    Mat res;
     for (int i=0; i<temp.rows; i++)
     {
-        cv::Mat temp2 = (temp.row(i) - mean.row(0));
+        Mat temp2 = (temp.row(i) - mean.row(0));
         res.push_back(temp2.row(0));
     }
     return res;
 }
 
 
-static void randomIndex(cv::Mat_<int> &randIdx)
+static void randomIndex(Mat_<int> &randIdx)
 {
     for (size_t i=0; i<randIdx.total(); i++)
         randIdx(i) = i;
-    cv::randShuffle(randIdx);
+    randShuffle(randIdx);
 }
 
 
-static void randomFat(const vector<cv::Mat> &input, cv::Mat &fat)
+static void randomFat(const vector<Mat> &input, Mat &fat)
 {
-    cv::Mat_<int> randIdx(1, input.size());
+    Mat_<int> randIdx(1, input.size());
     randomIndex(randIdx);
 
     for (size_t i=0; i<input.size(); i++)
@@ -182,7 +182,7 @@ struct FilterBank : Stage
 
 
     inline
-    cv::Mat filter(int f) const
+    Mat filter(int f) const
     {
         return filters.row(f).reshape(1, patchSize);
     }
@@ -194,7 +194,7 @@ struct FilterBank : Stage
         Mat dst, fil;
         if (full_convolution)
         {
-            cv::flip(f, fil, -1);
+            flip(f, fil, -1);
             anchor = Point(f.cols - f.cols/2 - 1, f.rows - f.rows/2 - 1);
         }
         else
@@ -202,7 +202,7 @@ struct FilterBank : Stage
             fil = f;
         }
         filter2D(src, dst, CV_32F, fil, anchor);
-        cv::normalize(dst, dst, 1); // is this the general case ?
+        normalize(dst, dst, 1); // is this the general case ?
         return dst;
     }
 
@@ -261,9 +261,9 @@ struct Learner : FilterBank
 
     Mat normalize(const Mat &inp) const
     {
-        cv::Scalar me,sd;
-        cv::meanStdDev(inp, me, sd);
-        cv::Mat im(inp - me[0]);
+        Scalar me,sd;
+        meanStdDev(inp, me, sd);
+        Mat im(inp - me[0]);
         im /= sd[0];
         return im;
     }
@@ -285,7 +285,7 @@ struct Learner : FilterBank
     virtual bool train(const vector<Mat> &images)
     {
         Mat grads(numFilters, patchSize*patchSize, CV_32F, 0.0f);
-        filters = cv::Mat(numFilters, patchSize*patchSize, CV_32F);
+        filters = Mat(numFilters, patchSize*patchSize, CV_32F);
         randu(filters,-1,1);
         for (int g=0; g<ngens; g++)
         {
@@ -358,15 +358,15 @@ struct GaborProjection : Oszillator
     virtual bool train(const vector<Mat> &images)
     {
         int N = numFilters;
-        cv::Mat proj;
+        Mat proj;
         for (int i=0; i<N; i++)
         {
             double sigma  = 12.0;;
             double theta  = double(freq*(7-i)) * CV_PI;
-            double lambda = double(1.3*(10-i)) * CV_PI/4;// * 180.0;//180.0 - theta;//45.0;// * 180.0 / CV_PI;
-            double gamma  = (i+5);//6.0;// * 180.0 / CV_PI;
-            double psi = CV_PI;//90.0;
-            cv::Mat gab = cv::getGaborKernel(cv::Size(patchSize,patchSize),sigma,theta,lambda,gamma,psi);
+            double lambda = double(1.3*(10-i)) * CV_PI/4;
+            double gamma  = (i+5);
+            double psi = CV_PI;
+            Mat gab = getGaborKernel(Size(patchSize,patchSize),sigma,theta,lambda,gamma,psi);
             gab.convertTo(gab,CV_32F,invert);
             proj.push_back(gab.reshape(1,1));
         }
@@ -387,7 +387,7 @@ struct WaveProjection : Oszillator
     virtual bool train(const vector<Mat> &images)
     {
         int N = numFilters, K = patchSize*patchSize;
-        cv::Mat proj(N, K, CV_32F);
+        Mat proj(N, K, CV_32F);
 
         float t = freq * 0.17f;
         float off = 1.0f + 1.0f/float(freq+1);
@@ -422,21 +422,21 @@ struct PcaProjection : FilterBank
 
     virtual bool train(const vector<Mat> &images)
     {
-        cv::Mat_<int> randIdx(1, images.size());
+        Mat_<int> randIdx(1, images.size());
         util::randomIndex(randIdx);
 
         int size = patchSize * patchSize;
-        cv::Mat Rx = cv::Mat::zeros(size, size, images[0].type());
+        Mat Rx = Mat::zeros(size, size, images[0].type());
 
         for (size_t j=0; j<images.size(); j++)
         {
-            cv::Mat temp = util::patchImage(images[randIdx(j)], patchSize);
+            Mat temp = util::patchImage(images[randIdx(j)], patchSize);
             Rx = Rx + temp * temp.t();
         }
         int count = images[0].cols * images.size();
         Rx = Rx / (double)(count);
 
-        cv::Mat evals, evecs;
+        Mat evals, evecs;
         eigen(Rx, evals, evecs);
 
         for (int i = 0; i<numFilters; i++)
@@ -459,7 +459,7 @@ struct DctProjection : FilterBank
 
     virtual bool train(const vector<Mat> &images) 
     { 
-        cv::Mat fat;
+        Mat fat;
         util::randomFat(images, fat);
 
         Mat freq;
@@ -497,18 +497,18 @@ struct Hashing : Stage
 
     virtual bool process(const vector<Mat> &input, vector<Mat> &output) const
     {
-        cv::Mat bhist;
+        Mat bhist;
         int numImg = input.size() / numFilters;
         for (int i=0; i<numImg; i++)
         {
-            cv::Mat T(input[0].size(), input[0].type(), cv::Scalar(0));
+            Mat T(input[0].size(), input[0].type(), Scalar(0));
             for (int j=0; j<numFilters; j++)
             {
-                cv::Mat temp;
+                Mat temp;
                 threshold(input[numFilters * i + j], temp, 0.0, double(1<<j), 0);
                 T += temp;
             }
-            cv::Mat t2 = util::im2col(T, blockSize, blockSize);
+            Mat t2 = util::im2col(T, blockSize, blockSize);
             t2 = util::hist(t2, (int)(pow(2.0, numFilters)) - 1);
             t2 = util::bsxfun_times(t2, numFilters);
             if (i == 0) bhist = t2;
@@ -577,7 +577,7 @@ struct Network : public PNet
 
     bool train(const vector<Mat> &images)
     {
-        vector<cv::Mat>feat(images), post;
+        vector<Mat>feat(images), post;
 
         for (size_t i=0; i<layers.size() - 1; i++)
         {
@@ -591,7 +591,7 @@ struct Network : public PNet
 
             // swap prev/cur set
             feat.clear();
-            cv::swap(feat,post);
+            swap(feat,post);
         }
         return true;
     }
@@ -600,7 +600,7 @@ struct Network : public PNet
     {
         Mat im;
         img.convertTo(im,CV_32F);
-        vector<cv::Mat>feat(1,im), post;
+        vector<Mat>feat(1,im), post;
 
         for (size_t i=0; i<layers.size(); i++)
         {
@@ -613,9 +613,9 @@ struct Network : public PNet
         return feat.back();
     }
 
-    bool save(const cv::String &fn) const
+    bool save(const String &fn) const
     {
-        cv::FileStorage fs(fn, cv::FileStorage::WRITE);
+        FileStorage fs(fn, FileStorage::WRITE);
         fs << "Stages" << "[" ;
         for (size_t i=0; i<layers.size(); i++)
         {
@@ -629,16 +629,16 @@ struct Network : public PNet
         return true;
     }
 
-    virtual bool load(const cv::String &fn)
+    virtual bool load(const String &fn)
     {
-        cv::FileStorage fs(fn, cv::FileStorage::READ);
-        cv::FileNode no = fs["Stages"];
-        for (cv::FileNodeIterator it=no.begin(); it!=no.end(); ++it)
+        FileStorage fs(fn, FileStorage::READ);
+        FileNode no = fs["Stages"];
+        for (FileNodeIterator it=no.begin(); it!=no.end(); ++it)
         {
-            const cv::FileNode &n = *it;
-            cv::String type;
+            const FileNode &n = *it;
+            String type;
             n["Type"] >> type;
-            cv::Ptr<Stage> stage = addStage(type);
+            Ptr<Stage> stage = addStage(type);
             stage->load(n);
         }
         fs.release();
@@ -646,9 +646,9 @@ struct Network : public PNet
     }
 
 
-    cv::String ingo()
+    String ingo()
     {
-        cv::String s="";
+        String s="";
         for (size_t j=0; j<layers.size(); j++)
         {
             s += layers[j]->info() + "\r\n";
@@ -662,9 +662,9 @@ struct Network : public PNet
 //
 // global factory method
 //
-cv::Ptr<PNet> loadNet(const String &fn)
+Ptr<PNet> loadNet(const String &fn)
 {
-    cv::Ptr<Network> pn = makePtr<Network>();
+    Ptr<Network> pn = makePtr<Network>();
     pn->load(fn);
     cerr << pn->ingo() << endl;
     return pn;

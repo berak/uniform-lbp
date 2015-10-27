@@ -135,6 +135,23 @@ struct ClassifierHist : public ClassifierNearestFloat
     }
 };
 
+//struct ClassifierHistWeighted : public ClassifierNearestFloat
+//{
+//
+//    // ClassifierNearest
+//    virtual double distance(const cv::Mat &testFeature, const cv::Mat &trainFeature) const
+//    {
+//        static float weights[] = {
+//            0,1,1,1,1,1,1,0,
+//            1,2,2,1,1,2,2,1,
+//            2,4,4,4,4,4,4,2,
+//            1,2,2,1,1,2,2,1,
+//            0,1,1,0,0,1,1,0,
+//        };
+//         return compareHist(testFeature, trainFeature, flag);
+//    }
+//};
+//
 
 //
 // Negated Mahalanobis Cosine Distance
@@ -825,7 +842,7 @@ Ptr<Classifier> createClassifier(int clsfy)
         case CL_NORM_L2SQR:return makePtr<ClassifierNearest>(NORM_L2SQR); break;
         case CL_NORM_L1:   return makePtr<ClassifierNearest>(NORM_L1); break;
         case CL_HIST_HELL: return makePtr<ClassifierHist>(HISTCMP_HELLINGER); break;
-        case CL_HIST_CHI:  return makePtr<ClassifierHist>(HISTCMP_CHISQR); break;
+        case CL_HIST_CHI:  return makePtr<ClassifierHist>(HISTCMP_CHISQR_ALT); break;
         case CL_KLDIV:     return makePtr<ClassifierHist>(HISTCMP_KL_DIV); break;
         case CL_COSINE:    return makePtr<ClassifierCosine>(); break;
         case CL_SVM_LIN:   return makePtr<ClassifierSVM>(int(cv::ml::SVM::LINEAR)); break;

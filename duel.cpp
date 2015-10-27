@@ -410,6 +410,7 @@ int main(int argc, const char *argv[])
             //TextureFeature::EXT_PCASIFT, TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_LIN,
             TextureFeature::EXT_GaborGB, TextureFeature::FIL_MEAN,  TextureFeature::CL_SVM_LIN,
             TextureFeature::EXT_PNET,    TextureFeature::FIL_NONE,  TextureFeature::CL_SVM_LIN,
+            TextureFeature::EXT_PNET,    TextureFeature::FIL_NONE,  TextureFeature::CL_MLP,
             TextureFeature::EXT_CDIKP,  TextureFeature::FIL_DCT8,  TextureFeature::CL_SVM_INT2,
 
             -1,-1,-1
