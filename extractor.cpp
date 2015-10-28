@@ -376,7 +376,8 @@ struct FeatureLTP
 struct LQPDisk35
 {
     const static int R = 5;
-    const static int NP = 20;
+    const static int NP = 21;   // 21 bits, 2mb lookup table
+    //const static int NP = 22; // 22 bits, 4mb lookup table
 
     Mat_<int> lut;
 
@@ -387,11 +388,10 @@ struct LQPDisk35
         fs["lut"] >> lut;
     }
 
-    int operator()(const cv::Mat &img, cv::Mat &lpq) const
+    int operator()(const cv::Mat &img, cv::Mat &features) const
     {       
         Mat_<uchar> m(img);
-        Mat_<uchar> lbp21 = Mat_<uchar>::zeros(img.size());
-        //PROFILE;
+        Mat_<uchar> lbp = Mat_<uchar>::zeros(img.size());
         static int pts[NP*2] = {
             -2,-2, //Disk3
             -3,-1, 
@@ -413,6 +413,8 @@ struct LQPDisk35
             -2, 5,
             -3, 4,
             -4, 3,
+            -5, 2,
+            //-5, 1
         };
 
         for (int i=R; i<img.rows-R; i++)
@@ -431,10 +433,10 @@ struct LQPDisk35
 
                     bits |= (m(y1,x1) > m(y2,x2)) << b;
                 }
-                lbp21(i,j) = lut(bits);
+                lbp(i,j) = lut(bits);
             }
         }
-        lpq=lbp21;
+        features = lbp;
         return 256;
     }
 };
@@ -1250,7 +1252,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
         case EXT_LBP_P:    return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid()); break;
         case EXT_LBPU:     return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist(true)); break;
         case EXT_LBPU_P:   return makePtr< GenericExtractor<FeatureLbp,PyramidGrid> >(FeatureLbp(), PyramidGrid(true)); break;
-        case EXT_LQP:      return makePtr< GenericExtractor<LQPDisk35,PyramidGrid> >(LQPDisk35(), PyramidGrid(true)); break;
+        case EXT_LQP:      return makePtr< GenericExtractor<LQPDisk35,GriddedHist> >(LQPDisk35(), GriddedHist()); break;
         case EXT_TPLbp:    return makePtr< GenericExtractor<FeatureTPLbp,GriddedHist> >(FeatureTPLbp(), GriddedHist()); break;
         case EXT_TPLBP_P:  return makePtr< GenericExtractor<FeatureTPLbp,PyramidGrid> >(FeatureTPLbp(), PyramidGrid()); break;
         case EXT_FPLbp:    return makePtr< GenericExtractor<FeatureFPLbp,GriddedHist> >(FeatureFPLbp(), GriddedHist()); break;
