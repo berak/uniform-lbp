@@ -197,7 +197,7 @@ int main(int argc, const char *argv[])
             "{ cls c          |0   | classifier enum }"
             "{ pre P          |0   | preprocessing }"
             "{ lab l          |    | train / test with labels(instead of direct image compare) }"
-            "{ skip s         |20  | skip imgs for train }"
+            "{ skip s         |1   | skip imgs for train }"
             "{ crop C         |80  | cut outer 80 pixels to to 90x90 }"
             "{ train t        |dev | train method: 'dev'(pairsDevTrain.txt) or 'split'(pairs.txt) }";
 

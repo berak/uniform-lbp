@@ -372,56 +372,48 @@ struct FeatureLTP
 };
 
 
-
+//
+// Visual Recognition using Local Quantized Patterns
+//  Sibt Ul Hussain, Bill Triggs
+//
 struct LQPDisk
 {
-    const static int R = 4;
-    const static int NP = 18;
+    int R;
+    int P;
+    int C;
 
     Mat_<int> lut;
+    Mat_<int> pts;
 
     LQPDisk()
     {
         // pretrained from util/codebook/lqp.cpp
         FileStorage fs("data/lqp.xml.gz",FileStorage::READ);
+        int E;
+        fs["R"] >> R;
+        fs["P"] >> P;
+        fs["C"] >> C;
+        fs["E"] >> E;
         fs["lut"] >> lut;
+        fs["pts"] >> pts;
+        cerr << "LQPDisk R "<< R << " P " << P <<" C " << C << " E " << E << endl;
+        //cerr << "pts " << pts.t() << endl;
     }
 
     int operator()(const cv::Mat &img, cv::Mat &features) const
     {       
         Mat_<uchar> m(img);
         Mat_<uchar> lbp = Mat_<uchar>::zeros(img.size());
-        static int pts[NP*2] = {
-             2, 0, //Disk2
-             2, 1, 
-             1, 2,
-             0, 2,
-            -1, 2,
-            -2, 1,
-             4, 0, //Disk4
-             4, 1,
-             4, 2,
-             3, 3,
-             2, 4,
-             1, 4,
-             0, 4,
-            -1, 4,
-            -2, 4,
-            -3, 3,
-            -4, 2,
-            -4, 1,
-        };
-
-
+        //int *pts = points();
         for (int i=R; i<img.rows-R; i++)
         {
             for (int j=R; j<img.cols-R; j++)
             {
                 unsigned bits=0;
-                for (int b=NP-1; b>=0; b--)
+                for (int b=P-1; b>=0; b--)
                 {
-                    int v  = pts[b*2];
-                    int u  = pts[b*2+1];
+                    int v  = pts(b*2);
+                    int u  = pts(b*2+1);
                     int y1 = i+v;
                     int x1 = j+u;
                     int y2 = i-v;
@@ -433,7 +425,7 @@ struct LQPDisk
             }
         }
         features = lbp;
-        return 256;
+        return C;
     }
 };
 
