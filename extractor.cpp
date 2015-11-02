@@ -397,14 +397,12 @@ struct LQPDisk
         fs["lut"] >> lut;
         fs["pts"] >> pts;
         cerr << "LQPDisk R "<< R << " P " << P <<" C " << C << " E " << E << endl;
-        //cerr << "pts " << pts.t() << endl;
     }
 
     int operator()(const cv::Mat &img, cv::Mat &features) const
     {       
         Mat_<uchar> m(img);
         Mat_<uchar> lbp = Mat_<uchar>::zeros(img.size());
-        //int *pts = points();
         for (int i=R; i<img.rows-R; i++)
         {
             for (int j=R; j<img.cols-R; j++)
