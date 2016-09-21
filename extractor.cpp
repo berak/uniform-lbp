@@ -1,4 +1,5 @@
 #include "opencv2/core/utility.hpp"
+#include "opencv2/core/hal/hal.hpp"
 #include "opencv2/xfeatures2d.hpp"
 #include "opencv2/opencv.hpp"
 
@@ -345,7 +346,7 @@ struct FeatureLTP
     {
         CV_Assert(I.isContinuous() && (I.channels() == 1));
 
-        Mat_<float>  m(I); 
+        Mat_<float>  m(I);
         Mat_<ushort> n(m.size());
         n = 0;
 
@@ -388,7 +389,7 @@ struct LQPDisk
     LQPDisk()
     {
         // pretrained from util/codebook/lqp.cpp
-        FileStorage fs("data/lqp.xml.gz",FileStorage::READ);
+        FileStorage fs("data/lqp.xml.gz", FileStorage::READ);
         int E;
         fs["R"] >> R;
         fs["P"] >> P;
@@ -400,7 +401,7 @@ struct LQPDisk
     }
 
     int operator()(const cv::Mat &img, cv::Mat &features) const
-    {       
+    {
         Mat_<uchar> m(img);
         Mat_<uchar> lbp = Mat_<uchar>::zeros(img.size());
         for (int i=R; i<img.rows-R; i++)
@@ -771,8 +772,8 @@ struct Patcher : public TextureFeature::Extractor
     Ptr<Landmarks> land;
     int patchSize;
 
-    Patcher(int size=20) 
-        : land(createLandmarks()) 
+    Patcher(int size=20)
+        : land(createLandmarks())
         , patchSize(size)
     {}
 
@@ -1164,7 +1165,7 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
     virtual int extract(const Mat &image, Mat &features) const
     {
         Mat blurImage;
-           GaussianBlur(image, blurImage, cv::Size(3, 3), 2, 2);
+        GaussianBlur(image, blurImage, cv::Size(3, 3), 2, 2);
         features.create((int)latches.size(), feature_bytes, CV_8U);
 
         vector<Point> pts;
@@ -1225,6 +1226,7 @@ struct ExtractorLatch2 : public TextureFeature::Extractor
 
 //extern Ptr<TextureFeature::Extractor> createFisherVector(const String &fn);
 //extern Ptr<TextureFeature::Extractor> createRBMExtractor(const String &fn);
+//extern cv::Ptr<TextureFeature::Extractor> createBIF(int num_bands, int num_rotations);
 
 namespace TextureFeature
 {
@@ -1234,6 +1236,7 @@ cv::Ptr<Extractor> createExtractor(int extract)
 {
     switch(int(extract))
     {
+        //case EXT_BIF:      return createBIF(8,4); break;
         case EXT_Pixels:   return makePtr< ExtractorPixels >(); break;
         case EXT_Ltp:      return makePtr< GenericExtractor<FeatureLTP,GriddedHist> >(FeatureLTP(), GriddedHist()); break;
         case EXT_Lbp:      return makePtr< GenericExtractor<FeatureLbp,GriddedHist> >(FeatureLbp(), GriddedHist()); break;

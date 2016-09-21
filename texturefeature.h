@@ -32,7 +32,7 @@ namespace TextureFeature
     {
         virtual int predict(const Mat &test, Mat &result) const = 0;
         virtual int train(const Mat &features, const Mat &labels) = 0;
-        virtual int update(const Mat &features, const Mat &labels) 
+        virtual int update(const Mat &features, const Mat &labels)
         {
             throw("not implemented!");
         }
@@ -91,6 +91,8 @@ namespace TextureFeature
         EXT_LATCH2,
         //EXT_DAISY,
         EXT_PATCH,
+        EXT_BIF,
+
         EXT_MAX
     };
     static const char *EXS[] = {
@@ -127,6 +129,7 @@ namespace TextureFeature
         "LATCH2",
         //"DAISY",
         "PATCH",
+        "BIF",
         0
     };
     enum FIL {
@@ -181,7 +184,7 @@ namespace TextureFeature
         CL_SVM_POL,
         CL_SVM_RBF,
         CL_SVM_INT,
-        CL_SVM_INT2, // custom 
+        CL_SVM_INT2, // custom
         CL_SVM_HEL,  // custom
         CL_SVM_HELSQ,  // custom
         CL_SVM_LOW,  // custom

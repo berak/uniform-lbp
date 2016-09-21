@@ -313,9 +313,6 @@ struct ClassifierSvmMulti : public TextureFeature::Classifier
     }
 };
 
-struct PPCA
-{
-};
 
 //
 //
