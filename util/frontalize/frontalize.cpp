@@ -295,10 +295,6 @@ struct FrontalizerImpl : public Frontalizer
 
 
 
-
-//#define FRONTALIZER_STANDALONE
-#ifdef FRONTALIZER_STANDALONE
-
 int main(int argc, const char *argv[])
 {
     const char *keys =
@@ -414,5 +410,3 @@ int main(int argc, const char *argv[])
     }
     return 0;
 }
-
-#endif // FRONTALIZER_STANDALONE
