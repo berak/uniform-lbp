@@ -23,7 +23,6 @@ using namespace std;
 //
 struct FrontalizerImpl : public Frontalizer
 {
-    const dlib::shape_predictor &sp;
     const bool DEBUG_IMAGES;
     const double symBlend; // weight factor for symmetry blending
     const int symThresh;   // threshold for symmetry blending
@@ -33,13 +32,15 @@ struct FrontalizerImpl : public Frontalizer
     Mat_<double> eyemask;
     vector<Point3d> pts3d;
 
-    FrontalizerImpl(const dlib::shape_predictor &sp, int crop, int symThreshold, double symBlend, bool debug_images)
-        : sp(sp)
-        , crop(crop)
+    dlib::shape_predictor sp;
+
+    FrontalizerImpl(string dlib_path, int crop, int symThreshold, double symBlend, bool debug_images)
+        : crop(crop)
         , symThresh(symThreshold)
         , symBlend(symBlend)
         , DEBUG_IMAGES(debug_images)
     {
+        dlib::deserialize(dlib_path) >> sp;
         // model is rotated 90° already, but still in col-major, right hand coords
         FileStorage fs("data/mdl.yml.gz", FileStorage::READ);
         if (! fs.isOpened())
@@ -285,9 +286,9 @@ struct FrontalizerImpl : public Frontalizer
         return res;
     }
 
-    static Ptr<Frontalizer> create(const dlib::shape_predictor &sp, int crop, int symThreshold, double symBlend, bool write)
+    static Ptr<Frontalizer> create(string dlib_path, int crop, int symThreshold, double symBlend, bool write)
     {
-        return makePtr<FrontalizerImpl>(sp, crop, symThreshold, symBlend, write);
+        return makePtr<FrontalizerImpl>(dlib_path, crop, symThreshold, symBlend, write);
     }
 
 };
@@ -331,10 +332,7 @@ int main(int argc, const char *argv[])
     bool align2d = parser.get<bool>("align2d");
     bool project3d = parser.get<bool>("project3d");
 
-    dlib::shape_predictor sp;
-    dlib::deserialize(dlib_path) >> sp;
-
-    FrontalizerImpl front(sp,crop,sym,blend,!write);
+    FrontalizerImpl front(dlib_path,crop,sym,blend,!write);
     CascadeClassifier casc(casc_path + "haarcascade_frontalface_alt.xml");
     if (casc.empty())
     {
