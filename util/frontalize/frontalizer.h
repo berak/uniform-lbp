@@ -9,15 +9,12 @@
 //@brief  apply a one-size-fits-all 3d model transformation (POSIT style), also do 2d eye-alignment, if nessecary.
 //
 
-// fwd:
-//class dlib::shape_predictor;
-
 struct Frontalizer
 {
     virtual cv::Mat align2d(const cv::Mat &imgray) const = 0;
     virtual cv::Mat project3d(const cv::Mat &imgray) const = 0;
 
-    static cv::Ptr<Frontalizer> create(string dlib_path, int crop, int symThreshold, double symBlend, bool write);
+    static cv::Ptr<Frontalizer> create(string dlib_model_path, int crop, int symThreshold, double symBlend, bool write);
 };
 
 
